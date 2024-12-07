@@ -23,6 +23,7 @@
   "devDependencies": {
     "@orpc/client": "workspace:*",
     "@orpc/contract": "workspace:*",
+    "@orpc/next": "workspace:*",
     "@orpc/openapi": "workspace:*",
     "@orpc/react": "workspace:*",
     "@orpc/server": "workspace:*",

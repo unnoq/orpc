@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createProcedureCaller, os } from '.'
+import { createProcedureCaller, ORPCError, os } from '.'
 
 describe('createProcedureCaller', () => {
   const path = ['ping']
@@ -133,27 +133,6 @@ describe('createProcedureCaller', () => {
     expect(caller({ id: '1' })).resolves.toEqual('pong')
   })
 
-  it('accept form data', async () => {
-    const ping = osw
-      .input(z.object({ id: z.number() }))
-      .output(z.object({ id: z.number() }))
-      .func((input, context, meta) => {
-        expect(context).toEqual(context)
-
-        return input
-      })
-
-    const caller = createProcedureCaller({
-      procedure: ping,
-      context,
-    })
-
-    const form = new FormData()
-    form.append('id', '1')
-
-    expect(await caller(form)).toEqual({ id: 1 })
-  })
-
   it('optional input when possible', async () => {
     os.func(() => { })()
     os.func(() => { })({})
@@ -167,5 +146,79 @@ describe('createProcedureCaller', () => {
     os.input(z.any()).func(() => { })()
     // @ts-expect-error input is required
     expect(os.input(z.boolean()).func(() => { })()).rejects.toThrow()
+  })
+
+  it('hooks', async () => {
+    const onSuccess = vi.fn()
+    const onError = vi.fn()
+    const onFinish = vi.fn()
+    const onExecute = vi.fn()
+
+    const procedure = os.input(z.string()).func(() => 'output')
+
+    const caller = createProcedureCaller({
+      procedure,
+      context: { val: 'context' },
+      execute: async (input, context, meta) => {
+        onExecute(input, context, meta)
+        try {
+          const output = await meta.next()
+          onSuccess(output, context)
+          return output
+        }
+        catch (e) {
+          onError(e, context)
+          throw e
+        }
+      },
+      onSuccess,
+      onError,
+      onFinish,
+    })
+
+    await caller('input')
+    expect(onExecute).toBeCalledTimes(1)
+    expect(onExecute).toHaveBeenCalledWith('input', { val: 'context' }, {
+      path: [],
+      procedure,
+      next: expect.any(Function),
+    })
+    expect(onSuccess).toBeCalledTimes(2)
+    expect(onSuccess).toHaveBeenNthCalledWith(1, 'output', { val: 'context' })
+    expect(onSuccess).toHaveBeenNthCalledWith(2, 'output', { val: 'context' })
+    expect(onError).not.toBeCalled()
+    expect(onFinish).toBeCalledTimes(1)
+    expect(onFinish).toBeCalledWith({ val: 'context' })
+
+    onSuccess.mockClear()
+    onError.mockClear()
+    onFinish.mockClear()
+    onExecute.mockClear()
+
+    // @ts-expect-error - invalid input
+    await expect(caller(123)).rejects.toThrowError(
+      'Validation input failed',
+    )
+
+    expect(onExecute).toBeCalledTimes(1)
+    expect(onExecute).toHaveBeenCalledWith(123, { val: 'context' }, {
+      path: [],
+      procedure,
+      next: expect.any(Function),
+    })
+    expect(onError).toBeCalledTimes(2)
+    expect(onError).toHaveBeenNthCalledWith(1, new ORPCError({
+      message: 'Validation input failed',
+      code: 'BAD_REQUEST',
+      cause: expect.any(Error),
+    }), { val: 'context' })
+    expect(onError).toHaveBeenNthCalledWith(2, new ORPCError({
+      message: 'Validation input failed',
+      code: 'BAD_REQUEST',
+      cause: expect.any(Error),
+    }), { val: 'context' })
+    expect(onSuccess).not.toBeCalled()
+    expect(onFinish).toBeCalledTimes(1)
+    expect(onFinish).toBeCalledWith({ val: 'context' })
   })
 })

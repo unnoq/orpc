@@ -1,4 +1,4 @@
-import type { Value } from '@orpc/shared'
+import type { GeneralHook, Merge, Value } from '@orpc/shared'
 import type { ANY_LAZY_PROCEDURE, ANY_PROCEDURE } from './procedure'
 import type { Router } from './router'
 import { isLazy } from './lazy'
@@ -7,7 +7,12 @@ import { createProcedureCaller, type ProcedureCaller } from './procedure-caller'
 
 export interface CreateRouterCallerOptions<
   TRouter extends Router<any>,
-> {
+> extends GeneralHook<
+    unknown,
+    unknown,
+    TRouter extends Router<infer UContext> ? UContext : never,
+    { path: string[], procedure: ANY_PROCEDURE }
+  > {
   router: TRouter
 
   /**
@@ -40,25 +45,20 @@ export function createRouterCaller<
 >(
   options: CreateRouterCallerOptions<TRouter>,
 ): RouterCaller<TRouter> {
-  return createRouterCallerInternal({
-    current: options.router,
-    context: options.context,
-    path: options.basePath ?? [],
-  }) as any
+  return createRouterCallerInternal(options) as any
 }
 
 function createRouterCallerInternal(
-  options: {
-    current: Router<any> | Router<any>[keyof Router<any>]
-    context: Value<any>
-    path: string[]
-  },
+  options: Merge<CreateRouterCallerOptions<Router<any>>, {
+    router: Router<any> | Router<any>[keyof Router<any>]
+  }>,
 ) {
-  const procedureCaller = isLazy(options.current) || isProcedure(options.current)
+  const procedureCaller = isLazy(options.router) || isProcedure(options.router)
     ? createProcedureCaller({
-      procedure: options.current as any,
+      ...options,
+      procedure: options.router as any,
       context: options.context,
-      path: options.path,
+      path: options.basePath,
     })
     : {}
 
@@ -68,12 +68,12 @@ function createRouterCallerInternal(
         return Reflect.get(target, key)
       }
 
-      const next = (options.current as any)[key]
+      const next = (options.router as any)[key]
 
       return createRouterCallerInternal({
-        current: next,
-        context: options.context,
-        path: [...options.path, key],
+        ...options,
+        router: next,
+        basePath: [...(options.basePath ?? []), key],
       })
     },
   })

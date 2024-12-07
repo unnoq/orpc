@@ -34,7 +34,7 @@ export function createORPCHandler(): FetchHandler {
 
       const caller = createProcedureCaller({
         context,
-        procedure: match.procedure,
+        procedure: match.procedure as any,
         path: match.path,
       })
 

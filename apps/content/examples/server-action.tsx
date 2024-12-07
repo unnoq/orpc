@@ -1,5 +1,6 @@
 'use server'
 
+import { createFormAction } from '@orpc/next'
 import { ORPCError, os } from '@orpc/server'
 import { oz } from '@orpc/zod'
 import { headers } from 'next/headers'
@@ -35,8 +36,15 @@ export const updateUser = os
   )
   .func((input, context, meta) => {
     // ^ context.user is automatically injected
-    redirect('/some-where') // or return some thing
+    // do something
   })
+
+const updateUserFA = createFormAction({
+  procedure: updateUser,
+  onSuccess() {
+    redirect('/some-where')
+  },
+})
 
 export default async function Page() {
   const orYouCanCallDirectly = async () => {
@@ -53,7 +61,7 @@ export default async function Page() {
 
   // You can use square brackets to express nested data
   return (
-    <form action={updateUser}>
+    <form action={updateUserFA}>
       {/* Auto convert 1992 to bigint */}
       <input type="number" name="id" value="1992" />
       {/* Auto parse user object */}

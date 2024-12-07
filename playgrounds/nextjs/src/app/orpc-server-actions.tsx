@@ -1,6 +1,6 @@
 'use client'
 
-import { createPlanet } from '@/actions/planet'
+import { createPlanetFA } from '@/actions/planet'
 
 export function CreatePlanetServerAction() {
   return (
@@ -8,8 +8,8 @@ export function CreatePlanetServerAction() {
       <h2>oRPC and Server Actions | Create Planet example</h2>
 
       <form action={(form) => {
-        createPlanet(form).then((planet) => {
-          alert(`Planet created: ${planet.name}.`)
+        createPlanetFA(form).then((planet) => {
+          alert(`Planet created.`)
         })
       }}
       >

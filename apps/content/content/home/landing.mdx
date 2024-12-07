@@ -91,7 +91,22 @@ convert `1992` into a `bigint` and seamlessly parse objects like `user`.
 ## Use as a Server Action
 
 ```tsx
-<form action={getting}>
+// call directly from client
+const onSubmit = () => { getting({ /***/ }) }
+// safe caller
+const gettingSA = createSafeAction({ procedure: getting })
+const onSubmit = () => { 
+	const [output, error] = await gettingSA({ /***/ })
+}
+// use with a hook
+const { execute, isPending, isError, error, data } = useSafeAction(gettingSA)
+// use as a form action
+const gettingFA = createFormAction({ 
+	procedure: getting,
+	onSuccess: () => redirect('/some-where')
+})
+
+<form action={gettingFA}>
   <input type="number" name="id" value="1992" />
   <input type="string" name="user[name]" value="unnoq" />
   <input type="file" name="user[avatar]" accept="image/*" />

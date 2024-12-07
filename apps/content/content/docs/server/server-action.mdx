@@ -63,35 +63,6 @@ export const updateUser = os
   })
 ```
 
-### Form Integration
-
-Integrate server actions seamlessly with React forms for automatic type coercion:
-
-```tsx twoslash
-import { updateUser } from 'examples/server-action'
-import * as React from 'react'
-
-export default function UpdateUserForm() {
-  return (
-    <form action={updateUser}>
-      {/* Auto convert 1992 to bigint */}
-      <input type="number" name="id" value="1992" />
-      {/* Auto parse user object */}
-      <input type="text" name="user[name]" value="Unnoq" />
-      <input
-        id="avatar"
-        type="file"
-        name="user[avatar]"
-        accept="image/*"
-      />
-    </form>
-  )
-}
-```
-
-Thanks to [Smart Conversion](/docs/openapi/smart-conversion), and [Bracket Notation](/docs/openapi/bracket-notation),
-automatically convert `1992` into a `bigint` and seamlessly parse objects like `user`.
-
 ### Direct Client Calls
 
 Call server actions directly from client components for greater flexibility:
@@ -120,14 +91,97 @@ export default function UpdateUserButton() {
 }
 ```
 
+### Safe Server Actions
+
+To handle errors gracefully or use hooks for improved reusability, leverage `createSafeAction` and `useSafeAction`:
+
+```tsx twoslash
+import { createSafeAction } from '@orpc/next'
+import { useSafeAction } from '@orpc/next/hooks'
+import { updateUser } from 'examples/server-action'
+
+// on server
+const updateUserSA = createSafeAction({ 
+  procedure: updateUser,
+})
+
+// on client
+const onSubmit = async () => {
+  const [output, error] = await updateUserSA({ 
+    id: 1992n,
+    user: {
+      name: 'Unnoq',
+      avatar: (document.getElementById('avatar') as any).files[0],
+    },
+  })
+}
+
+// with a hook
+const { execute, isPending, isError, error, data } = useSafeAction(updateUserSA)
+
+const onSubmit2 = () => {
+  execute({ 
+    id: 1992n,
+    user: {
+      name: 'Unnoq',
+      avatar: ( document.getElementById('avatar') as any).files[0],
+    },
+  })
+}
+```
+
+This approach simplifies error handling and improves the maintainability of your server actions.
+
+
+### Enhanced Form Integration
+
+React forms integrate seamlessly with server actions using `createFormAction`. This setup enables automatic type coercion
+
+```tsx twoslash
+// on server
+import { createFormAction } from '@orpc/next'
+import { updateUser } from 'examples/server-action'
+const updateUserFA = createFormAction({ 
+  procedure: updateUser,
+  onSuccess: () => {
+    // redirect('/some-where')
+  }
+})
+
+// on client
+import * as React from 'react'
+
+export default function UpdateUserForm() {
+  return (
+    <form action={updateUserFA}>
+      {/* Auto convert 1992 to bigint */}
+      <input type="number" name="id" value="1992" />
+      {/* Auto parse user object */}
+      <input type="text" name="user[name]" value="Unnoq" />
+      <input
+        id="avatar"
+        type="file"
+        name="user[avatar]"
+        accept="image/*"
+      />
+    </form>
+  )
+}
+```
+
+Thanks to [Smart Conversion](/docs/openapi/smart-conversion), and [Bracket Notation](/docs/openapi/bracket-notation),
+automatically convert `1992` into a `bigint` and seamlessly parse objects like `user`.
+
 ## Server Actions with Context
 
 Some procedures cannot be used as server actions directly. This is typically because they 
 require additional context, such as user information or other runtime data. 
-In such cases, you can use [createProcedureCaller](/docs/server/caller#calling-procedures-with-context) 
+In such cases, you can use [createProcedureCaller](/docs/server/caller#calling-procedures-with-context)
+or `createSafeAction` and `createFormAction` (built on top of `createProcedureCaller`)
 to provide the required context dynamically, making the procedure callable and usable as a server action.
 
 ```ts twoslash
+import { createSafeAction, createFormAction } from '@orpc/next'
 import { createProcedureCaller, os } from '@orpc/server'
 import { z } from 'zod'
 
@@ -141,7 +195,7 @@ const getting = os
 // @errors: 2349
 getting({ name: 'Unnoq' }) // ❌ cannot call this procedure directly, and cannot be used as a server action
 
-export const caller = createProcedureCaller({
+export const caller = createProcedureCaller({ // or createSafeAction or createFormAction
     procedure: getting,
     context: async () => {
         // you can access headers, cookies, etc. here to create context
@@ -151,3 +205,5 @@ export const caller = createProcedureCaller({
 
 caller({ name: 'Unnoq' }) // ✅ can call this procedure directly, and can be used as a server action
 ```
+
+This flexibility ensures you can adapt server actions to scenarios requiring runtime information, enhancing usability across diverse use cases.

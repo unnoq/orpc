@@ -1,0 +1,60 @@
+{
+  "name": "@orpc/next",
+  "type": "module",
+  "version": "0.0.0",
+  "license": "MIT",
+  "homepage": "https://orpc.unnoq.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unnoq/orpc.git",
+    "directory": "packages/next"
+  },
+  "keywords": [
+    "unnoq",
+    "orpc",
+    "nextjs"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./hooks": {
+        "types": "./dist/src/hooks.d.ts",
+        "import": "./dist/hooks.js",
+        "default": "./dist/hooks.js"
+      },
+      "./🔒/*": {
+        "types": "./dist/src/*.d.ts"
+      }
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./hooks": "./src/hooks.ts",
+    "./🔒/*": {
+      "types": "./src/*.ts"
+    }
+  },
+  "files": [
+    "!**/*.map",
+    "!**/*.tsbuildinfo",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup --clean --sourcemap --entry.index=src/index.ts --entry.hooks=src/hooks.ts --format=esm --onSuccess='tsc -b --noCheck'",
+    "build:watch": "pnpm run build --watch",
+    "type:check": "tsc -b"
+  },
+  "peerDependencies": {
+    "@orpc/server": "workspace:*",
+    "next": ">=15.0.0",
+    "react": ">=18.3.0"
+  },
+  "dependencies": {
+    "@orpc/contract": "workspace:*",
+    "@orpc/shared": "workspace:*"
+  }
+}

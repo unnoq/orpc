@@ -170,7 +170,7 @@ export function decorateProcedure<
   }
 
   return Object.assign(createProcedureCaller({
-    procedure,
+    procedure: procedure as any,
     context: undefined as any,
   }), {
     [DECORATED_PROCEDURE_SYMBOL]: true,

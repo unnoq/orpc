@@ -276,13 +276,13 @@ describe('server action', () => {
       .func(() => 'string')
 
     expectTypeOf(p).toMatchTypeOf<
-      (input: { id: number } | FormData) => Promise<string>
+      (input: { id: number }) => Promise<string>
     >()
 
     const p2 = os.input(z.object({ id: z.number() })).func(() => 12333)
 
     expectTypeOf(p2).toMatchTypeOf<
-      (input: { id: number } | FormData) => Promise<number>
+      (input: { id: number }) => Promise<number>
     >()
   })
 
@@ -297,21 +297,6 @@ describe('server action', () => {
     expect(await p({ id: 123, date: new Date('2022-01-01') })).toEqual({
       id: 123,
       date: new Date('2022-01-01'),
-    })
-  })
-
-  it('can deserialize form data', async () => {
-    const p = os
-      .input(z.object({ id: z.number(), nested: z.object({ date: z.date() }) }))
-      .func(async input => input)
-
-    const form = new FormData()
-    form.append('id', '123')
-    form.append('nested[date]', '2022-01-01')
-
-    expect(await p(form)).toEqual({
-      id: 123,
-      nested: { date: new Date('2022-01-01') },
     })
   })
 })

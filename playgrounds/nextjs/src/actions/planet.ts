@@ -1,5 +1,6 @@
 'use server'
 
+import { createFormAction } from '@orpc/next'
 import { ORPCError } from '@orpc/server'
 import { oz } from '@orpc/zod'
 import { z } from 'zod'
@@ -41,6 +42,13 @@ export const createPlanet = authed
 
     return planet
   })
+
+export const createPlanetFA = createFormAction({
+  procedure: createPlanet,
+  onSuccess(output) {
+    // redirect('/planets')
+  },
+})
 
 export const findPlanet = pub
   .input(

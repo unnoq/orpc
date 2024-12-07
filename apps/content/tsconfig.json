@@ -30,7 +30,8 @@
     { "path": "../../packages/server" },
     { "path": "../../packages/client" },
     { "path": "../../packages/react" },
-    { "path": "../../packages/zod" }
+    { "path": "../../packages/zod" },
+    { "path": "../../packages/next" }
   ],
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

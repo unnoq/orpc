@@ -10,14 +10,15 @@
   },
   "dependencies": {
     "@orpc/client": "latest",
+    "@orpc/next": "latest",
     "@orpc/openapi": "latest",
     "@orpc/react": "latest",
     "@orpc/server": "latest",
     "@orpc/zod": "latest",
     "@tanstack/react-query": "^5.61.5",
     "next": "15.0.3",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

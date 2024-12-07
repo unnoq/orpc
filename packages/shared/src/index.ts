@@ -1,5 +1,6 @@
-export * from './json'
+export * from './hook'
 
+export * from './json'
 export * from './object'
 export * from './value'
 export { isPlainObject } from 'is-what'

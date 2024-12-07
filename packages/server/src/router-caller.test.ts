@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createRouterCaller, os } from '.'
+import { createRouterCaller, ORPCError, os } from '.'
 
 describe('createRouterCaller', () => {
   const internal = false
@@ -193,5 +193,79 @@ describe('createRouterCaller', () => {
       'lazyRouter',
       'ping',
     ])
+  })
+
+  it('hooks', async () => {
+    const onSuccess = vi.fn()
+    const onError = vi.fn()
+    const onFinish = vi.fn()
+    const onExecute = vi.fn()
+
+    const procedure = os.input(z.string()).func(() => 'output')
+
+    const caller = createRouterCaller({
+      router: { procedure, nested: { procedure } },
+      context: { val: 'context' },
+      execute: async (input, context, meta) => {
+        onExecute(input, context, meta)
+        try {
+          const output = await meta.next()
+          onSuccess(output, context)
+          return output
+        }
+        catch (e) {
+          onError(e, context)
+          throw e
+        }
+      },
+      onSuccess,
+      onError,
+      onFinish,
+    })
+
+    await caller.procedure('input')
+    expect(onExecute).toBeCalledTimes(1)
+    expect(onExecute).toHaveBeenCalledWith('input', { val: 'context' }, {
+      path: ['procedure'],
+      procedure,
+      next: expect.any(Function),
+    })
+    expect(onSuccess).toBeCalledTimes(2)
+    expect(onSuccess).toHaveBeenNthCalledWith(1, 'output', { val: 'context' })
+    expect(onSuccess).toHaveBeenNthCalledWith(2, 'output', { val: 'context' })
+    expect(onError).not.toBeCalled()
+    expect(onFinish).toBeCalledTimes(1)
+    expect(onFinish).toBeCalledWith({ val: 'context' })
+
+    onSuccess.mockClear()
+    onError.mockClear()
+    onFinish.mockClear()
+    onExecute.mockClear()
+
+    // @ts-expect-error - invalid input
+    await expect(caller.nested.procedure(123)).rejects.toThrowError(
+      'Validation input failed',
+    )
+
+    expect(onExecute).toBeCalledTimes(1)
+    expect(onExecute).toHaveBeenCalledWith(123, { val: 'context' }, {
+      path: ['nested', 'procedure'],
+      procedure,
+      next: expect.any(Function),
+    })
+    expect(onError).toBeCalledTimes(2)
+    expect(onError).toHaveBeenNthCalledWith(1, new ORPCError({
+      message: 'Validation input failed',
+      code: 'BAD_REQUEST',
+      cause: expect.any(Error),
+    }), { val: 'context' })
+    expect(onError).toHaveBeenNthCalledWith(2, new ORPCError({
+      message: 'Validation input failed',
+      code: 'BAD_REQUEST',
+      cause: expect.any(Error),
+    }), { val: 'context' })
+    expect(onSuccess).not.toBeCalled()
+    expect(onFinish).toBeCalledTimes(1)
+    expect(onFinish).toBeCalledWith({ val: 'context' })
   })
 })
