@@ -30,6 +30,7 @@
     { "path": "../../packages/server" },
     { "path": "../../packages/client" },
     { "path": "../../packages/react" },
+    { "path": "../../packages/react-query" },
     { "path": "../../packages/zod" },
     { "path": "../../packages/next" }
   ],

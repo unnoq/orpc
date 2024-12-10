@@ -102,6 +102,9 @@ importers:
       '@orpc/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@orpc/react-query':
+        specifier: workspace:*
+        version: link:../../packages/react-query
       '@orpc/server':
         specifier: workspace:*
         version: link:../../packages/server
@@ -258,6 +261,31 @@ importers:
     devDependencies:
       zod:
         specifier: ^3.23.8
+        version: 3.23.8
+
+  packages/react-query:
+    dependencies:
+      '@orpc/client':
+        specifier: workspace:*
+        version: link:../client
+      '@orpc/contract':
+        specifier: workspace:*
+        version: link:../contract
+      '@orpc/server':
+        specifier: workspace:*
+        version: link:../server
+      '@orpc/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@tanstack/react-query':
+        specifier: '>=5.59.0'
+        version: 5.59.15(react@18.3.1)
+      react:
+        specifier: '>=18.3.0'
+        version: 18.3.1
+    devDependencies:
+      zod:
+        specifier: ^3.21.4
         version: 3.23.8
 
   packages/server:

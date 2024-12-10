@@ -26,6 +26,7 @@
     "@orpc/next": "workspace:*",
     "@orpc/openapi": "workspace:*",
     "@orpc/react": "workspace:*",
+    "@orpc/react-query": "workspace:*",
     "@orpc/server": "workspace:*",
     "@orpc/zod": "workspace:*",
     "@types/express": "^5.0.0",

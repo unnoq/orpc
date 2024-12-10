@@ -57,24 +57,35 @@ Our [Vanilla Client](/docs/client/vanilla) is fully typed and doesn't rely on ge
 ## Seamless Integration with TanStack Query
 
 ```tsx
-const utils = orpc.useUtils()
-const { mutate, isPending } = orpc.getting.useMutation({
-	onSuccess(){
-    utils.invalidate() // invalidate all queries
-  }
-})
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-mutate({ 
-	id: 1992n,
-	user: {
-		name: 'unnoq',
-		avatar: document.getElementById('avatar').files[0],
-	}
-})
+// Fetch data with oRPC
+const { data, status } = useQuery(
+  orpc.post.find.queryOptions({ input: { id: 'example' } })
+);
+
+// Perform a mutation and invalidate related queries on success
+const { mutate, isPending } = useMutation(
+  orpc.getting.mutationOptions({
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: orpc.post.find.key({ input: { id: 'example' } }),
+      });
+    },
+  })
+);
+
+// Execute mutation with structured input
+mutate({
+  id: 1992n,
+  user: {
+    name: 'unnoq',
+    avatar: document.getElementById('avatar').files[0], // Handle file uploads
+  },
+});
 ```
 
-oRPC's [TanStack Query integration](/docs/client/react) includes over 10 hooks and 29+ utilities, 
-such as `useQuery`, `useSuspenseQuery`, `useMutation`, `invalidate`, and more. Absolutely everything is typesafe!
+Learn more about [React Query Integration](/docs/client/react-query).
 
 ## Access via OpenAPI Standard
 

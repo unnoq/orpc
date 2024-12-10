@@ -1,0 +1,172 @@
+---
+title: React Query
+description: Simplify React Query usage with minimal integration using ORPC and TanStack Query
+---
+
+## Installation
+
+```package-install
+@orpc/client @orpc/react-query @tanstack/react-query
+```
+
+## Setup
+
+### Using a Global Client
+
+```ts twoslash
+import { createORPCReactQueryUtils } from '@orpc/react-query';
+import { createORPCClient } from '@orpc/client';
+import type { router } from 'examples/server';
+
+// Create an ORPC client
+export const client = createORPCClient<typeof router>({
+  baseURL: 'http://localhost:3000/api',
+});
+
+// Create React Query utilities for ORPC
+export const orpc = createORPCReactQueryUtils<typeof router>(client);
+
+// @noErrors
+orpc.getting.
+//           ^|
+```
+
+### Using Context with a Client
+
+```tsx twoslash
+import { createORPCReactQueryUtils, RouterUtils } from '@orpc/react-query';
+import { createORPCClient } from '@orpc/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { router } from 'examples/server';
+import * as React from 'react';
+
+const ORPCContext = React.createContext<RouterUtils<typeof router> | undefined>(undefined);
+
+export function useORPC() {
+  const orpc = React.useContext(ORPCContext);
+
+  if (!orpc) {
+    throw new Error('ORPCContext is not available.');
+  }
+
+  return orpc;
+}
+
+export function ORPCProvider({ children }: { children: React.ReactNode }) {
+  const [client] = React.useState(() =>
+    createORPCClient<typeof router>({
+      baseURL: 'http://localhost:3000/api',
+    })
+  );
+  const [queryClient] = React.useState(() => new QueryClient());
+
+  const orpc = React.useMemo(() => createORPCReactQueryUtils<typeof router>(client), [client]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ORPCContext.Provider value={orpc}>
+        {children}
+      </ORPCContext.Provider>
+    </QueryClientProvider>
+  );
+}
+
+// Example usage
+const orpc = useORPC();
+// @noErrors
+orpc.getting.
+//           ^|
+```
+
+## Multiple ORPC Instances
+
+To prevent conflicts when using multiple ORPC instances, you can provide a unique base path to `createORPCReactQueryUtils`.
+
+```tsx twoslash
+import { createORPCReactQueryUtils } from '@orpc/react-query'
+
+// Create separate ORPC instances with unique base paths
+const userORPC = createORPCReactQueryUtils('fake-client' as any, ['__user-api__'])
+const postORPC = createORPCReactQueryUtils('fake-client' as any, ['__post-api__'])
+```
+
+This ensures that each instance manages its own set of query keys and avoids any conflicts.
+
+## Usage
+
+### Standard Queries and Mutations
+
+```ts twoslash
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { orpc } from 'examples/react-query'
+
+// Fetch data
+const { data: gettingData } = useQuery(orpc.getting.queryOptions({ input: { name: 'unnoq' } }))
+
+// Use suspense query
+const { data: postData } = useSuspenseQuery(
+  orpc.post.find.queryOptions({ input: { id: 'example' } }),
+)
+
+// Perform mutations
+const { mutate: postMutate } = useMutation(orpc.post.create.mutationOptions())
+
+// Invalidate queries
+const queryClient = useQueryClient()
+queryClient.invalidateQueries({ queryKey: orpc.key() }) // Invalidate all queries
+queryClient.invalidateQueries({ queryKey: orpc.post.find.key({ input: { id: 'example' } }) }) // Specific queries
+```
+
+> **Note**: This library enhances [TanStack Query](https://tanstack.com/query/latest) by managing query keys and functions for you, providing a seamless developer experience.
+
+
+## Infinite Queries
+
+Infinite queries require a `cursor` in the input field for pagination.
+
+```tsx twoslash
+import { os } from '@orpc/server';
+import { z } from 'zod';
+import { createORPCReactQueryUtils } from '@orpc/react-query';
+import { useInfiniteQuery, useSuspenseInfiniteQuery } from '@tanstack/react-query';
+import * as React from 'react';
+
+const router = {
+  user: {
+    list: os
+      .input(z.object({ cursor: z.number(), limit: z.number() }))
+      .func((input) => ({
+        nextCursor: input.cursor + input.limit,
+        users: [], // Fetch your actual data here
+      })),
+  },
+};
+
+const orpc = createORPCReactQueryUtils<typeof router>('fake-client' as any);
+
+export function MyComponent() {
+  const query = useInfiniteQuery(
+    orpc.user.list.infiniteOptions({
+      input: { limit: 10 },
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialPageParam: 0,
+    })
+  );
+
+  const query2 = useSuspenseInfiniteQuery(
+    orpc.user.list.infiniteOptions({
+      input: { limit: 10 },
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialPageParam: 0,
+    })
+  );
+
+  return (
+    <div>
+      {query.isLoading && 'Loading...'}
+      {query.isSuccess && <div>Data: {JSON.stringify(query.data)}</div>}
+      {query.isError && <div>Error: {query.error.message}</div>}
+    </div>
+  );
+}
+```

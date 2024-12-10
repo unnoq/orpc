@@ -1,0 +1,60 @@
+{
+  "name": "@orpc/react-query",
+  "type": "module",
+  "version": "0.0.0",
+  "license": "MIT",
+  "homepage": "https://orpc.unnoq.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unnoq/orpc.git",
+    "directory": "packages/react-query"
+  },
+  "keywords": [
+    "unnoq",
+    "orpc",
+    "react-query",
+    "tanstack query",
+    "react"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./🔒/*": {
+        "types": "./dist/src/*.d.ts"
+      }
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./🔒/*": {
+      "types": "./src/*.ts"
+    }
+  },
+  "files": [
+    "!**/*.map",
+    "!**/*.tsbuildinfo",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup --clean --sourcemap --entry.index=src/index.ts --format=esm --onSuccess='tsc -b --noCheck'",
+    "build:watch": "pnpm run build --watch",
+    "type:check": "tsc -b"
+  },
+  "peerDependencies": {
+    "@orpc/client": "workspace:*",
+    "@orpc/contract": "workspace:*",
+    "@orpc/server": "workspace:*",
+    "@tanstack/react-query": ">=5.59.0",
+    "react": ">=18.3.0"
+  },
+  "dependencies": {
+    "@orpc/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "zod": "^3.21.4"
+  }
+}
