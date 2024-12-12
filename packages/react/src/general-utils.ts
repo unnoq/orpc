@@ -20,7 +20,7 @@ import type {
   ORPCInvalidateQueryFilters,
   ORPCQueryFilters,
 } from './tanstack-query'
-import type { SchemaInputForInfiniteQuery } from './types'
+import type { InferCursor, SchemaInputForInfiniteQuery } from './types'
 import { getMutationKeyFromPath, getQueryKeyFromPath } from './tanstack-key'
 
 export interface GeneralUtils<
@@ -44,7 +44,7 @@ export interface GeneralUtils<
     | undefined
     | InfiniteData<
       SchemaOutput<TOutputSchema, TFuncOutput>,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >,
   ][]
 
@@ -67,12 +67,12 @@ export interface GeneralUtils<
     updater: Updater<
       | InfiniteData<
         SchemaOutput<TOutputSchema, TFuncOutput>,
-        SchemaInput<TInputSchema>['cursor']
+        InferCursor<TInputSchema>
       >
       | undefined,
       | InfiniteData<
         SchemaOutput<TOutputSchema, TFuncOutput>,
-        SchemaInput<TInputSchema>['cursor']
+        InferCursor<TInputSchema>
       >
       | undefined
     >,
@@ -82,7 +82,7 @@ export interface GeneralUtils<
     | undefined
     | InfiniteData<
       SchemaOutput<TOutputSchema, TFuncOutput>,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >,
   ][]
 
@@ -134,7 +134,7 @@ export interface GeneralUtils<
       SchemaOutput<TOutputSchema, TFuncOutput>,
       InfiniteData<SchemaOutput<TOutputSchema, TFuncOutput>>,
       QueryKey,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >,
     'queryKey'
   >
@@ -160,7 +160,7 @@ export interface GeneralUtils<
           SchemaOutput<TOutputSchema, TFuncOutput>,
           InfiniteData<SchemaOutput<TOutputSchema, TFuncOutput>>,
           QueryKey,
-          SchemaInput<TInputSchema>['cursor']
+          InferCursor<TInputSchema>
         >,
         'queryKey'
       >

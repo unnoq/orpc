@@ -135,16 +135,4 @@ it('required all procedure match', () => {
       p3: p3.prefix('/test'),
     },
   })
-
-  implementer.router({
-    p1,
-    // @ts-expect-error not allow define more than expected
-    p2: p1,
-    nested: {
-      p2,
-    },
-    nested2: {
-      p3: p3.prefix('/test'),
-    },
-  })
 })

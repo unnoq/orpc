@@ -217,7 +217,7 @@ it('setInfiniteQueriesData', () => {
   user_utils.setInfiniteQueriesData({}, (old) => {
     expect(old).toBe(page)
 
-    return page2
+    return page2 as any
   })
 
   const page3 = {

@@ -48,6 +48,11 @@ export function zodCoerce(
   value: unknown,
   options?: ZodCoerceOptions,
 ): unknown {
+  if (schema['~standard'].vendor !== 'zod') {
+    // not support other schema yet
+    return value
+  }
+
   const isRoot = options?.isRoot ?? true
   const options_ = { ...options, isRoot: false }
 

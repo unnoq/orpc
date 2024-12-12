@@ -1,5 +1,5 @@
 import type { Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
-import type { SchemaInputForInfiniteQuery } from './types'
+import type { InferCursor, SchemaInputForInfiniteQuery } from './types'
 import {
   get,
   type PartialOnUndefinedDeep,
@@ -52,7 +52,7 @@ export interface ProcedureHooks<
   useInfiniteQuery: <
     USelectData = InfiniteData<
       SchemaOutput<TOutputSchema, TFuncOutput>,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >,
   >(
     options: PartialOnUndefinedDeep<
@@ -63,7 +63,7 @@ export interface ProcedureHooks<
           USelectData,
           SchemaOutput<TOutputSchema, TFuncOutput>,
           QueryKey,
-          SchemaInput<TInputSchema>['cursor']
+          InferCursor<TInputSchema>
         >,
         'queryFn' | 'queryKey'
       > & {
@@ -86,7 +86,7 @@ export interface ProcedureHooks<
   useSuspenseInfiniteQuery: <
     USelectData = InfiniteData<
       SchemaOutput<TOutputSchema, TFuncOutput>,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >,
   >(
     options: PartialOnUndefinedDeep<
@@ -97,7 +97,7 @@ export interface ProcedureHooks<
           USelectData,
           SchemaOutput<TOutputSchema, TFuncOutput>,
           QueryKey,
-          SchemaInput<TInputSchema>['cursor']
+          InferCursor<TInputSchema>
         >,
         'queryFn' | 'queryKey'
       > & {
@@ -118,7 +118,7 @@ export interface ProcedureHooks<
           DefaultError,
           SchemaOutput<TOutputSchema, TFuncOutput>,
           QueryKey,
-          SchemaInput<TInputSchema>['cursor']
+          InferCursor<TInputSchema>
         >,
         'queryKey' | 'queryFn'
       > & {

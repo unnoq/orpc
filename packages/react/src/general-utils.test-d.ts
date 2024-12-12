@@ -110,7 +110,7 @@ describe('setQueriesData', () => {
 describe('setInfiniteQueriesData', () => {
   it('simple', () => {
     user_utils.setInfiniteQueriesData({}, (old) => {
-      expectTypeOf(old).toEqualTypeOf<InfiniteData<unknown> | undefined>()
+      expectTypeOf(old).toEqualTypeOf<InfiniteData<unknown, never> | undefined>()
 
       return {
         pageParams: [],

@@ -14,7 +14,7 @@ import type {
   SetDataOptions,
   Updater,
 } from '@tanstack/react-query'
-import type { SchemaInputForInfiniteQuery } from './types'
+import type { InferCursor, SchemaInputForInfiniteQuery } from './types'
 import { getQueryKeyFromPath } from './tanstack-key'
 
 export interface ProcedureUtils<
@@ -37,7 +37,7 @@ export interface ProcedureUtils<
           DefaultError,
           SchemaOutput<TOutputSchema, TFuncOutput>,
           QueryKey,
-          SchemaInput<TInputSchema>['cursor']
+          InferCursor<TInputSchema>
         >,
         'queryKey' | 'queryFn'
       > & {
@@ -47,7 +47,7 @@ export interface ProcedureUtils<
   ) => Promise<
     InfiniteData<
       SchemaOutput<TOutputSchema, TFuncOutput>,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >
   >
 
@@ -66,7 +66,7 @@ export interface ProcedureUtils<
           DefaultError,
           SchemaOutput<TOutputSchema, TFuncOutput>,
           QueryKey,
-          SchemaInput<TInputSchema>['cursor']
+          InferCursor<TInputSchema>
         >,
         'queryKey' | 'queryFn'
       > & {
@@ -82,7 +82,7 @@ export interface ProcedureUtils<
     input: SchemaInputForInfiniteQuery<TInputSchema>,
   ) => | InfiniteData<
     SchemaOutput<TOutputSchema, TFuncOutput>,
-    SchemaInput<TInputSchema>['cursor']
+    InferCursor<TInputSchema>
   >
   | undefined
 
@@ -101,7 +101,7 @@ export interface ProcedureUtils<
           DefaultError,
           SchemaOutput<TOutputSchema, TFuncOutput>,
           QueryKey,
-          SchemaInput<TInputSchema>['cursor']
+          InferCursor<TInputSchema>
         >,
         'queryKey' | 'queryFn'
       > & {
@@ -111,7 +111,7 @@ export interface ProcedureUtils<
   ) => Promise<
     InfiniteData<
       SchemaOutput<TOutputSchema, TFuncOutput>,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >
   >
 
@@ -123,7 +123,7 @@ export interface ProcedureUtils<
   ) => | QueryState<
     InfiniteData<
       SchemaOutput<TOutputSchema, TFuncOutput>,
-      SchemaInput<TInputSchema>['cursor']
+      InferCursor<TInputSchema>
     >
   >
   | undefined
@@ -141,28 +141,27 @@ export interface ProcedureUtils<
     updater: Updater<
       | InfiniteData<
         SchemaOutput<TOutputSchema, TFuncOutput>,
-        SchemaInput<TInputSchema>['cursor']
+        InferCursor<TInputSchema>
       >
       | undefined,
       | InfiniteData<
         SchemaOutput<TOutputSchema, TFuncOutput>,
-        SchemaInput<TInputSchema>['cursor']
+        InferCursor<TInputSchema>
       >
       | undefined
     >,
     options?: SetDataOptions,
   ) => | InfiniteData<
     SchemaOutput<TOutputSchema, TFuncOutput>,
-    SchemaInput<TInputSchema>['cursor']
+    InferCursor<TInputSchema>
   >
   | undefined
 }
 
 export interface CreateProcedureUtilsOptions<
-  TInputSchema extends Schema = undefined,
-  TOutputSchema extends Schema = undefined,
-  TFuncOutput extends
-  SchemaOutput<TOutputSchema> = SchemaOutput<TOutputSchema>,
+  TInputSchema extends Schema,
+  TOutputSchema extends Schema,
+  TFuncOutput ,
 > {
   client: Caller<SchemaInput<TInputSchema>, SchemaOutput<TOutputSchema, TFuncOutput>>
   queryClient: QueryClient

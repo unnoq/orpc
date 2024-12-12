@@ -1,18 +1,18 @@
-import type { input, output, ZodType } from 'zod'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 
 export type HTTPPath = `/${string}`
 export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 export type HTTPStatus = number
 
-export type Schema = ZodType<any, any, any> | undefined
+export type Schema = StandardSchemaV1 | undefined
 
 export type SchemaInput<
   TSchema extends Schema,
   TFallback = unknown,
 > = TSchema extends undefined
   ? TFallback
-  : TSchema extends ZodType<any, any, any>
-    ? input<TSchema>
+  : TSchema extends StandardSchemaV1
+    ? StandardSchemaV1.InferInput<TSchema>
     : TFallback
 
 export type SchemaOutput<
@@ -20,6 +20,6 @@ export type SchemaOutput<
   TFallback = unknown,
 > = TSchema extends undefined
   ? TFallback
-  : TSchema extends ZodType<any, any, any>
-    ? output<TSchema>
+  : TSchema extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<TSchema>
     : TFallback

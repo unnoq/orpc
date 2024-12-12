@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import {
   getCustomJSONSchema,
   getCustomZodFileMimeType,
@@ -9,6 +10,7 @@ import {
   type JSONSchema,
   type keywords,
 } from 'json-schema-typed/draft-2020-12'
+
 import {
   type EnumLike,
   type KeySchema,
@@ -109,14 +111,21 @@ export interface ZodToJsonSchemaOptions {
 }
 
 export function zodToJsonSchema(
-  schema: ZodTypeAny,
+  schema: StandardSchemaV1,
   options?: ZodToJsonSchemaOptions,
 ): Exclude<JSONSchema, boolean> {
+  if (schema['~standard'].vendor !== 'zod') {
+    console.warn(`Generate JSON schema not support ${schema['~standard'].vendor} yet`)
+    return {}
+  }
+
+  const schema__ = schema as ZodTypeAny
+
   if (!options?.isHandledCustomJSONSchema) {
-    const customJSONSchema = getCustomJSONSchema(schema._def, options)
+    const customJSONSchema = getCustomJSONSchema(schema__._def, options)
 
     if (customJSONSchema) {
-      const json = zodToJsonSchema(schema, {
+      const json = zodToJsonSchema(schema__, {
         ...options,
         isHandledCustomJSONSchema: true,
       })
@@ -130,7 +139,7 @@ export function zodToJsonSchema(
 
   const childOptions = { ...options, isHandledCustomJSONSchema: false }
 
-  const customType = getCustomZodType(schema._def)
+  const customType = getCustomZodType(schema__._def)
 
   switch (customType) {
     case 'Blob': {
@@ -138,7 +147,7 @@ export function zodToJsonSchema(
     }
 
     case 'File': {
-      const mimeType = getCustomZodFileMimeType(schema._def) ?? '*/*'
+      const mimeType = getCustomZodFileMimeType(schema__._def) ?? '*/*'
 
       return { type: 'string', contentMediaType: mimeType }
     }
@@ -161,11 +170,11 @@ export function zodToJsonSchema(
 
   const _expectedCustomType: undefined = customType
 
-  const typeName = schema._def.typeName as ZodFirstPartyTypeKind | undefined
+  const typeName = schema__._def.typeName as ZodFirstPartyTypeKind | undefined
 
   switch (typeName) {
     case ZodFirstPartyTypeKind.ZodString: {
-      const schema_ = schema as ZodString
+      const schema_ = schema__ as ZodString
 
       const json: JSONSchema = { type: 'string' }
 
@@ -252,7 +261,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodNumber: {
-      const schema_ = schema as ZodNumber
+      const schema_ = schema__ as ZodNumber
 
       const json: JSONSchema = { type: 'number' }
 
@@ -313,12 +322,12 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodLiteral: {
-      const schema_ = schema as ZodLiteral<unknown>
+      const schema_ = schema__ as ZodLiteral<unknown>
       return { const: schema_._def.value }
     }
 
     case ZodFirstPartyTypeKind.ZodEnum: {
-      const schema_ = schema as ZodEnum<[string, ...string[]]>
+      const schema_ = schema__ as ZodEnum<[string, ...string[]]>
 
       return {
         enum: schema_._def.values,
@@ -326,7 +335,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodNativeEnum: {
-      const schema_ = schema as ZodNativeEnum<EnumLike>
+      const schema_ = schema__ as ZodNativeEnum<EnumLike>
 
       return {
         enum: Object.values(schema_._def.values),
@@ -334,7 +343,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodArray: {
-      const schema_ = schema as ZodArray<ZodTypeAny>
+      const schema_ = schema__ as ZodArray<ZodTypeAny>
       const def = schema_._def
 
       const json: JSONSchema = { type: 'array' }
@@ -356,7 +365,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodTuple: {
-      const schema_ = schema as ZodTuple<
+      const schema_ = schema__ as ZodTuple<
         [ZodTypeAny, ...ZodTypeAny[]],
         ZodTypeAny | null
       >
@@ -383,7 +392,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodObject: {
-      const schema_ = schema as ZodObject<ZodRawShape>
+      const schema_ = schema__ as ZodObject<ZodRawShape>
 
       const json: JSONSchema = { type: 'object' }
       const properties: Record<string, JSONSchema> = {}
@@ -435,7 +444,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodRecord: {
-      const schema_ = schema as ZodRecord<KeySchema, ZodAny>
+      const schema_ = schema__ as ZodRecord<KeySchema, ZodAny>
 
       const json: JSONSchema = { type: 'object' }
 
@@ -448,7 +457,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodSet: {
-      const schema_ = schema as ZodSet
+      const schema_ = schema__ as ZodSet
 
       return {
         type: 'array',
@@ -457,7 +466,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodMap: {
-      const schema_ = schema as ZodMap
+      const schema_ = schema__ as ZodMap
 
       return {
         type: 'array',
@@ -475,7 +484,7 @@ export function zodToJsonSchema(
 
     case ZodFirstPartyTypeKind.ZodUnion:
     case ZodFirstPartyTypeKind.ZodDiscriminatedUnion: {
-      const schema_ = schema as
+      const schema_ = schema__ as
         | ZodUnion<ZodUnionOptions>
         | ZodDiscriminatedUnion<string, [ZodObject<any>, ...ZodObject<any>[]]>
 
@@ -489,7 +498,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodIntersection: {
-      const schema_ = schema as ZodIntersection<ZodTypeAny, ZodTypeAny>
+      const schema_ = schema__ as ZodIntersection<ZodTypeAny, ZodTypeAny>
 
       const allOf: JSONSchema[] = []
 
@@ -501,7 +510,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodLazy: {
-      const schema_ = schema as ZodLazy<ZodTypeAny>
+      const schema_ = schema__ as ZodLazy<ZodTypeAny>
 
       const maxLazyDepth = childOptions?.maxLazyDepth ?? 5
       const lazyDepth = childOptions?.lazyDepth ?? 0
@@ -523,7 +532,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodOptional: {
-      const schema_ = schema as ZodOptional<ZodTypeAny>
+      const schema_ = schema__ as ZodOptional<ZodTypeAny>
 
       const inner = zodToJsonSchema(schema_._def.innerType, childOptions)
 
@@ -533,17 +542,17 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodReadonly: {
-      const schema_ = schema as ZodReadonly<ZodTypeAny>
+      const schema_ = schema__ as ZodReadonly<ZodTypeAny>
       return zodToJsonSchema(schema_._def.innerType, childOptions)
     }
 
     case ZodFirstPartyTypeKind.ZodDefault: {
-      const schema_ = schema as ZodDefault<ZodTypeAny>
+      const schema_ = schema__ as ZodDefault<ZodTypeAny>
       return zodToJsonSchema(schema_._def.innerType, childOptions)
     }
 
     case ZodFirstPartyTypeKind.ZodEffects: {
-      const schema_ = schema as ZodEffects<ZodTypeAny>
+      const schema_ = schema__ as ZodEffects<ZodTypeAny>
 
       if (
         schema_._def.effect.type === 'transform'
@@ -556,17 +565,17 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodCatch: {
-      const schema_ = schema as ZodCatch<ZodTypeAny>
+      const schema_ = schema__ as ZodCatch<ZodTypeAny>
       return zodToJsonSchema(schema_._def.innerType, childOptions)
     }
 
     case ZodFirstPartyTypeKind.ZodBranded: {
-      const schema_ = schema as ZodBranded<ZodTypeAny, string | number | symbol>
+      const schema_ = schema__ as ZodBranded<ZodTypeAny, string | number | symbol>
       return zodToJsonSchema(schema_._def.type, childOptions)
     }
 
     case ZodFirstPartyTypeKind.ZodPipeline: {
-      const schema_ = schema as ZodPipeline<ZodTypeAny, ZodTypeAny>
+      const schema_ = schema__ as ZodPipeline<ZodTypeAny, ZodTypeAny>
       return zodToJsonSchema(
         childOptions?.mode === 'output' ? schema_._def.out : schema_._def.in,
         childOptions,
@@ -574,7 +583,7 @@ export function zodToJsonSchema(
     }
 
     case ZodFirstPartyTypeKind.ZodNullable: {
-      const schema_ = schema as ZodNullable<ZodTypeAny>
+      const schema_ = schema__ as ZodNullable<ZodTypeAny>
 
       const inner = zodToJsonSchema(schema_._def.innerType, childOptions)
 

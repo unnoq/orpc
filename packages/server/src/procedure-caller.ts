@@ -2,7 +2,7 @@ import type { SchemaInput, SchemaOutput } from '@orpc/contract'
 import type { Hooks, PartialOnUndefinedDeep, Value } from '@orpc/shared'
 import type { Lazy } from './lazy'
 import type { MiddlewareMeta } from './middleware'
-import type { ANY_LAZY_PROCEDURE, ANY_PROCEDURE, Procedure } from './procedure'
+import type { ANY_LAZY_PROCEDURE, ANY_PROCEDURE, Procedure, WELL_DEFINED_PROCEDURE } from './procedure'
 import type { Caller, Context, Meta } from './types'
 import { executeWithHooks, trim, value } from '@orpc/shared'
 import { ORPCError } from '@orpc/shared/error'
@@ -48,26 +48,27 @@ export function createProcedureCaller<
     const [input, callerOptions] = args
 
     const path = options.path ?? []
-    const procedure = await loadProcedure(options.procedure)
+    const procedure = await loadProcedure(options.procedure) as WELL_DEFINED_PROCEDURE
     const context = await value(options.context)
 
     const execute = async () => {
-      const validInput = (() => {
+      const validInput = await (async () => {
         const schema = procedure.zz$p.contract.zz$cp.InputSchema
         if (!schema) {
           return input
         }
 
-        try {
-          return schema.parse(input)
-        }
-        catch (e) {
+        const result = await schema['~standard'].validate(input)
+
+        if (result.issues) {
           throw new ORPCError({
             message: 'Validation input failed',
             code: 'BAD_REQUEST',
-            cause: e,
+            issues: result.issues,
           })
         }
+
+        return result.value
       })()
 
       const meta: Meta = {
@@ -108,15 +109,14 @@ export function createProcedureCaller<
           return output
         }
 
-        const result = await schema.safeParseAsync(output)
-        if (result.error) {
+        const result = await schema['~standard'].validate(output)
+        if (result.issues) {
           throw new ORPCError({
             message: 'Validation output failed',
             code: 'INTERNAL_SERVER_ERROR',
-            cause: result.error,
           })
         }
-        return result.data
+        return result.value
       })()
 
       return validOutput

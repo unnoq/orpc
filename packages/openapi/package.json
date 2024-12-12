@@ -53,6 +53,7 @@
     "@orpc/shared": "workspace:*",
     "@orpc/transformer": "workspace:*",
     "@orpc/zod": "workspace:*",
+    "@standard-schema/spec": "1.0.0-beta.4",
     "escape-string-regexp": "^5.0.0",
     "json-schema-typed": "^8.0.1",
     "openapi3-ts": "^4.4.0"

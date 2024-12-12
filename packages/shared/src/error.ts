@@ -1,4 +1,4 @@
-import { ZodError, type ZodIssue } from 'zod'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 
 export const ORPC_ERROR_CODE_STATUSES = {
   BAD_REQUEST: 400,
@@ -30,7 +30,7 @@ export interface ORPCErrorJSON<TCode extends ORPCErrorCode, TData> {
   status: number
   message: string
   data: TData
-  issues?: ZodIssue[]
+  issues?: readonly StandardSchemaV1.Issue[]
 }
 
 export type ANY_ORPC_ERROR_JSON = ORPCErrorJSON<any, any>
@@ -43,6 +43,7 @@ export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
       status?: number
       message?: string
       cause?: unknown
+      issues?: readonly StandardSchemaV1.Issue[]
     } & (undefined extends TData ? { data?: TData } : { data: TData }),
   ) {
     if (zz$oe.status && (zz$oe.status < 400 || zz$oe.status >= 600)) {
@@ -64,12 +65,8 @@ export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
     return this.zz$oe.data as TData
   }
 
-  get issues(): ZodIssue[] | undefined {
-    if (this.code === 'BAD_REQUEST' && this.zz$oe.cause instanceof ZodError) {
-      return this.zz$oe.cause.issues
-    }
-
-    return undefined
+  get issues(): readonly StandardSchemaV1.Issue[] | undefined {
+    return this.zz$oe.issues
   }
 
   toJSON(): ORPCErrorJSON<TCode, TData> {
@@ -103,9 +100,9 @@ export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
     return new ORPCError({
       code: json.code as ORPCErrorCode,
       status: json.status as number,
-      message: Reflect.get(json, 'message') as string,
-      data: Reflect.get(json, 'data') as any,
-      cause: 'issues' in json ? new ZodError(json.issues as any) : undefined,
+      message: (json as any).message as string,
+      data: (json as any).data as any,
+      issues: (json as any).issues as undefined | readonly StandardSchemaV1.Issue[],
     })
   }
 }

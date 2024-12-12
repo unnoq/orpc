@@ -171,7 +171,7 @@ export async function generateOpenAPI(
               in: 'path',
               required: true,
               schema: schema as any,
-              example: internal.inputExample?.[name],
+              example: (internal.inputExample as any)?.[name],
             }
           })
       })()
@@ -212,7 +212,7 @@ export async function generateOpenAPI(
               style: 'deepObject',
               required: inputSchema?.required?.includes(name) ?? false,
               schema: schema_ as any,
-              example: internal.inputExample?.[name],
+              example: (internal.inputExample as any)?.[name],
             }
           },
         )
@@ -263,12 +263,18 @@ export async function generateOpenAPI(
             isStillHasFileSchema ? 'multipart/form-data' : 'application/json'
           ] = {
             schema: schema as any,
-            example: internal.inputExample,
+            example: (internal.inputExample as any),
           }
         }
 
         return {
-          required: Boolean(internal.InputSchema?.isOptional()),
+          required: Boolean(
+            internal.InputSchema
+            && 'isOptional' in internal.InputSchema
+            && typeof internal.InputSchema.isOptional === 'function'
+              ? internal.InputSchema.isOptional()
+              : false,
+          ),
           content,
         }
       })()

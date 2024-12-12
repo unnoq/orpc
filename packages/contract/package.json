@@ -41,10 +41,8 @@
     "build:watch": "pnpm run build --watch",
     "type:check": "tsc -b"
   },
-  "peerDependencies": {
-    "zod": ">=3.23.0"
-  },
   "dependencies": {
-    "@orpc/shared": "workspace:*"
+    "@orpc/shared": "workspace:*",
+    "@standard-schema/spec": "1.0.0-beta.4"
   }
 }

@@ -184,9 +184,9 @@ importers:
       '@orpc/shared':
         specifier: workspace:*
         version: link:../shared
-      zod:
-        specifier: '>=3.23.0'
-        version: 3.24.1
+      '@standard-schema/spec':
+        specifier: 1.0.0-beta.4
+        version: 1.0.0-beta.4
 
   packages/next:
     dependencies:
@@ -227,6 +227,9 @@ importers:
       '@orpc/zod':
         specifier: workspace:*
         version: link:../zod
+      '@standard-schema/spec':
+        specifier: 1.0.0-beta.4
+        version: 1.0.0-beta.4
       escape-string-regexp:
         specifier: ^5.0.0
         version: 5.0.0
@@ -311,9 +314,6 @@ importers:
       '@orpc/zod':
         specifier: workspace:*
         version: link:../zod
-      zod:
-        specifier: '>=3.23.0'
-        version: 3.24.1
     devDependencies:
       '@orpc/openapi':
         specifier: workspace:*
@@ -321,6 +321,9 @@ importers:
 
   packages/shared:
     dependencies:
+      '@standard-schema/spec':
+        specifier: 1.0.0-beta.4
+        version: 1.0.0-beta.4
       is-what:
         specifier: ^5.0.2
         version: 5.0.2
@@ -330,9 +333,6 @@ importers:
       type-fest:
         specifier: ^4.26.1
         version: 4.30.0
-      zod:
-        specifier: ^3.24.1
-        version: 3.24.1
 
   packages/transformer:
     dependencies:
@@ -1860,6 +1860,9 @@ packages:
 
   '@shikijs/vscode-textmate@9.3.1':
     resolution: {integrity: sha512-79QfK1393x9Ho60QFyLti+QfdJzRQCVLFb97kOIV7Eo9vQU/roINgk7m24uv0a7AUvN//RDH36FLjjK48v0s9g==}
+
+  '@standard-schema/spec@1.0.0-beta.4':
+    resolution: {integrity: sha512-d3IxtzLo7P1oZ8s8YNvxzBUXRXojSut8pbPrTYtzsc5sn4+53jVqbk66pQerSZbZSJZQux6LkclB/+8IDordHg==}
 
   '@stylistic/eslint-plugin@2.11.0':
     resolution: {integrity: sha512-PNRHbydNG5EH8NK4c+izdJlxajIR6GxcUhzsYNRsn6Myep4dsZt0qFCz3rCPnkvgO5FYibDcMqgNHUT+zvjYZw==}
@@ -6584,6 +6587,8 @@ snapshots:
       '@types/hast': 3.0.4
 
   '@shikijs/vscode-textmate@9.3.1': {}
+
+  '@standard-schema/spec@1.0.0-beta.4': {}
 
   '@stylistic/eslint-plugin@2.11.0(eslint@9.15.0(jiti@2.1.0))(typescript@5.7.2)':
     dependencies:

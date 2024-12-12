@@ -48,8 +48,7 @@
     "type:check": "tsc -b"
   },
   "peerDependencies": {
-    "@orpc/zod": "workspace:*",
-    "zod": ">=3.23.0"
+    "@orpc/zod": "workspace:*"
   },
   "dependencies": {
     "@orpc/contract": "workspace:*",

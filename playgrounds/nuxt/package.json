@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "orpc-nuxt-playground",
   "type": "module",
   "private": true,
   "scripts": {

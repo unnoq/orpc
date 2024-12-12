@@ -48,9 +48,9 @@
     "type:check": "tsc -b"
   },
   "dependencies": {
+    "@standard-schema/spec": "1.0.0-beta.4",
     "is-what": "^5.0.2",
     "radash": "^12.1.0",
-    "type-fest": "^4.26.1",
-    "zod": "^3.24.1"
+    "type-fest": "^4.26.1"
   }
 }

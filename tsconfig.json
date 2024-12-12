@@ -11,7 +11,9 @@
     { "path": "./packages/client" },
     { "path": "./packages/react" },
     { "path": "./packages/transformer" },
-    { "path": "./packages/zod" }
+    { "path": "./packages/zod" },
+    { "path": "./packages/react-query" },
+    { "path": "./packages/vue-query" }
   ],
   "include": [
     "playground",
