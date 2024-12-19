@@ -23,7 +23,7 @@ describe('useQuery', () => {
     // @ts-expect-error -- invalid input
     const { result } = renderHook(() => useQuery(orpc.user.create.queryOptions({ input: {} }), queryClient))
 
-    await vi.waitFor(() => expect(result.current.error).toEqual(new Error('Validation input failed')))
+    await vi.waitFor(() => expect(result.current.error).toEqual(new Error('Input validation failed')))
 
     expect(queryClient.getQueryData(orpc.ping.key({ type: 'query' }))).toEqual(undefined)
   })

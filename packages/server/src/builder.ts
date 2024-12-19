@@ -1,204 +1,53 @@
-import type {
-  ANY_CONTRACT_PROCEDURE,
-  ContractRouter,
-  HTTPPath,
-  RouteOptions,
-  Schema,
-  SchemaInput,
-  SchemaOutput,
-} from '@orpc/contract'
-import type { IsEqual } from '@orpc/shared'
-import type { DecoratedLazy } from './lazy'
-import type { DecoratedProcedure, Procedure, ProcedureFunc } from './procedure'
-import type { HandledRouter, Router } from './router'
-import type { Context, MergeContext } from './types'
-import {
-  ContractProcedure,
-  isContractProcedure,
-} from '@orpc/contract'
-import {
-  type DecoratedMiddleware,
-  decorateMiddleware,
-  type MapInputMiddleware,
-  type Middleware,
-} from './middleware'
-import { decorateProcedure } from './procedure'
+import type { ANY_CONTRACT_PROCEDURE, ContractRouter, HTTPPath, RouteOptions, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { DecoratedLazy } from './lazy-decorated'
+import type { Middleware } from './middleware'
+import type { DecoratedMiddleware } from './middleware-decorated'
+import type { Router } from './router'
+import type { AdaptedRouter } from './router-builder'
+import type { Context, MergeContext, WELL_CONTEXT } from './types'
+import { ContractProcedure } from '@orpc/contract'
+import { type ChainableImplementer, createChainableImplementer } from './implementer-chainable'
+import { decorateMiddleware } from './middleware-decorated'
+import { Procedure, type ProcedureFunc } from './procedure'
 import { ProcedureBuilder } from './procedure-builder'
-import { ProcedureImplementer } from './procedure-implementer'
+import { type DecoratedProcedure, decorateProcedure } from './procedure-decorated'
 import { RouterBuilder } from './router-builder'
-import {
-  type ChainedRouterImplementer,
-  chainRouterImplementer,
-} from './router-implementer'
+
+export interface BuilderDef<TContext extends Context, TExtraContext extends Context> {
+  middlewares?: Middleware<MergeContext<TContext, TExtraContext>, Partial<TExtraContext> | undefined, unknown, any>[]
+}
 
 export class Builder<TContext extends Context, TExtraContext extends Context> {
-  constructor(
-    public zz$b: {
-      middlewares?: Middleware<any, any, any, any>[]
-    } = {},
-  ) { }
+  '~type' = 'Builder' as const
+  '~orpc': BuilderDef<TContext, TExtraContext>
 
-  /**
-   * Self chainable
-   */
-
-  context<UContext extends Context>(): IsEqual<UContext, Context> extends true
-    ? Builder<TContext, TExtraContext>
-    : Builder<UContext, TExtraContext> {
-    return this as any
+  constructor(def: BuilderDef<TContext, TExtraContext>) {
+    this['~orpc'] = def
   }
 
-  use<
-    UExtraContext extends
-    | Partial<MergeContext<Context, MergeContext<TContext, TExtraContext>>>
-    | undefined = undefined,
-  >(
+  context<UContext extends Context = WELL_CONTEXT>(): Builder<UContext, undefined> {
+    return new Builder({})
+  }
+
+  use<U extends Context & Partial<MergeContext<TContext, TExtraContext>> | undefined = undefined>(
     middleware: Middleware<
       MergeContext<TContext, TExtraContext>,
-      UExtraContext,
+      U,
       unknown,
       unknown
     >,
-  ): Builder<TContext, MergeContext<TExtraContext, UExtraContext>>
-
-  use<
-    UExtraContext extends
-    | Partial<MergeContext<Context, MergeContext<TContext, TExtraContext>>>
-    | undefined = undefined,
-    UMappedInput = unknown,
-  >(
-    middleware: Middleware<
-      MergeContext<TContext, TExtraContext>,
-      UExtraContext,
-      UMappedInput,
-      unknown
-    >,
-    mapInput: MapInputMiddleware<unknown, UMappedInput>,
-  ): Builder<TContext, MergeContext<TExtraContext, UExtraContext>>
-
-  use(
-    middleware: Middleware<any, any, any, any>,
-    mapInput?: MapInputMiddleware<any, any>,
-  ): Builder<any, any> {
-    const middleware_ = mapInput
-      ? decorateMiddleware(middleware).mapInput(mapInput)
-      : middleware
-
+  ): Builder<TContext, MergeContext<TExtraContext, U>> {
     return new Builder({
-      ...this.zz$b,
-      middlewares: [...(this.zz$b.middlewares || []), middleware_],
+      ...this['~orpc'],
+      middlewares: [...(this['~orpc'].middlewares ?? []), middleware as any],
     })
   }
 
-  /**
-   * Convert to ContractProcedureBuilder
-   */
-
-  route(
-    route: RouteOptions,
-  ): ProcedureBuilder<TContext, TExtraContext, undefined, undefined> {
-    return new ProcedureBuilder({
-      middlewares: this.zz$b.middlewares,
-      contract: new ContractProcedure({
-        route,
-        InputSchema: undefined,
-        OutputSchema: undefined,
-      }),
-    })
-  }
-
-  input<USchema extends Schema = undefined>(
-    schema: USchema,
-    example?: SchemaInput<USchema>,
-  ): ProcedureBuilder<TContext, TExtraContext, USchema, undefined> {
-    return new ProcedureBuilder({
-      middlewares: this.zz$b.middlewares,
-      contract: new ContractProcedure({
-        OutputSchema: undefined,
-        InputSchema: schema,
-        inputExample: example,
-      }),
-    })
-  }
-
-  output<USchema extends Schema = undefined>(
-    schema: USchema,
-    example?: SchemaOutput<USchema>,
-  ): ProcedureBuilder<TContext, TExtraContext, undefined, USchema> {
-    return new ProcedureBuilder({
-      middlewares: this.zz$b.middlewares,
-      contract: new ContractProcedure({
-        InputSchema: undefined,
-        OutputSchema: schema,
-        outputExample: example,
-      }),
-    })
-  }
-
-  /**
-   * Convert to Procedure
-   */
-  func<UFuncOutput = undefined>(
-    func: ProcedureFunc<
-      TContext,
-      TExtraContext,
-      undefined,
-      undefined,
-      UFuncOutput
-    >,
-  ): DecoratedProcedure<
-      TContext,
-      TExtraContext,
-      undefined,
-      undefined,
-      UFuncOutput
-    > {
-    return decorateProcedure({
-      zz$p: {
-        middlewares: this.zz$b.middlewares,
-        contract: new ContractProcedure({
-          InputSchema: undefined,
-          OutputSchema: undefined,
-        }),
-        func,
-      },
-    })
-  }
-
-  /**
-   * Convert to ProcedureImplementer | RouterBuilder
-   */
-
-  contract<UContract extends ANY_CONTRACT_PROCEDURE | ContractRouter>(
-    contract: UContract,
-  ): UContract extends ContractProcedure<
-      infer UInputSchema,
-      infer UOutputSchema
-    >
-      ? ProcedureImplementer<TContext, TExtraContext, UInputSchema, UOutputSchema>
-      : UContract extends ContractRouter
-        ? ChainedRouterImplementer<TContext, UContract, TExtraContext>
-        : never {
-    if (isContractProcedure(contract)) {
-      return new ProcedureImplementer({
-        contract,
-        middlewares: this.zz$b.middlewares,
-      }) as any
-    }
-
-    return chainRouterImplementer(
-      contract as ContractRouter,
-      this.zz$b.middlewares,
-    ) as any
-  }
-
-  /**
-   * Create ExtendedMiddleware
-   */
-
-  // TODO: TOutput always any, infer not work at all, because TOutput used inside middleware params,
-  // solution (maybe): create new generic for .output() method
-  middleware<UExtraContext extends Context = undefined, TInput = unknown, TOutput = any>(
+  middleware<
+    UExtraContext extends Context & Partial<MergeContext<TContext, TExtraContext>> | undefined = undefined,
+    TInput = unknown,
+    TOutput = any,
+  >(
     middleware: Middleware<
       MergeContext<TContext, TExtraContext>,
       UExtraContext,
@@ -214,33 +63,87 @@ export class Builder<TContext extends Context, TExtraContext extends Context> {
     return decorateMiddleware(middleware)
   }
 
+  route(route: RouteOptions): ProcedureBuilder<TContext, TExtraContext, undefined, undefined> {
+    return new ProcedureBuilder({
+      middlewares: this['~orpc'].middlewares,
+      contract: new ContractProcedure({
+        route,
+        InputSchema: undefined,
+        OutputSchema: undefined,
+      }),
+    })
+  }
+
+  input<USchema extends Schema = undefined>(
+    schema: USchema,
+    example?: SchemaInput<USchema>,
+  ): ProcedureBuilder<TContext, TExtraContext, USchema, undefined> {
+    return new ProcedureBuilder({
+      middlewares: this['~orpc'].middlewares,
+      contract: new ContractProcedure({
+        OutputSchema: undefined,
+        InputSchema: schema,
+        inputExample: example,
+      }),
+    })
+  }
+
+  output<USchema extends Schema = undefined>(
+    schema: USchema,
+    example?: SchemaOutput<USchema>,
+  ): ProcedureBuilder<TContext, TExtraContext, undefined, USchema> {
+    return new ProcedureBuilder({
+      middlewares: this['~orpc'].middlewares,
+      contract: new ContractProcedure({
+        InputSchema: undefined,
+        OutputSchema: schema,
+        outputExample: example,
+      }),
+    })
+  }
+
+  func<UFuncOutput = undefined>(
+    func: ProcedureFunc<TContext, TExtraContext, undefined, undefined, UFuncOutput>,
+  ): DecoratedProcedure<TContext, TExtraContext, undefined, undefined, UFuncOutput> {
+    return decorateProcedure(new Procedure({
+      middlewares: this['~orpc'].middlewares,
+      contract: new ContractProcedure({
+        InputSchema: undefined,
+        OutputSchema: undefined,
+      }),
+      func,
+    }))
+  }
+
   prefix(prefix: HTTPPath): RouterBuilder<TContext, TExtraContext> {
     return new RouterBuilder({
-      ...this.zz$b,
+      middlewares: this['~orpc'].middlewares,
       prefix,
     })
   }
 
   tags(...tags: string[]): RouterBuilder<TContext, TExtraContext> {
     return new RouterBuilder({
-      ...this.zz$b,
+      middlewares: this['~orpc'].middlewares,
       tags,
     })
   }
 
-  /**
-   * Create DecoratedRouter
-   */
-  router<URouter extends Router<TContext>>(
-    router: URouter,
-  ): HandledRouter<URouter> {
-    return new RouterBuilder<TContext, TExtraContext>(this.zz$b).router(router)
+  router<U extends Router<MergeContext<TContext, TExtraContext>, any>>(
+    router: U,
+  ): AdaptedRouter<TContext, U> {
+    return new RouterBuilder<TContext, TExtraContext>(this['~orpc']).router(router)
   }
 
-  lazy<U extends Router<TContext> | Procedure<TContext, any, any, any, any>>(
+  lazy<U extends Router<MergeContext<TContext, TExtraContext>, any>>(
     loader: () => Promise<{ default: U }>,
-  ): DecoratedLazy<U> {
-    // TODO: replace with a more solid solution
-    return new RouterBuilder<TContext, TExtraContext>(this.zz$b).lazy(loader as any) as any
+  ): DecoratedLazy<AdaptedRouter<TContext, U>> {
+    return new RouterBuilder<TContext, TExtraContext>(this['~orpc']).lazy(loader)
+  }
+
+  contract<U extends ANY_CONTRACT_PROCEDURE | ContractRouter>(
+    contract: U,
+  ): ChainableImplementer<TContext, TExtraContext, U> {
+    return createChainableImplementer(contract, this['~orpc'].middlewares)
   }
 }

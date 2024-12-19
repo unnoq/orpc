@@ -40,27 +40,24 @@ export class ContractRouterBuilder {
   }
 
   router<T extends ContractRouter>(router: T): AdaptedContractRouter<T> {
+    if (isContractProcedure(router)) {
+      let decorated = DecoratedContractProcedure.decorate(router)
+
+      if (this['~orpc'].tags) {
+        decorated = decorated.unshiftTag(...this['~orpc'].tags)
+      }
+
+      if (this['~orpc'].prefix) {
+        decorated = decorated.prefix(this['~orpc'].prefix)
+      }
+
+      return decorated as any
+    }
+
     const adapted: ContractRouter = {}
 
     for (const key in router) {
-      const item = router[key]
-
-      if (isContractProcedure(item)) {
-        let decorated = DecoratedContractProcedure.decorate(item)
-
-        if (this['~orpc'].tags) {
-          decorated = decorated.pushTag(...this['~orpc'].tags)
-        }
-
-        if (this['~orpc'].prefix) {
-          decorated = decorated.prefix(this['~orpc'].prefix)
-        }
-
-        adapted[key] = decorated
-      }
-      else {
-        adapted[key] = this.router(item as ContractRouter)
-      }
+      adapted[key] = this.router(router[key]!)
     }
 
     return adapted as any

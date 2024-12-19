@@ -17,7 +17,7 @@ export interface Hooks<TInput, TOutput, TContext, TMeta extends (Record<string, 
   onFinish?: Arrayable<(state: OnSuccessState<TInput, TOutput> | OnErrorState<TInput>, context: TContext, meta: TMeta) => Promisable<void>>
 }
 
-export async function executeWithHooks<TInput, TOutput, TContext, TMeta extends (Record<string, unknown> & { next?: never }) | undefined>(
+export async function executeWithHooks<TInput, TOutput, TContext, TMeta extends (Record<string, any> & { next?: never }) | undefined>(
   options: {
     hooks?: Hooks<TInput, TOutput, TContext, TMeta>
     input: TInput

@@ -25,7 +25,7 @@ export class ContractBuilder {
     })
   }
 
-  input<U extends Schema>(schema: U, example?: SchemaInput<U>): DecoratedContractProcedure<U, undefined> {
+  input<U extends Schema = undefined>(schema: U, example?: SchemaInput<U>): DecoratedContractProcedure<U, undefined> {
     return new DecoratedContractProcedure({
       InputSchema: schema,
       inputExample: example,
@@ -33,7 +33,7 @@ export class ContractBuilder {
     })
   }
 
-  output<U extends Schema>(schema: U, example?: SchemaOutput<U>): DecoratedContractProcedure<undefined, U> {
+  output<U extends Schema = undefined>(schema: U, example?: SchemaOutput<U>): DecoratedContractProcedure<undefined, U> {
     return new DecoratedContractProcedure({
       OutputSchema: schema,
       outputExample: example,

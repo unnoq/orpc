@@ -1,122 +1,53 @@
-import type { ANY_PROCEDURE, Router } from '.'
-import type { Lazy } from './lazy'
-import { z } from 'zod'
-import { os } from '.'
-import { createLazy, decorateLazy } from './lazy'
+import type { ANY_LAZY, FlattenLazy, Lazy } from './lazy'
+import type { Procedure } from './procedure'
+import type { WELL_CONTEXT } from './types'
+import { flatLazy, isLazy, lazy, unlazy } from './lazy'
 
-const router = {
-  ping: os.input(z.string()).func(() => 'pong'),
-  pong: os.func(() => 'ping'),
-}
-const lazyPing = createLazy(() => Promise.resolve({ default: router.ping }))
-const lazyPong = createLazy(() => Promise.resolve({ default: router.pong }))
-const lazyRouter = createLazy(() => Promise.resolve({ default: router }))
-const nestedLazyRouter = createLazy(() => Promise.resolve({ default: lazyRouter }))
-const complexLazyRouter = createLazy(() => Promise.resolve({
-  default: {
-    ...router,
-    lazyRouter,
-    nestedLazyRouter,
-  },
-}))
+const procedure = {} as Procedure<WELL_CONTEXT, undefined, undefined, undefined, unknown>
 
-describe('DecoratedLazy', () => {
-  it('with procedure', () => {
-    const decorated = decorateLazy(lazyPing)
+const router = { procedure }
 
-    type IsLazyProcedure = typeof decorated extends Lazy<ANY_PROCEDURE> ? true : false
-    expectTypeOf<IsLazyProcedure>().toEqualTypeOf<true>()
+it('lazy', () => {
+  expectTypeOf(
+    lazy(() => Promise.resolve({ default: procedure })),
+  ).toMatchTypeOf<Lazy<typeof procedure>>()
 
-    expectTypeOf(decorated).toMatchTypeOf<
-      (input: string) => Promise<string>
-    >()
+  expectTypeOf(
+    lazy(() => Promise.resolve({ default: router })),
+  ).toMatchTypeOf<Lazy<typeof router>>()
+})
 
-    expectTypeOf(decorated('test')).toMatchTypeOf<Promise<string>>()
-  })
+it('isLazy', () => {
+  const item = {} as unknown
 
-  it('with router', () => {
-    const decorated = decorateLazy(lazyRouter)
+  if (isLazy(item)) {
+    expectTypeOf(item).toEqualTypeOf<ANY_LAZY>()
+  }
+})
 
-    type IsRouter = typeof decorated extends Router<any> ? true : false
-    expectTypeOf<IsRouter>().toEqualTypeOf<true>()
+it('unwrapLazy', () => {
+  expectTypeOf(
+    unlazy(lazy(() => Promise.resolve({ default: procedure }))),
+  ).toMatchTypeOf<Promise<{ default: typeof procedure }>>()
 
-    expectTypeOf(decorated).toMatchTypeOf<{
-      ping: (input: string) => Promise<string>
-      pong: () => Promise<string>
-    }>()
+  expectTypeOf(
+    unlazy(lazy(() => Promise.resolve({ default: router }))),
+  ).toMatchTypeOf<Promise<{ default: typeof router }>>()
+})
 
-    expectTypeOf(decorated.ping).toMatchTypeOf<(input: string) => Promise<string>>()
-    expectTypeOf(decorated.ping('test')).toMatchTypeOf<Promise<string>>()
+it('FlattenLazy', () => {
+  expectTypeOf<FlattenLazy<Lazy<Lazy<typeof procedure>>>>().toMatchTypeOf<Lazy<typeof procedure>>()
+  expectTypeOf < FlattenLazy<Lazy<Lazy<Lazy<typeof router>>>>>().toMatchTypeOf<Lazy<typeof router>>()
+})
 
-    expectTypeOf(decorated.pong).toMatchTypeOf<() => Promise<string>>()
-    expectTypeOf(decorated.pong()).toMatchTypeOf<Promise<string>>()
-  })
+it('flatLazy', () => {
+  expectTypeOf(
+    flatLazy(lazy(() => Promise.resolve({ default: lazy(() => Promise.resolve({ default: procedure })) }))),
+  ).toMatchTypeOf<Lazy<typeof procedure>>()
 
-  it('with nested router', () => {
-    const decorated = decorateLazy(nestedLazyRouter)
-
-    type IsRouter = typeof decorated extends Router<any> ? true : false
-    expectTypeOf<IsRouter>().toEqualTypeOf<true>()
-
-    expectTypeOf(decorated).toMatchTypeOf<{
-      ping: (input: string) => Promise<string>
-      pong: () => Promise<string>
-    }>()
-
-    expectTypeOf(decorated.ping).toMatchTypeOf<(input: string) => Promise<string>>()
-    expectTypeOf(decorated.ping('test')).toMatchTypeOf<Promise<string>>()
-
-    expectTypeOf(decorated.pong).toMatchTypeOf<() => Promise<string>>()
-    expectTypeOf(decorated.pong()).toMatchTypeOf<Promise<string>>()
-  })
-
-  it('with complex router', () => {
-    const decorated = decorateLazy(complexLazyRouter)
-
-    type IsRouter = typeof decorated extends Router<any> ? true : false
-    expectTypeOf<IsRouter>().toEqualTypeOf<true>()
-
-    expectTypeOf(decorated).toMatchTypeOf<{
-      ping: (input: string) => Promise<string>
-      pong: () => Promise<string>
-    }>()
-
-    expectTypeOf(decorated.nestedLazyRouter).toMatchTypeOf<{
-      ping: (input: string) => Promise<string>
-      pong: () => Promise<string>
-    }>()
-
-    expectTypeOf(decorated.nestedLazyRouter).toMatchTypeOf<{
-      ping: (input: string) => Promise<string>
-      pong: () => Promise<string>
-    }>()
-
-    expectTypeOf(decorated.ping).toMatchTypeOf<(input: string) => Promise<string>>()
-    expectTypeOf(decorated.ping('test')).toMatchTypeOf<Promise<string>>()
-
-    expectTypeOf(decorated.pong).toMatchTypeOf<() => Promise<string>>()
-    expectTypeOf(decorated.pong()).toMatchTypeOf<Promise<string>>()
-
-    expectTypeOf(decorated.lazyRouter).toMatchTypeOf<{
-      ping: (input: string) => Promise<string>
-      pong: () => Promise<string>
-    }>()
-
-    expectTypeOf(decorated.lazyRouter.ping).toMatchTypeOf<(input: string) => Promise<string>>()
-    expectTypeOf(decorated.lazyRouter.ping('test')).toMatchTypeOf<Promise<string>>()
-
-    expectTypeOf(decorated.lazyRouter.pong).toMatchTypeOf<() => Promise<string>>()
-    expectTypeOf(decorated.lazyRouter.pong()).toMatchTypeOf<Promise<string>>()
-
-    expectTypeOf(decorated.nestedLazyRouter).toMatchTypeOf<{
-      ping: (input: string) => Promise<string>
-      pong: () => Promise<string>
-    }>()
-
-    expectTypeOf(decorated.nestedLazyRouter.ping).toMatchTypeOf<(input: string) => Promise<string>>()
-    expectTypeOf(decorated.nestedLazyRouter.ping('test')).toMatchTypeOf<Promise<string>>()
-
-    expectTypeOf(decorated.nestedLazyRouter.pong).toMatchTypeOf<() => Promise<string>>()
-    expectTypeOf(decorated.nestedLazyRouter.pong()).toMatchTypeOf<Promise<string>>()
-  })
+  expectTypeOf(
+    flatLazy(lazy(() => Promise.resolve({ default: lazy(() => Promise.resolve({
+      default: lazy(() => Promise.resolve({ default: router })),
+    })) }))),
+  ).toMatchTypeOf<Lazy<typeof router>>()
 })

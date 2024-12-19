@@ -52,23 +52,29 @@ describe('prefix', () => {
   })
 })
 
-describe('pushTag', () => {
+describe('unshiftTag', () => {
   const decorated = new DecoratedContractProcedure({ InputSchema: undefined, OutputSchema: undefined })
 
   it('works', () => {
-    const tagged = decorated.pushTag('tag1', 'tag2')
+    const tagged = decorated.unshiftTag('tag1', 'tag2')
     expect(tagged).toBeInstanceOf(DecoratedContractProcedure)
     expect(tagged['~orpc']).toEqual({ route: { tags: ['tag1', 'tag2'] } })
 
-    const tagged2 = tagged.pushTag('tag3')
+    const tagged2 = tagged.unshiftTag('tag3')
     expect(tagged2).toBeInstanceOf(DecoratedContractProcedure)
-    expect(tagged2['~orpc']).toEqual({ route: { tags: ['tag1', 'tag2', 'tag3'] } })
+    expect(tagged2['~orpc']).toEqual({ route: { tags: ['tag3', 'tag1', 'tag2'] } })
   })
 
   it('not reference', () => {
-    const tagged = decorated.pushTag('tag1', 'tag2')
+    const tagged = decorated.unshiftTag('tag1', 'tag2')
     expect(tagged['~orpc']).not.toBe(decorated['~orpc'])
     expect(tagged).not.toBe(decorated)
+  })
+
+  it('prevent duplicate', () => {
+    const tagged = decorated.unshiftTag('tag1', 'tag2')
+    const tagged2 = tagged.unshiftTag('tag1', 'tag3')
+    expect(tagged2['~orpc'].route?.tags).toEqual(['tag1', 'tag3', 'tag2'])
   })
 })
 

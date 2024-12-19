@@ -63,7 +63,7 @@ describe('useAction', () => {
     expect(result.current.isError).toBe(true)
     expect(result.current.input).toEqual({ value: 12334 })
     expect(result.current.output).toEqual(undefined)
-    expect(result.current.error?.message).toEqual('Validation input failed')
+    expect(result.current.error?.message).toEqual('Input validation failed')
   })
 
   it('return result on execute', async () => {
@@ -86,7 +86,7 @@ describe('useAction', () => {
     const [output2, error2, status2] = await result.current.execute({ value: 123 })
 
     expect(output2).toBe(undefined)
-    expect(error2?.message).toBe('Validation input failed')
+    expect(error2?.message).toBe('Input validation failed')
     expect(status2).toBe('error')
 
     await vi.waitFor(() => expect(result.current.status).toBe('error'))
@@ -94,7 +94,7 @@ describe('useAction', () => {
     expect(result.current.isError).toBe(true)
     expect(result.current.input).toEqual({ value: 123 })
     expect(result.current.output).toEqual(undefined)
-    expect(result.current.error?.message).toBe('Validation input failed')
+    expect(result.current.error?.message).toBe('Input validation failed')
   })
 
   it('hooks', async () => {

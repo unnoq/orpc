@@ -1,13 +1,13 @@
-import type { Router } from '../router'
+import type { Context } from '../types'
 import type { FetchHandler, FetchHandlerOptions } from './types'
 import { ORPCError } from '@orpc/shared/error'
 
-export type HandleFetchRequestOptions<TRouter extends Router<any>> = FetchHandlerOptions<TRouter> & {
+export type HandleFetchRequestOptions<T extends Context> = FetchHandlerOptions<T> & {
   handlers: readonly [FetchHandler, ...FetchHandler[]]
 }
 
-export async function handleFetchRequest< TRouter extends Router<any>>(
-  options: HandleFetchRequestOptions<TRouter>,
+export async function handleFetchRequest<T extends Context>(
+  options: HandleFetchRequestOptions<T>,
 ) {
   for (const handler of options.handlers) {
     const response = await handler(options)

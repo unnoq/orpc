@@ -1,84 +1,64 @@
-import type { DecoratedLazy } from './lazy'
+import type { ContractRouter } from '@orpc/contract'
+import type { FlattenLazy } from './lazy'
 import type { Middleware } from './middleware'
-import type { HandledRouter, RouterWithContract } from './router'
-import type { Context } from './types'
-import { type ContractProcedure, type ContractRouter, isContractProcedure } from '@orpc/contract'
-import { createLazy, decorateLazy } from './lazy'
-import { ProcedureImplementer } from './procedure-implementer'
+import type { Router } from './router'
+import type { AdaptedRouter } from './router-builder'
+import type { Context, MergeContext } from './types'
+import { setRouterContract } from './hidden'
 import { RouterBuilder } from './router-builder'
 
-export const ROUTER_CONTRACT_SYMBOL = Symbol('ORPC_ROUTER_CONTRACT')
+export interface RouterImplementerDef<
+  TContext extends Context,
+  TExtraContext extends Context,
+  TContract extends ContractRouter,
+> {
+  middlewares?: Middleware<MergeContext<TContext, TExtraContext>, Partial<TExtraContext> | undefined, unknown, any>[]
+  contract: TContract
+}
 
 export class RouterImplementer<
   TContext extends Context,
+  TExtraContext extends Context,
   TContract extends ContractRouter,
 > {
-  constructor(
-    public zz$ri: {
-      contract: TContract
-    },
-  ) {}
+  '~type' = 'RouterImplementer' as const
+  '~orpc': RouterImplementerDef<TContext, TExtraContext, TContract>
 
-  router<U extends RouterWithContract<TContext, TContract>>(
+  constructor(def: RouterImplementerDef<TContext, TExtraContext, TContract>) {
+    this['~orpc'] = def
+  }
+
+  use<U extends Context & Partial<MergeContext<TContext, TExtraContext>> | undefined = undefined>(
+    middleware: Middleware<
+      MergeContext<TContext, TExtraContext>,
+      U,
+      unknown,
+      unknown
+    >,
+  ): RouterImplementer<TContext, MergeContext<TExtraContext, U>, TContract> {
+    return new RouterImplementer({
+      ...this['~orpc'],
+      middlewares: [...(this['~orpc'].middlewares ?? []), middleware as any],
+    })
+  }
+
+  router<U extends Router<MergeContext<TContext, TExtraContext>, TContract>>(
     router: U,
-  ): HandledRouter<U> {
-    return Object.assign(new RouterBuilder<TContext, undefined>({}).router(router), {
-      [ROUTER_CONTRACT_SYMBOL]: this.zz$ri.contract,
-    })
+  ): AdaptedRouter<TContext, U> {
+    const adapted = new RouterBuilder(this['~orpc']).router(router)
+
+    const contracted = setRouterContract(adapted, this['~orpc'].contract)
+
+    return contracted
   }
 
-  lazy<U extends RouterWithContract<TContext, TContract>>(
+  lazy<U extends Router<MergeContext<TContext, TExtraContext>, TContract>>(
     loader: () => Promise<{ default: U }>,
-  ): DecoratedLazy<U> {
-    const lazy = createLazy(loader)
-    const decorated = decorateLazy(lazy)
+  ): AdaptedRouter<TContext, FlattenLazy<U>> {
+    const adapted = new RouterBuilder(this['~orpc']).lazy(loader)
 
-    return Object.assign(decorated, {
-      [ROUTER_CONTRACT_SYMBOL]: this.zz$ri.contract,
-    })
+    const contracted = setRouterContract(adapted, this['~orpc'].contract)
+
+    return contracted
   }
-}
-
-export type ChainedRouterImplementer<
-  TContext extends Context,
-  TContract extends ContractRouter,
-  TExtraContext extends Context,
-> = {
-  [K in keyof TContract]: TContract[K] extends ContractProcedure<
-    infer UInputSchema,
-    infer UOutputSchema
-  >
-    ? ProcedureImplementer<TContext, TExtraContext, UInputSchema, UOutputSchema>
-    : TContract[K] extends ContractRouter
-      ? ChainedRouterImplementer<TContext, TContract[K], TExtraContext>
-      : never
-} & RouterImplementer<TContext, TContract>
-
-export function chainRouterImplementer<
-  TContext extends Context,
-  TContract extends ContractRouter,
-  TExtraContext extends Context,
->(
-  contract: TContract,
-  middlewares?: Middleware<any, any, any, any>[],
-): ChainedRouterImplementer<TContext, TContract, TExtraContext> {
-  const result: Record<string, unknown> = {}
-
-  for (const key in contract) {
-    const item = contract[key]
-
-    if (isContractProcedure(item)) {
-      result[key] = new ProcedureImplementer({
-        contract: item,
-        middlewares,
-      })
-    }
-    else {
-      result[key] = chainRouterImplementer(item as ContractRouter, middlewares)
-    }
-  }
-
-  const implementer = new RouterImplementer({ contract })
-
-  return Object.assign(implementer, result) as any
 }

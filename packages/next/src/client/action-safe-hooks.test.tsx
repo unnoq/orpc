@@ -65,7 +65,7 @@ describe('useSafeAction', () => {
     expect(result.current.isPending).toBe(false)
     expect(result.current.isError).toBe(true)
     expect(result.current.output).toBe(undefined)
-    expect(result.current.error?.message).toEqual('Validation input failed')
+    expect(result.current.error?.message).toEqual('Input validation failed')
     expect(result.current.input).toEqual({ value: 12334 })
   })
 

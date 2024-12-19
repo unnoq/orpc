@@ -56,17 +56,17 @@ describe('prefix', () => {
 
 describe('pushTag', () => {
   it('return ContractProcedure', () => {
-    const tagged = decorated.pushTag('tag', 'tag2')
+    const tagged = decorated.unshiftTag('tag', 'tag2')
     expectTypeOf(tagged).toEqualTypeOf<DecoratedContractProcedure<undefined, undefined>>()
   })
 
   it('throw error on invalid tag', () => {
-    decorated.pushTag('tag')
-    decorated.pushTag('tag', 'tag2')
+    decorated.unshiftTag('tag')
+    decorated.unshiftTag('tag', 'tag2')
     // @ts-expect-error - invalid tag
-    decorated.pushTag(1)
+    decorated.unshiftTag(1)
     // @ts-expect-error - invalid tag
-    decorated.pushTag({})
+    decorated.unshiftTag({})
   })
 })
 

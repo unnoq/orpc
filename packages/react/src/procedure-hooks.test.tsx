@@ -55,7 +55,7 @@ describe('useQuery', () => {
     await waitFor(() => expect(result.current.status).toBe('error'))
 
     expect((result.current.error as any).message).toEqual(
-      'Validation input failed',
+      'Input validation failed',
     )
   })
 })
@@ -143,7 +143,7 @@ describe('useInfiniteQuery', () => {
     await waitFor(() => expect(result.current.status).toBe('error'))
 
     expect((result.current.error as any).message).toEqual(
-      'Validation input failed',
+      'Input validation failed',
     )
   })
 })
@@ -186,7 +186,7 @@ describe('useSuspenseQuery', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('error-boundary')).toHaveTextContent(
-        'Validation input failed',
+        'Input validation failed',
       ),
     )
   })
@@ -274,7 +274,7 @@ describe('useSuspenseInfiniteQuery', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('error-boundary')).toHaveTextContent(
-        'Validation input failed',
+        'Input validation failed',
       ),
     )
   })
@@ -381,7 +381,7 @@ describe('useMutation', () => {
 
     await waitFor(() =>
       expect((result.current.error as any)?.message).toEqual(
-        'Validation input failed',
+        'Input validation failed',
       ),
     )
   })

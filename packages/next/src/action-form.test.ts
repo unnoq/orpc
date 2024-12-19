@@ -27,7 +27,7 @@ describe('createFormAction', () => {
       procedure,
     })
 
-    expect(formAction(new FormData())).rejects.toThrowError('Validation input failed')
+    expect(formAction(new FormData())).rejects.toThrowError('Input validation failed')
   })
 
   it('hooks', async () => {

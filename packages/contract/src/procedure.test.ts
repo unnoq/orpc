@@ -11,4 +11,10 @@ describe('isContractProcedure', () => {
     expect(1).not.toSatisfy(isContractProcedure)
     expect({ '~orpc': {} }).not.toSatisfy(isContractProcedure)
   })
+
+  it('works with raw object', () => {
+    expect(Object.assign({}, new ContractProcedure({ InputSchema: undefined, OutputSchema: undefined }))).toSatisfy(isContractProcedure)
+    expect(Object.assign({}, new ContractProcedure({ InputSchema: z.object({}), OutputSchema: undefined }))).toSatisfy(isContractProcedure)
+    expect(Object.assign({}, new ContractProcedure({ InputSchema: z.object({}), OutputSchema: undefined, route: {} }))).toSatisfy(isContractProcedure)
+  })
 })

@@ -3,6 +3,7 @@ export * from './function'
 export * from './hook'
 export * from './json'
 export * from './object'
+export * from './proxy'
 export * from './value'
 
 export { isPlainObject } from 'is-what'

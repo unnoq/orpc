@@ -1,164 +1,151 @@
-import type { SchemaInput, SchemaOutput } from '@orpc/contract'
-import type { Hooks, PartialOnUndefinedDeep, Value } from '@orpc/shared'
-import type { Lazy } from './lazy'
+import type { Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { Hooks, Value } from '@orpc/shared'
+import type { Lazyable } from './lazy'
 import type { MiddlewareMeta } from './middleware'
-import type { ANY_LAZY_PROCEDURE, ANY_PROCEDURE, Procedure, WELL_DEFINED_PROCEDURE } from './procedure'
-import type { Caller, Context, Meta } from './types'
-import { executeWithHooks, trim, value } from '@orpc/shared'
+import type {
+  ANY_PROCEDURE,
+  Procedure,
+} from './procedure'
+
+import type { Caller, Context, Meta, WELL_CONTEXT } from './types'
+import { executeWithHooks, value } from '@orpc/shared'
 import { ORPCError } from '@orpc/shared/error'
-import { isLazy, loadLazy } from './lazy'
-import { isProcedure } from './procedure'
+import { unlazy } from './lazy'
 import { mergeContext } from './utils'
 
+/**
+ * Options for creating a procedure caller with comprehensive type safety
+ */
 export type CreateProcedureCallerOptions<
-  T extends ANY_PROCEDURE | ANY_LAZY_PROCEDURE,
-> = T extends
-| Procedure<infer UContext, any, any, infer UOutputSchema, infer UFuncOutput>
-| Lazy<Procedure<infer UContext, any, any, infer UOutputSchema, infer UFuncOutput>> ? {
-  procedure: T
+  TContext extends Context,
+  TInputSchema extends Schema,
+  TOutputSchema extends Schema,
+  TFuncOutput extends SchemaInput<TOutputSchema>,
+> =
+  & {
+    procedure: Lazyable<Procedure<TContext, any, TInputSchema, TOutputSchema, TFuncOutput>>
 
-  /**
-   * This is helpful for logging and analytics.
-   *
-   * @internal
-   */
-  path?: string[]
-} & PartialOnUndefinedDeep<{
-  /**
-   * The context used when calling the procedure.
-   */
-  context: Value<UContext>
-}> & Hooks<unknown, SchemaOutput<UOutputSchema, UFuncOutput>, UContext, { path: string[], procedure: ANY_PROCEDURE }>
-  : never
-
-export type ProcedureCaller<
-  TProcedure extends ANY_PROCEDURE | ANY_LAZY_PROCEDURE,
-> = TProcedure extends
-| Procedure<any, any, infer UInputSchema, infer UOutputSchema, infer UFuncOutput >
-| Lazy<Procedure<any, any, infer UInputSchema, infer UOutputSchema, infer UFuncOutput >>
-  ? Caller<SchemaInput<UInputSchema>, SchemaOutput<UOutputSchema, UFuncOutput>>
-  : never
+    /**
+     * This is helpful for logging and analytics.
+     *
+     * @internal
+     */
+    path?: string[]
+  }
+  & ({
+    /**
+     * The context used when calling the procedure.
+     */
+    context: Value<TContext>
+  } | (undefined extends TContext ? { context?: undefined } : never))
+  & Hooks<unknown, SchemaOutput<TOutputSchema, TFuncOutput>, TContext, Meta>
 
 export function createProcedureCaller<
-  TProcedure extends ANY_PROCEDURE | ANY_LAZY_PROCEDURE,
+  TContext extends Context = WELL_CONTEXT,
+  TInputSchema extends Schema = undefined,
+  TOutputSchema extends Schema = undefined,
+  TFuncOutput extends SchemaInput<TOutputSchema> = SchemaInput<TOutputSchema>,
 >(
-  options: CreateProcedureCallerOptions<TProcedure>,
-): ProcedureCaller<TProcedure> {
-  const caller: Caller<unknown, unknown> = async (...args) => {
-    const [input, callerOptions] = args
-
+  options: CreateProcedureCallerOptions<TContext, TInputSchema, TOutputSchema, TFuncOutput>,
+): Caller<SchemaInput<TInputSchema>, SchemaOutput<TOutputSchema, TFuncOutput>> {
+  return async (...[input, callerOptions]) => {
     const path = options.path ?? []
-    const procedure = await loadProcedure(options.procedure) as WELL_DEFINED_PROCEDURE
-    const context = await value(options.context)
+    const { default: procedure } = await unlazy(options.procedure)
+    const context = await value(options.context) as TContext
 
-    const execute = async () => {
-      const validInput = await (async () => {
-        const schema = procedure.zz$p.contract['~orpc'].InputSchema
-        if (!schema) {
-          return input
-        }
-
-        const result = await schema['~standard'].validate(input)
-
-        if (result.issues) {
-          throw new ORPCError({
-            message: 'Validation input failed',
-            code: 'BAD_REQUEST',
-            issues: result.issues,
-          })
-        }
-
-        return result.value
-      })()
-
-      const meta: Meta = {
-        path,
-        procedure,
-        signal: callerOptions?.signal,
-      }
-
-      const middlewares = procedure.zz$p.middlewares ?? []
-      let currentMidIndex = 0
-      let currentContext: Context = context
-
-      const next: MiddlewareMeta<unknown>['next'] = async (nextOptions) => {
-        const mid = middlewares[currentMidIndex]
-        currentMidIndex += 1
-        currentContext = mergeContext(currentContext, nextOptions.context)
-
-        if (mid) {
-          return await mid(validInput, currentContext, {
-            ...meta,
-            next,
-            output: output => ({ output, context: undefined }),
-          })
-        }
-        else {
-          return {
-            output: await await procedure.zz$p.func(validInput, currentContext, meta),
-            context: currentContext,
-          }
-        }
-      }
-
-      const output = (await next({})).output
-
-      const validOutput = await (async () => {
-        const schema = procedure.zz$p.contract['~orpc'].OutputSchema
-        if (!schema) {
-          return output
-        }
-
-        const result = await schema['~standard'].validate(output)
-        if (result.issues) {
-          throw new ORPCError({
-            message: 'Validation output failed',
-            code: 'INTERNAL_SERVER_ERROR',
-          })
-        }
-        return result.value
-      })()
-
-      return validOutput
+    const meta: Meta = {
+      path,
+      procedure,
+      signal: callerOptions?.signal,
     }
 
-    const output = await executeWithHooks({
+    const executeWithValidation = async () => {
+      const validInput = await validateInput(procedure, input)
+
+      const output = await executeMiddlewareChain(
+        procedure,
+        validInput,
+        context,
+        meta,
+      )
+
+      return validateOutput(procedure, output) as SchemaOutput<TOutputSchema, TFuncOutput>
+    }
+
+    return executeWithHooks({
       hooks: options,
       input,
       context,
-      meta: {
-        path,
-        procedure,
-      },
-      execute,
+      meta,
+      execute: executeWithValidation,
     })
-
-    return output
   }
-
-  return caller as any
 }
 
-export async function loadProcedure(procedure: ANY_PROCEDURE | ANY_LAZY_PROCEDURE): Promise<ANY_PROCEDURE> {
-  let loadedProcedure: ANY_PROCEDURE
+async function validateInput(procedure: ANY_PROCEDURE, input: unknown) {
+  const schema = procedure['~orpc'].contract['~orpc'].InputSchema
+  if (!schema)
+    return input
 
-  if (isLazy(procedure)) {
-    loadedProcedure = (await loadLazy(procedure)).default
-  }
-  else {
-    loadedProcedure = procedure
-  }
-
-  if (!isProcedure(loadedProcedure)) {
+  const result = await schema['~standard'].validate(input)
+  if (result.issues) {
     throw new ORPCError({
-      code: 'NOT_FOUND',
-      message: 'Not found',
-      cause: new Error(trim(`
-          This error should be caught by the typescript compiler.
-          But if you still see this error, it means that you trying to call a lazy router (expected to be a lazy procedure).
-        `)),
+      message: 'Input validation failed',
+      code: 'BAD_REQUEST',
+      issues: result.issues,
     })
   }
 
-  return loadedProcedure
+  return result.value
+}
+
+async function validateOutput(procedure: ANY_PROCEDURE, output: unknown) {
+  const schema = procedure['~orpc'].contract['~orpc'].OutputSchema
+  if (!schema)
+    return output
+
+  const result = await schema['~standard'].validate(output)
+  if (result.issues) {
+    throw new ORPCError({
+      message: 'Output validation failed',
+      code: 'INTERNAL_SERVER_ERROR',
+      issues: result.issues,
+    })
+  }
+
+  return result.value
+}
+
+async function executeMiddlewareChain(
+  procedure: ANY_PROCEDURE,
+  input: unknown,
+  context: Context,
+  meta: Meta,
+) {
+  const middlewares = procedure['~orpc'].middlewares ?? []
+  let currentMidIndex = 0
+  let currentContext = context
+
+  const next: MiddlewareMeta<unknown>['next'] = async (nextOptions) => {
+    const mid = middlewares[currentMidIndex]
+    currentMidIndex += 1
+    currentContext = mergeContext(currentContext, nextOptions.context)
+
+    if (mid) {
+      return await mid(input, currentContext, {
+        ...meta,
+        next,
+        output: output => ({ output, context: undefined }),
+      })
+    }
+
+    const result = {
+      output: await procedure['~orpc'].func(input, currentContext, meta),
+      context: currentContext,
+    }
+
+    return result as any
+  }
+
+  return (await next({})).output
 }

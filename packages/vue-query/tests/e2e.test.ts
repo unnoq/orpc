@@ -37,7 +37,7 @@ describe('useQuery', () => {
     // @ts-expect-error -- invalid input
     const query = useQuery(orpc.user.create.queryOptions({ input: {} }), queryClient)
 
-    await vi.waitFor(() => expect(query.error.value).toEqual(new Error('Validation input failed')))
+    await vi.waitFor(() => expect(query.error.value).toEqual(new Error('Input validation failed')))
 
     expect(queryClient.getQueryData(orpc.ping.key({ type: 'query' }))).toEqual(undefined)
   })

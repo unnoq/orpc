@@ -14,7 +14,7 @@ describe('createSafeAction', () => {
     // @ts-expect-error - invalid input
     expect(safe({ name: 123 })).resolves.toEqual([undefined, {
       code: 'BAD_REQUEST',
-      message: 'Validation input failed',
+      message: 'Input validation failed',
       issues: [
         {
           code: 'invalid_type',

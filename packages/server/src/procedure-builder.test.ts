@@ -1,225 +1,111 @@
-import type { MiddlewareMeta } from './middleware'
-import type { ProcedureImplementer } from './procedure-implementer'
-import type { Meta } from './types'
 import { ContractProcedure } from '@orpc/contract'
 import { z } from 'zod'
-import { os } from '.'
-import { type DecoratedProcedure, isProcedure } from './procedure'
+import { isProcedure } from './procedure'
 import { ProcedureBuilder } from './procedure-builder'
+import { ProcedureImplementer } from './procedure-implementer'
 
-const schema1 = z.object({ id: z.string() })
-const example1 = { id: '1' }
-const schema2 = z.object({ name: z.string() })
-const example2 = { name: 'unnoq' }
+describe('self chainable', () => {
+  const builder = new ProcedureBuilder<{ id?: string }, undefined, undefined, undefined>({
+    contract: new ContractProcedure({
+      InputSchema: undefined,
+      OutputSchema: undefined,
+    }),
+    middlewares: [],
+  })
 
-const builder = new ProcedureBuilder<
-  { auth: boolean },
-  undefined,
-  undefined,
-  undefined
->({
-  contract: new ContractProcedure({
-    InputSchema: undefined,
-    OutputSchema: undefined,
-  }),
-})
+  const schema = z.object({ id: z.string().transform(v => Number.parseInt(v)) })
+  const example = { id: '1' }
+  const out_example = { id: 1 }
 
-it('input', () => {
-  const builder2 = builder.input(schema1, example1)
+  it('route', () => {
+    const route = { method: 'GET', path: '/test', deprecated: true, description: 'des', summary: 'sum', tags: ['hi'] } as const
+    const routed = builder.route(route)
 
-  expectTypeOf(builder2).toEqualTypeOf<
-    ProcedureBuilder<{ auth: boolean }, undefined, typeof schema1, undefined>
-  >()
+    expect(routed).not.toBe(builder)
+    expect(routed).toBeInstanceOf(ProcedureBuilder)
+    expect(routed['~orpc'].contract['~orpc'].route).toBe(route)
+  })
 
-  expect(builder2.zz$pb).toMatchObject({
-    contract: {
-      '~orpc': {
-        InputSchema: schema1,
-        inputExample: example1,
-      },
-    },
+  it('input', () => {
+    const input_ed = builder.input(schema, example)
+
+    expect(input_ed).not.toBe(builder)
+    expect(input_ed).toBeInstanceOf(ProcedureBuilder)
+    expect(input_ed['~orpc'].contract['~orpc'].InputSchema).toBe(schema)
+    expect(input_ed['~orpc'].contract['~orpc'].inputExample).toBe(example)
+  })
+
+  it('output', () => {
+    const output_ed = builder.output(schema, out_example)
+
+    expect(output_ed).not.toBe(builder)
+    expect(output_ed).toBeInstanceOf(ProcedureBuilder)
+    expect(output_ed['~orpc'].contract['~orpc'].OutputSchema).toBe(schema)
+    expect(output_ed['~orpc'].contract['~orpc'].outputExample).toBe(out_example)
   })
 })
 
-it('output', () => {
-  const builder2 = builder.output(schema2, example2)
+describe('to ProcedureImplementer', () => {
+  const schema = z.object({ id: z.string().transform(v => Number.parseInt(v)) })
 
-  expectTypeOf(builder2).toEqualTypeOf<
-    ProcedureBuilder<{ auth: boolean }, undefined, undefined, typeof schema2>
-  >()
+  const global_mid = vi.fn()
+  const builder = new ProcedureBuilder<{ id?: string } | undefined, undefined, typeof schema, typeof schema>({
+    contract: new ContractProcedure({
+      InputSchema: schema,
+      OutputSchema: schema,
+    }),
+    middlewares: [global_mid],
+  })
 
-  expect(builder2.zz$pb).toMatchObject({
-    contract: {
-      '~orpc': {
-        OutputSchema: schema2,
-        outputExample: example2,
-      },
-    },
+  it('use middleware', () => {
+    const mid = vi.fn()
+
+    const implementer = builder.use(mid)
+
+    expect(implementer).toBeInstanceOf(ProcedureImplementer)
+    expect(implementer['~orpc'].middlewares).toEqual([global_mid, mid])
+  })
+
+  it('use middleware with map input', () => {
+    const mid = vi.fn()
+    const map_input = vi.fn()
+
+    const implementer = builder.use(mid, map_input)
+    expect(implementer).toBeInstanceOf(ProcedureImplementer)
+    expect(implementer['~orpc'].middlewares).toEqual([global_mid, expect.any(Function)])
+
+    map_input.mockReturnValueOnce('__input__')
+    mid.mockReturnValueOnce('__mid__')
+
+    expect((implementer as any)['~orpc'].middlewares[1]('input')).toBe('__mid__')
+
+    expect(map_input).toBeCalledTimes(1)
+    expect(map_input).toBeCalledWith('input')
+
+    expect(mid).toBeCalledTimes(1)
+    expect(mid).toBeCalledWith('__input__')
   })
 })
 
-it('route', () => {
-  const builder2 = builder.route({
-    method: 'GET',
-    path: '/test',
-    deprecated: true,
-    description: 'des',
-    summary: 'sum',
-    tags: ['hi'],
+describe('to DecoratedProcedure', () => {
+  const schema = z.object({ id: z.string().transform(v => Number.parseInt(v)) })
+
+  const global_mid = vi.fn()
+  const builder = new ProcedureBuilder<{ id?: string } | undefined, undefined, typeof schema, typeof schema>({
+    contract: new ContractProcedure({
+      InputSchema: schema,
+      OutputSchema: schema,
+    }),
+    middlewares: [global_mid],
   })
 
-  expectTypeOf(builder2).toEqualTypeOf<
-    ProcedureBuilder<{ auth: boolean }, undefined, undefined, undefined>
-  >()
+  it('func', () => {
+    const func = vi.fn()
+    const procedure = builder.func(func)
 
-  expect(builder2.zz$pb).toMatchObject({
-    contract: {
-      '~orpc': {
-        route: {
-          method: 'GET',
-          path: '/test',
-          deprecated: true,
-          description: 'des',
-          summary: 'sum',
-          tags: ['hi'],
-        },
-      },
-    },
-  })
-})
+    expect(procedure).toSatisfy(isProcedure)
 
-describe('use middleware', () => {
-  it('infer types', () => {
-    const implementer = builder
-      .use((input, context, meta) => {
-        expectTypeOf(input).toEqualTypeOf<unknown>()
-        expectTypeOf(context).toEqualTypeOf<{ auth: boolean }>()
-        expectTypeOf(meta).toEqualTypeOf<MiddlewareMeta<unknown>>()
-
-        return meta.next({
-          context: {
-            userId: '1',
-          },
-        })
-      })
-      .use((input, context, meta) => {
-        expectTypeOf(input).toEqualTypeOf<unknown>()
-        expectTypeOf(context).toEqualTypeOf<
-          { userId: string } & { auth: boolean }
-        >()
-        expectTypeOf(meta).toEqualTypeOf<MiddlewareMeta<unknown>>()
-
-        return meta.next({})
-      })
-
-    expectTypeOf(implementer).toEqualTypeOf<
-      ProcedureImplementer<
-        { auth: boolean },
-        { userId: string },
-        undefined,
-        undefined
-      >
-    >()
-  })
-
-  it('map middleware input', () => {
-    // @ts-expect-error mismatch input
-    builder.use((input: { postId: string }) => {
-      return { context: { a: 'a' } }
-    })
-
-    builder.use(
-      (input: { postId: string }, _, meta) => {
-        return meta.next({ context: { a: 'a' } })
-      },
-      // @ts-expect-error mismatch input
-      input => ({ postId: 12455 }),
-    )
-
-    builder.use(
-      (input: { postId: string }, context, meta) => meta.next({}),
-      input => ({ postId: '12455' }),
-    )
-
-    const implementer = builder.input(schema1).use(
-      (input: { id: number }, _, meta) => {
-        return meta.next({
-          context: {
-            userId555: '1',
-          },
-        })
-      },
-      input => ({ id: Number.parseInt(input.id) }),
-    )
-
-    expectTypeOf(implementer).toEqualTypeOf<
-      ProcedureImplementer<
-        { auth: boolean },
-        { userId555: string },
-        typeof schema1,
-        undefined
-      >
-    >()
-  })
-})
-
-describe('handler', () => {
-  it('infer types', () => {
-    const handler = builder.func((input, context, meta) => {
-      expectTypeOf(input).toEqualTypeOf<unknown>()
-      expectTypeOf(context).toEqualTypeOf<{ auth: boolean }>()
-      expectTypeOf(meta).toEqualTypeOf<Meta>()
-    })
-
-    expectTypeOf(handler).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        undefined,
-        undefined,
-        undefined,
-        void
-      >
-    >()
-
-    expect(isProcedure(handler)).toBe(true)
-  })
-
-  it('combine middlewares', () => {
-    const mid1 = os.middleware((input, context, meta) => {
-      return meta.next({
-        context: {
-          userId: '1',
-        },
-      })
-    })
-
-    const mid2 = os.middleware((_, __, meta) => meta.next({}))
-
-    const handler = builder
-      .use(mid1)
-      .use(mid2)
-      .func((input, context, meta) => {
-        expectTypeOf(input).toEqualTypeOf<unknown>()
-        expectTypeOf(context).toEqualTypeOf<
-          { userId: string } & { auth: boolean }
-        >()
-        expectTypeOf(meta).toEqualTypeOf<Meta>()
-
-        return {
-          name: 'unnoq',
-        }
-      })
-
-    expectTypeOf(handler).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        { userId: string },
-        undefined,
-        undefined,
-        { name: string }
-      >
-    >()
-
-    expect(handler.zz$p.middlewares).toEqual([mid1, mid2])
+    expect(procedure['~orpc'].func).toBe(func)
+    expect(procedure['~orpc'].middlewares).toEqual([global_mid])
   })
 })

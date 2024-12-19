@@ -11,7 +11,7 @@ export interface RouteOptions {
   summary?: string
   description?: string
   deprecated?: boolean
-  tags?: string[]
+  tags?: readonly string[]
 }
 
 export interface ContractProcedureDef<TInputSchema extends Schema, TOutputSchema extends Schema> {
@@ -35,5 +35,19 @@ export type ANY_CONTRACT_PROCEDURE = ContractProcedure<any, any>
 export type WELL_CONTRACT_PROCEDURE = ContractProcedure<Schema, Schema>
 
 export function isContractProcedure(item: unknown): item is ANY_CONTRACT_PROCEDURE {
-  return item instanceof ContractProcedure
+  if (item instanceof ContractProcedure) {
+    return true
+  }
+
+  return (
+    (typeof item === 'object' || typeof item === 'function')
+    && item !== null
+    && '~type' in item
+    && item['~type'] === 'ContractProcedure'
+    && '~orpc' in item
+    && typeof item['~orpc'] === 'object'
+    && item['~orpc'] !== null
+    && 'InputSchema' in item['~orpc']
+    && 'OutputSchema' in item['~orpc']
+  )
 }

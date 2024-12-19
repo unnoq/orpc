@@ -1,6 +1,9 @@
-import type { WELL_DEFINED_PROCEDURE } from './procedure'
+/// <reference lib="dom" />
 
-export type Context = Record<string, unknown> | undefined
+import type { ANY_PROCEDURE } from './procedure'
+
+export type Context = Record<string, any> | undefined
+export type WELL_CONTEXT = Record<string, unknown> | undefined
 
 export type MergeContext<
   TA extends Context,
@@ -17,5 +20,5 @@ export interface Caller<TInput, TOutput> {
 
 export interface Meta extends CallerOptions {
   path: string[]
-  procedure: WELL_DEFINED_PROCEDURE
+  procedure: ANY_PROCEDURE
 }

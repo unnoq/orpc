@@ -61,6 +61,8 @@ describe('router', () => {
     const routed = builder.router(router)
 
     expectTypeOf(routed).toEqualTypeOf<AdaptedContractRouter<typeof router>>()
+
+    expectTypeOf(builder.router(ping)).toEqualTypeOf<AdaptedContractRouter<typeof ping>>()
   })
 
   it('throw error on invalid router', () => {

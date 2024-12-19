@@ -118,7 +118,7 @@ describe.each(handlers)('openAPIServerHandler', (handler) => {
     expect(await response?.json()).toEqual({
       code: 'BAD_REQUEST',
       status: 400,
-      message: 'Validation input failed',
+      message: 'Input validation failed',
       issues: [
         {
           code: 'invalid_type',
@@ -149,7 +149,7 @@ describe.each(handlers)('openAPIServerHandler', (handler) => {
     expect(await response?.json()).toEqual({
       code: 'BAD_REQUEST',
       status: 400,
-      message: 'Validation input failed',
+      message: 'Input validation failed',
       issues: [
         {
           code: 'invalid_type',
@@ -180,7 +180,7 @@ describe.each(handlers)('openAPIServerHandler', (handler) => {
     expect(await response?.json()).toEqual({
       code: 'BAD_REQUEST',
       status: 400,
-      message: 'Validation input failed',
+      message: 'Input validation failed',
       issues: [
         {
           code: 'invalid_type',

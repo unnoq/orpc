@@ -1,121 +1,48 @@
-import { describe, expect, it, vi } from 'vitest'
-import { z } from 'zod'
-import { os } from '.'
-import {
-  createFlattenLazy,
-  createLazy,
-  decorateLazy,
-  isLazy,
-  LAZY_LOADER_SYMBOL,
-  loadLazy,
-} from './lazy'
+import type { WELL_CONTEXT } from './types'
+import { ContractProcedure } from '@orpc/contract'
+import { flatLazy, isLazy, lazy, LAZY_LOADER_SYMBOL, unlazy } from './lazy'
+import { Procedure } from './procedure'
 
-describe('createLazy', () => {
-  it('should create a lazy object with a loader function', () => {
-    const mockLoader = vi.fn().mockResolvedValue({ default: 'test' })
-    const lazyObj = createLazy(mockLoader)
-
-    expect(lazyObj[LAZY_LOADER_SYMBOL]).toBe(mockLoader)
-  })
+const procedure = new Procedure<WELL_CONTEXT, undefined, undefined, undefined, unknown>({
+  contract: new ContractProcedure({
+    InputSchema: undefined,
+    OutputSchema: undefined,
+  }),
+  func: vi.fn(),
+  middlewares: [],
 })
 
-describe('loadLazy', () => {
-  it('should call the loader function and return the result', async () => {
-    const mockLoader = vi.fn().mockResolvedValue({ default: 'loaded value' })
-    const lazyObj = createLazy(mockLoader)
+const router = { procedure }
 
-    const result = await loadLazy(lazyObj)
+it('lazy', () => {
+  const procedureLoader = () => Promise.resolve({ default: procedure })
+  const routerLoader = () => Promise.resolve({ default: router })
 
-    expect(mockLoader).toHaveBeenCalledOnce()
-    expect(result).toEqual({ default: 'loaded value' })
-  })
+  expect(lazy(procedureLoader)).toSatisfy(isLazy)
+  expect(lazy(routerLoader)).toSatisfy(isLazy)
+
+  expect(lazy(procedureLoader)[LAZY_LOADER_SYMBOL]).toBe(procedureLoader)
+  expect(lazy(routerLoader)[LAZY_LOADER_SYMBOL]).toBe(routerLoader)
 })
 
-describe('isLazy', () => {
-  it('should return true for a lazy object', () => {
-    const lazyObj = createLazy(() => Promise.resolve({ default: 'test' }))
-    expect(isLazy(lazyObj)).toBe(true)
-  })
-
-  it('should return false for non-lazy objects', () => {
-    expect(isLazy(null)).toBe(false)
-    expect(isLazy(undefined)).toBe(false)
-    expect(isLazy({})).toBe(false)
-    expect(isLazy({ someOtherSymbol: () => { } })).toBe(false)
-  })
+it('isLazy', () => {
+  expect(lazy(() => Promise.resolve({ default: procedure }))).toSatisfy(isLazy)
+  expect(lazy(() => Promise.resolve({ default: router }))).toSatisfy(isLazy)
+  expect({}).not.toSatisfy(isLazy)
+  expect(undefined).not.toSatisfy(isLazy)
 })
 
-describe('createFlattenLazy', () => {
-  it('should flatten nested lazy objects', async () => {
-    const innerMostLoader = vi.fn().mockResolvedValue({ default: 'final value' })
-    const innerLoader = vi.fn().mockResolvedValue({
-      default: createLazy(innerMostLoader),
-    })
-    const outerLoader = vi.fn().mockResolvedValue({
-      default: createLazy(innerLoader),
-    })
+it('unwrapLazy', async () => {
+  const lazied = lazy(() => Promise.resolve({ default: 'root' }))
 
-    const flattenedLazy = createFlattenLazy(createLazy(outerLoader))
-
-    const result = await loadLazy(flattenedLazy)
-
-    expect(outerLoader).toHaveBeenCalledOnce()
-    expect(innerLoader).toHaveBeenCalledOnce()
-    expect(innerMostLoader).toHaveBeenCalledOnce()
-    expect(result).toEqual({ default: 'final value' })
-  })
-
-  it('should handle single-level lazy objects', async () => {
-    const loader = vi.fn().mockResolvedValue({ default: 'simple value' })
-    const flattenedLazy = createFlattenLazy(createLazy(loader))
-
-    const result = await loadLazy(flattenedLazy)
-
-    expect(loader).toHaveBeenCalledOnce()
-    expect(result).toEqual({ default: 'simple value' })
-  })
+  expect(unlazy(lazied)).resolves.toEqual({ default: 'root' })
+  expect((await unlazy(lazy(() => Promise.resolve({ default: lazied })))).default).toSatisfy(isLazy)
 })
 
-describe('decorateLazy', () => {
-  const ping = os.input(z.string()).func(() => 'pong')
-  const pong = os.func(() => 'ping')
+it('flatLazy', () => {
+  const lazied = lazy(() => Promise.resolve({ default: 'root' }))
 
-  const router = {
-    ping: createLazy(() => Promise.resolve({ default: ping })),
-    pong: createLazy(() => Promise.resolve({ default: pong })),
-    nested: {
-      ping: createLazy(() => Promise.resolve({ default: ping })),
-      pong: createLazy(() => Promise.resolve({ default: pong })),
-    },
-    complex: createLazy(() => Promise.resolve({
-      default: {
-        ping,
-        pong: createLazy(() => Promise.resolve({ default: pong })),
-      },
-    })),
-  }
-
-  it('should create a proxy for nested lazy loading', async () => {
-    const decoratedLazy = decorateLazy(createLazy(() => Promise.resolve({ default: router })))
-
-    // Test method access
-    const methodResult = await decoratedLazy.ping('test')
-    expect(methodResult).toBe('pong')
-
-    // Test nested method access
-    const nestedResult = await decoratedLazy.nested.pong('test')
-    expect(nestedResult).toBe('ping')
-  })
-
-  it('should create a proxy for complex lazy loading', async () => {
-    const decoratedLazy = decorateLazy(createLazy(() => Promise.resolve({ default: router })))
-
-    // Test method access
-    const methodResult = await decoratedLazy.complex.ping('test')
-    expect(methodResult).toBe('pong')
-
-    // Test nested method access
-    const nestedResult = await decoratedLazy.complex.pong('test')
-    expect(nestedResult).toBe('ping')
-  })
+  expect(flatLazy(lazied)[LAZY_LOADER_SYMBOL]()).resolves.toEqual({ default: 'root' })
+  expect(flatLazy(lazy(() => Promise.resolve({ default: lazied })))[LAZY_LOADER_SYMBOL]()).resolves.toEqual({ default: 'root' })
+  expect(flatLazy(lazy(() => Promise.resolve({ default: lazy(() => Promise.resolve({ default: lazied })) })))[LAZY_LOADER_SYMBOL]()).resolves.toEqual({ default: 'root' })
 })

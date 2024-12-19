@@ -1,64 +1,73 @@
-import type { Hooks, Merge, Value } from '@orpc/shared'
-import type { ANY_LAZY_PROCEDURE, ANY_PROCEDURE } from './procedure'
-import type { Router } from './router'
-import { isLazy } from './lazy'
+import type { SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { Hooks, Value } from '@orpc/shared'
+import type { Lazy } from './lazy'
+import type { Procedure } from './procedure'
+import type { Caller, Meta } from './types'
+import { isLazy, lazy, unlazy } from './lazy'
 import { isProcedure } from './procedure'
-import { createProcedureCaller, type ProcedureCaller } from './procedure-caller'
+import { createProcedureCaller } from './procedure-caller'
+import { type ANY_ROUTER, getRouterChild, type Router } from './router'
 
-export interface CreateRouterCallerOptions<
-  TRouter extends Router<any>,
-> extends Hooks<
-    unknown,
-    unknown,
-    TRouter extends Router<infer UContext> ? UContext : never,
-    { path: string[], procedure: ANY_PROCEDURE }
-  > {
-  router: TRouter
+export type RouterCaller<T extends ANY_ROUTER> = T extends Lazy<infer U extends ANY_ROUTER>
+  ? RouterCaller<U>
+  : T extends Procedure<any, any, infer UInputSchema, infer UOutputSchema, infer UFuncOutput>
+    ? Caller<SchemaInput<UInputSchema>, SchemaOutput<UOutputSchema, UFuncOutput>>
+    : {
+        [K in keyof T]: T[K] extends ANY_ROUTER ? RouterCaller<T[K]> : never
+      }
 
-  /**
-   * The context used when calling the procedure.
-   */
-  context: Value<
-    TRouter extends Router<infer UContext> ? UContext : never
-  >
+export type CreateRouterCallerOptions<
+  TRouter extends ANY_ROUTER,
+> =
+  & {
+    router: TRouter | Lazy<undefined>
 
-  /**
-   * This is helpful for logging and analytics.
-   *
-   * @internal
-   */
-  basePath?: string[]
-}
-
-export type RouterCaller<
-  TRouter extends Router<any>,
-> = {
-  [K in keyof TRouter]: TRouter[K] extends ANY_PROCEDURE | ANY_LAZY_PROCEDURE
-    ? ProcedureCaller<TRouter[K]>
-    : TRouter[K] extends Router<any>
-      ? RouterCaller<TRouter[K]>
-      : never
-}
+    /**
+     * This is helpful for logging and analytics.
+     *
+     * @internal
+     */
+    path?: string[]
+  }
+  & (TRouter extends Router<infer UContext, any>
+    ? undefined extends UContext ? { context?: Value<UContext> } : { context: Value<UContext> }
+    : never)
+  & Hooks<unknown, unknown, TRouter extends Router<infer UContext, any> ? UContext : never, Meta>
 
 export function createRouterCaller<
-  TRouter extends Router<any>,
+  TRouter extends ANY_ROUTER,
 >(
   options: CreateRouterCallerOptions<TRouter>,
 ): RouterCaller<TRouter> {
-  return createRouterCallerInternal(options) as any
-}
+  if (isProcedure(options.router)) {
+    const caller = createProcedureCaller({
+      ...options,
+      procedure: options.router,
+      context: options.context,
+      path: options.path,
+    })
 
-function createRouterCallerInternal(
-  options: Merge<CreateRouterCallerOptions<Router<any>>, {
-    router: Router<any> | Router<any>[keyof Router<any>]
-  }>,
-) {
-  const procedureCaller = isLazy(options.router) || isProcedure(options.router)
+    return caller as any
+  }
+
+  const procedureCaller = isLazy(options.router)
     ? createProcedureCaller({
       ...options,
-      procedure: options.router as any,
+      procedure: lazy(async () => {
+        const { default: maybeProcedure } = await unlazy(options.router)
+
+        if (!isProcedure(maybeProcedure)) {
+          throw new Error(`
+            Expected a valid procedure or lazy<procedure> but got unknown.
+            This should be caught by TypeScript compilation.
+            Please report this issue if this makes you feel uncomfortable.
+          `)
+        }
+
+        return { default: maybeProcedure }
+      }),
       context: options.context,
-      path: options.basePath,
+      path: options.path,
     })
     : {}
 
@@ -68,15 +77,19 @@ function createRouterCallerInternal(
         return Reflect.get(target, key)
       }
 
-      const next = (options.router as any)[key]
+      const next = getRouterChild(options.router, key)
 
-      return createRouterCallerInternal({
+      if (!next) {
+        return Reflect.get(target, key)
+      }
+
+      return createRouterCaller({
         ...options,
         router: next,
-        basePath: [...(options.basePath ?? []), key],
+        path: [...(options.path ?? []), key],
       })
     },
   })
 
-  return recursive
+  return recursive as any
 }

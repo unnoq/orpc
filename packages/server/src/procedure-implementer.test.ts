@@ -1,224 +1,68 @@
-import type { DecoratedProcedure, Meta, MiddlewareMeta } from '.'
-import { DecoratedContractProcedure } from '@orpc/contract'
+import { ContractProcedure } from '@orpc/contract'
 import { z } from 'zod'
-import { isProcedure, os } from '.'
+import { isProcedure } from './procedure'
 import { ProcedureImplementer } from './procedure-implementer'
 
-const p1 = new DecoratedContractProcedure({
-  InputSchema: undefined,
-  OutputSchema: undefined,
-  route: {
-    method: undefined,
-    path: undefined,
-  },
-})
-const implementer1 = new ProcedureImplementer<
-  { auth: boolean },
-  undefined,
-  undefined,
-  undefined
->({ contract: p1 })
-
-const schema1 = z.object({ id: z.string() })
-const schema2 = z.object({ name: z.string() })
-
-const p2 = new DecoratedContractProcedure({
-  InputSchema: schema1,
-  OutputSchema: schema2,
-  route: {
-    method: 'GET',
-    path: '/test',
-  },
-})
-
-const implementer2 = new ProcedureImplementer<
-  { auth: boolean },
-  undefined,
-  typeof schema1,
-  typeof schema2
->({ contract: p2 })
-
-describe('use middleware', () => {
-  it('infer types', () => {
-    const i = implementer1
-      .use((input, context, meta) => {
-        expectTypeOf(input).toEqualTypeOf<unknown>()
-        expectTypeOf(context).toEqualTypeOf<{ auth: boolean }>()
-        expectTypeOf(meta).toEqualTypeOf<MiddlewareMeta<unknown>>()
-
-        return meta.next({
-          context: {
-            userId: '1',
-          },
-        })
-      })
-      .use((input, context, meta) => {
-        expectTypeOf(input).toEqualTypeOf<unknown>()
-        expectTypeOf(context).toEqualTypeOf<
-          { userId: string } & { auth: boolean }
-        >()
-        expectTypeOf(meta).toEqualTypeOf<MiddlewareMeta<unknown>>()
-
-        return meta.next({})
-      })
-
-    expectTypeOf(i).toEqualTypeOf<
-      ProcedureImplementer<
-        { auth: boolean },
-        { userId: string },
-        undefined,
-        undefined
-      >
-    >()
+describe('self chainable', () => {
+  const schema = z.object({ val: z.string().transform(v => Number.parseInt(v)) })
+  const implementer = new ProcedureImplementer<{ id?: string }, undefined, typeof schema, typeof schema>({
+    contract: new ContractProcedure({
+      InputSchema: schema,
+      OutputSchema: schema,
+    }),
   })
 
-  it('map middleware input', () => {
-    // @ts-expect-error mismatch input
-    implementer2.use((input: { postId: string }) => {
-      return { context: { a: 'a' } }
-    })
+  it('use middleware', () => {
+    const mid1 = vi.fn()
+    const mid2 = vi.fn()
+    const i = implementer.use(mid1).use(mid2)
 
-    implementer2.use(
-      (input: { postId: string }, _, meta) => {
-        return meta.next({ context: { a: 'a' } })
-      },
-      // @ts-expect-error mismatch input
-      input => ({ postId: 12455 }),
-    )
+    expect(i).not.toBe(implementer)
+    expect(i).toBeInstanceOf(ProcedureImplementer)
+    expect(i['~orpc'].middlewares).toEqual([mid1, mid2])
+  })
 
-    implementer2.use(
-      (input: { postId: string }, context, meta) => meta.next({}),
-      input => ({ postId: '12455' }),
-    )
+  it('use middleware with map input', () => {
+    const mid = vi.fn()
+    const map = vi.fn()
 
-    const i = implementer2.use(
-      (input: { id: number }, _, meta) => {
-        return meta.next({
-          context: {
-            userIdd: '1',
-          },
-        })
-      },
-      input => ({ id: Number.parseInt(input.id) }),
-    )
+    const i = implementer.use(mid, map)
 
-    expectTypeOf(i).toEqualTypeOf<
-      ProcedureImplementer<
-        { auth: boolean },
-        { userIdd: string },
-        typeof schema1,
-        typeof schema2
-      >
-    >()
+    expect(i).not.toBe(implementer)
+    expect(i).toBeInstanceOf(ProcedureImplementer)
+    expect(i['~orpc'].middlewares).toEqual([expect.any(Function)])
+
+    map.mockReturnValueOnce('__input__')
+    mid.mockReturnValueOnce('__mid__')
+
+    expect((i as any)['~orpc'].middlewares[0]('input')).toBe('__mid__')
+
+    expect(map).toBeCalledTimes(1)
+    expect(map).toBeCalledWith('input')
+
+    expect(mid).toBeCalledTimes(1)
+    expect(mid).toBeCalledWith('__input__')
   })
 })
 
-describe('output schema', () => {
-  it('auto infer output schema if output schema is not specified', async () => {
-    const sr = os.func(() => ({ a: 1 }))
+describe('to DecoratedProcedure', () => {
+  const schema = z.object({ val: z.string().transform(v => Number.parseInt(v)) })
 
-    const result = await sr.zz$p.func({}, undefined, {
-      method: 'GET',
-      path: '/',
-    } as any)
-
-    expectTypeOf(result).toEqualTypeOf<{ a: number }>()
+  const global_mid = vi.fn()
+  const implementer = new ProcedureImplementer<{ id?: string } | undefined, { db: string }, typeof schema, typeof schema>({
+    contract: new ContractProcedure({
+      InputSchema: schema,
+      OutputSchema: schema,
+    }),
+    middlewares: [global_mid],
   })
 
-  it('not infer output schema if output schema is specified', async () => {
-    const srb1 = new ProcedureImplementer({
-      contract: new DecoratedContractProcedure({
-        OutputSchema: z.unknown(),
-        InputSchema: undefined,
-      }),
-    })
+  it('func', () => {
+    const func = vi.fn()
+    const procedure = implementer.func(func)
 
-    const sr = srb1.func(() => ({ b: 1 }))
-
-    const result = await sr.zz$p.func({}, {}, {
-      method: 'GET',
-      path: '/',
-    } as any)
-
-    expectTypeOf(result).toEqualTypeOf<unknown>()
-  })
-})
-
-describe('handler', () => {
-  it('infer types', () => {
-    const handler = implementer1.func((input, context, meta) => {
-      expectTypeOf(input).toEqualTypeOf<unknown>()
-      expectTypeOf(context).toEqualTypeOf<{ auth: boolean }>()
-      expectTypeOf(meta).toEqualTypeOf<Meta>()
-
-      return {
-        name: 'unnoq',
-      }
-    })
-
-    expectTypeOf(handler).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        undefined,
-        undefined,
-        undefined,
-        { name: string }
-      >
-    >()
-    expect(isProcedure(handler)).toBe(true)
-
-    implementer2.func((input, context, meta) => {
-      expectTypeOf(input).toEqualTypeOf<{ id: string }>()
-      expectTypeOf(context).toEqualTypeOf<{ auth: boolean }>()
-      expectTypeOf(meta).toEqualTypeOf<Meta>()
-
-      return {
-        name: 'unnoq',
-      }
-    })
-
-    // @ts-expect-error mismatch output
-    implementer2.func(() => {})
-  })
-
-  it('combine middlewares', () => {
-    const mid1 = os.middleware((input, context, meta) => {
-      return meta.next({
-        context: {
-          userId: '1',
-        },
-      })
-    })
-
-    const mid2 = os.middleware((input, context, meta) => {
-      return meta.next({ })
-    })
-
-    const handler = implementer2
-      .use(mid1)
-      .use(mid2)
-      .func((input, context, meta) => {
-        expectTypeOf(input).toEqualTypeOf<{ id: string }>()
-        expectTypeOf(context).toEqualTypeOf<
-          { auth: boolean } & { userId: string }
-        >()
-        expectTypeOf(meta).toEqualTypeOf<Meta>()
-
-        return {
-          name: 'unnoq',
-        }
-      })
-
-    expectTypeOf(handler).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        { userId: string },
-        typeof schema1,
-        typeof schema2,
-        { name: string }
-      >
-    >()
-
-    expect(handler.zz$p.middlewares).toEqual([mid1, mid2])
+    expect(procedure).toSatisfy(isProcedure)
+    expect(procedure['~orpc'].func).toBe(func)
+    expect(procedure['~orpc'].middlewares).toEqual([global_mid])
   })
 })

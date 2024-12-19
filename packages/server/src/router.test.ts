@@ -1,101 +1,98 @@
-import { oc } from '@orpc/contract'
+import { ContractProcedure } from '@orpc/contract'
 import { z } from 'zod'
-import { os, type RouterWithContract } from '.'
+import { isLazy, lazy, unlazy } from './lazy'
+import { Procedure } from './procedure'
+import { getRouterChild } from './router'
 
-it('require procedure match context', () => {
-  const osw = os.context<{ auth: boolean, userId: string }>()
+describe('getRouterChild', () => {
+  const schema = z.object({ val: z.string().transform(val => Number(val)) })
 
-  osw.router({
-    ping: osw.context<{ auth: boolean }>().func(() => {
-      return { pong: 'ping' }
+  const ping = new Procedure({
+    contract: new ContractProcedure({
+      InputSchema: schema,
+      OutputSchema: schema,
     }),
-
-    // @ts-expect-error userId is not match
-    ping2: osw.context<{ userId: number }>().func(() => {
-      return { name: 'unnoq' }
+    func: vi.fn(() => ({ val: '123' })),
+  })
+  const pong = new Procedure({
+    contract: new ContractProcedure({
+      InputSchema: undefined,
+      OutputSchema: undefined,
     }),
-
-    nested: {
-      ping: osw.context<{ auth: boolean }>().func(() => {
-        return { pong: 'ping' }
-      }),
-
-      // @ts-expect-error userId is not match
-      ping2: osw.context<{ userId: number }>().func(() => {
-        return { name: 'unnoq' }
-      }),
-    },
-  })
-})
-
-it('require match contract', () => {
-  const pingContract = oc.route({ method: 'GET', path: '/ping' })
-  const pongContract = oc.input(z.string()).output(z.string())
-  const ping = os.contract(pingContract).func(() => {
-    return 'ping'
-  })
-  const pong = os.contract(pongContract).func(() => {
-    return 'pong'
+    func: vi.fn(() => ('output')),
   })
 
-  const contract = oc.router({
-    ping: pingContract,
-    pong: pongContract,
-
-    nested: oc.router({
-      ping: pingContract,
-      pong: pongContract,
-    }),
+  it('with procedure as router', () => {
+    expect(getRouterChild(ping)).toBe(ping)
+    expect(getRouterChild(ping, '~orpc')).toBe(undefined)
+    expect(getRouterChild(ping, '~type')).toBe(undefined)
   })
 
-  const _1: RouterWithContract<undefined, typeof contract> = {
-    ping,
-    pong,
-
-    nested: {
+  it('with router', () => {
+    const router = {
       ping,
       pong,
-    },
-  }
+      nested: {
+        ping,
+        pong,
+      },
+    }
 
-  const _2: RouterWithContract<undefined, typeof contract> = {
-    ping,
-    pong,
+    expect(getRouterChild(router, 'ping')).toBe(ping)
+    expect(getRouterChild(router, 'pong')).toBe(pong)
+    expect(getRouterChild(router, 'nested')).toBe(router.nested)
+    expect(getRouterChild(router, 'nested', 'ping')).toBe(ping)
+    expect(getRouterChild(router, 'nested', 'pong')).toBe(pong)
+    expect(getRouterChild(router, 'nested', '~orpc')).toBe(undefined)
+    expect(getRouterChild(router, 'nested', 'ping', '~orpc')).toBe(undefined)
+    expect(getRouterChild(router, 'nested', 'pue', '~orpc', 'peng', 'pue')).toBe(undefined)
+  })
 
-    nested: os.contract(contract.nested).router({
-      ping,
+  it('with lazy router', async () => {
+    const lazyPing = lazy(() => Promise.resolve({ default: ping }))
+    const lazyPong = lazy(() => Promise.resolve({ default: pong }))
+
+    const lazyNested = lazy(() => Promise.resolve({
+      default: {
+        ping,
+        pong: lazyPong,
+        nested2: lazy(() => Promise.resolve({
+          default: {
+            ping,
+            pong: lazyPong,
+          },
+        })),
+      },
+    }))
+
+    const router = {
+      ping: lazyPing,
       pong,
-    }),
-  }
+      nested: lazyNested,
+    }
 
-  const _3: RouterWithContract<undefined, typeof contract> = {
-    ping,
-    pong,
+    expect(await unlazy(getRouterChild(router, 'ping'))).toEqual({ default: ping })
+    expect(getRouterChild(router, 'pong')).toBe(pong)
 
-    // @ts-expect-error missing nested.ping
-    nested: {
-      pong,
-    },
-  }
+    expect(getRouterChild(router, 'nested')).toSatisfy(isLazy)
+    expect(getRouterChild(router, 'nested', 'ping')).toSatisfy(isLazy)
+    expect(getRouterChild(router, 'nested', 'pong')).toSatisfy(isLazy)
 
-  const _4: RouterWithContract<undefined, typeof contract> = {
-    ping,
-    pong,
+    expect(getRouterChild(router, 'nested')).toBe(lazyNested)
+    expect(await unlazy(getRouterChild(router, 'nested', 'ping'))).toEqual({ default: ping })
+    expect(await unlazy(getRouterChild(router, 'nested', 'pong'))).toEqual({ default: pong })
 
-    nested: {
-      ping,
-      // @ts-expect-error nested.pong is mismatch
-      pong: os.func(() => 'ping'),
-    },
-  }
+    expect(getRouterChild(router, 'nested', '~orpc')).toSatisfy(isLazy)
+    expect(await unlazy(getRouterChild(router, 'nested', '~orpc'))).toEqual({ default: undefined })
 
-  // @ts-expect-error missing pong
-  const _5: RouterWithContract<undefined, typeof contract> = {
-    ping,
+    expect(await unlazy(getRouterChild(router, 'nested', 'nested2', 'pong'))).toEqual({ default: pong })
+    expect(await unlazy(getRouterChild(router, 'nested', 'nested2', 'peo', 'pue', 'cu', 'la'))).toEqual({ default: undefined })
+  })
 
-    nested: {
-      ping,
-      pong,
-    },
-  }
+  it('support Lazy<undefined>', async () => {
+    const lazied = lazy(() => Promise.resolve({ default: undefined }))
+
+    expect(await unlazy(getRouterChild(lazied, 'ping'))).toEqual({ default: undefined })
+    expect(await unlazy(getRouterChild(lazied, 'ping', '~orpc'))).toEqual({ default: undefined })
+  })
 })

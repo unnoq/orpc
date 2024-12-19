@@ -30,6 +30,10 @@ const router = {
 }
 
 describe('ContractRouter', () => {
+  it('procedure also is a contract router', () => {
+    const _: ContractRouter = ping
+  })
+
   it('just an object and accepts both procedures and decorated procedures', () => {
     const _: ContractRouter = router
   })

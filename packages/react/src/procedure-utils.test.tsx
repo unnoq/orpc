@@ -33,7 +33,7 @@ describe('fetchQuery', () => {
   it('on error', () => {
     // @ts-expect-error invalid input
     expect(utils.fetchQuery({ id: {} })).rejects.toThrowError(
-      'Validation input failed',
+      'Input validation failed',
     )
   })
 })
@@ -70,7 +70,7 @@ describe('fetchInfiniteQuery', () => {
     expect(
       // @ts-expect-error invalid input
       utils.fetchInfiniteQuery({ input: { keyword: {} } }),
-    ).rejects.toThrowError('Validation input failed')
+    ).rejects.toThrowError('Input validation failed')
   })
 })
 
@@ -168,7 +168,7 @@ describe('ensureQueryData', () => {
   it('on error', () => {
     // @ts-expect-error invalid input
     expect(utils.ensureQueryData({ id: {} })).rejects.toThrowError(
-      'Validation input failed',
+      'Input validation failed',
     )
   })
 })
@@ -205,7 +205,7 @@ describe('ensureInfiniteQuery', () => {
     expect(
       // @ts-expect-error invalid input
       utils.ensureInfiniteQueryData({ input: { keyword: {} } }),
-    ).rejects.toThrowError('Validation input failed')
+    ).rejects.toThrowError('Input validation failed')
   })
 })
 

@@ -8,7 +8,7 @@ describe('e2e', () => {
   it('works on error', () => {
     // @ts-expect-error - invalid input
     expect(client.user.find()).rejects.toThrowError(
-      'Validation input failed',
+      'Input validation failed',
     )
   })
 

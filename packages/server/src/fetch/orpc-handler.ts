@@ -1,12 +1,12 @@
 import type { ANY_LAZY_PROCEDURE, ANY_PROCEDURE } from '../procedure'
-import type { Router } from '../router'
 import type { FetchHandler } from './types'
 import { executeWithHooks, ORPC_PROTOCOL_HEADER, ORPC_PROTOCOL_VALUE, trim, value } from '@orpc/shared'
 import { ORPCError } from '@orpc/shared/error'
 import { ORPCDeserializer, ORPCSerializer } from '@orpc/transformer'
-import { isLazy } from '../lazy'
+import { unlazy } from '../lazy'
 import { isProcedure } from '../procedure'
 import { createProcedureCaller } from '../procedure-caller'
+import { type ANY_ROUTER, getRouterChild } from '../router'
 
 const serializer = new ORPCSerializer()
 const deserializer = new ORPCDeserializer()
@@ -23,17 +23,17 @@ export function createORPCHandler(): FetchHandler {
       const url = new URL(options.request.url)
       const pathname = `/${trim(url.pathname.replace(options.prefix ?? '', ''), '/')}`
 
-      const match = resolveORPCRouter(options.router, pathname)
+      const match = await resolveRouterMatch(options.router, pathname)
 
       if (!match) {
         throw new ORPCError({ code: 'NOT_FOUND', message: 'Not found' })
       }
 
-      const input = await deserializeRequest(options.request)
+      const input = await parseRequestInput(options.request)
 
       const caller = createProcedureCaller({
         context,
-        procedure: match.procedure as any,
+        procedure: match.procedure,
         path: match.path,
       })
 
@@ -58,58 +58,60 @@ export function createORPCHandler(): FetchHandler {
         },
       })
     }
-    catch (e) {
-      const error = e instanceof ORPCError
-        ? e
-        : new ORPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Internal server error',
-          cause: e,
-        })
-
-      const { body, headers } = serializer.serialize(error.toJSON())
-
-      return new Response(body, {
-        status: error.status,
-        headers,
-      })
+    catch (error) {
+      return handleErrorResponse(error)
     }
   }
 }
 
-function resolveORPCRouter(router: Router<any>, pathname: string): {
+async function resolveRouterMatch(
+  router: ANY_ROUTER,
+  pathname: string,
+): Promise<{
   path: string[]
   procedure: ANY_PROCEDURE | ANY_LAZY_PROCEDURE
-} | undefined {
-  const path = trim(pathname, '/').split('/').map(decodeURIComponent)
+} | undefined> {
+  const pathSegments = trim(pathname, '/').split('/').map(decodeURIComponent)
 
-  let current: Router<any> | ANY_PROCEDURE | ANY_LAZY_PROCEDURE | undefined = router
-  for (const segment of path) {
-    if ((typeof current !== 'object' && typeof current !== 'function') || !current) {
-      current = undefined
-      break
-    }
+  const match = getRouterChild(router, ...pathSegments)
+  const { default: maybeProcedure } = await unlazy(match)
 
-    current = (current as any)[segment]
+  if (!isProcedure(maybeProcedure)) {
+    return undefined
   }
 
-  return isProcedure(current) || isLazy(current)
-    ? {
-        procedure: current,
-        path,
-      }
-    : undefined
+  return {
+    procedure: maybeProcedure,
+    path: pathSegments,
+  }
 }
 
-async function deserializeRequest(request: Request): Promise<unknown> {
+async function parseRequestInput(request: Request): Promise<unknown> {
   try {
     return await deserializer.deserialize(request)
   }
-  catch (e) {
+  catch (error) {
     throw new ORPCError({
       code: 'BAD_REQUEST',
       message: 'Cannot parse request. Please check the request body and Content-Type header.',
-      cause: e,
+      cause: error,
     })
   }
+}
+
+function handleErrorResponse(error: unknown): Response {
+  const orpcError = error instanceof ORPCError
+    ? error
+    : new ORPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Internal server error',
+      cause: error,
+    })
+
+  const { body, headers } = serializer.serialize(orpcError.toJSON())
+
+  return new Response(body, {
+    status: orpcError.status,
+    headers,
+  })
 }

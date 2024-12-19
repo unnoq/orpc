@@ -1,198 +1,115 @@
+import { ContractProcedure } from '@orpc/contract'
 import { z } from 'zod'
-import { createRouterCaller, ORPCError, os } from '.'
+import { isLazy, lazy, unlazy } from './lazy'
+import { Procedure } from './procedure'
+import { createProcedureCaller } from './procedure-caller'
+import { createRouterCaller } from './router-caller'
+
+vi.mock('./procedure-caller', () => ({
+  createProcedureCaller: vi.fn(() => vi.fn(() => '__mocked__')),
+}))
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe('createRouterCaller', () => {
-  const internal = false
-  const context = { auth: true }
-
-  const osw = os.context<{ auth?: boolean }>()
-
-  const ping = osw
-    .input(z.object({ value: z.string().transform(v => Number(v)) }))
-    .output(z.object({ value: z.number().transform(v => v.toString()) }))
-    .func((input, context, meta) => {
-      expect(context).toEqual(context)
-
-      return input
-    })
-
-  const pong = osw.func((_, context, meta) => {
-    expect(context).toEqual(context)
-
-    return { value: true }
+  const schema = z.object({ val: z.string().transform(v => Number(v)) })
+  const ping = new Procedure({
+    contract: new ContractProcedure({
+      InputSchema: schema,
+      OutputSchema: schema,
+    }),
+    func: vi.fn(() => ({ val: '123' })),
+  })
+  const pong = new Procedure({
+    contract: new ContractProcedure({
+      InputSchema: undefined,
+      OutputSchema: undefined,
+    }),
+    func: vi.fn(() => ('output')),
   })
 
-  const lazyRouter = osw.lazy(() => Promise.resolve({
-    default: {
-      ping: osw.lazy(() => Promise.resolve({ default: ping })),
-      pong,
-      lazyRouter: osw.lazy(() => Promise.resolve({ default: { ping, pong } })),
-    },
-  }))
-
-  const router = osw.router({
-    ping,
+  const router = {
+    ping: lazy(() => Promise.resolve({ default: ping })),
     pong,
-    nested: {
+    nested: lazy(() => Promise.resolve({ default: {
       ping,
-      pong,
-    },
-    lazyRouter,
+      pong: lazy(() => Promise.resolve({ default: pong })),
+    } })),
+  }
+
+  const caller = createRouterCaller({
+    router,
+    context: { auth: true },
+    path: ['users'],
   })
 
-  it('infer context', () => {
-    createRouterCaller({
-      router,
-      // @ts-expect-error invalid context
-      context: { auth: 123 },
-    })
+  it('works', () => {
+    expect(caller.pong({ val: '123' })).toEqual('__mocked__')
 
-    createRouterCaller({
-      router,
-      context,
-    })
-  })
-
-  it('with validate', () => {
-    const caller = createRouterCaller({
-      router,
-      context,
-    })
-
-    expectTypeOf(caller.ping).toMatchTypeOf<
-      (input: { value: string }) => Promise<{
-        value: string
-      }>
-    >()
-
-    expectTypeOf(caller.pong).toMatchTypeOf<
-      (input: unknown) => Promise<{
-        value: boolean
-      }>
-    >()
-
-    expectTypeOf(caller.nested.ping).toMatchTypeOf<
-      (input: { value: string }) => Promise<{
-        value: string
-      }>
-    >()
-
-    expectTypeOf(caller.nested.pong).toMatchTypeOf<
-      (input: unknown) => Promise<{
-        value: boolean
-      }>
-    >()
-
-    expectTypeOf(caller.lazyRouter.ping).toMatchTypeOf<
-      (input: { value: string }) => Promise<{
-        value: string
-      }>
-    >()
-
-    expectTypeOf(caller.lazyRouter.pong).toMatchTypeOf<
-      (input: unknown) => Promise<{
-        value: boolean
-      }>
-    >()
-
-    expectTypeOf(caller.lazyRouter.lazyRouter.ping).toMatchTypeOf<
-      (input: { value: string }) => Promise<{
-        value: string
-      }>
-    >()
-
-    expectTypeOf(caller.lazyRouter.lazyRouter.pong).toMatchTypeOf<
-      (input: unknown) => Promise<{
-        value: boolean
-      }>
-    >()
-
-    expect(caller.ping({ value: '123' })).resolves.toEqual({ value: '123' })
-    expect(caller.pong({ value: '123' })).resolves.toEqual({ value: true })
-
-    expect(caller.nested.ping({ value: '123' })).resolves.toEqual({
-      value: '123',
-    })
-    expect(caller.nested.pong({ value: '123' })).resolves.toEqual({
-      value: true,
-    })
-
-    expect(caller.lazyRouter.ping({ value: '123' })).resolves.toEqual({
-      value: '123',
-    })
-    expect(caller.lazyRouter.pong({ value: '123' })).resolves.toEqual({
-      value: true,
-    })
-
-    expect(caller.lazyRouter.lazyRouter.ping({ value: '123' })).resolves.toEqual({
-      value: '123',
-    })
-    expect(caller.lazyRouter.lazyRouter.pong({ value: '123' })).resolves.toEqual({
-      value: true,
-    })
-
-    // @ts-expect-error - invalid input
-    expect(caller.ping({ value: new Date('2023-01-01') })).rejects.toThrowError(
-      'Validation input failed',
-    )
-
-    // @ts-expect-error - invalid input
-    expect(caller.nested.ping({ value: true })).rejects.toThrowError(
-      'Validation input failed',
-    )
-
-    // @ts-expect-error - invalid input
-    expect(caller.lazyRouter.ping({ value: true })).rejects.toThrowError(
-      'Validation input failed',
-    )
-
-    // @ts-expect-error - invalid input
-    expect(caller.lazyRouter.lazyRouter.ping({ value: true })).rejects.toThrowError(
-      'Validation input failed',
-    )
-  })
-
-  it('path', () => {
-    const ping = osw.func((_, __, { path }) => {
-      return path
-    })
-
-    const lazyRouter = osw.lazy(() => Promise.resolve({
-      default: {
-        ping: osw.lazy(() => Promise.resolve({ default: ping })),
-        lazyRouter: osw.lazy(() => Promise.resolve({ default: { ping } })),
-      },
+    expect(createProcedureCaller).toBeCalledTimes(1)
+    expect(createProcedureCaller).toBeCalledWith(expect.objectContaining({
+      procedure: pong,
+      context: { auth: true },
+      path: ['users', 'pong'],
     }))
 
-    const router = osw.router({
-      ping,
-      nested: {
-        ping,
-        child: {
-          ping,
-        },
-      },
-      lazyRouter,
-    })
+    expect(vi.mocked(createProcedureCaller).mock.results[0]?.value).toBeCalledTimes(1)
+    expect(vi.mocked(createProcedureCaller).mock.results[0]?.value).toBeCalledWith({ val: '123' })
+  })
 
+  it('work with lazy', async () => {
+    expect(caller.ping({ val: '123' })).toEqual('__mocked__')
+
+    expect(createProcedureCaller).toBeCalledTimes(1)
+    expect(createProcedureCaller).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      procedure: expect.any(Object),
+      context: { auth: true },
+      path: ['users', 'ping'],
+    }))
+
+    expect((await unlazy(vi.mocked(createProcedureCaller as any).mock.calls[0]![0].procedure)).default).toBe(ping)
+
+    expect(vi.mocked(createProcedureCaller).mock.results[0]?.value).toBeCalledTimes(1)
+    expect(vi.mocked(createProcedureCaller).mock.results[0]?.value).toBeCalledWith({ val: '123' })
+  })
+
+  it('work with nested lazy', async () => {
+    expect(caller.nested.ping({ val: '123' })).toEqual('__mocked__')
+
+    expect(createProcedureCaller).toBeCalledTimes(2)
+    expect(createProcedureCaller).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      procedure: expect.any(Object),
+      context: { auth: true },
+      path: ['users', 'nested', 'ping'],
+    }))
+
+    const lazied = vi.mocked(createProcedureCaller as any).mock.calls[1]![0].procedure
+    expect(await unlazy(lazied)).toEqual({ default: ping })
+
+    expect(vi.mocked(createProcedureCaller).mock.results[1]?.value).toBeCalledTimes(1)
+    expect(vi.mocked(createProcedureCaller).mock.results[1]?.value).toBeCalledWith({ val: '123' })
+  })
+
+  it('work with procedure as router', () => {
     const caller = createRouterCaller({
-      router,
-      context,
+      router: ping,
+      context: { auth: true },
+      path: ['users'],
     })
 
-    expect(caller.ping('')).resolves.toEqual(['ping'])
-    expect(caller.nested.ping('')).resolves.toEqual(['nested', 'ping'])
-    expect(caller.nested.child.ping('')).resolves.toEqual([
-      'nested',
-      'child',
-      'ping',
-    ])
-    expect(caller.lazyRouter.ping()).resolves.toEqual(['lazyRouter', 'ping'])
-    expect(caller.lazyRouter.lazyRouter.ping('')).resolves.toEqual([
-      'lazyRouter',
-      'lazyRouter',
-      'ping',
-    ])
+    expect(caller({ val: '123' })).toEqual('__mocked__')
+
+    expect(createProcedureCaller).toBeCalledTimes(1)
+    expect(createProcedureCaller).toHaveBeenCalledWith(expect.objectContaining({
+      procedure: ping,
+      context: { auth: true },
+      path: ['users'],
+    }))
+
+    expect(vi.mocked(createProcedureCaller).mock.results[0]?.value).toBeCalledTimes(1)
+    expect(vi.mocked(createProcedureCaller).mock.results[0]?.value).toBeCalledWith({ val: '123' })
   })
 
   it('hooks', async () => {
@@ -200,79 +117,71 @@ describe('createRouterCaller', () => {
     const onSuccess = vi.fn()
     const onError = vi.fn()
     const onFinish = vi.fn()
-    const onExecute = vi.fn()
+    const execute = vi.fn()
 
-    const procedure = os.input(z.string()).func(() => 'output')
-
-    const context = { val: 'context' }
     const caller = createRouterCaller({
-      router: { procedure, nested: { procedure } },
-      context,
-      execute: async (input, context, meta) => {
-        onStart(input, context, meta)
-        onExecute(input, context, meta)
-        try {
-          const output = await meta.next()
-          onSuccess(output, context, meta)
-          return output
-        }
-        catch (e) {
-          onError(e, context, meta)
-          throw e
-        }
-      },
+      router,
+      context: { auth: true },
       onStart,
       onSuccess,
       onError,
       onFinish,
+      execute,
     })
 
-    const meta = {
-      path: ['procedure'],
-      procedure,
-    }
+    expect(caller.pong({ val: '123' })).toEqual('__mocked__')
 
-    await caller.procedure('input')
-    expect(onStart).toBeCalledTimes(2)
-    expect(onStart).toHaveBeenNthCalledWith(1, 'input', context, { ...meta, next: expect.any(Function) })
-    expect(onStart).toHaveBeenNthCalledWith(2, { input: 'input', status: 'pending' }, context, meta)
-    expect(onExecute).toBeCalledTimes(1)
-    expect(onExecute).toHaveBeenCalledWith('input', context, { ...meta, next: expect.any(Function) })
-    expect(onSuccess).toBeCalledTimes(2)
-    expect(onSuccess).toHaveBeenNthCalledWith(1, { output: 'output', input: 'input', status: 'success' }, context, meta)
-    expect(onSuccess).toHaveBeenNthCalledWith(2, 'output', context, { ...meta, next: expect.any(Function) })
-    expect(onError).not.toBeCalled()
-    expect(onFinish).toBeCalledTimes(1)
-    expect(onFinish).toBeCalledWith({ output: 'output', input: 'input', status: 'success' }, context, meta)
+    expect(createProcedureCaller).toBeCalledTimes(1)
+    expect(createProcedureCaller).toHaveBeenCalledWith(expect.objectContaining({
+      procedure: pong,
+      context: { auth: true },
+      path: ['pong'],
+      onStart,
+      onSuccess,
+      onError,
+      onFinish,
+      execute,
+    }))
+  })
 
-    onSuccess.mockClear()
-    onError.mockClear()
-    onFinish.mockClear()
-    onExecute.mockClear()
+  it('not recursive on symbol', () => {
+    expect((caller as any)[Symbol('something')]).toBeUndefined()
+  })
 
-    // @ts-expect-error - invalid input
-    await expect(caller.nested.procedure(123)).rejects.toThrowError(
-      'Validation input failed',
-    )
-
-    const meta2 = {
-      path: ['nested', 'procedure'],
-      procedure,
-    }
-
-    const error2 = new ORPCError({
-      message: 'Validation input failed',
-      code: 'BAD_REQUEST',
-      cause: expect.any(Error),
+  it('throw error if call on invalid lazy', async () => {
+    const caller = createRouterCaller({
+      router: lazy(() => Promise.resolve({ default: undefined })),
     })
 
-    expect(onExecute).toBeCalledTimes(1)
-    expect(onExecute).toHaveBeenCalledWith(123, context, { ...meta2, next: expect.any(Function) })
-    expect(onError).toBeCalledTimes(2)
-    expect(onError).toHaveBeenNthCalledWith(1, { input: 123, error: error2, status: 'error' }, context, meta2)
-    expect(onError).toHaveBeenNthCalledWith(2, error2, context, { ...meta2, next: expect.any(Function) })
-    expect(onSuccess).not.toBeCalled()
-    expect(onFinish).toBeCalledTimes(1)
-    expect(onFinish).toBeCalledWith({ input: 123, error: error2, status: 'error' }, context, meta2)
+    // @ts-expect-error --- invalid lazy
+    caller.router.ping.pong({ val: '123' })
+
+    const procedure = vi.mocked(createProcedureCaller).mock.calls[0]![0].procedure
+
+    expect(procedure).toSatisfy(isLazy)
+
+    expect(unlazy(procedure)).rejects.toThrow('Expected a valid procedure or lazy<procedure> but got unknown.')
+  })
+
+  it('return undefined if access the undefined key', async () => {
+    const caller = createRouterCaller({
+      router: {
+        ping,
+      },
+    })
+
+    // @ts-expect-error --- invalid access
+    expect(caller.router).toBeUndefined()
+  })
+
+  it('works without base path', async () => {
+    const caller = createRouterCaller({
+      router: {
+        ping,
+      },
+    })
+
+    expect(caller.ping({ val: '123' })).toEqual('__mocked__')
+    expect(vi.mocked(createProcedureCaller).mock.calls[0]![0].path).toEqual(['ping'])
   })
 })
