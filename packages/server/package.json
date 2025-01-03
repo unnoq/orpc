@@ -30,6 +30,11 @@
         "import": "./dist/node.js",
         "default": "./dist/node.js"
       },
+      "./express": {
+        "types": "./dist/src/adapters/express/index.d.ts",
+        "import": "./dist/express.js",
+        "default": "./dist/express.js"
+      },
       "./🔒/*": {
         "types": "./dist/src/*.d.ts"
       }
@@ -39,6 +44,7 @@
     ".": "./src/index.ts",
     "./fetch": "./src/adapters/fetch/index.ts",
     "./node": "./src/adapters/node/index.ts",
+    "./express": "./src/adapters/express/index.ts",
     "./🔒/*": {
       "types": "./src/*.ts"
     }
@@ -59,6 +65,7 @@
     "@orpc/shared": "workspace:*"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "zod": "^3.24.1"
   }
 }

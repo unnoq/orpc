@@ -1,6 +1,7 @@
 import { OpenAPIGenerator } from '@orpc/openapi'
 import { OpenAPIServerHandler } from '@orpc/openapi/node'
-import { CompositeHandler, ORPCHandler } from '@orpc/server/node'
+import { expressAdapter } from '@orpc/server/express'
+import { ORPCHandler } from '@orpc/server/node'
 import { ZodCoercer, ZodToJsonSchemaConverter } from '@orpc/zod'
 import express from 'express'
 import { router } from './router'
@@ -17,23 +18,14 @@ const openAPIHandler = new OpenAPIServerHandler(router, {
   },
 })
 
-const orpcHandler = new ORPCHandler(router, {
-  onError: ({ error }) => {
-    console.error(error)
-  },
-})
+const orpcHandler = new ORPCHandler(router)
 
-const compositeHandler = new CompositeHandler([openAPIHandler, orpcHandler])
+app.use(expressAdapter([orpcHandler, openAPIHandler], {
+  prefix: '/api',
+}))
 
-app.all('/api/*', (req, res) => {
-  const context = req.headers.authorization
-    ? { user: { id: 'test', name: 'John Doe', email: 'john@doe.com' } }
-    : {}
-
-  return compositeHandler.handle(req, res, {
-    prefix: '/api',
-    context,
-  })
+app.use((req, res, next) => {
+  res.status(404).send('Not Found')
 })
 
 const openAPIGenerator = new OpenAPIGenerator({

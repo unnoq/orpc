@@ -331,6 +331,9 @@ importers:
         specifier: workspace:*
         version: link:../shared
     devDependencies:
+      '@types/express':
+        specifier: ^5.0.0
+        version: 5.0.0
       zod:
         specifier: ^3.24.1
         version: 3.24.1
