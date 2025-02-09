@@ -1,4 +1,4 @@
-import type { AnyContractRouter, ContractProcedure, ContractRouterToErrorMap, ContractRouterToMeta, ORPCErrorConstructorMap } from '@orpc/contract'
+import type { AnyContractRouter, ContractProcedure, ContractRouterToErrorMap, ContractRouterToMeta, ErrorMap } from '@orpc/contract'
 import type { ConflictContextGuard, Context, MergedContext } from './context'
 import type { ProcedureImplementer } from './implementer-procedure'
 import type { ImplementerInternalWithMiddlewares } from './implementer-variants'
@@ -24,22 +24,29 @@ export interface RouterImplementer<
       UOutContext,
       TInput,
       TOutput,
-      ORPCErrorConstructorMap<ContractRouterToErrorMap<TContract>>,
+      ContractRouterToErrorMap<TContract>,
       ContractRouterToMeta<TContract>
     >,
-  ): DecoratedMiddleware<TCurrentContext, UOutContext, TInput, TOutput, ORPCErrorConstructorMap<any>, ContractRouterToMeta<TContract>> // ORPCErrorConstructorMap<any> ensures middleware can used in any procedure
+  ): DecoratedMiddleware<
+    TCurrentContext,
+    UOutContext,
+    TInput,
+    TOutput,
+    ContractRouterToErrorMap<TContract>,
+    ContractRouterToMeta<TContract>
+  >
 
-  use<U extends Context>(
+  use<UOutContext extends Context, UErrorMap extends ErrorMap = ContractRouterToErrorMap<TContract>>(
     middleware: Middleware<
       TCurrentContext,
-      U,
+      UOutContext,
       unknown,
       unknown,
-      ORPCErrorConstructorMap<ContractRouterToErrorMap<TContract>>,
+      UErrorMap,
       ContractRouterToMeta<TContract>
     >,
-  ): ConflictContextGuard<MergedContext<TCurrentContext, U>>
-    & ImplementerInternalWithMiddlewares<TContract, TInitialContext, MergedContext<TCurrentContext, U>>
+  ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
+    & ImplementerInternalWithMiddlewares<TContract, TInitialContext, MergedContext<TCurrentContext, UOutContext>>
 
   router<U extends Router<TCurrentContext, TContract>>(router: U): AdaptedRouter<U, TInitialContext, Record<never, never>>
 

@@ -1,4 +1,4 @@
-import type { ORPCErrorConstructorMap } from '@orpc/contract'
+import type { MergedErrorMap } from '@orpc/contract'
 import type { baseErrorMap, BaseMeta } from '../../contract/tests/shared'
 import type { CurrentContext } from '../tests/shared'
 import type { Middleware } from './middleware'
@@ -9,7 +9,7 @@ const decorated = {} as DecoratedMiddleware<
   { extra: boolean },
   { input: string },
   { output: number },
-  ORPCErrorConstructorMap<typeof baseErrorMap>,
+  typeof baseErrorMap,
   BaseMeta
 >
 
@@ -21,10 +21,31 @@ describe('DecoratedMiddleware', () => {
         { extra: boolean },
         { input: string },
         { output: number },
-        ORPCErrorConstructorMap<typeof baseErrorMap>,
+        typeof baseErrorMap,
         BaseMeta
       >
     >()
+  })
+
+  it('.errors', () => {
+    const applied = decorated.errors({
+      BAD_GATEWAY: { message: 'BAD_GATEWAY' },
+      OVERRIDE: { message: 'OVERRIDE' },
+    })
+
+    expectTypeOf(applied).toEqualTypeOf<
+      DecoratedMiddleware<
+        CurrentContext,
+        { extra: boolean },
+        { input: string },
+        { output: number },
+        MergedErrorMap<typeof baseErrorMap, { BAD_GATEWAY: { message: string }, OVERRIDE: { message: string } }>,
+        BaseMeta
+      >
+    >()
+
+    // @ts-expect-error - invalid schema
+    decorated.errors({ BAD_GATEWAY: { data: {} } })
   })
 
   it('.mapInput', () => {
@@ -36,7 +57,7 @@ describe('DecoratedMiddleware', () => {
         { extra: boolean },
         'input',
         { output: number },
-        ORPCErrorConstructorMap<typeof baseErrorMap>,
+        typeof baseErrorMap,
         BaseMeta
       >
     >()
@@ -54,7 +75,7 @@ describe('DecoratedMiddleware', () => {
           { extra: boolean } & { extra2: boolean },
           { input: string } & { input2: string },
           { output: number },
-          ORPCErrorConstructorMap<typeof baseErrorMap>,
+          MergedErrorMap<typeof baseErrorMap, typeof baseErrorMap>,
           BaseMeta
         >
       >()
@@ -80,7 +101,7 @@ describe('DecoratedMiddleware', () => {
           { extra: boolean } & { extra2: boolean },
           { input: string } & { input2: string },
           { output: number },
-          ORPCErrorConstructorMap<typeof baseErrorMap>,
+          MergedErrorMap<typeof baseErrorMap, typeof baseErrorMap>,
           BaseMeta
         >
       >()

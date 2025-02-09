@@ -3,11 +3,16 @@ import { baseErrorMap, baseMeta, baseRoute, generalSchema, inputSchema, outputSc
 import { router } from '../tests/shared'
 import { Builder } from './builder'
 import { unlazy } from './lazy'
-import * as MiddlewareDecorated from './middleware-decorated'
+import { decorateMiddleware } from './middleware-decorated'
 import { DecoratedProcedure } from './procedure-decorated'
 import * as Router from './router'
 
-const decorateMiddlewareSpy = vi.spyOn(MiddlewareDecorated, 'decorateMiddleware')
+vi.mock('./middleware-decorated', () => ({
+  decorateMiddleware: vi.fn(mid => ({
+    mapInput: vi.fn(map => [mid, map]),
+  })),
+}))
+
 const adaptRouterSpy = vi.spyOn(Router, 'adaptRouter')
 
 const mid = vi.fn()
@@ -98,9 +103,9 @@ describe('builder', () => {
     const mid = vi.fn()
     const applied = builder.middleware(mid)
 
-    expect(applied).toBe(decorateMiddlewareSpy.mock.results[0]?.value)
-    expect(decorateMiddlewareSpy).toBeCalledTimes(1)
-    expect(decorateMiddlewareSpy).toBeCalledWith(mid)
+    expect(applied).toBe(vi.mocked(decorateMiddleware).mock.results[0]?.value)
+    expect(decorateMiddleware).toBeCalledTimes(1)
+    expect(decorateMiddleware).toBeCalledWith(mid)
   })
 
   it('.errors', () => {
@@ -116,15 +121,51 @@ describe('builder', () => {
     })
   })
 
-  it('.use', () => {
-    const mid2 = vi.fn()
-    const applied = builder.use(mid2)
+  describe('.use', () => {
+    it('without map input', () => {
+      const mid2 = vi.fn()
+      const applied = builder.use(mid2)
 
-    expect(applied).instanceOf(Builder)
-    expect(applied).not.toBe(builder)
-    expect(applied['~orpc']).toEqual({
-      ...def,
-      middlewares: [mid, mid2],
+      expect(applied).instanceOf(Builder)
+      expect(applied).not.toBe(builder)
+      expect(applied['~orpc']).toEqual({
+        ...def,
+        middlewares: [mid, mid2],
+      })
+    })
+
+    it('with map input', () => {
+      const mid2 = vi.fn()
+      const map = vi.fn()
+      const applied = builder.use(mid2, map)
+
+      expect(applied).instanceOf(Builder)
+      expect(applied).not.toBe(builder)
+      expect(applied['~orpc']).toEqual({
+        ...def,
+        middlewares: [mid, [mid2, map]],
+      })
+
+      expect(decorateMiddleware).toBeCalledTimes(1)
+      expect(decorateMiddleware).toBeCalledWith(mid2)
+    })
+
+    it('with attached error map', () => {
+      const errorMap = {
+        ADDITION: {},
+        OVERRIDE: { message: 'this is low priority' },
+      }
+      const mid2 = vi.fn() as any
+      mid2['~errorMap'] = errorMap
+      const applied = builder.use(mid2)
+
+      expect(applied).instanceOf(Builder)
+      expect(applied).not.toBe(builder)
+      expect(applied['~orpc']).toEqual({
+        ...def,
+        errorMap: { ...errorMap, ...def.errorMap },
+        middlewares: [mid, mid2],
+      })
     })
   })
 

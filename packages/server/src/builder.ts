@@ -1,4 +1,4 @@
-import type { ContractProcedureDef, ContractRouter, ErrorMap, HTTPPath, MergedErrorMap, Meta, ORPCErrorConstructorMap, Route, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { ContractProcedureDef, ContractRouter, ErrorMap, HTTPPath, MergedErrorMap, Meta, Route, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
 import type { BuilderWithMiddlewares, ProcedureBuilder, ProcedureBuilderWithInput, ProcedureBuilderWithOutput, RouterBuilder } from './builder-variants'
 import type { ConflictContextGuard, Context, MergedContext } from './context'
 import type { FlattenLazy } from './lazy-utils'
@@ -98,8 +98,10 @@ export class Builder<
   }
 
   middleware<UOutContext extends Context, TInput, TOutput = any>( // = any here is important to make middleware can be used in any output by default
-    middleware: Middleware<TCurrentContext, UOutContext, TInput, TOutput, ORPCErrorConstructorMap<TErrorMap>, TMeta>,
-  ): DecoratedMiddleware<TCurrentContext, UOutContext, TInput, TOutput, ORPCErrorConstructorMap<any>, TMeta> { // ORPCErrorConstructorMap<any> ensures middleware can used in any procedure
+    middleware: Middleware<TCurrentContext, UOutContext, TInput, TOutput, TErrorMap, TMeta>,
+  ): DecoratedMiddleware<TCurrentContext, UOutContext, TInput, TOutput, TErrorMap, TMeta> {
+    middleware['~errorMap'] = this['~orpc'].errorMap
+
     return decorateMiddleware(middleware)
   }
 
@@ -112,30 +114,44 @@ export class Builder<
     })
   }
 
-  use<UOutContext extends Context>(
+  use<UOutContext extends Context, UErrorMap extends ErrorMap = TErrorMap>(
     middleware: Middleware<
       TCurrentContext,
       UOutContext,
       SchemaOutput<TInputSchema>,
       SchemaInput<TOutputSchema>,
-      ORPCErrorConstructorMap<TErrorMap>,
+      UErrorMap,
       TMeta
     >,
   ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>> &
-    BuilderWithMiddlewares<TInitialContext, MergedContext<TCurrentContext, UOutContext>, TInputSchema, TOutputSchema, TErrorMap, TMeta>
+    BuilderWithMiddlewares<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      MergedErrorMap<UErrorMap, TErrorMap>,
+      TMeta
+    >
 
-  use<UOutContext extends Context, UInput>(
+  use<UOutContext extends Context, UInput, UErrorMap extends ErrorMap = TErrorMap>(
     middleware: Middleware<
       TCurrentContext,
       UOutContext,
       UInput,
       SchemaInput<TOutputSchema>,
-      ORPCErrorConstructorMap<TErrorMap>,
+      UErrorMap,
       TMeta
     >,
     mapInput: MapInputMiddleware<SchemaOutput<TInputSchema>, UInput>,
   ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>> &
-    BuilderWithMiddlewares<TInitialContext, MergedContext<TCurrentContext, UOutContext>, TInputSchema, TOutputSchema, TErrorMap, TMeta>
+    BuilderWithMiddlewares<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      MergedErrorMap<UErrorMap, TErrorMap>,
+      TMeta
+    >
 
   use(
     middleware: AnyMiddleware,
@@ -147,6 +163,9 @@ export class Builder<
 
     return new Builder({
       ...this['~orpc'],
+      errorMap: mapped['~errorMap']
+        ? mergeErrorMap(mapped['~errorMap'], this['~orpc'].errorMap)
+        : this['~orpc'].errorMap,
       middlewares: addMiddleware(this['~orpc'].middlewares, mapped),
     })
   }
@@ -176,7 +195,7 @@ export class Builder<
       ...this['~orpc'],
       inputSchema: schema,
       inputValidationIndex: fallbackConfig('initialInputValidationIndex', this['~orpc'].config.initialInputValidationIndex) + this['~orpc'].middlewares.length,
-    })
+    }) as any // Type instantiation is excessively deep and possibly infinite.
   }
 
   output<USchema extends Schema>(

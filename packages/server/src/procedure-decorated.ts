@@ -1,4 +1,4 @@
-import type { ClientRest, ErrorMap, MergedErrorMap, Meta, ORPCErrorConstructorMap, Route, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { ClientRest, ErrorMap, MergedErrorMap, Meta, Route, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
 import type { ConflictContextGuard, Context, MergedContext } from './context'
 import type { AnyMiddleware, MapInputMiddleware, Middleware } from './middleware'
 import type { CreateProcedureClientRest, ProcedureClient } from './procedure-client'
@@ -52,30 +52,46 @@ export class DecoratedProcedure<
     })
   }
 
-  use<U extends Context>(
+  use<UOutContext extends Context, UErrorMap extends ErrorMap = TErrorMap>(
     middleware: Middleware<
       TCurrentContext,
-      U,
+      UOutContext,
       SchemaOutput<TInputSchema>,
       THandlerOutput,
-      ORPCErrorConstructorMap<TErrorMap>,
+      UErrorMap,
       TMeta
     >,
-  ): ConflictContextGuard<MergedContext<TCurrentContext, U>>
-    & DecoratedProcedure<TInitialContext, MergedContext<TCurrentContext, U>, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta>
+  ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
+    & DecoratedProcedure<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      THandlerOutput,
+      MergedErrorMap<UErrorMap, TErrorMap>,
+      TMeta
+    >
 
-  use<UOutContext extends Context, UInput>(
+  use<UOutContext extends Context, UInput, UErrorMap extends ErrorMap = TErrorMap>(
     middleware: Middleware<
       TCurrentContext,
       UOutContext,
       UInput,
       THandlerOutput,
-      ORPCErrorConstructorMap<TErrorMap>,
+      UErrorMap,
       TMeta
     >,
     mapInput: MapInputMiddleware<SchemaOutput<TInputSchema, THandlerOutput>, UInput>,
   ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
-    & DecoratedProcedure<TInitialContext, MergedContext<TCurrentContext, UOutContext>, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta>
+    & DecoratedProcedure<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      THandlerOutput,
+      MergedErrorMap<UErrorMap, TErrorMap>,
+      TMeta
+    >
 
   use(middleware: AnyMiddleware, mapInput?: MapInputMiddleware<any, any>): DecoratedProcedure<any, any, any, any, any, any, any> {
     const mapped = mapInput
@@ -84,6 +100,9 @@ export class DecoratedProcedure<
 
     return new DecoratedProcedure({
       ...this['~orpc'],
+      errorMap: mapped['~errorMap']
+        ? mergeErrorMap(mapped['~errorMap'], this['~orpc'].errorMap)
+        : this['~orpc'].errorMap,
       middlewares: addMiddleware(this['~orpc'].middlewares, mapped),
     })
   }

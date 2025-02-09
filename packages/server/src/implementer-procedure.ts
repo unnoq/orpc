@@ -1,4 +1,4 @@
-import type { ClientRest, ErrorMap, Meta, ORPCErrorConstructorMap, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { ClientRest, ErrorMap, MergedErrorMap, Meta, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
 import type { BuilderDef } from './builder'
 import type { ConflictContextGuard, Context, MergedContext } from './context'
 import type { MapInputMiddleware, Middleware } from './middleware'
@@ -8,6 +8,7 @@ import type { DecoratedProcedure } from './procedure-decorated'
 
 /**
  * Like `DecoratedProcedure`, but removed all method that can change the contract.
+ * It must backward compatible with `DecoratedProcedure`.
  */
 export interface ImplementedProcedure<
   TInitialContext extends Context,
@@ -18,28 +19,46 @@ export interface ImplementedProcedure<
   TErrorMap extends ErrorMap,
   TMeta extends Meta,
 > extends Procedure<TInitialContext, TCurrentContext, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta> {
-  use: (<U extends Context>(
+  use<U extends Context, UErrorMap extends ErrorMap = TErrorMap>(
     middleware: Middleware<
       TCurrentContext,
       U,
       SchemaOutput<TInputSchema>,
       THandlerOutput,
-      ORPCErrorConstructorMap<TErrorMap>,
+      UErrorMap,
       TMeta
     >,
-  ) => ConflictContextGuard<MergedContext<TCurrentContext, U>>
-    & DecoratedProcedure<TInitialContext, MergedContext<TCurrentContext, U>, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta>) & (<UOutContext extends Context, UInput>(
-      middleware: Middleware<
-        TCurrentContext,
-        UOutContext,
-        UInput,
-        THandlerOutput,
-        ORPCErrorConstructorMap<TErrorMap>,
-        TMeta
-      >,
-      mapInput: MapInputMiddleware<SchemaOutput<TInputSchema, THandlerOutput>, UInput>,
-    ) => ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
-      & DecoratedProcedure<TInitialContext, MergedContext<TCurrentContext, UOutContext>, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta>)
+  ): ConflictContextGuard<MergedContext<TCurrentContext, U>>
+    & DecoratedProcedure<
+      TInitialContext,
+      MergedContext<TCurrentContext, U>,
+      TInputSchema,
+      TOutputSchema,
+      THandlerOutput,
+      MergedErrorMap<UErrorMap, TErrorMap>,
+      TMeta
+    >
+
+  use<UOutContext extends Context, UInput, UErrorMap extends ErrorMap = TErrorMap>(
+    middleware: Middleware<
+      TCurrentContext,
+      UOutContext,
+      UInput,
+      THandlerOutput,
+      UErrorMap,
+      TMeta
+    >,
+    mapInput: MapInputMiddleware<SchemaOutput<TInputSchema, THandlerOutput>, UInput>,
+  ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
+    & DecoratedProcedure<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      THandlerOutput,
+      MergedErrorMap<UErrorMap, TErrorMap>,
+      TMeta
+    >
 
   /**
    * Make this procedure callable (works like a function while still being a procedure).
@@ -60,6 +79,7 @@ export interface ImplementedProcedure<
 
 /**
  * Like `ProcedureBuilderWithoutHandler`, but removed all method that can change the contract.
+ * It must backward compatible with `Builder`.
  */
 export interface ProcedureImplementer<
   TInitialContext extends Context,
@@ -71,42 +91,44 @@ export interface ProcedureImplementer<
 > {
   '~orpc': BuilderDef<TInputSchema, TOutputSchema, TErrorMap, TMeta>
 
-  'use': (<U extends Context>(
+  'use'<U extends Context, UErrorMap extends ErrorMap = TErrorMap>(
     middleware: Middleware<
       TCurrentContext,
       U,
       SchemaOutput<TInputSchema>,
       SchemaInput<TOutputSchema>,
-      ORPCErrorConstructorMap<TErrorMap>,
+      UErrorMap,
       TMeta
     >,
-  ) => ConflictContextGuard<MergedContext<TCurrentContext, U>>
+  ): ConflictContextGuard<MergedContext<TCurrentContext, U>>
     & ProcedureImplementer<
       TInitialContext,
       MergedContext<TCurrentContext, U>,
       TInputSchema,
       TOutputSchema,
-      TErrorMap,
+      MergedErrorMap<UErrorMap, TErrorMap>,
       TMeta
-    >) & (<UOutContext extends Context, UInput>(
-      middleware: Middleware<
-        TCurrentContext,
-        UOutContext,
-        UInput,
-        SchemaInput<TOutputSchema>,
-        ORPCErrorConstructorMap<TErrorMap>,
-        TMeta
-      >,
-      mapInput: MapInputMiddleware<SchemaOutput<TInputSchema>, UInput>,
-    ) => ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
-      & ProcedureImplementer<
-        TInitialContext,
-        MergedContext<TCurrentContext, UOutContext>,
-        TInputSchema,
-        TOutputSchema,
-        TErrorMap,
-        TMeta
-      >)
+    >
+
+  'use'<UOutContext extends Context, UInput, UErrorMap extends ErrorMap = TErrorMap>(
+    middleware: Middleware<
+      TCurrentContext,
+      UOutContext,
+      UInput,
+      SchemaInput<TOutputSchema>,
+      UErrorMap,
+      TMeta
+    >,
+    mapInput: MapInputMiddleware<SchemaOutput<TInputSchema>, UInput>,
+  ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
+    & ProcedureImplementer<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      MergedErrorMap<UErrorMap, TErrorMap>,
+      TMeta
+    >
 
   'handler'<UFuncOutput extends SchemaInput<TOutputSchema>>(
     handler: ProcedureHandler<TCurrentContext, TInputSchema, TOutputSchema, UFuncOutput, TErrorMap, TMeta>,

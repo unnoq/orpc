@@ -62,7 +62,7 @@ describe('Implementer', () => {
             { extra: boolean },
             unknown,
             any,
-            ORPCErrorConstructorMap<any>,
+            typeof baseErrorMap | Record<never, never>,
             Meta | BaseMeta
           >
         >()
@@ -80,7 +80,7 @@ describe('Implementer', () => {
             Record<never, never>,
             'input',
             'output',
-            ORPCErrorConstructorMap<any>,
+            typeof baseErrorMap | Record<never, never>,
             Meta | BaseMeta
           >
         >()

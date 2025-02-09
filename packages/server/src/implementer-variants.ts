@@ -1,4 +1,4 @@
-import type { AnyContractRouter, ContractProcedure, ContractRouterToErrorMap, ContractRouterToMeta, ORPCErrorConstructorMap } from '@orpc/contract'
+import type { AnyContractRouter, ContractProcedure, ContractRouterToErrorMap, ContractRouterToMeta, ErrorMap } from '@orpc/contract'
 import type { ConflictContextGuard, Context, MergedContext } from './context'
 import type { ProcedureImplementer } from './implementer-procedure'
 import type { FlattenLazy } from './lazy-utils'
@@ -10,13 +10,13 @@ export interface RouterImplementerWithMiddlewares<
   TInitialContext extends Context,
   TCurrentContext extends Context,
 > {
-  use<U extends Context>(
+  use<U extends Context, UErrorMap extends ErrorMap = ContractRouterToErrorMap<TContract>>(
     middleware: Middleware<
       TCurrentContext,
       U,
       unknown,
       unknown,
-      ORPCErrorConstructorMap<ContractRouterToErrorMap<TContract>>,
+      UErrorMap,
       ContractRouterToMeta<TContract>
     >,
   ): ConflictContextGuard<MergedContext<TCurrentContext, U>>

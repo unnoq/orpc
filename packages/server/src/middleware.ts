@@ -43,11 +43,13 @@ export interface Middleware<
   TOutContext extends Context,
   TInput,
   TOutput,
-  TErrorConstructorMap extends ORPCErrorConstructorMap<any>,
+  TErrorMap extends ErrorMap,
   TMeta extends Meta,
 > {
+  '~errorMap'?: TErrorMap
+
   (
-    options: MiddlewareOptions<TInContext, TOutput, TErrorConstructorMap, TMeta>,
+    options: MiddlewareOptions<TInContext, TOutput, ORPCErrorConstructorMap<TErrorMap>, TMeta>,
     input: TInput,
     output: MiddlewareOutputFn<TOutput>,
   ): Promisable<

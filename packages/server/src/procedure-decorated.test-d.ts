@@ -1,8 +1,8 @@
-import type { Client, ClientRest, ErrorFromErrorMap, ErrorMap, MergedErrorMap, ORPCErrorConstructorMap, Schema } from '@orpc/contract'
+import type { Client, ClientRest, ErrorFromErrorMap, ErrorMap, MergedErrorMap, Meta, ORPCErrorConstructorMap, Schema } from '@orpc/contract'
 import type { baseErrorMap, BaseMeta, inputSchema, outputSchema } from '../../contract/tests/shared'
 import type { CurrentContext, InitialContext } from '../tests/shared'
 import type { Context } from './context'
-import type { MiddlewareOutputFn } from './middleware'
+import type { Middleware, MiddlewareOutputFn } from './middleware'
 import type { Procedure } from './procedure'
 import type { DecoratedProcedure } from './procedure-decorated'
 
@@ -117,7 +117,7 @@ describe('DecoratedProcedure', () => {
           typeof inputSchema,
           typeof outputSchema,
           { output: number },
-          typeof baseErrorMap,
+          MergedErrorMap<typeof baseErrorMap, typeof baseErrorMap>,
           BaseMeta
         >
       >()
@@ -157,7 +157,7 @@ describe('DecoratedProcedure', () => {
           typeof inputSchema,
           typeof outputSchema,
           { output: number },
-          typeof baseErrorMap,
+          MergedErrorMap<typeof baseErrorMap, typeof baseErrorMap>,
           BaseMeta
         >
       >()
@@ -170,6 +170,27 @@ describe('DecoratedProcedure', () => {
       builder.use(({ next }, input, output: MiddlewareOutputFn<'invalid'>) => next({}), () => {})
       // conflict context but not detected
       expectTypeOf(builder.use(({ next }) => next({ context: { db: undefined } }), () => {})).toEqualTypeOf<never>()
+    })
+
+    it('with error map', () => {
+      const errors = {
+        OVERRIDE: { message: 'OVERRIDE' },
+        ADDITIONAL: { message: 'ADDITIONAL' },
+      }
+      const mid = {} as Middleware<Context, { extra: boolean }, unknown, any, typeof errors, Meta>
+      const applied = builder.use(mid)
+
+      expectTypeOf(applied).toEqualTypeOf<
+        DecoratedProcedure<
+          InitialContext,
+          CurrentContext & { extra: boolean },
+          typeof inputSchema,
+          typeof outputSchema,
+          { output: number },
+          MergedErrorMap<typeof errors, typeof baseErrorMap>,
+          BaseMeta
+        >
+      >()
     })
   })
 

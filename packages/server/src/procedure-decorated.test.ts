@@ -96,6 +96,24 @@ describe('decoratedProcedure', () => {
         middlewares: [...def.middlewares, [mid, map]],
       })
     })
+
+    it('with attached error map', () => {
+      const errorMap = {
+        ADDITION: {},
+        OVERRIDE: { message: 'this is low priority' },
+      }
+      const mid2 = vi.fn() as any
+      mid2['~errorMap'] = errorMap
+      const applied = decorated.use(mid2)
+
+      expect(applied).not.toBe(decorated)
+      expect(applied).toBeInstanceOf(DecoratedProcedure)
+      expect(applied['~orpc']).toEqual({
+        ...def,
+        errorMap: { ...errorMap, ...def.errorMap },
+        middlewares: [...def.middlewares, mid2],
+      })
+    })
   })
 
   it('.callable', () => {

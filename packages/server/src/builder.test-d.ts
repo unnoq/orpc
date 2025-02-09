@@ -1,11 +1,11 @@
-import type { ContractProcedure, ErrorMap, MergedErrorMap, ORPCErrorConstructorMap, Schema } from '@orpc/contract'
+import type { ContractProcedure, ErrorMap, MergedErrorMap, Meta, ORPCErrorConstructorMap, Schema } from '@orpc/contract'
 import type { baseErrorMap, BaseMeta, inputSchema, outputSchema } from '../../contract/tests/shared'
 import type { CurrentContext, InitialContext } from '../tests/shared'
 import type { Builder } from './builder'
 import type { BuilderWithMiddlewares, ProcedureBuilder, ProcedureBuilderWithInput, ProcedureBuilderWithOutput, RouterBuilder } from './builder-variants'
 import type { Context } from './context'
 import type { Lazy } from './lazy'
-import type { MiddlewareOutputFn } from './middleware'
+import type { Middleware, MiddlewareOutputFn } from './middleware'
 import type { DecoratedMiddleware } from './middleware-decorated'
 import type { Procedure } from './procedure'
 import type { DecoratedProcedure } from './procedure-decorated'
@@ -135,7 +135,7 @@ describe('Builder', () => {
           })
         }),
       ).toEqualTypeOf<
-        DecoratedMiddleware<CurrentContext, { extra: boolean }, unknown, any, ORPCErrorConstructorMap<any>, BaseMeta>
+        DecoratedMiddleware<CurrentContext, { extra: boolean }, unknown, any, typeof baseErrorMap, BaseMeta>
       >()
 
       // @ts-expect-error --- conflict context
@@ -146,7 +146,7 @@ describe('Builder', () => {
       expectTypeOf(
         builder.middleware(({ next }, input: 'input', output: MiddlewareOutputFn<'output'>) => next()),
       ).toEqualTypeOf<
-        DecoratedMiddleware<CurrentContext, Record<never, never>, 'input', 'output', ORPCErrorConstructorMap<any>, BaseMeta>
+        DecoratedMiddleware<CurrentContext, Record<never, never>, 'input', 'output', typeof baseErrorMap, BaseMeta>
       >()
     })
   })
@@ -198,7 +198,7 @@ describe('Builder', () => {
           CurrentContext & { extra: boolean },
           typeof inputSchema,
           typeof outputSchema,
-          typeof baseErrorMap,
+          MergedErrorMap<typeof baseErrorMap, typeof baseErrorMap>,
           BaseMeta
         >
       >()
@@ -242,7 +242,7 @@ describe('Builder', () => {
           CurrentContext & { extra: boolean },
           typeof inputSchema,
           typeof outputSchema,
-          typeof baseErrorMap,
+          MergedErrorMap<typeof baseErrorMap, typeof baseErrorMap>,
           BaseMeta
         >
       >()
@@ -261,6 +261,26 @@ describe('Builder', () => {
       builder.use(({ next }, input: 'invalid') => next({}), input => ({ mapped: true }))
       // @ts-expect-error --- output is not match
       builder.use(({ next }, input, output: MiddlewareOutputFn<'invalid'>) => next({}), input => ({ mapped: true }))
+    })
+
+    it('with error map', () => {
+      const errors = {
+        OVERRIDE: { message: 'OVERRIDE' },
+        ADDITIONAL: { message: 'ADDITIONAL' },
+      }
+      const mid = {} as Middleware<Context, { extra: boolean }, unknown, any, typeof errors, Meta>
+      const applied = builder.use(mid)
+
+      expectTypeOf(applied).toEqualTypeOf<
+        BuilderWithMiddlewares<
+          InitialContext,
+          CurrentContext & { extra: boolean },
+          typeof inputSchema,
+          typeof outputSchema,
+          MergedErrorMap<typeof errors, typeof baseErrorMap>,
+          BaseMeta
+        >
+      >()
     })
   })
 
