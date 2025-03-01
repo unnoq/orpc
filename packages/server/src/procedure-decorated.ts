@@ -16,7 +16,7 @@ export class DecoratedProcedure<
   TCurrentContext extends Context,
   TInputSchema extends Schema,
   TOutputSchema extends Schema,
-  THandlerOutput extends SchemaInput<TOutputSchema>,
+  THandlerOutput,
   TErrorMap extends ErrorMap,
   TMeta extends Meta,
 > extends Procedure<TInitialContext, TCurrentContext, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta> {
@@ -60,25 +60,41 @@ export class DecoratedProcedure<
       TCurrentContext,
       U,
       SchemaOutput<TInputSchema>,
-      THandlerOutput,
+      SchemaInput<TOutputSchema, THandlerOutput>,
       ORPCErrorConstructorMap<TErrorMap>,
       TMeta
     >,
   ): ConflictContextGuard<MergedContext<TCurrentContext, U>>
-    & DecoratedProcedure<TInitialContext, MergedContext<TCurrentContext, U>, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta>
+    & DecoratedProcedure<
+      TInitialContext,
+      MergedContext<TCurrentContext, U>,
+      TInputSchema,
+      TOutputSchema,
+      THandlerOutput,
+      TErrorMap,
+      TMeta
+    >
 
   use<UOutContext extends Context, UInput>(
     middleware: Middleware<
       TCurrentContext,
       UOutContext,
       UInput,
-      THandlerOutput,
+      SchemaInput<TOutputSchema, THandlerOutput>,
       ORPCErrorConstructorMap<TErrorMap>,
       TMeta
     >,
-    mapInput: MapInputMiddleware<SchemaOutput<TInputSchema, THandlerOutput>, UInput>,
+    mapInput: MapInputMiddleware<SchemaOutput<TInputSchema>, UInput>,
   ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>>
-    & DecoratedProcedure<TInitialContext, MergedContext<TCurrentContext, UOutContext>, TInputSchema, TOutputSchema, THandlerOutput, TErrorMap, TMeta>
+    & DecoratedProcedure<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      THandlerOutput,
+      TErrorMap,
+      TMeta
+    >
 
   use(middleware: AnyMiddleware, mapInput?: MapInputMiddleware<any, any>): DecoratedProcedure<any, any, any, any, any, any, any> {
     const mapped = mapInput

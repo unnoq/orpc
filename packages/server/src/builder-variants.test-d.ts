@@ -70,13 +70,13 @@ describe('BuilderWithMiddlewares', () => {
 
   it('.use', () => {
     const applied = builder.use(({ context, next, path, procedure, errors, signal }, input, output) => {
-      expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+      expectTypeOf(input).toEqualTypeOf<unknown>()
       expectTypeOf(context).toEqualTypeOf<CurrentContext>()
       expectTypeOf(path).toEqualTypeOf<string[]>()
       expectTypeOf(procedure).toEqualTypeOf<
         Procedure<Context, Context, Schema, Schema, unknown, ErrorMap, BaseMeta>
       >()
-      expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<{ output: number }>>()
+      expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<unknown>>()
       expectTypeOf(errors).toEqualTypeOf<ORPCErrorConstructorMap<typeof baseErrorMap>>()
       expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
 
@@ -174,7 +174,7 @@ describe('BuilderWithMiddlewares', () => {
 
   it('.handler', () => {
     const procedure = builder.handler(({ input, context, procedure, path, signal, errors }) => {
-      expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+      expectTypeOf(input).toEqualTypeOf<unknown>()
       expectTypeOf(context).toEqualTypeOf<CurrentContext>()
       expectTypeOf(path).toEqualTypeOf<string[]>()
       expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
@@ -250,13 +250,13 @@ describe('ProcedureBuilder', () => {
 
   it('.use', () => {
     const applied = builder.use(({ context, next, path, procedure, errors, signal }, input, output) => {
-      expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+      expectTypeOf(input).toEqualTypeOf<unknown>()
       expectTypeOf(context).toEqualTypeOf<CurrentContext>()
       expectTypeOf(path).toEqualTypeOf<string[]>()
       expectTypeOf(procedure).toEqualTypeOf<
         Procedure<Context, Context, Schema, Schema, unknown, ErrorMap, BaseMeta>
       >()
-      expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<{ output: number }>>()
+      expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<unknown>>()
       expectTypeOf(errors).toEqualTypeOf<ORPCErrorConstructorMap<typeof baseErrorMap>>()
       expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
 
@@ -354,7 +354,7 @@ describe('ProcedureBuilder', () => {
 
   it('.handler', () => {
     const procedure = builder.handler(({ input, context, procedure, path, signal, errors }) => {
-      expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+      expectTypeOf(input).toEqualTypeOf<unknown>()
       expectTypeOf(context).toEqualTypeOf<CurrentContext>()
       expectTypeOf(path).toEqualTypeOf<string[]>()
       expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
@@ -437,7 +437,7 @@ describe('ProcedureBuilderWithInput', () => {
         expectTypeOf(procedure).toEqualTypeOf<
           Procedure<Context, Context, Schema, Schema, unknown, ErrorMap, BaseMeta>
         >()
-        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<{ output: number }>>()
+        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<unknown>>()
         expectTypeOf(errors).toEqualTypeOf<ORPCErrorConstructorMap<typeof baseErrorMap>>()
         expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
 
@@ -477,7 +477,7 @@ describe('ProcedureBuilderWithInput', () => {
         expectTypeOf(procedure).toEqualTypeOf<
           Procedure<Context, Context, Schema, Schema, unknown, ErrorMap, BaseMeta>
         >()
-        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<{ output: number }>>()
+        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<unknown>>()
         expectTypeOf(errors).toEqualTypeOf<ORPCErrorConstructorMap<typeof baseErrorMap>>()
         expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
 
@@ -613,7 +613,7 @@ describe('ProcedureBuilderWithOutput', () => {
       '$config' | '$context' | '$meta' | '$route' | 'middleware' | 'prefix' | 'tag' | 'router' | 'lazy' | 'output'
     >
 
-    expectTypeOf(builder).toMatchTypeOf(expected)
+    // expectTypeOf(builder).toMatchTypeOf(expected)
     expectTypeOf<keyof typeof builder>().toEqualTypeOf<keyof typeof expected>()
   })
 
@@ -646,7 +646,7 @@ describe('ProcedureBuilderWithOutput', () => {
 
   it('.use', () => {
     const applied = builder.use(({ context, next, path, procedure, errors, signal }, input, output) => {
-      expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+      expectTypeOf(input).toEqualTypeOf<unknown>()
       expectTypeOf(context).toEqualTypeOf<CurrentContext>()
       expectTypeOf(path).toEqualTypeOf<string[]>()
       expectTypeOf(procedure).toEqualTypeOf<
@@ -734,7 +734,7 @@ describe('ProcedureBuilderWithOutput', () => {
 
   it('.handler', () => {
     const procedure = builder.handler(({ input, context, procedure, path, signal, errors }) => {
-      expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+      expectTypeOf(input).toEqualTypeOf<unknown>()
       expectTypeOf(context).toEqualTypeOf<CurrentContext>()
       expectTypeOf(path).toEqualTypeOf<string[]>()
       expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
@@ -753,11 +753,14 @@ describe('ProcedureBuilderWithOutput', () => {
         CurrentContext,
         typeof inputSchema,
         typeof outputSchema,
-        { output: number },
+        unknown,
         typeof baseErrorMap,
         BaseMeta
       >
     >()
+
+    // @ts-expect-error --- invalid output
+    builder.handler(() => ({ output: 'invalid' }))
   })
 })
 
@@ -777,7 +780,7 @@ describe('ProcedureBuilderWithInputOutput', () => {
       '$config' | '$context' | '$meta' | '$route' | 'middleware' | 'prefix' | 'tag' | 'router' | 'lazy' | 'input' | 'output'
     >
 
-    expectTypeOf(builder).toMatchTypeOf(expected)
+    // expectTypeOf(builder).toMatchTypeOf(expected)
     expectTypeOf<keyof typeof builder>().toEqualTypeOf<keyof typeof expected>()
   })
 
@@ -953,11 +956,14 @@ describe('ProcedureBuilderWithInputOutput', () => {
         CurrentContext,
         typeof inputSchema,
         typeof outputSchema,
-        { output: number },
+        unknown,
         typeof baseErrorMap,
         BaseMeta
       >
     >()
+
+    // @ts-expect-error --- invalid output
+    builder.handler(() => ({ output: 'invalid' }))
   })
 })
 

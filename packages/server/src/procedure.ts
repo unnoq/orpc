@@ -1,4 +1,4 @@
-import type { ContractProcedureDef, ErrorMap, Meta, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { ContractProcedureDef, ErrorMap, Meta, Schema } from '@orpc/contract'
 import type { Promisable } from '@orpc/shared'
 import type { Context } from './context'
 import type { ORPCErrorConstructorMap } from './error'
@@ -22,15 +22,14 @@ export interface ProcedureHandlerOptions<
 
 export interface ProcedureHandler<
   TCurrentContext extends Context,
-  TInputSchema extends Schema,
-  TOutputSchema extends Schema,
-  THandlerOutput extends SchemaInput<TOutputSchema>,
+  TInput,
+  THandlerOutput,
   TErrorMap extends ErrorMap,
   TMeta extends Meta,
 > {
   (
-    opt: ProcedureHandlerOptions<TCurrentContext, SchemaOutput<TInputSchema>, ORPCErrorConstructorMap<TErrorMap>, TMeta>
-  ): Promisable<SchemaInput<TOutputSchema, THandlerOutput>>
+    opt: ProcedureHandlerOptions<TCurrentContext, TInput, ORPCErrorConstructorMap<TErrorMap>, TMeta>
+  ): Promisable<THandlerOutput>
 }
 
 export interface ProcedureDef<
@@ -38,7 +37,7 @@ export interface ProcedureDef<
   TCurrentContext extends Context,
   TInputSchema extends Schema,
   TOutputSchema extends Schema,
-  THandlerOutput extends SchemaInput<TOutputSchema>,
+  THandlerOutput,
   TErrorMap extends ErrorMap,
   TMeta extends Meta,
 > extends ContractProcedureDef<TInputSchema, TOutputSchema, TErrorMap, TMeta> {
@@ -46,7 +45,7 @@ export interface ProcedureDef<
   middlewares: AnyMiddleware[]
   inputValidationIndex: number
   outputValidationIndex: number
-  handler: ProcedureHandler<TCurrentContext, any, any, THandlerOutput, any, any>
+  handler: ProcedureHandler<TCurrentContext, any, THandlerOutput, any, any>
 }
 
 export class Procedure<
@@ -54,7 +53,7 @@ export class Procedure<
   TCurrentContext extends Context,
   TInputSchema extends Schema,
   TOutputSchema extends Schema,
-  THandlerOutput extends SchemaInput<TOutputSchema>,
+  THandlerOutput,
   TErrorMap extends ErrorMap,
   TMeta extends Meta,
 > {

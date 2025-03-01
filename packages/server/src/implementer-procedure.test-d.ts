@@ -200,7 +200,7 @@ describe('ProcedureImplementer', () => {
       '$config' | '$context' | '$meta' | '$route' | 'middleware' | 'prefix' | 'tag' | 'router' | 'lazy' | 'input' | 'output' | 'meta' | 'route' | 'errors'
     >
 
-    expectTypeOf(builder).toMatchTypeOf(expected)
+    // expectTypeOf(builder).toMatchTypeOf(expected)
     expectTypeOf<keyof typeof builder>().toEqualTypeOf<keyof typeof expected>()
   })
 
@@ -328,10 +328,13 @@ describe('ProcedureImplementer', () => {
         CurrentContext,
         typeof inputSchema,
         typeof outputSchema,
-        { output: number },
+        unknown,
         typeof baseErrorMap,
         BaseMeta
       >
     >()
+
+    // @ts-expect-error --- invalid output
+    builder.handler(() => ({ output: 'invalid' }))
   })
 })

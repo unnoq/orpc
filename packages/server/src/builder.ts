@@ -1,4 +1,4 @@
-import type { ContractProcedureDef, ContractRouter, ErrorMap, HTTPPath, MergedErrorMap, Meta, Route, Schema, SchemaInput, SchemaOutput } from '@orpc/contract'
+import type { ContractProcedureDef, ContractRouter, ErrorMap, HTTPPath, MergedErrorMap, Meta, Route, Schema } from '@orpc/contract'
 import type { BuilderWithMiddlewares, ProcedureBuilder, ProcedureBuilderWithInput, ProcedureBuilderWithOutput, RouterBuilder } from './builder-variants'
 import type { ConflictContextGuard, Context, MergedContext } from './context'
 import type { ORPCErrorConstructorMap } from './error'
@@ -117,26 +117,40 @@ export class Builder<
     middleware: Middleware<
       TCurrentContext,
       UOutContext,
-      SchemaOutput<TInputSchema>,
-      SchemaInput<TOutputSchema>,
+      unknown,
+      unknown,
       ORPCErrorConstructorMap<TErrorMap>,
       TMeta
     >,
   ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>> &
-    BuilderWithMiddlewares<TInitialContext, MergedContext<TCurrentContext, UOutContext>, TInputSchema, TOutputSchema, TErrorMap, TMeta>
+    BuilderWithMiddlewares<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      TErrorMap,
+      TMeta
+    >
 
   use<UOutContext extends Context, UInput>(
     middleware: Middleware<
       TCurrentContext,
       UOutContext,
       UInput,
-      SchemaInput<TOutputSchema>,
+      unknown,
       ORPCErrorConstructorMap<TErrorMap>,
       TMeta
     >,
-    mapInput: MapInputMiddleware<SchemaOutput<TInputSchema>, UInput>,
+    mapInput: MapInputMiddleware<unknown, UInput>,
   ): ConflictContextGuard<MergedContext<TCurrentContext, UOutContext>> &
-    BuilderWithMiddlewares<TInitialContext, MergedContext<TCurrentContext, UOutContext>, TInputSchema, TOutputSchema, TErrorMap, TMeta>
+    BuilderWithMiddlewares<
+      TInitialContext,
+      MergedContext<TCurrentContext, UOutContext>,
+      TInputSchema,
+      TOutputSchema,
+      TErrorMap,
+      TMeta
+    >
 
   use(
     middleware: AnyMiddleware,
@@ -177,7 +191,7 @@ export class Builder<
       ...this['~orpc'],
       inputSchema: schema,
       inputValidationIndex: fallbackConfig('initialInputValidationIndex', this['~orpc'].config.initialInputValidationIndex) + this['~orpc'].middlewares.length,
-    })
+    }) as any
   }
 
   output<USchema extends Schema>(
@@ -187,11 +201,11 @@ export class Builder<
       ...this['~orpc'],
       outputSchema: schema,
       outputValidationIndex: fallbackConfig('initialOutputValidationIndex', this['~orpc'].config.initialOutputValidationIndex) + this['~orpc'].middlewares.length,
-    })
+    }) as any
   }
 
-  handler<UFuncOutput extends SchemaInput<TOutputSchema>>(
-    handler: ProcedureHandler<TCurrentContext, TInputSchema, TOutputSchema, UFuncOutput, TErrorMap, TMeta>,
+  handler<UFuncOutput>(
+    handler: ProcedureHandler<TCurrentContext, unknown, UFuncOutput, TErrorMap, TMeta>,
   ): DecoratedProcedure<TInitialContext, TCurrentContext, TInputSchema, TOutputSchema, UFuncOutput, TErrorMap, TMeta> {
     return new DecoratedProcedure({
       ...this['~orpc'],

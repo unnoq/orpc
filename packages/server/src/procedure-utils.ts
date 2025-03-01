@@ -21,7 +21,7 @@ export function call<
   TInitialContext extends Context,
   TInputSchema extends Schema,
   TOutputSchema extends Schema,
-  THandlerOutput extends SchemaInput<TOutputSchema>,
+  THandlerOutput,
   TErrorMap extends ErrorMap,
   TMeta extends Meta,
 >(

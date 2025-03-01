@@ -176,13 +176,13 @@ describe('Builder', () => {
   describe('.use', () => {
     it('without map input', () => {
       const applied = builder.use(({ context, next, path, procedure, errors, signal }, input, output) => {
-        expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+        expectTypeOf(input).toEqualTypeOf<unknown>()
         expectTypeOf(context).toEqualTypeOf<CurrentContext>()
         expectTypeOf(path).toEqualTypeOf<string[]>()
         expectTypeOf(procedure).toEqualTypeOf<
           Procedure<Context, Context, Schema, Schema, unknown, ErrorMap, BaseMeta>
         >()
-        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<{ output: number }>>()
+        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<unknown>>()
         expectTypeOf(errors).toEqualTypeOf<ORPCErrorConstructorMap<typeof baseErrorMap>>()
         expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
 
@@ -222,7 +222,7 @@ describe('Builder', () => {
         expectTypeOf(procedure).toEqualTypeOf<
           Procedure<Context, Context, Schema, Schema, unknown, ErrorMap, BaseMeta>
         >()
-        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<{ output: number }>>()
+        expectTypeOf(output).toEqualTypeOf<MiddlewareOutputFn<unknown>>()
         expectTypeOf(errors).toEqualTypeOf<ORPCErrorConstructorMap<typeof baseErrorMap>>()
         expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
 
@@ -232,7 +232,7 @@ describe('Builder', () => {
           },
         })
       }, (input) => {
-        expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+        expectTypeOf(input).toEqualTypeOf<unknown>()
 
         return { mapped: true }
       })
@@ -331,7 +331,7 @@ describe('Builder', () => {
 
   it('.handler', () => {
     const procedure = builder.handler(({ input, context, procedure, path, signal, errors }) => {
-      expectTypeOf(input).toEqualTypeOf<{ input: string }>()
+      expectTypeOf(input).toEqualTypeOf<unknown>()
       expectTypeOf(context).toEqualTypeOf<CurrentContext>()
       expectTypeOf(path).toEqualTypeOf<string[]>()
       expectTypeOf(signal).toEqualTypeOf<undefined | InstanceType<typeof AbortSignal>>()
