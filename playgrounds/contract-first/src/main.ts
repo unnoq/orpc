@@ -38,26 +38,22 @@ const server = createServer(async (req, res) => {
     ? { user: { id: 'test', name: 'John Doe', email: 'john@doe.com' } }
     : {}
 
-  if (req.url?.startsWith('/api')) {
-    const { matched } = await openAPIHandler.handle(req, res, {
-      prefix: '/api',
-      context,
-    })
+  const api = await openAPIHandler.handle(req, res, {
+    prefix: '/api',
+    context,
+  })
 
-    if (matched) {
-      return
-    }
+  if (api.matched) {
+    return
   }
 
-  if (req.url?.startsWith('/rpc')) {
-    const { matched } = await rpcHandler.handle(req, res, {
-      prefix: '/rpc',
-      context,
-    })
+  const rpc = await rpcHandler.handle(req, res, {
+    prefix: '/rpc',
+    context,
+  })
 
-    if (matched) {
-      return
-    }
+  if (rpc.matched) {
+    return
   }
 
   if (req.url === '/spec.json') {

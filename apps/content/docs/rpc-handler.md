@@ -55,17 +55,13 @@ const handler = new RPCHandler(router, {
 })
 
 export default async function fetch(request: Request) {
-  const url = new URL(request.url)
+  const { matched, response } = await handler.handle(request, {
+    prefix: '/rpc',
+    context: {} // Provide initial context if required
+  })
 
-  if (url.pathname.startWith('/rpc')) {
-    const result = await handler.handle(request, {
-      prefix: '/rpc',
-      context: {} // Provide initial context if required
-    })
-
-    if (result.matched) {
-      return result.response
-    }
+  if (matched) {
+    return response
   }
 
   return new Response('Not Found', { status: 404 })

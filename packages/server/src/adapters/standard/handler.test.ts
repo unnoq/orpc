@@ -351,4 +351,22 @@ describe('standardHandler', () => {
     expect(client).toHaveBeenCalledOnce()
     expect(client).toHaveBeenCalledWith(undefined, expect.objectContaining({ lastEventId: '123456' }))
   })
+
+  it('should check prefix first', async () => {
+    const result = await handler.handle({
+      raw: {},
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+      url: new URL('http://localhost/users/1'),
+      body: vi.fn(),
+      signal,
+    }, {
+      context: { db: 'postgres' },
+      prefix: '/invalid',
+    })
+
+    expect(result).toEqual({ matched: false, response: undefined })
+  })
 })

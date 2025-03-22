@@ -77,16 +77,13 @@ const handler = new OpenAPIHandler(router, {
 })
 
 export default async function fetch(request: Request) {
-  const url = new URL(request.url)
+  const { matched, response } = await handler.handle(request, {
+    prefix: '/api',
+    context: {} // Add initial context if needed
+  })
 
-  if (url.pathname.startsWith('/api')) {
-    const result = await handler.handle(request, {
-      prefix: '/api',
-      context: {} // Add initial context if needed
-    })
-
-    if (result.matched)
-      return result.response
+  if (matched) {
+    return response
   }
 
   return new Response('Not Found', { status: 404 })

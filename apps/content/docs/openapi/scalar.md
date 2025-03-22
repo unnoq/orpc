@@ -30,14 +30,12 @@ const openAPIGenerator = new OpenAPIGenerator({
 })
 
 const server = createServer(async (req, res) => {
-  if (req.url?.startsWith('/api')) {
-    const { matched } = await openAPIHandler.handle(req, res, {
-      prefix: '/api',
-    })
+  const { matched } = await openAPIHandler.handle(req, res, {
+    prefix: '/api',
+  })
 
-    if (matched) {
-      return
-    }
+  if (matched) {
+    return
   }
 
   if (req.url === '/spec.json') {

@@ -25,15 +25,13 @@ const handler = new RPCHandler(router, {
 })
 
 const server = createServer(async (req, res) => {
-  if (req.url.startsWith('/rpc')) {
-    const { matched } = await handler.handle(req, res, {
-      prefix: '/rpc',
-      context: {} // Provide initial context if needed
-    })
+  const { matched } = await handler.handle(req, res, {
+    prefix: '/rpc',
+    context: {} // Provide initial context if needed
+  })
 
-    if (matched) {
-      return
-    }
+  if (matched) {
+    return
   }
 
   res.statusCode = 404
@@ -64,15 +62,13 @@ const server = createSecureServer({
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem'),
 }, async (req, res) => {
-  if (req.url.startsWith('/rpc')) {
-    const { matched } = await handler.handle(req, res, {
-      prefix: '/rpc',
-      context: {}, // Provide initial context if needed
-    })
+  const { matched } = await handler.handle(req, res, {
+    prefix: '/rpc',
+    context: {}, // Provide initial context if needed
+  })
 
-    if (matched) {
-      return
-    }
+  if (matched) {
+    return
   }
 
   res.statusCode = 404

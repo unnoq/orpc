@@ -20,17 +20,13 @@ const handler = new RPCHandler(router, {
 })
 
 Deno.serve(async (request) => {
-  const url = new URL(request.url)
+  const { matched, response } = await handler.handle(request, {
+    prefix: '/rpc',
+    context: {} // Provide initial context if needed
+  })
 
-  if (url.pathname.startsWith('/rpc')) {
-    const { response } = await handler.handle(request, {
-      prefix: '/rpc',
-      context: {} // Provide initial context if needed
-    })
-
-    if (response) {
-      return response
-    }
+  if (matched) {
+    return response
   }
 
   return new Response('Not found', { status: 404 })

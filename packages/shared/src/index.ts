@@ -8,5 +8,5 @@ export * from './object'
 export * from './types'
 export * from './value'
 
-export { group, guard, mapEntries, mapValues, omit, trim } from 'radash'
+export { group, guard, mapEntries, mapValues, omit } from 'radash'
 export type { IsEqual, IsNever, PartialDeep, Promisable } from 'type-fest'
