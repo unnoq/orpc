@@ -1,14 +1,24 @@
-import type { ClientContext, ClientRest } from '@orpc/client'
-import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, MergedErrorMap, Meta, Route } from '@orpc/contract'
+import type { ClientContext } from '@orpc/client'
+import type {
+  AnySchema,
+  ErrorMap,
+  InferSchemaInput,
+  InferSchemaOutput,
+  MergedErrorMap,
+  Meta,
+  Route,
+} from '@orpc/contract'
 import type { IntersectPick, MaybeOptionalOptions } from '@orpc/shared'
 import type { Context, MergedCurrentContext, MergedInitialContext } from './context'
 import type { ORPCErrorConstructorMap } from './error'
 import type { AnyMiddleware, MapInputMiddleware, Middleware } from './middleware'
+import type { ProcedureActionableClient } from './procedure-action'
 import type { CreateProcedureClientOptions, ProcedureClient } from './procedure-client'
 import { mergeErrorMap, mergeMeta, mergeRoute } from '@orpc/contract'
 import { decorateMiddleware } from './middleware-decorated'
 import { addMiddleware } from './middleware-utils'
 import { Procedure } from './procedure'
+import { createActionableClient } from './procedure-action'
 import { createProcedureClient } from './procedure-client'
 
 export class DecoratedProcedure<
@@ -117,7 +127,10 @@ export class DecoratedProcedure<
     >
   ): DecoratedProcedure<TInitialContext, TCurrentContext, TInputSchema, TOutputSchema, TErrorMap, TMeta>
     & ProcedureClient<TClientContext, TInputSchema, TOutputSchema, TErrorMap> {
-    return new Proxy(createProcedureClient(this, ...rest as any), {
+    const client: ProcedureClient<TClientContext, TInputSchema, TOutputSchema, TErrorMap>
+        = createProcedureClient(this, ...rest as any)
+
+    return new Proxy(client, {
       get: (target, key) => {
         return Reflect.has(this, key) ? Reflect.get(this, key) : Reflect.get(target, key)
       },
@@ -128,9 +141,9 @@ export class DecoratedProcedure<
   }
 
   /**
-   * Make this procedure compatible with server action (the same as .callable, but the type is compatible with server action).
+   * Make this procedure compatible with server action.
    */
-  actionable<TClientContext extends ClientContext>(
+  actionable(
     ...rest: MaybeOptionalOptions<
       CreateProcedureClientOptions<
         TInitialContext,
@@ -138,12 +151,22 @@ export class DecoratedProcedure<
         TOutputSchema,
         TErrorMap,
         TMeta,
-        TClientContext
+        Record<never, never>
       >
     >
   ):
     & DecoratedProcedure<TInitialContext, TCurrentContext, TInputSchema, TOutputSchema, TErrorMap, TMeta>
-    & ((...rest: ClientRest<TClientContext, InferSchemaInput<TInputSchema>>) => Promise<InferSchemaOutput<TOutputSchema>>) {
-    return this.callable(...rest)
+    & ProcedureActionableClient<TInputSchema, TOutputSchema, TErrorMap> {
+    const action: ProcedureActionableClient<TInputSchema, TOutputSchema, TErrorMap>
+      = createActionableClient(createProcedureClient(this, ...rest as any))
+
+    return new Proxy(action, {
+      get: (target, key) => {
+        return Reflect.has(this, key) ? Reflect.get(this, key) : Reflect.get(target, key)
+      },
+      has: (target, key) => {
+        return Reflect.has(this, key) || Reflect.has(target, key)
+      },
+    }) as any
   }
 }

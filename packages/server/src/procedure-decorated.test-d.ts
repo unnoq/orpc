@@ -1,4 +1,4 @@
-import type { Client, ClientRest } from '@orpc/client'
+import type { Client } from '@orpc/client'
 import type { AnySchema, ErrorFromErrorMap, ErrorMap, MergedErrorMap } from '@orpc/contract'
 import type { baseErrorMap, BaseMeta, inputSchema, outputSchema } from '../../contract/tests/shared'
 import type { CurrentContext, InitialContext } from '../tests/shared'
@@ -6,6 +6,7 @@ import type { Context } from './context'
 import type { ORPCErrorConstructorMap } from './error'
 import type { Middleware, MiddlewareOutputFn } from './middleware'
 import type { Procedure } from './procedure'
+import type { ActionableClient, ActionableError } from './procedure-action'
 import type { DecoratedProcedure } from './procedure-decorated'
 
 const builder = {} as DecoratedProcedure<
@@ -226,7 +227,12 @@ describe('DecoratedProcedure', () => {
         typeof baseErrorMap,
         BaseMeta
       >
-      & ((...rest: ClientRest<{ batch?: boolean }, { input: number }>) => Promise<{ output: string }>)
+      & ActionableClient<{ input: number }, { output: string }, ActionableError<ErrorFromErrorMap<typeof baseErrorMap>>>
     >()
+
+    builder.actionable({
+      // @ts-expect-error --- all clientContext must be optional
+      context: async (clientContext: { batch: boolean }) => ({ db: 'postgres' }),
+    })
   })
 })

@@ -53,6 +53,7 @@ You can find the full documentation [here](https://orpc.unnoq.com).
 - [@orpc/contract](https://www.npmjs.com/package/@orpc/contract): Build your API contract.
 - [@orpc/server](https://www.npmjs.com/package/@orpc/server): Build your API or implement API contract.
 - [@orpc/client](https://www.npmjs.com/package/@orpc/client): Consume your API on the client with type-safety.
+- [@orpc/react](https://www.npmjs.com/package/@orpc/react): Utilities for integrating oRPC with React and React Server Actions.
 - [@orpc/react-query](https://www.npmjs.com/package/@orpc/react-query): Integration with [React Query](https://tanstack.com/query/latest/docs/framework/react/overview).
 - [@orpc/vue-query](https://www.npmjs.com/package/@orpc/vue-query): Integration with [Vue Query](https://tanstack.com/query/latest/docs/framework/vue/overview).
 - [@orpc/solid-query](https://www.npmjs.com/package/@orpc/solid-query): Integration with [Solid Query](https://tanstack.com/query/latest/docs/framework/solid/overview).

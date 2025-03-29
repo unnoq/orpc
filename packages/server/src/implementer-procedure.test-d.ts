@@ -1,4 +1,4 @@
-import type { Client, ClientRest } from '@orpc/client'
+import type { Client } from '@orpc/client'
 import type { AnySchema, ContractProcedure, ErrorFromErrorMap, ErrorMap } from '@orpc/contract'
 import type { OmitChainMethodDeep } from '@orpc/shared'
 import type { baseErrorMap, BaseMeta, inputSchema, outputSchema } from '../../contract/tests/shared'
@@ -9,6 +9,7 @@ import type { ORPCErrorConstructorMap } from './error'
 import type { ImplementedProcedure, ProcedureImplementer } from './implementer-procedure'
 import type { Middleware, MiddlewareOutputFn } from './middleware'
 import type { Procedure } from './procedure'
+import type { ActionableClient, ActionableError } from './procedure-action'
 import type { DecoratedProcedure } from './procedure-decorated'
 
 const generalBuilder = {} as Builder<
@@ -198,7 +199,7 @@ describe('ImplementedProcedure', () => {
           typeof baseErrorMap,
           BaseMeta
       >
-      & ((...rest: ClientRest<{ batch?: boolean }, { input: number }>) => Promise<{ output: string }>)
+      & ActionableClient<{ input: number }, { output: string }, ActionableError<ErrorFromErrorMap<typeof baseErrorMap>>>
     >()
   })
 })

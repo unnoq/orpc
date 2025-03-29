@@ -1,54 +1,44 @@
+import type { ORPCError } from './error'
 import type { Client, ClientContext } from './types'
 
 describe('client', () => {
-  const fn: Client<ClientContext, string, number, Error> = async (...[input, options]) => {
-    expectTypeOf(input).toEqualTypeOf<string>()
-    expectTypeOf(options).toMatchTypeOf<({ context?: unknown, signal?: AbortSignal }) | undefined>()
-    return 123
-  }
-
-  const fnWithOptionalInput: Client<ClientContext, string | undefined, number, Error> = async (...args) => {
+  const client: Client<{ cache?: boolean }, string | undefined, number, Error | ORPCError<'OVERRIDE', unknown>> = async (...args) => {
     const [input, options] = args
 
     expectTypeOf(input).toEqualTypeOf<string | undefined>()
-    expectTypeOf(options).toMatchTypeOf<{ context?: unknown, signal?: AbortSignal } | undefined>()
+    expectTypeOf(options).toMatchTypeOf<{ context?: { cache?: boolean }, signal?: AbortSignal } | undefined>()
     return 123
   }
 
   it('just a function', () => {
-    expectTypeOf(fn).toMatchTypeOf<(input: string, options: { context?: ClientContext, signal?: AbortSignal }) => Promise<number>>()
-    expectTypeOf(fnWithOptionalInput).toMatchTypeOf<(input: string | undefined, options: { context?: ClientContext, signal?: AbortSignal }) => Promise<number>>()
+    expectTypeOf(client).toMatchTypeOf<(input: string | undefined, options: { context?: ClientContext, signal?: AbortSignal }) => Promise<number>>()
   })
 
   it('infer correct input', () => {
-    fn('123')
-    fnWithOptionalInput('123')
+    client('123')
+    client(undefined)
+    client()
 
     // @ts-expect-error - invalid input
-    fn(123)
+    client(123)
     // @ts-expect-error - invalid input
-    fnWithOptionalInput(123)
+    client({})
+  })
 
+  it('require non-undefindable input', () => {
+    const client = {} as Client<ClientContext, { val: string }, { val: number }, Error>
+
+    client({ val: '123' })
+    // @ts-expect-error - missing input
+    client()
     // @ts-expect-error - invalid input
-    fn({})
-    // @ts-expect-error - invalid input
-    fnWithOptionalInput({})
+    client({ val: 123 })
   })
 
   it('accept signal', () => {
-    fn('123', { signal: new AbortSignal() })
-    fnWithOptionalInput('123', { signal: new AbortSignal() })
-
+    client('123', { signal: new AbortSignal() })
     // @ts-expect-error - invalid signal
-    fn('123', { signal: 1234 })
-    // @ts-expect-error - invalid signal
-    fnWithOptionalInput('123', { signal: 1234 })
-  })
-
-  it('can accept call without args', () => {
-    expectTypeOf(fnWithOptionalInput()).toMatchTypeOf<Promise<number>>()
-    // @ts-expect-error - input is required
-    expectTypeOf(fn()).toEqualTypeOf<Promise<number>>()
+    client('123', { signal: 1234 })
   })
 
   describe('context', () => {
@@ -80,5 +70,15 @@ describe('client', () => {
       // @ts-expect-error - context is invalid
       client({ val: '123' }, { context: { userId: 123 } })
     })
+  })
+
+  it('infer correct output', async () => {
+    expectTypeOf(await client('123')).toEqualTypeOf<number>()
+  })
+
+  it('can reverse infer', () => {
+    expectTypeOf<
+      typeof client extends Client<infer C, infer I, infer O, infer E> ? [C, I, O, E] : never
+    >().toEqualTypeOf<[{ cache?: boolean }, string | undefined, number, Error | ORPCError<'OVERRIDE', unknown>]>()
   })
 })

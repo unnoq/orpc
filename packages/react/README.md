@@ -8,8 +8,8 @@
   <a href="https://codecov.io/gh/unnoq/orpc">
     <img alt="codecov" src="https://codecov.io/gh/unnoq/orpc/branch/main/graph/badge.svg">
   </a>
-  <a href="https://www.npmjs.com/package/@orpc/openapi">
-    <img alt="weekly downloads" src="https://img.shields.io/npm/dw/%40orpc%2Fopenapi?logo=npm" />
+  <a href="https://www.npmjs.com/package/@orpc/react">
+    <img alt="weekly downloads" src="https://img.shields.io/npm/dw/%40orpc%2Freact?logo=npm" />
   </a>
   <a href="https://github.com/unnoq/orpc/blob/main/LICENSE">
     <img alt="MIT License" src="https://img.shields.io/github/license/unnoq/orpc?logo=open-source-initiative" />
@@ -64,31 +64,83 @@ You can find the full documentation [here](https://orpc.unnoq.com).
 - [@orpc/valibot](https://www.npmjs.com/package/@orpc/valibot): OpenAPI spec generation from [Valibot](https://valibot.dev/).
 - [@orpc/arktype](https://www.npmjs.com/package/@orpc/arktype): OpenAPI spec generation from [ArkType](https://arktype.io/).
 
-## `@orpc/openapi`
+## `@orpc/react`
 
-Generate OpenAPI specs and handle OpenAPI requests. Read the [documentation](https://orpc.unnoq.com/docs/openapi/getting-started) for more information.
+Provides utilities for integrating oRPC with React and React Server Actions. Read the [documentation](https://orpc.unnoq.com/docs/server-action) for more information.
 
-```ts
-import { createServer } from 'node:http'
-import { OpenAPIHandler } from '@orpc/openapi/node'
-import { CORSPlugin } from '@orpc/server/plugins'
+### `useServerAction` Hook
 
-const handler = new OpenAPIHandler(router, {
-  plugins: [new CORSPlugin()]
-})
+The `useServerAction` hook simplifies invoking server actions in React.
 
-const server = createServer(async (req, res) => {
-  const result = await handler.handle(req, res, {
-    context: { headers: req.headers }
+```tsx
+'use client'
+
+import { isDefinedError, onError } from '@orpc/client'
+import { useServerAction } from '@orpc/react'
+
+export function MyComponent() {
+  const { execute, data, error, status } = useServerAction(someAction, {
+    interceptors: [
+      onError((error) => {
+        if (isDefinedError(error)) {
+          console.error(error.data)
+          //                   ^ Typed error data
+        }
+      }),
+    ],
   })
 
-  if (!result.matched) {
-    res.statusCode = 404
-    res.end('No procedure matched')
+  const action = async (form: FormData) => {
+    const name = form.get('name') as string
+    execute({ name })
   }
+
+  return (
+    <form action={action}>
+      <input type="text" name="name" required />
+      <button type="submit">Submit</button>
+      {status === 'pending' && <p>Loading...</p>}
+    </form>
+  )
+}
+```
+
+### `createFormAction` Utility
+
+Creates a form action that can be used in React forms and deserializes with bracket notation.
+
+```tsx
+const dosomething = os
+  .input(
+    z.object({
+      user: z.object({
+        name: z.string(),
+        age: z.coerce.number(),
+      }),
+    })
+  )
+  .handler(({ input }) => {
+    console.log('Form action called!')
+    console.log(input)
+  })
+
+export const redirectSomeWhereForm = createFormAction(dosomething, {
+  interceptors: [
+    onSuccess(async () => {
+      redirect('/some-where')
+    }),
+  ],
 })
 
-server.listen(3000, '127.0.0.1', () => console.log('Listening on 127.0.0.1:3000'))
+export function MyComponent() {
+  return (
+    <form action={redirectSomeWhereForm}>
+      <input type="text" name="user[name]" required />
+      <input type="number" name="user[age]" required />
+      <button type="submit">Submit</button>
+    </form>
+  )
+}
 ```
 
 ## Sponsors

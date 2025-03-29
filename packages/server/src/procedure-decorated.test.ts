@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { ping } from '../tests/shared'
 import { isProcedure } from './procedure'
+import { createActionableClient } from './procedure-action'
 import { createProcedureClient } from './procedure-client'
 import { DecoratedProcedure } from './procedure-decorated'
 
@@ -13,6 +14,11 @@ vi.mock('./middleware-decorated', () => ({
 vi.mock('./procedure-client', async original => ({
   ...await original(),
   createProcedureClient: vi.fn(() => vi.fn()),
+}))
+
+vi.mock('./procedure-action', async original => ({
+  ...await original(),
+  createActionableClient: vi.fn(() => vi.fn()),
 }))
 
 beforeEach(() => {
@@ -131,6 +137,9 @@ describe('decoratedProcedure', () => {
 
     expect(createProcedureClient).toBeCalledTimes(1)
     expect(createProcedureClient).toBeCalledWith(decorated, options)
+
+    expect(createActionableClient).toBeCalledTimes(1)
+    expect(createActionableClient).toBeCalledWith(vi.mocked(createProcedureClient).mock.results[0]!.value)
 
     // can access to function properties
     expect('name' in applied).toBe(true)

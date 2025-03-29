@@ -5,7 +5,7 @@ it('onStart', () => {
   const interceptor: Interceptor<{ foo: string }, 'success', 'error'> = onStart((options) => {
     expectTypeOf(options.foo).toEqualTypeOf<string>()
     expectTypeOf(options.next).toBeCallableWith<[options?: { foo: string }]>()
-    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'>>()
+    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'> & { __error?: { type: 'error' } }>()
   })
 })
 
@@ -15,7 +15,7 @@ it('onSuccess', () => {
 
     expectTypeOf(options.foo).toEqualTypeOf<string>()
     expectTypeOf(options.next).toBeCallableWith<[options?: { foo: string }]>()
-    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'>>()
+    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'> & { __error?: { type: 'error' } }>()
   })
 })
 
@@ -25,7 +25,7 @@ it('onError', () => {
 
     expectTypeOf(options.foo).toEqualTypeOf<string>()
     expectTypeOf(options.next).toBeCallableWith<[options?: { foo: string }]>()
-    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'>>()
+    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'> & { __error?: { type: 'error' } }>()
   })
 })
 
@@ -35,6 +35,6 @@ it('onFinish', () => {
 
     expectTypeOf(options.foo).toEqualTypeOf<string>()
     expectTypeOf(options.next).toBeCallableWith<[options?: { foo: string }]>()
-    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'>>()
+    expectTypeOf(options.next()).toEqualTypeOf<Promise<'success'> & { __error?: { type: 'error' } }>()
   })
 })

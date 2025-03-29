@@ -5,15 +5,16 @@ export type InterceptableOptions = Record<string, any>
 export type InterceptorOptions<
   TOptions extends InterceptableOptions,
   TResult,
+  TError,
 > = Omit<TOptions, 'next'> & {
-  next(options?: TOptions): Promise<TResult>
+  next(options?: TOptions): Promise<TResult> & { __error?: { type: TError } }
 }
 
 export type Interceptor<
   TOptions extends InterceptableOptions,
   TResult,
   TError,
-> = (options: InterceptorOptions<TOptions, TResult>) => Promise<TResult> & { __error?: { type: TError } }
+> = (options: InterceptorOptions<TOptions, TResult, TError>) => Promise<TResult> & { __error?: { type: TError } }
 
 /**
  * Can used for interceptors or middlewares

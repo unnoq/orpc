@@ -3,7 +3,7 @@
   "version": "1.0.0-beta.4",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --turbopack --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "next lint",
@@ -12,19 +12,20 @@
   "dependencies": {
     "@orpc/client": "next",
     "@orpc/openapi": "next",
+    "@orpc/react": "next",
     "@orpc/react-query": "next",
     "@orpc/server": "next",
     "@orpc/zod": "next",
     "@tanstack/react-query": "^5.66.4",
-    "next": "^15.1.7",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "next": "^15.2.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.1",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
     "typescript": "5.7.3"
   }
 }

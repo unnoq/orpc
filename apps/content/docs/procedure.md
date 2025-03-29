@@ -28,7 +28,7 @@ const example = os
     return { id: 1 }
   })
   .callable() // Make the procedure callable like a regular function
-  .actionable() // Like .callable, but compatible with server actions
+  .actionable() // Server Action compatibility
 ```
 
 > The `.handler` method is the only required step. All other chains are optional.

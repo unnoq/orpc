@@ -1,20 +1,19 @@
 {
-  "name": "@orpc/react-query",
+  "name": "@orpc/react",
   "type": "module",
-  "version": "1.0.0-beta.4",
+  "version": "0.0.0",
   "license": "MIT",
   "homepage": "https://orpc.unnoq.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/unnoq/orpc.git",
-    "directory": "packages/react-query"
+    "directory": "packages/react"
   },
   "keywords": [
     "unnoq",
     "orpc",
-    "react-query",
-    "tanstack query",
-    "react"
+    "react",
+    "nextjs"
   ],
   "publishConfig": {
     "exports": {
@@ -22,11 +21,17 @@
         "types": "./dist/index.d.mts",
         "import": "./dist/index.mjs",
         "default": "./dist/index.mjs"
+      },
+      "./server": {
+        "types": "./dist/server/index.d.mts",
+        "import": "./dist/server/index.mjs",
+        "default": "./dist/server/index.mjs"
       }
     }
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./server": "./src/server/index.ts"
   },
   "files": [
     "dist"
@@ -37,11 +42,13 @@
     "type:check": "tsc -b"
   },
   "peerDependencies": {
-    "@orpc/client": "workspace:*",
-    "@tanstack/react-query": ">=5.59.0",
-    "react": ">=18.3.0"
+    "react": ">=18.0.0"
   },
   "dependencies": {
+    "@orpc/client": "workspace:*",
+    "@orpc/contract": "workspace:*",
+    "@orpc/openapi-client": "workspace:*",
+    "@orpc/server": "workspace:*",
     "@orpc/shared": "workspace:*"
   },
   "devDependencies": {
