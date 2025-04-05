@@ -18,11 +18,17 @@
         "types": "./dist/index.d.mts",
         "import": "./dist/index.mjs",
         "default": "./dist/index.mjs"
+      },
+      "./batch": {
+        "types": "./dist/batch/index.d.mts",
+        "import": "./dist/batch/index.mjs",
+        "default": "./dist/batch/index.mjs"
       }
     }
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./batch": "./src/batch/index.ts"
   },
   "files": [
     "dist"

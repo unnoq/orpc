@@ -12,7 +12,7 @@ export interface StandardLinkPlugin<T extends ClientContext> {
 
 export interface StandardLinkOptions<T extends ClientContext> {
   interceptors?: Interceptor<{ path: readonly string[], input: unknown, options: ClientOptions<T> }, unknown, ThrowableError>[]
-  clientInterceptors?: Interceptor<{ request: StandardRequest }, StandardLazyResponse, ThrowableError>[]
+  clientInterceptors?: Interceptor<{ request: StandardRequest, path: readonly string[], input: unknown, options: ClientOptions<T> }, StandardLazyResponse, ThrowableError>[]
   plugins?: StandardLinkPlugin<T>[]
 }
 
@@ -46,8 +46,8 @@ export class StandardLink<T extends ClientContext> implements ClientLink<T> {
 
     const response = await intercept(
       this.clientInterceptors,
-      { request },
-      ({ request }) => this.sender.call(request, options, path, input),
+      { request, options, path, input },
+      ({ request, options, path, input }) => this.sender.call(request, options, path, input),
     )
 
     const output = await this.codec.decode(response, options, path, input)
