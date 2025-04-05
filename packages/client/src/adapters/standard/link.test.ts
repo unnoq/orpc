@@ -43,13 +43,20 @@ describe('standardLink', () => {
       next: expect.any(Function),
       path: ['planet', 'create'],
       input: { name: 'Earth' },
-      options: { context, signal, lastEventId },
+      context,
+      signal,
+      lastEventId,
     })
 
     expect(clientInterceptor).toHaveBeenCalledTimes(1)
     expect(clientInterceptor).toHaveBeenCalledWith({
       next: expect.any(Function),
       request: '__standard_request__',
+      path: ['planet', 'create'],
+      input: { name: 'Earth' },
+      context,
+      signal,
+      lastEventId,
     })
   })
 

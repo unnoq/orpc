@@ -5,9 +5,15 @@ export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 
 export type ClientContext = Record<PropertyKey, any>
 
-export type FriendlyClientOptions<TClientContext extends ClientContext> =
-  & { signal?: AbortSignal, lastEventId?: string | undefined }
-  & (Record<never, never> extends TClientContext ? { context?: TClientContext } : { context: TClientContext })
+export interface ClientOptions<T extends ClientContext> {
+  signal?: AbortSignal
+  lastEventId?: string | undefined
+  context: T
+}
+
+export type FriendlyClientOptions<T extends ClientContext> =
+  & Omit<ClientOptions<T>, 'context'>
+  & (Record<never, never> extends T ? { context?: T } : { context: T })
 
 export type ClientRest<TClientContext extends ClientContext, TInput> = Record<never, never> extends TClientContext
   ? undefined extends TInput
@@ -26,10 +32,6 @@ export type NestedClient<TClientContext extends ClientContext> = Client<TClientC
 }
 
 export type InferClientContext<T extends NestedClient<any>> = T extends NestedClient<infer U> ? U : never
-
-export type ClientOptions<TClientContext extends ClientContext> = FriendlyClientOptions<TClientContext> & {
-  context: TClientContext
-}
 
 export interface ClientLink<TClientContext extends ClientContext> {
   call: (path: readonly string[], input: unknown, options: ClientOptions<TClientContext>) => Promise<unknown>

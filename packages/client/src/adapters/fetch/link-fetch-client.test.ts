@@ -41,9 +41,7 @@ describe('linkFetchClient', () => {
     expect(fetch).toBeCalledWith(
       toFetchRequestSpy.mock.results[0]!.value,
       { redirect: 'manual' },
-      options,
-      ['example'],
-      { body: true },
+      { ...options, path: ['example'], input: { body: true } },
     )
   })
 })

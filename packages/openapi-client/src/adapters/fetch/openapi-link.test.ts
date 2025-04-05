@@ -16,8 +16,7 @@ describe('openAPILink', () => {
 
   const link = new OpenAPILink(router, {
     url: 'http://localhost:3000/api',
-    fetch: async (url, init) => {
-      const request = new Request(url, init)
+    fetch: async (request) => {
       const { matched, response } = await handler.handle(request, {
         prefix: '/api',
       })

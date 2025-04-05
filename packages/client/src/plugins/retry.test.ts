@@ -58,7 +58,7 @@ describe('clientRetryPlugin', () => {
 
     expect(handlerFn).toHaveBeenCalledTimes(4)
     expect(retry).toHaveBeenCalledTimes(1)
-    expect(retry).toHaveBeenCalledWith({ context: { retry, retryDelay: 0 } }, [], 'hello')
+    expect(retry).toHaveBeenCalledWith(expect.objectContaining({ context: { retry, retryDelay: 0 }, path: [], input: 'hello' }))
   })
 
   it('should not retry if success', async () => {
@@ -100,17 +100,24 @@ describe('clientRetryPlugin', () => {
     expect(shouldRetry).toHaveBeenCalledTimes(2)
     expect(shouldRetry).toHaveBeenNthCalledWith(
       1,
-      { attemptIndex: 0, error: expect.any(ORPCError) },
-      expect.objectContaining({ context: { retry: 3, shouldRetry, retryDelay: 0 } }),
-      [],
-      'hello',
+      expect.objectContaining({
+        attemptIndex: 0,
+        error: expect.any(ORPCError),
+        context: { retry: 3, shouldRetry, retryDelay: 0 },
+        input: 'hello',
+        path: [],
+      }),
     )
+
     expect(shouldRetry).toHaveBeenNthCalledWith(
       2,
-      { attemptIndex: 1, error: expect.any(ORPCError) },
-      expect.objectContaining({ context: { retry: 3, shouldRetry, retryDelay: 0 } }),
-      [],
-      'hello',
+      expect.objectContaining({
+        attemptIndex: 1,
+        error: expect.any(ORPCError),
+        context: { retry: 3, shouldRetry, retryDelay: 0 },
+        input: 'hello',
+        path: [],
+      }),
     )
   })
 
@@ -127,24 +134,33 @@ describe('clientRetryPlugin', () => {
     expect(onRetry).toHaveBeenCalledTimes(3)
     expect(onRetry).toHaveBeenNthCalledWith(
       1,
-      { attemptIndex: 0, error: expect.any(ORPCError) },
-      expect.objectContaining({ context: { retry: 3, retryDelay: 0, onRetry } }),
-      [],
-      'hello',
+      expect.objectContaining({
+        attemptIndex: 0,
+        error: expect.any(ORPCError),
+        context: { retry: 3, retryDelay: 0, onRetry },
+        input: 'hello',
+        path: [],
+      }),
     )
     expect(onRetry).toHaveBeenNthCalledWith(
       2,
-      { attemptIndex: 1, error: expect.any(ORPCError) },
-      expect.objectContaining({ context: { retry: 3, retryDelay: 0, onRetry } }),
-      [],
-      'hello',
+      expect.objectContaining({
+        attemptIndex: 1,
+        error: expect.any(ORPCError),
+        context: { retry: 3, retryDelay: 0, onRetry },
+        input: 'hello',
+        path: [],
+      }),
     )
     expect(onRetry).toHaveBeenNthCalledWith(
       3,
-      { attemptIndex: 2, error: expect.any(ORPCError) },
-      expect.objectContaining({ context: { retry: 3, retryDelay: 0, onRetry } }),
-      [],
-      'hello',
+      expect.objectContaining({
+        attemptIndex: 2,
+        error: expect.any(ORPCError),
+        context: { retry: 3, retryDelay: 0, onRetry },
+        input: 'hello',
+        path: [],
+      }),
     )
 
     expect(clean).toHaveBeenCalledTimes(3)
@@ -262,10 +278,13 @@ describe('clientRetryPlugin', () => {
       expect(shouldRetry).toHaveBeenCalledTimes(1)
       expect(shouldRetry).toHaveBeenNthCalledWith(
         1,
-        expect.objectContaining({ error: expect.any(Error), lastEventId: '5', lastEventRetry: 5678 }),
-        expect.objectContaining({ lastEventId: '5' }),
-        [],
-        'hello',
+        expect.objectContaining({
+          error: expect.any(Error),
+          lastEventId: '5',
+          lastEventRetry: 5678,
+          input: 'hello',
+          path: [],
+        }),
       )
     })
 
@@ -317,10 +336,13 @@ describe('clientRetryPlugin', () => {
       expect(shouldRetry).toHaveBeenCalledTimes(1)
       expect(shouldRetry).toHaveBeenNthCalledWith(
         1,
-        expect.objectContaining({ error: expect.any(Error), lastEventId: '10', lastEventRetry: 1234 }),
-        expect.objectContaining({ lastEventId: '10' }),
-        [],
-        'hello',
+        expect.objectContaining({
+          error: expect.any(Error),
+          lastEventId: '10',
+          lastEventRetry: 1234,
+          input: 'hello',
+          path: [],
+        }),
       )
     })
 
@@ -361,17 +383,23 @@ describe('clientRetryPlugin', () => {
       expect(shouldRetry).toHaveBeenCalledTimes(2)
       expect(shouldRetry).toHaveBeenNthCalledWith(
         1,
-        { attemptIndex: 0, error: expect.any(ORPCError) },
-        expect.objectContaining({ context: { retry: 3, shouldRetry, retryDelay: 0 } }),
-        [],
-        'hello',
+        expect.objectContaining({
+          attemptIndex: 0,
+          error: expect.any(ORPCError),
+          context: { retry: 3, shouldRetry, retryDelay: 0 },
+          input: 'hello',
+          path: [],
+        }),
       )
       expect(shouldRetry).toHaveBeenNthCalledWith(
         2,
-        { attemptIndex: 1, error: expect.any(ORPCError) },
-        expect.objectContaining({ context: { retry: 3, shouldRetry, retryDelay: 0 } }),
-        [],
-        'hello',
+        expect.objectContaining({
+          attemptIndex: 1,
+          error: expect.any(ORPCError),
+          context: { retry: 3, shouldRetry, retryDelay: 0 },
+          input: 'hello',
+          path: [],
+        }),
       )
     })
 
@@ -393,24 +421,36 @@ describe('clientRetryPlugin', () => {
       expect(onRetry).toHaveBeenCalledTimes(3)
       expect(onRetry).toHaveBeenNthCalledWith(
         1,
-        { attemptIndex: 0, error: expect.any(ORPCError), lastEventId: '0' },
-        expect.objectContaining({ context: { retry: 3, retryDelay: 0, onRetry } }),
-        [],
-        'hello',
+        expect.objectContaining({
+          attemptIndex: 0,
+          error: expect.any(ORPCError),
+          lastEventId: '0',
+          context: { retry: 3, retryDelay: 0, onRetry },
+          input: 'hello',
+          path: [],
+        }),
       )
       expect(onRetry).toHaveBeenNthCalledWith(
         2,
-        { attemptIndex: 1, error: expect.any(ORPCError), lastEventId: '1' },
-        expect.objectContaining({ context: { retry: 3, retryDelay: 0, onRetry } }),
-        [],
-        'hello',
+        expect.objectContaining({
+          attemptIndex: 1,
+          error: expect.any(ORPCError),
+          lastEventId: '1',
+          context: { retry: 3, retryDelay: 0, onRetry },
+          input: 'hello',
+          path: [],
+        }),
       )
       expect(onRetry).toHaveBeenNthCalledWith(
         3,
-        { attemptIndex: 2, error: expect.any(ORPCError), lastEventId: '2' },
-        expect.objectContaining({ context: { retry: 3, retryDelay: 0, onRetry } }),
-        [],
-        'hello',
+        expect.objectContaining({
+          attemptIndex: 2,
+          error: expect.any(ORPCError),
+          lastEventId: '2',
+          context: { retry: 3, retryDelay: 0, onRetry },
+          input: 'hello',
+          path: [],
+        }),
       )
 
       expect(clean).toHaveBeenCalledTimes(3)

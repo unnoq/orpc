@@ -71,7 +71,7 @@ interface ClientContext {
 
 const link = new RPCLink<ClientContext>({
   url: 'http://localhost:3000/rpc',
-  method: ({ context }, path) => {
+  method: ({ context, path }) => {
     if (context?.cache) {
       return 'GET'
     }

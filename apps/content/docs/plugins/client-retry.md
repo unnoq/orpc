@@ -26,7 +26,7 @@ const link = new RPCLink<ORPCClientContext>({
   plugins: [
     new ClientRetryPlugin({
       default: { // Optional override for default options
-        retry: (options, path) => {
+        retry: ({ path }) => {
           if (path.join('.') === 'planet.list') {
             return 2
           }

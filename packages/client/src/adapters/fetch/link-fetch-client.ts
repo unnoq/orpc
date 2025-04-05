@@ -1,16 +1,14 @@
 import type { StandardLazyResponse, StandardRequest } from '@orpc/standard-server'
 import type { ToFetchRequestOptions } from '@orpc/standard-server-fetch'
 import type { ClientContext, ClientOptions } from '../../types'
-import type { StandardLinkClient } from '../standard'
+import type { StandardLinkClient, StandardLinkInterceptorOptions } from '../standard'
 import { toFetchRequest, toStandardLazyResponse } from '@orpc/standard-server-fetch'
 
 export interface LinkFetchClientOptions<T extends ClientContext> extends ToFetchRequestOptions {
   fetch?: (
     request: Request,
     init: { redirect?: Request['redirect'] },
-    options: ClientOptions<T>,
-    path: readonly string[],
-    input: unknown
+    options: StandardLinkInterceptorOptions<T>,
   ) => Promise<Response>
 }
 
@@ -26,7 +24,7 @@ export class LinkFetchClient<T extends ClientContext> implements StandardLinkCli
   async call(request: StandardRequest, options: ClientOptions<T>, path: readonly string[], input: unknown): Promise<StandardLazyResponse> {
     const fetchRequest = toFetchRequest(request, this.toFetchRequestOptions)
 
-    const fetchResponse = await this.fetch(fetchRequest, { redirect: 'manual' }, options, path, input)
+    const fetchResponse = await this.fetch(fetchRequest, { redirect: 'manual' }, { ...options, path, input })
 
     const lazyResponse = toStandardLazyResponse(fetchResponse)
 

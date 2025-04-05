@@ -18,8 +18,7 @@ describe.each(supportedDataTypes)('rpcLink: $name', ({ value, expected }) => {
       const rpcLink = new RPCLink({
         url: 'http://api.example.com',
         method,
-        fetch: async (url, init) => {
-          const request = new Request(url, init)
+        fetch: async (request) => {
           const { matched, response } = await rpcHandler.handle(request)
 
           if (matched) {
@@ -51,8 +50,7 @@ describe.each(supportedDataTypes)('rpcLink: $name', ({ value, expected }) => {
       const rpcLink = new RPCLink({
         url: 'http://api.example.com',
         method,
-        fetch: async (url, init) => {
-          const request = new Request(url, init)
+        fetch: async (request) => {
           const { matched, response } = await rpcHandler.handle(request)
 
           if (matched) {
