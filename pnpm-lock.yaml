@@ -208,6 +208,9 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
     devDependencies:
+      '@sinclair/typebox':
+        specifier: ^0.30.0
+        version: 0.30.4
       arktype:
         specifier: 2.1.20
         version: 2.1.20
@@ -457,6 +460,21 @@ importers:
       zod:
         specifier: ^3.24.2
         version: 3.24.4
+
+  packages/typebox:
+    dependencies:
+      '@orpc/contract':
+        specifier: workspace:*
+        version: link:../contract
+      '@orpc/openapi':
+        specifier: workspace:*
+        version: link:../openapi
+      '@orpc/server':
+        specifier: workspace:*
+        version: link:../server
+      '@sinclair/typebox':
+        specifier: ^0.30.0
+        version: 0.30.4
 
   packages/valibot:
     dependencies:
@@ -2891,6 +2909,9 @@ packages:
 
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
+
+  '@sinclair/typebox@0.30.4':
+    resolution: {integrity: sha512-wFuuDR+O1OAE2GL0q68h1Ty00RE6Ihcixr55A6TU5RCvOUHnwJw9LGuDVg9NxDiAp7m/YJpa+UaOuLAz0ziyOQ==}
 
   '@sindresorhus/is@7.0.1':
     resolution: {integrity: sha512-QWLl2P+rsCJeofkDNIT3WFmb6NrRud1SUYW8dIhXK/46XFV8Q/g7Bsvib0Askb0reRLe+WYPeeE+l5cH7SlkuQ==}
@@ -10581,6 +10602,8 @@ snapshots:
       - typescript
 
   '@shikijs/vscode-textmate@10.0.2': {}
+
+  '@sinclair/typebox@0.30.4': {}
 
   '@sindresorhus/is@7.0.1': {}
 
