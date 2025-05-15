@@ -39,6 +39,11 @@
         "types": "./dist/adapters/websocket/index.d.mts",
         "import": "./dist/adapters/websocket/index.mjs",
         "default": "./dist/adapters/websocket/index.mjs"
+      },
+      "./electron-ipc": {
+        "types": "./dist/adapters/electron-ipc/index.d.mts",
+        "import": "./dist/adapters/electron-ipc/index.mjs",
+        "default": "./dist/adapters/electron-ipc/index.mjs"
       }
     }
   },
@@ -47,7 +52,8 @@
     "./plugins": "./src/plugins/index.ts",
     "./standard": "./src/adapters/standard/index.ts",
     "./fetch": "./src/adapters/fetch/index.ts",
-    "./websocket": "./src/adapters/websocket/index.ts"
+    "./websocket": "./src/adapters/websocket/index.ts",
+    "./electron-ipc": "./src/adapters/electron-ipc/index.ts"
   },
   "files": [
     "dist"
@@ -57,6 +63,14 @@
     "build:watch": "pnpm run build --watch",
     "type:check": "tsc -b"
   },
+  "peerDependencies": {
+    "electron": ">=36.2.0"
+  },
+  "peerDependenciesMeta": {
+    "electron": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@orpc/shared": "workspace:*",
     "@orpc/standard-server": "workspace:*",
@@ -64,6 +78,7 @@
     "@orpc/standard-server-peer": "workspace:*"
   },
   "devDependencies": {
+    "electron": "^36.2.0",
     "zod": "^3.24.2"
   }
 }

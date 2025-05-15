@@ -87,6 +87,7 @@ export default defineConfig({
           items: [
             { text: 'HTTP', link: '/docs/adapters/http' },
             { text: 'Websocket', link: '/docs/adapters/websocket' },
+            { text: 'IPC', link: '/docs/adapters/ipc' },
           ],
         },
         {
@@ -105,6 +106,7 @@ export default defineConfig({
             { text: 'SolidStart', link: '/docs/integrations/solid-start' },
             { text: 'Astro', link: '/docs/integrations/astro' },
             { text: 'React Native', link: '/docs/integrations/react-native' },
+            { text: 'Electron IPC', link: '/docs/integrations/electron-ipc' },
           ],
         },
         {

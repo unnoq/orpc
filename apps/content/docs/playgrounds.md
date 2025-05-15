@@ -20,6 +20,7 @@ featuring pre-configured examples accessible instantly via StackBlitz or local s
 | Astro Playground          | [Open in StackBlitz](https://stackblitz.com/github/unnoq/orpc/tree/main/playgrounds/astro)          | [View Source](https://github.com/unnoq/orpc/tree/main/playgrounds/astro)          |
 | Contract-First Playground | [Open in StackBlitz](https://stackblitz.com/github/unnoq/orpc/tree/main/playgrounds/contract-first) | [View Source](https://github.com/unnoq/orpc/tree/main/playgrounds/contract-first) |
 | NestJS Playground         | [Open in StackBlitz](https://stackblitz.com/github/unnoq/orpc/tree/main/playgrounds/nest)           | [View Source](https://github.com/unnoq/orpc/tree/main/playgrounds/nest)           |
+| Electron Playground       |                                                                                                     | [View Source](https://github.com/unnoq/orpc/tree/main/playgrounds/electron)       |
 
 :::warning
 StackBlitz has own limitations, so some features may not work as expected.
@@ -38,6 +39,7 @@ npx degit unnoq/orpc/playgrounds/svelte-kit orpc-svelte-kit-playground
 npx degit unnoq/orpc/playgrounds/astro orpc-astro-playground
 npx degit unnoq/orpc/playgrounds/contract-first orpc-contract-first-playground
 npx degit unnoq/orpc/playgrounds/nest orpc-nest-playground
+npx degit unnoq/orpc/playgrounds/electron orpc-electron-playground
 ```
 
 For each project, set up the development environment:

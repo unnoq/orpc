@@ -56,13 +56,13 @@ export default antfu({
 }, {
   files: ['playgrounds/**'],
   rules: {
+    'node/prefer-global/process': 'off',
     'no-alert': 'off',
     'eslint-comments/no-unlimited-disable': 'off',
   },
 }, {
   files: ['playgrounds/nest/**'],
   rules: {
-    'node/prefer-global/process': 'off',
     '@typescript-eslint/consistent-type-imports': 'off',
   },
 })

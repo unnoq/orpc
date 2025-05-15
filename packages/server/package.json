@@ -59,6 +59,11 @@
         "types": "./dist/adapters/bun-ws/index.d.mts",
         "import": "./dist/adapters/bun-ws/index.mjs",
         "default": "./dist/adapters/bun-ws/index.mjs"
+      },
+      "./electron-ipc": {
+        "types": "./dist/adapters/electron-ipc/index.d.mts",
+        "import": "./dist/adapters/electron-ipc/index.mjs",
+        "default": "./dist/adapters/electron-ipc/index.mjs"
       }
     }
   },
@@ -71,7 +76,8 @@
     "./websocket": "./src/adapters/websocket/index.ts",
     "./crossws": "./src/adapters/crossws/index.ts",
     "./ws": "./src/adapters/ws/index.ts",
-    "./bun-ws": "./src/adapters/bun-ws/index.ts"
+    "./bun-ws": "./src/adapters/bun-ws/index.ts",
+    "./electron-ipc": "./src/adapters/electron-ipc/index.ts"
   },
   "files": [
     "dist"
@@ -83,10 +89,14 @@
   },
   "peerDependencies": {
     "crossws": ">=0.3.4",
+    "electron": ">=36.2.0",
     "ws": ">=8.18.1"
   },
   "peerDependenciesMeta": {
     "crossws": {
+      "optional": true
+    },
+    "electron": {
       "optional": true
     },
     "ws": {
@@ -105,6 +115,7 @@
   "devDependencies": {
     "@types/ws": "^8.18.1",
     "crossws": "^0.3.4",
+    "electron": "^36.2.0",
     "next": "^15.3.0",
     "supertest": "^7.1.0",
     "ws": "^8.18.1"

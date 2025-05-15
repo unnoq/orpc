@@ -48,6 +48,12 @@
     "vite-plugin-solid": "^2.11.6",
     "vitest": "^3.0.4"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild"
+    ]
+  },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
   },
