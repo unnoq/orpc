@@ -20,7 +20,7 @@
     "@orpc/openapi-client": "next",
     "@orpc/react-query": "next",
     "@orpc/zod": "next",
-    "@swc/cli": "^0.6.0",
+    "@swc/cli": "^0.7.0",
     "@swc/core": "^1.10.7",
     "@tanstack/react-query": "^5.75.7",
     "@types/express": "^5.0.1",
@@ -34,6 +34,6 @@
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
-    "zod": "3.25.0-beta.20250516T005923"
+    "zod": "3.25.0-canary.20250504T221648"
   }
 }
