@@ -47,6 +47,6 @@
   "devDependencies": {
     "@tanstack/vue-query": "^5.72.3",
     "react": "^19.1.0",
-    "zod": "3.25.0-beta.20250516T005923"
+    "zod": "3.25.0-canary.20250504T221648"
   }
 }
