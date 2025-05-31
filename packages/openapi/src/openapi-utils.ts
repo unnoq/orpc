@@ -3,7 +3,7 @@ import type { OpenAPI } from './openapi'
 import type { FileSchema, JSONSchema, ObjectSchema } from './schema'
 import { standardizeHTTPPath } from '@orpc/openapi-client/standard'
 import { findDeepMatches, isObject } from '@orpc/shared'
-import { filterSchemaBranches, isFileSchema } from './schema-utils'
+import { expandArrayableSchema, filterSchemaBranches, isFileSchema, isPrimitiveSchema } from './schema-utils'
 
 /**
  * @internal
@@ -106,13 +106,31 @@ export function toOpenAPIParameters(schema: ObjectSchema, parameterIn: 'path' | 
   for (const key in schema.properties) {
     const keySchema = schema.properties[key]!
 
+    let isDeepObjectStyle = true
+
+    if (parameterIn !== 'query') {
+      isDeepObjectStyle = false
+    }
+    else if (isPrimitiveSchema(keySchema)) {
+      isDeepObjectStyle = false
+    }
+    else {
+      const [item] = expandArrayableSchema(keySchema) ?? []
+
+      if (item !== undefined && isPrimitiveSchema(item)) {
+        isDeepObjectStyle = false
+      }
+    }
+
     parameters.push({
       name: key,
       in: parameterIn,
       required: schema.required?.includes(key),
-      style: parameterIn === 'query' ? 'deepObject' : undefined,
-      explode: parameterIn === 'query' ? true : undefined,
       schema: toOpenAPISchema(keySchema) as any,
+      style: isDeepObjectStyle ? 'deepObject' : undefined,
+      explode: isDeepObjectStyle ? true : undefined,
+      allowEmptyValue: parameterIn === 'query' ? true : undefined,
+      allowReserved: parameterIn === 'query' ? true : undefined,
     })
   }
 

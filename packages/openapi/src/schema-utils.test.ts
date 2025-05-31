@@ -1,6 +1,6 @@
 import type { JSONSchema, ObjectSchema } from './schema'
 import { isObject } from '@orpc/shared'
-import { applySchemaOptionality, expandUnionSchema, filterSchemaBranches, isAnySchema, isFileSchema, isObjectSchema, separateObjectSchema } from './schema-utils'
+import { applySchemaOptionality, expandArrayableSchema, expandUnionSchema, filterSchemaBranches, isAnySchema, isFileSchema, isObjectSchema, isPrimitiveSchema, separateObjectSchema } from './schema-utils'
 
 it('isFileSchema', () => {
   expect(isFileSchema({ type: 'string', contentMediaType: 'image/png' })).toBe(true)
@@ -213,4 +213,53 @@ it('expandUnionSchema', () => {
 
   expect(expandUnionSchema({ allOf: [{ type: 'string' }, { type: 'number' }] })).toEqual([{ allOf: [{ type: 'string' }, { type: 'number' }] }])
   expect(expandUnionSchema({ type: 'string', anyOf: [{ type: 'string' }, { type: 'number' }] })).toEqual([{ type: 'string', anyOf: [{ type: 'string' }, { type: 'number' }] }])
+})
+
+it('expandArrayableSchema', () => {
+  expect(expandArrayableSchema({ type: 'string' })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [] })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [{ type: 'array', items: { type: 'string' } }] })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [{ type: 'array', items: { type: 'string' } }, { type: 'string' }, { type: 'string' }] })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [{ type: 'array', items: { type: 'string', description: 'something' } }, { type: 'string' }] })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [{ type: 'string' }, { type: 'string' }] })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [{ type: 'object' }, { type: 'string' }] })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [true, true] })).toBe(undefined)
+  expect(expandArrayableSchema({ anyOf: [{ type: 'array', items: { type: 'string' } }, { type: 'string' }], oneOf: [] })).toBe(undefined)
+
+  expect(expandArrayableSchema({ oneOf: [{ type: 'array', items: { type: 'string' } }, { type: 'string' }] })).toEqual([
+    { type: 'string' },
+    { type: 'array', items: { type: 'string' } },
+  ])
+  expect(expandArrayableSchema({ anyOf: [{ type: 'array', items: { type: 'string' } }, { type: 'string' }] })).toEqual([
+    { type: 'string' },
+    { type: 'array', items: { type: 'string' } },
+  ])
+  expect(expandArrayableSchema({ anyOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }] })).toEqual([
+    { type: 'string' },
+    { type: 'array', items: { type: 'string' } },
+  ])
+  expect(expandArrayableSchema({ anyOf: [{ type: 'array', items: { type: 'string' }, description: 'array of something' }, { type: 'string' }] })).toEqual([
+    { type: 'string' },
+    { type: 'array', items: { type: 'string' }, description: 'array of something' },
+  ])
+})
+
+it('isPrimitiveSchema', () => {
+  expect(isPrimitiveSchema({ type: 'string' })).toBe(true)
+  expect(isPrimitiveSchema({ type: 'number' })).toBe(true)
+  expect(isPrimitiveSchema({ type: 'integer' })).toBe(true)
+  expect(isPrimitiveSchema({ type: 'boolean' })).toBe(true)
+  expect(isPrimitiveSchema({ type: 'null' })).toBe(true)
+  expect(isPrimitiveSchema({ const: 'const' })).toBe(true)
+  expect(isPrimitiveSchema({ anyOf: [{ type: 'string' }, { type: 'number' }] })).toBe(true)
+  expect(isPrimitiveSchema({ oneOf: [{ type: 'string' }, { type: 'number' }] })).toBe(true)
+  expect(isPrimitiveSchema({ description: 'description', anyOf: [{ type: 'string' }, { type: 'number' }] })).toBe(true)
+  expect(isPrimitiveSchema({ anyOf: [{ type: 'string' }, { oneOf: [{ type: 'boolean' }, { type: 'number' }] }] })).toBe(true)
+
+  expect(isPrimitiveSchema(true)).toBe(false)
+  expect(isPrimitiveSchema(false)).toBe(false)
+  expect(isPrimitiveSchema({ allOf: [{ type: 'string' }, { oneOf: [{ type: 'boolean' }, { type: 'number' }] }] })).toBe(false)
+  expect(isPrimitiveSchema({ type: 'object', properties: { a: { type: 'string' } } })).toBe(false)
+  expect(isPrimitiveSchema({ type: 'array', items: { type: 'string' } })).toBe(false)
+  expect(isPrimitiveSchema({ anyOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }] })).toBe(false)
 })

@@ -138,7 +138,17 @@ const inputTests: TestCase[] = [
   },
   {
     name: 'query + params',
-    contract: oc.route({ path: '/planets/{id}', method: 'GET' }).input(z.object({ id: z.string(), query1: z.string(), query2: z.number().optional() })),
+    contract: oc.route({ path: '/planets/{id}', method: 'GET' }).input(
+      z.object({
+        id: z.string(),
+        query1: z.string(),
+        query2: z.number().optional(),
+        query3: z.object({
+          a: z.string(),
+        }).optional(),
+        query4: z.array(z.number()).or(z.number()),
+      }),
+    ),
     expected: {
       '/planets/{id}': {
         get: expect.objectContaining({
@@ -155,21 +165,59 @@ const inputTests: TestCase[] = [
               name: 'query1',
               in: 'query',
               required: true,
-              explode: true,
-              style: 'deepObject',
               schema: {
                 type: 'string',
               },
+              allowEmptyValue: true,
+              allowReserved: true,
             },
             {
               name: 'query2',
               in: 'query',
               required: false,
-              explode: true,
-              style: 'deepObject',
               schema: {
                 type: 'number',
               },
+              allowEmptyValue: true,
+              allowReserved: true,
+            },
+            {
+              name: 'query3',
+              in: 'query',
+              required: false,
+              schema: {
+                type: 'object',
+                properties: {
+                  a: {
+                    type: 'string',
+                  },
+                },
+                required: ['a'],
+              },
+              style: 'deepObject',
+              explode: true,
+              allowEmptyValue: true,
+              allowReserved: true,
+            },
+            {
+              name: 'query4',
+              in: 'query',
+              required: true,
+              schema: {
+                anyOf: [
+                  {
+                    type: 'array',
+                    items: {
+                      type: 'number',
+                    },
+                  },
+                  {
+                    type: 'number',
+                  },
+                ],
+              },
+              allowEmptyValue: true,
+              allowReserved: true,
             },
           ],
         }),
@@ -287,21 +335,21 @@ const inputTests: TestCase[] = [
               name: 'query1',
               in: 'query',
               required: true,
-              explode: true,
-              style: 'deepObject',
               schema: {
                 type: 'string',
               },
+              allowEmptyValue: true,
+              allowReserved: true,
             },
             {
               name: 'query2',
               in: 'query',
               required: false,
-              explode: true,
-              style: 'deepObject',
               schema: {
                 type: 'number',
               },
+              allowEmptyValue: true,
+              allowReserved: true,
             },
             {
               name: 'header1',

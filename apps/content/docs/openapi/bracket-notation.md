@@ -9,9 +9,29 @@ Bracket Notation encodes structured data in formats with limited syntax, like UR
 
 ## Usage
 
-- Append `[]` **at the end** to denote an array.
-- Append `[number]` to specify an array index (missing indexes create sparse arrays).
-- Append `[key]` to denote an object property.
+1. **Same name (>=2 elements) are represented as an array.**
+
+   ```
+   color=red&color=blue → { color: ["red", "blue"] }
+   ```
+
+2. **Append `[]` at the end to denote an array.**
+
+   ```
+   color[]=red&color[]=blue → { color: ["red", "blue"] }
+   ```
+
+3. **Append `[number]` to specify an array index (missing indexes create sparse arrays).**
+
+   ```
+   color[0]=red&color[2]=blue → { color: ["red", <empty>, "blue"] }
+   ```
+
+4. **Append `[key]` to denote an object property.**
+
+   ```
+   color[red]=true&color[blue]=false → { color: { red: true, blue: false } }
+   ```
 
 ## Limitations
 

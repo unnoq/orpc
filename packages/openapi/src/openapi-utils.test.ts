@@ -169,9 +169,22 @@ describe('toOpenAPIParameters', () => {
     type: 'object',
     properties: {
       a: { type: 'string' },
-      b: { type: 'number' },
+      b: {
+        type: 'object',
+        properties: {
+          b1: { type: 'number' },
+          b2: { type: 'string' },
+        },
+        required: ['b1'],
+      },
+      c: {
+        oneOf: [
+          { type: 'string' },
+          { type: 'array', items: { type: 'string' } },
+        ],
+      },
     },
-    required: ['a'],
+    required: ['a', 'c'],
   }
 
   it('normal', () => {
@@ -187,7 +200,22 @@ describe('toOpenAPIParameters', () => {
       in: 'path',
       required: false,
       schema: {
-        type: 'number',
+        type: 'object',
+        properties: {
+          b1: { type: 'number' },
+          b2: { type: 'string' },
+        },
+        required: ['b1'],
+      },
+    }, {
+      name: 'c',
+      in: 'path',
+      required: true,
+      schema: {
+        oneOf: [
+          { type: 'string' },
+          { type: 'array', items: { type: 'string' } },
+        ],
       },
     }])
   })
@@ -197,11 +225,11 @@ describe('toOpenAPIParameters', () => {
       name: 'a',
       in: 'query',
       required: true,
-      explode: true,
-      style: 'deepObject',
       schema: {
         type: 'string',
       },
+      allowEmptyValue: true,
+      allowReserved: true,
     }, {
       name: 'b',
       in: 'query',
@@ -209,8 +237,27 @@ describe('toOpenAPIParameters', () => {
       explode: true,
       style: 'deepObject',
       schema: {
-        type: 'number',
+        type: 'object',
+        properties: {
+          b1: { type: 'number' },
+          b2: { type: 'string' },
+        },
+        required: ['b1'],
       },
+      allowEmptyValue: true,
+      allowReserved: true,
+    }, {
+      name: 'c',
+      in: 'query',
+      required: true,
+      schema: {
+        oneOf: [
+          { type: 'string' },
+          { type: 'array', items: { type: 'string' } },
+        ],
+      },
+      allowEmptyValue: true,
+      allowReserved: true,
     }])
   })
 })

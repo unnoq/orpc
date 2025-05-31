@@ -162,16 +162,76 @@ describe('standardBracketNotationSerializer', () => {
       ])).toEqual({ '0': 1, '': 2 })
     })
 
-    it('can deserialize when conflict keys', () => {
+    it('should be an array if conflict keys', () => {
       expect(serializer.deserialize([
         ['a', 1],
         ['a', 2],
-      ])).toEqual({ a: 2 })
+      ])).toEqual({ a: [1, 2] })
 
       expect(serializer.deserialize([
         ['0', 1],
         ['0', 2],
-      ])).toEqual([2])
+      ])).toEqual([[1, 2]])
+
+      expect(serializer.deserialize([
+        ['a', 1],
+        ['a', 2],
+        ['a[2]', 3],
+      ])).toEqual({ a: [1, 2, 3] })
+
+      expect(serializer.deserialize([
+        ['0', 1],
+        ['0', 2],
+        ['0[user]', 3],
+      ])).toEqual([{
+        0: 1,
+        1: 2,
+        user: 3,
+      }])
+    })
+
+    it('should be an array if [] conflict keys', () => {
+      expect(serializer.deserialize([
+        ['users[]', 1],
+        ['users[]', 2],
+        ['users[name]', 3],
+      ])).toEqual({
+        users: {
+          '': [1, 2],
+          'name': 3,
+        },
+      })
+
+      expect(serializer.deserialize([
+        ['users[]', 1],
+        ['users[]', 2],
+        ['users[name][]', 3],
+        ['users[name][]', 4],
+        ['users[]', 5],
+        ['users[name][]', 6],
+      ])).toEqual({
+        users: {
+          '': [1, 2, 5],
+          'name': [3, 4, 6],
+        },
+      })
+
+      expect(serializer.deserialize([
+        ['a[]', 1],
+        ['a[b][]', 2],
+        ['a[b][c][]', 3],
+        ['a[]', 4],
+        ['a[b][]', 5],
+        ['a[b][c][]', 6],
+      ])).toEqual({
+        a: {
+          '': [1, 4],
+          'b': {
+            '': [2, 5],
+            'c': [3, 6],
+          },
+        },
+      })
     })
 
     it('can deserialize mixed nested structures', () => {

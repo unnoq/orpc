@@ -1,6 +1,6 @@
 import type { FileSchema, JSONSchema, ObjectSchema } from './schema'
-import { isObject } from '@orpc/shared'
-import { LOGIC_KEYWORDS } from './schema'
+import { isObject, stringifyJSON } from '@orpc/shared'
+import { JSONSchemaTypeName, LOGIC_KEYWORDS } from './schema'
 
 /**
  *@internal
@@ -154,4 +154,55 @@ export function expandUnionSchema(schema: JSONSchema): JSONSchema[] {
   }
 
   return [schema]
+}
+
+export function expandArrayableSchema(schema: JSONSchema): undefined | [items: JSONSchema, array: JSONSchema & { type: 'array', items?: JSONSchema }] {
+  const schemas = expandUnionSchema(schema)
+
+  if (schemas.length !== 2) {
+    return undefined
+  }
+
+  const arraySchema = schemas.find(
+    s => typeof s === 'object' && s.type === 'array' && Object.keys(s).filter(k => LOGIC_KEYWORDS.includes(k)).every(k => k === 'type' || k === 'items'),
+  ) as JSONSchema & { type: 'array', items?: JSONSchema }
+
+  if (arraySchema === undefined) {
+    return undefined
+  }
+
+  const items1 = arraySchema.items
+  const items2 = schemas.find(s => s !== arraySchema) as JSONSchema
+
+  if (stringifyJSON(items1) !== stringifyJSON(items2)) {
+    return undefined
+  }
+
+  return [items2, arraySchema]
+}
+
+const PRIMITIVE_SCHEMA_TYPES = new Set<string>([
+  JSONSchemaTypeName.String,
+  JSONSchemaTypeName.Number,
+  JSONSchemaTypeName.Integer,
+  JSONSchemaTypeName.Boolean,
+  JSONSchemaTypeName.Null,
+])
+
+export function isPrimitiveSchema(schema: JSONSchema): boolean {
+  return expandUnionSchema(schema).every((s) => {
+    if (typeof s === 'boolean') {
+      return false
+    }
+
+    if (typeof s.type === 'string' && PRIMITIVE_SCHEMA_TYPES.has(s.type)) {
+      return true
+    }
+
+    if (s.const !== undefined) {
+      return true
+    }
+
+    return false
+  })
 }

@@ -45,23 +45,30 @@ export class StandardBracketNotationSerializer {
 
         if (i !== segments.length - 1) {
           if (Array.isArray(currentRef[nextSegment]) && !isValidArrayIndex(segment)) {
-            currentRef[nextSegment] = { ...currentRef[nextSegment] }
+            if (arrayPushStyles.has(currentRef[nextSegment])) {
+              arrayPushStyles.delete(currentRef[nextSegment])
+              currentRef[nextSegment] = pushStyleArrayToObject(currentRef[nextSegment])
+            }
+            else {
+              currentRef[nextSegment] = arrayToObject(currentRef[nextSegment])
+            }
           }
         }
         else {
           if (Array.isArray(currentRef[nextSegment])) {
             if (segment === '') {
               if (currentRef[nextSegment].length && !arrayPushStyles.has(currentRef[nextSegment])) {
-                currentRef[nextSegment] = { ...currentRef[nextSegment] }
+                currentRef[nextSegment] = arrayToObject(currentRef[nextSegment])
               }
             }
             else {
               if (arrayPushStyles.has(currentRef[nextSegment])) {
-                currentRef[nextSegment] = { '': currentRef[nextSegment].at(-1) }
+                arrayPushStyles.delete(currentRef[nextSegment])
+                currentRef[nextSegment] = pushStyleArrayToObject(currentRef[nextSegment])
               }
 
               else if (!isValidArrayIndex(segment)) {
-                currentRef[nextSegment] = { ...currentRef[nextSegment] }
+                currentRef[nextSegment] = arrayToObject(currentRef[nextSegment])
               }
             }
           }
@@ -71,13 +78,16 @@ export class StandardBracketNotationSerializer {
         nextSegment = segment
       })
 
-      if (Array.isArray(currentRef)) {
-        if (nextSegment === '') {
-          arrayPushStyles.add(currentRef)
-          currentRef.push(value)
+      if (Array.isArray(currentRef) && nextSegment === '') {
+        arrayPushStyles.add(currentRef)
+        currentRef.push(value)
+      }
+      else if (nextSegment in currentRef) {
+        if (Array.isArray(currentRef[nextSegment])) {
+          currentRef[nextSegment].push(value)
         }
         else {
-          currentRef[Number(nextSegment)] = value
+          currentRef[nextSegment] = [currentRef[nextSegment], value]
         }
       }
       else {
@@ -157,4 +167,14 @@ export class StandardBracketNotationSerializer {
 
 function isValidArrayIndex(value: string): boolean {
   return /^0$|^[1-9]\d*$/.test(value)
+}
+
+function arrayToObject(array: any[]): Record<string, unknown> {
+  return { ...array }
+}
+
+function pushStyleArrayToObject(array: any[]): Record<string, unknown> {
+  return {
+    '': array.length === 1 ? array[0] : array,
+  }
 }
