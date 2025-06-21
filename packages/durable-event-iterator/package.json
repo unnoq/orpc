@@ -1,0 +1,61 @@
+{
+  "name": "@orpc/experimental-durable-event-iterator",
+  "type": "module",
+  "version": "1.5.2",
+  "license": "MIT",
+  "homepage": "https://orpc.unnoq.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unnoq/orpc.git",
+    "directory": "packages/durable-event-iterator"
+  },
+  "keywords": [
+    "unnoq",
+    "orpc"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.mts",
+        "import": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "./client": {
+        "types": "./dist/client/index.d.mts",
+        "import": "./dist/client/index.mjs",
+        "default": "./dist/client/index.mjs"
+      },
+      "./durable-object": {
+        "types": "./dist/durable-object/index.d.mts",
+        "import": "./dist/durable-object/index.mjs",
+        "default": "./dist/durable-object/index.mjs"
+      }
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts",
+    "./durable-object": "./src/durable-object/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "build:watch": "pnpm run build --watch",
+    "type:check": "tsc -b"
+  },
+  "dependencies": {
+    "@orpc/client": "workspace:*",
+    "@orpc/contract": "workspace:*",
+    "@orpc/server": "workspace:*",
+    "@orpc/shared": "workspace:*",
+    "jose": "^6.0.11",
+    "partysocket": "^1.1.4",
+    "valibot": "^1.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250617.0",
+    "@types/node": "^22.15.30"
+  }
+}

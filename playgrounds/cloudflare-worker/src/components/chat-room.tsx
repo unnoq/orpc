@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
-import { chatRoomClient } from '../lib/chat-room'
+import { client } from '../lib/orpc'
 
 export function ChatRoom() {
   const [messages, setMessages] = useState<string[]>([])
+  const [iterator, setIterator] = useState<Awaited<ReturnType<typeof client.onMessage>> | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
 
     void (async () => {
-      for await (const message of await chatRoomClient.onMessage(undefined, { signal: controller.signal })) {
-        setMessages(messages => [...messages, message])
+      const iterator = await client.onMessage(undefined, { signal: controller.signal })
+      setIterator(iterator)
+
+      for await (const message of iterator) {
+        setMessages(messages => [...messages, message.message])
       }
     })()
 
@@ -24,7 +28,7 @@ export function ChatRoom() {
     const form = new FormData(e.target as HTMLFormElement)
     const message = form.get('message') as string
 
-    await chatRoomClient.send({ message })
+    await iterator?.publishMessage({ message })
   }
 
   return (

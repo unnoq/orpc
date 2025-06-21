@@ -13,4 +13,4 @@ export * from './types'
 export * from './value'
 
 export { group, guard, mapEntries, mapValues, omit } from 'radash'
-export type { IsEqual, IsNever, PartialDeep, Promisable } from 'type-fest'
+export type { IsEqual, IsNever, JsonValue, PartialDeep, Promisable } from 'type-fest'
