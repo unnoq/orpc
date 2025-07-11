@@ -5,7 +5,7 @@ export interface createORPCClientOptions {
   /**
    * Use as base path for all procedure, useful when you only want to call a subset of the procedure.
    */
-  path?: string[]
+  path?: readonly string[]
 }
 
 /**
@@ -15,9 +15,9 @@ export interface createORPCClientOptions {
  */
 export function createORPCClient<T extends NestedClient<any>>(
   link: ClientLink<InferClientContext<T>>,
-  options?: createORPCClientOptions,
+  options: createORPCClientOptions = {},
 ): T {
-  const path = options?.path ?? []
+  const path = options.path ?? []
 
   const procedureClient: Client<InferClientContext<T>, unknown, unknown, Error> = async (
     ...[input, options = {} as FriendlyClientOptions<InferClientContext<T>>]

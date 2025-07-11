@@ -53,3 +53,15 @@ else {
 - `isDefined` can replace `isDefinedError`
 
 :::
+
+## Safe Client
+
+If you often use `safe` for error handling, `createSafeClient` can simplify your code by automatically wrapping all procedure calls with `safe`. It works with both [server-side](/docs/client/server-side) and [client-side](/docs/client/client-side) clients.
+
+```ts
+import { createSafeClient } from '@orpc/client'
+
+const safeClient = createSafeClient(client)
+
+const [error, data] = await safeClient.doSomething({ id: '123' })
+```
