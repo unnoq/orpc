@@ -1,6 +1,6 @@
 import { call, createRouterClient, getEventMeta, isProcedure, ORPCError, unlazy } from '@orpc/server'
 import { isAsyncIteratorObject } from '@orpc/shared'
-import { tracked } from '@trpc/server'
+import { tracked, TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { inputSchema, outputSchema } from '../../contract/tests/shared'
 import { t, trpcRouter } from '../tests/shared'
@@ -40,7 +40,7 @@ describe('toORPCRouter', async () => {
   it('meta/route', async () => {
     expect(orpcRouter.ping['~orpc'].meta).toEqual({ meta1: 'test' })
     expect(orpcRouter.nested.ping['~orpc'].route).toEqual({ path: '/nested/ping', description: 'Nested ping procedure' })
-    expect(orpcRouter.nested.ping['~orpc'].meta).toEqual({ path: '/nested/ping', description: 'Nested ping procedure' })
+    expect(orpcRouter.nested.ping['~orpc'].meta).toEqual({ route: { path: '/nested/ping', description: 'Nested ping procedure' } })
   })
 
   describe('calls', () => {
@@ -60,6 +60,16 @@ describe('toORPCRouter', async () => {
         call(orpcRouter.throw, { b: 42, c: 'test' }, { context: { a: 'test' } }),
       ).rejects.toSatisfy((err: any) => {
         return err instanceof ORPCError && err.code === 'PARSE_ERROR' && err.message === 'throw'
+      })
+
+      await expect(
+        call(orpcRouter.ping, { input: 'invalid' } as any, { context: { a: 'test' } }),
+      ).rejects.toSatisfy((err: any) => {
+        expect(err).toBeInstanceOf(ORPCError)
+        expect(err.cause).toBeInstanceOf(TRPCError)
+        expect(err.cause.cause).toBeInstanceOf(z.ZodError)
+
+        return true
       })
     })
 

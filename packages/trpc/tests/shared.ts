@@ -40,7 +40,7 @@ export const trpcRouter = t.router({
 
   nested: {
     ping: t.procedure
-      .meta({ path: '/nested/ping', description: 'Nested ping procedure' })
+      .meta({ route: { path: '/nested/ping', description: 'Nested ping procedure' } })
       .input(z.object({ a: z.string() }))
       .output(z.string().transform(val => Number(val)))
       .query(({ input }) => {

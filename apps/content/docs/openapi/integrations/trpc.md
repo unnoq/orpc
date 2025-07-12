@@ -50,6 +50,16 @@ const orpcRouter = toORPCRouter(trpcRouter)
 
 ::: warning
 Ensure you set the `.meta` type to `ORPCMeta` when creating your tRPC builder. This is required for OpenAPI features to function properly.
+
+```ts
+const example = t.procedure
+  .meta({ route: { path: '/hello', summary: 'Hello procedure' } }) // [!code highlight]
+  .input(z.object({ name: z.string() }))
+  .query(({ input }) => {
+    return `Hello, ${input.name}!`
+  })
+```
+
 :::
 
 ### Specification Generation
