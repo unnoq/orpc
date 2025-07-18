@@ -99,8 +99,8 @@ importers:
   apps/content:
     devDependencies:
       '@ai-sdk/google':
-        specifier: 2.0.0-beta.12
-        version: 2.0.0-beta.12(zod@4.0.5)
+        specifier: 2.0.0-canary.20
+        version: 2.0.0-canary.20(zod@4.0.5)
       '@ai-sdk/react':
         specifier: 2.0.0-beta.23
         version: 2.0.0-beta.23(react@19.1.0)(zod@4.0.5)
@@ -1408,11 +1408,11 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
-  '@ai-sdk/google@2.0.0-beta.12':
-    resolution: {integrity: sha512-+tCWa9Q1vI/eHcudLm+3nd9omzkyRydkHks5N6iP7OSM14f+7G/X4AeBZnFtDC20aOsKH4NeI+ZwBd7xvC4cwA==}
+  '@ai-sdk/google@2.0.0-canary.20':
+    resolution: {integrity: sha512-2LqcuiADGzr8mqzHfHU+E7Prjl5Vb4aqFKUibp1GF2pLy9i4dx+4lwRRn5noYBoKQcjJTKtO+PkPW2eErvunKg==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: ^3.25.76 || ^4
+      zod: ^3.24.0
 
   '@ai-sdk/provider-utils@3.0.0-beta.4':
     resolution: {integrity: sha512-6/ldkUlM7qZCe7sUD/YzgR6dRADjp68whGODikuh9L2HJJElKrOetRD3wE6fA0/TYGcG8g3gUVmiXj+dGhYiFA==}
@@ -1420,8 +1420,18 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
+  '@ai-sdk/provider-utils@3.0.0-canary.19':
+    resolution: {integrity: sha512-4IJw6/wkWYLYfFYPvCs5go0L/sBRZsIRW1l/R6LniF4WjAH2+R4dMbESgBmzx+Z2+W+W6gFeK8dnQByn7vaA/w==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.23.8
+
   '@ai-sdk/provider@2.0.0-beta.1':
     resolution: {integrity: sha512-Z8SPncMtS3RsoXITmT7NVwrAq6M44dmw0DoUOYJqNNtCu8iMWuxB8Nxsoqpa0uEEy9R1V1ZThJAXTYgjTUxl3w==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/provider@2.0.0-canary.14':
+    resolution: {integrity: sha512-aN83hjdjDCyhkOdulwMsxmGb91owS+bCSe6FWg1TEwusNM35vv020nY//Gid/0NdIpVkZJGzAajgCWrnno2zzA==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@2.0.0-beta.23':
@@ -13345,10 +13355,10 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
       zod: 4.0.5
 
-  '@ai-sdk/google@2.0.0-beta.12(zod@4.0.5)':
+  '@ai-sdk/google@2.0.0-canary.20(zod@4.0.5)':
     dependencies:
-      '@ai-sdk/provider': 2.0.0-beta.1
-      '@ai-sdk/provider-utils': 3.0.0-beta.4(zod@4.0.5)
+      '@ai-sdk/provider': 2.0.0-canary.14
+      '@ai-sdk/provider-utils': 3.0.0-canary.19(zod@4.0.5)
       zod: 4.0.5
 
   '@ai-sdk/provider-utils@3.0.0-beta.4(zod@4.0.5)':
@@ -13359,7 +13369,18 @@ snapshots:
       zod: 4.0.5
       zod-to-json-schema: 3.24.6(zod@4.0.5)
 
+  '@ai-sdk/provider-utils@3.0.0-canary.19(zod@4.0.5)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0-canary.14
+      '@standard-schema/spec': 1.0.0
+      zod: 4.0.5
+      zod-to-json-schema: 3.24.6(zod@4.0.5)
+
   '@ai-sdk/provider@2.0.0-beta.1':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@2.0.0-canary.14':
     dependencies:
       json-schema: 0.4.0
 
