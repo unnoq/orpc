@@ -1,13 +1,13 @@
 {
-  "name": "@orpc/shared",
+  "name": "@orpc/otel",
   "type": "module",
-  "version": "1.7.6",
+  "version": "0.0.0",
   "license": "MIT",
   "homepage": "https://orpc.unnoq.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/unnoq/orpc.git",
-    "directory": "packages/shared"
+    "directory": "packages/otel"
   },
   "keywords": [
     "unnoq",
@@ -34,21 +34,14 @@
     "type:check": "tsc -b"
   },
   "peerDependencies": {
-    "@opentelemetry/api": ">=1.9.0"
-  },
-  "peerDependenciesMeta": {
-    "@opentelemetry/api": {
-      "optional": true
-    }
+    "@opentelemetry/api": ">=1.9.0",
+    "@opentelemetry/instrumentation": ">=0.203.0"
   },
   "dependencies": {
-    "radash": "^12.1.1",
-    "type-fest": "^4.39.1"
+    "@orpc/shared": "workspace:*"
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "arktype": "2.1.20",
-    "valibot": "^1.1.0",
-    "zod": "^4.0.5"
+    "@opentelemetry/instrumentation": "^0.203.0"
   }
 }
