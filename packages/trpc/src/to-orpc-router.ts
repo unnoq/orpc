@@ -7,16 +7,16 @@ import { get, isObject, isTypescriptObject } from '@orpc/shared'
 import { isTrackedEnvelope, TRPCError } from '@trpc/server'
 import { getHTTPStatusCodeFromError, isAsyncIterable } from '@trpc/server/unstable-core-do-not-import'
 
-export interface experimental_ORPCMeta {
+export interface ORPCMeta {
   route?: ORPC.Route
 }
 
-export type experimental_ToORPCOutput<T>
+export type ToORPCOutput<T>
   = T extends AsyncIterable<infer TData, infer TReturn, infer TNext>
     ? AsyncIteratorClass<TData, TReturn, TNext>
     : T
 
-export type experimental_ToORPCRouterResult<TContext extends ORPC.Context, TMeta extends ORPC.Meta, TRecord extends Record<string, any>>
+export type ToORPCRouterResult<TContext extends ORPC.Context, TMeta extends ORPC.Meta, TRecord extends Record<string, any>>
     = {
       [K in keyof TRecord]:
       TRecord[K] extends AnyProcedure
@@ -24,12 +24,12 @@ export type experimental_ToORPCRouterResult<TContext extends ORPC.Context, TMeta
           TContext,
           object,
           ORPC.Schema<TRecord[K]['_def']['$types']['input'], unknown>,
-          ORPC.Schema<unknown, experimental_ToORPCOutput<TRecord[K]['_def']['$types']['output']>>,
+          ORPC.Schema<unknown, ToORPCOutput<TRecord[K]['_def']['$types']['output']>>,
           object,
           TMeta
         >
         : TRecord[K] extends Record<string, any>
-          ? experimental_ToORPCRouterResult<TContext, TMeta, TRecord[K]>
+          ? ToORPCRouterResult<TContext, TMeta, TRecord[K]>
           : never
     }
 
@@ -38,9 +38,9 @@ export type experimental_ToORPCRouterResult<TContext extends ORPC.Context, TMeta
  *
  * @warning You should set the `meta` type to `ORPCMeta` when creating your tRPC builder, to ensure OpenAPI features work correctly.
  */
-export function experimental_toORPCRouter<T extends AnyRouter>(
+export function toORPCRouter<T extends AnyRouter>(
   router: T,
-): experimental_ToORPCRouterResult<
+): ToORPCRouterResult<
     inferRouterContext<T>,
     inferRouterMeta<T>,
     T['_def']['record']
@@ -61,7 +61,7 @@ function lazyToORPCRouter(lazies: AnyRouter['_def']['lazy']) {
 
     orpcRouter[key] = ORPC.createAccessibleLazyRouter(ORPC.lazy(async () => {
       const router = await item.ref()
-      return { default: experimental_toORPCRouter(router) }
+      return { default: toORPCRouter(router) }
     }))
   }
 

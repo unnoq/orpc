@@ -38,10 +38,7 @@ deno install npm:@orpc/trpc@latest
 By converting a [tRPC router](https://trpc.io/docs/server/routers) to an [oRPC router](/docs/router), you can utilize most oRPC features, including OpenAPI specification generation and request handling.
 
 ```ts
-import {
-  experimental_ORPCMeta as ORPCMeta,
-  experimental_toORPCRouter as toORPCRouter
-} from '@orpc/trpc'
+import { ORPCMeta, toORPCRouter } from '@orpc/trpc'
 
 export const t = initTRPC.context<Context>().meta<ORPCMeta>().create()
 
