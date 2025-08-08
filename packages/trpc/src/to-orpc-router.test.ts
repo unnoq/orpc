@@ -4,7 +4,7 @@ import { tracked, TRPCError } from '@trpc/server'
 import * as z from 'zod'
 import { inputSchema, outputSchema } from '../../contract/tests/shared'
 import { t, trpcRouter } from '../tests/shared'
-import { experimental_toORPCRouter as toORPCRouter } from './to-orpc-router'
+import { toORPCRouter } from './to-orpc-router'
 
 beforeEach(() => {
   vi.clearAllMocks()

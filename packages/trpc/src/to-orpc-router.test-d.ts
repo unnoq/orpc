@@ -3,7 +3,7 @@ import type { AsyncIteratorClass } from '@orpc/shared'
 import type { inferRouterContext } from '@trpc/server'
 import type { inferRouterMeta, TrackedData } from '@trpc/server/unstable-core-do-not-import'
 import type { TRPCContext, TRPCMeta, trpcRouter } from '../tests/shared'
-import type { experimental_ToORPCRouterResult as ToORPCRouterResult } from './to-orpc-router'
+import type { ToORPCRouterResult } from './to-orpc-router'
 
 it('ToORPCRouterResult', () => {
   const orpcRouter = {} as ToORPCRouterResult<

@@ -1,4 +1,4 @@
-import type { experimental_ORPCMeta as ORPCMeta } from '../src/to-orpc-router'
+import type { ORPCMeta } from '../src/to-orpc-router'
 import { initTRPC, lazy, tracked, TRPCError } from '@trpc/server'
 import { z } from 'zod/v4'
 import { inputSchema, outputSchema } from '../../contract/tests/shared'
