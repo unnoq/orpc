@@ -223,11 +223,6 @@ describe('standardHandler', () => {
 
     const error = new Error('Something bad')
     codec.decode.mockRejectedValueOnce(error)
-    const client = vi.fn()
-    vi.mocked(createProcedureClient).mockReturnValueOnce(client)
-
-    codec.decode.mockReturnValueOnce('__input__')
-
     codec.encodeError.mockReturnValueOnce(response)
 
     const result = await handler.handle(request, {
@@ -240,17 +235,11 @@ describe('standardHandler', () => {
     expect(matcher.match).toHaveBeenCalledOnce()
     expect(matcher.match).toHaveBeenCalledWith('GET', '/users/1')
 
-    expect(createProcedureClient).toHaveBeenCalledOnce()
-    expect(createProcedureClient).toHaveBeenCalledWith(ping, {
-      context: { db: 'postgres' },
-      interceptors: [],
-      path: ['ping'],
-    })
+    expect(createProcedureClient).not.toHaveBeenCalled()
 
     expect(codec.decode).toHaveBeenCalledOnce()
     expect(codec.decode).toHaveBeenCalledWith(request, { id: '__id__' }, ping)
 
-    expect(client).not.toHaveBeenCalledOnce()
     expect(codec.encode).not.toBeCalled()
 
     expect(codec.encodeError).toHaveBeenCalledOnce()

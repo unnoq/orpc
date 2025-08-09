@@ -1,4 +1,5 @@
 import Stream from 'node:stream'
+import { AbortError } from '@orpc/shared'
 import { toAbortSignal } from './signal'
 
 describe('toAbortSignal', async () => {
@@ -57,7 +58,7 @@ describe('toAbortSignal', async () => {
 
     await vi.waitFor(() => {
       expect(signal.aborted).toEqual(true)
-      expect(signal.reason).toEqual(new Error('Writable stream closed before it finished writing'))
+      expect(signal.reason).toEqual(new AbortError('Writable stream closed before it finished writing'))
     })
   })
 })

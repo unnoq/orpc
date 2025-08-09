@@ -1,7 +1,15 @@
 import type { EventIteratorPayload } from './codec'
-import { AsyncIdQueue } from '@orpc/shared'
+import * as shared from '@orpc/shared'
 import { ErrorEvent, getEventMeta, withEventMeta } from '@orpc/standard-server'
 import { resolveEventIterator, toEventIterator } from './event-iterator'
+
+const AsyncIdQueue = shared.AsyncIdQueue
+const startSpanSpy = vi.spyOn(shared, 'startSpan')
+const runInSpanContextSpy = vi.spyOn(shared, 'runInSpanContext')
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe('toEventIterator', () => {
   it('on success', async () => {
@@ -62,6 +70,9 @@ describe('toEventIterator', () => {
     expect(cleanup).toHaveBeenCalledTimes(1)
 
     await expect(iterator.next()).resolves.toEqual({ done: true, value: undefined })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
   })
 
   it('on error', async () => {
@@ -122,6 +133,40 @@ describe('toEventIterator', () => {
     expect(cleanup).toHaveBeenCalledTimes(1)
 
     await expect(iterator.next()).resolves.toEqual({ done: true, value: undefined })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
+  })
+
+  it('on queue close before finish', async () => {
+    const queue = new AsyncIdQueue<EventIteratorPayload>()
+    queue.open('198')
+    const cleanup = vi.fn()
+    const iterator = toEventIterator(queue, '198', cleanup)
+
+    const promise = expect(iterator.next()).rejects.toThrow('[AsyncIdQueue] Queue[198] was closed or aborted while waiting for pulling.')
+
+    await new Promise(resolve => setTimeout(resolve, 1))
+    queue.close({ id: '198' })
+    await promise
+
+    expect(cleanup).toHaveBeenCalledTimes(1)
+  })
+
+  it('on cleanup error', async () => {
+    const queue = new AsyncIdQueue<EventIteratorPayload>()
+    queue.open('198')
+
+    const cleanupError = new Error('cleanup error')
+    const cleanup = vi.fn(() => {
+      throw cleanupError
+    })
+
+    const iterator = toEventIterator(queue, '198', cleanup)
+
+    await expect(iterator.return()).rejects.toThrow(cleanupError)
+
+    expect(cleanup).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -194,15 +239,15 @@ describe('resolveEventIterator', () => {
     })
   })
 
-  it('on unknown error', async () => {
+  it('on non-ErrorEvent', async () => {
     const callback = vi.fn(async () => 'next' as const)
 
-    await resolveEventIterator((async function* () {
+    await expect(resolveEventIterator((async function* () {
       yield 'hello'
       yield withEventMeta({ hello2: true }, { id: 'id-1', retry: 2000, comments: [] })
       yield 'hello3'
-      throw withEventMeta(new Error('hi'), { id: 'id-2', retry: 2001, comments: ['comment1', 'comment2'] })
-    })(), callback)
+      throw new Error('test')
+    })(), callback)).rejects.toThrow('test')
 
     expect(callback).toHaveBeenCalledTimes(4)
     expect(callback).toHaveBeenNthCalledWith(1, {
@@ -221,16 +266,22 @@ describe('resolveEventIterator', () => {
       data: 'hello3',
     })
 
+    /**
+     * always emit an error event
+     * even if the error is not an ErrorEvent
+     * so that the iterator can be closed properly
+     */
     expect(callback).toHaveBeenNthCalledWith(4, {
       event: 'error',
       data: undefined,
-      meta: { id: 'id-2', retry: 2001, comments: ['comment1', 'comment2'] },
     })
   })
 
   it('on callback return abort', async () => {
     let time = 0
-    const callback = vi.fn(async () => time++ === 1 ? 'abort' : 'next' as const)
+    const callback = vi.fn(async (...args) => {
+      return time++ === 1 ? 'abort' : 'next' as const
+    })
 
     let cleanupError
     let isCleanupCalled = false
@@ -248,9 +299,6 @@ describe('resolveEventIterator', () => {
       }
       finally {
         isCleanupCalled = true
-
-        // eslint-disable-next-line no-unsafe-finally
-        throw new Error('this should silence ignored')
       }
     })(), callback)
 
@@ -298,9 +346,6 @@ describe('resolveEventIterator', () => {
       }
       finally {
         isCleanupCalled = true
-
-        // eslint-disable-next-line no-unsafe-finally
-        throw new Error('this should silence ignored')
       }
     })(), callback)).rejects.toThrow('callback error')
 
@@ -317,6 +362,51 @@ describe('resolveEventIterator', () => {
       event: 'message',
       data: { hello2: true },
       meta: { id: 'id-1', retry: 2000, comments: [] },
+    })
+  })
+
+  it('on non-ErrorEvent and callback throw error', async () => {
+    let time = 0
+    const callback = vi.fn(async () => {
+      if (++time === 4) {
+        throw new Error('callback error')
+      }
+
+      return 'next' as const
+    })
+
+    await expect(resolveEventIterator((async function* () {
+      yield 'hello'
+      yield withEventMeta({ hello2: true }, { id: 'id-1', retry: 2000, comments: [] })
+      yield 'hello3'
+      throw new Error('test')
+    })(), callback)).rejects.toThrow('callback error')
+
+    expect(callback).toHaveBeenCalledTimes(4)
+    expect(callback).toHaveBeenNthCalledWith(1, {
+      event: 'message',
+      data: 'hello',
+    })
+
+    expect(callback).toHaveBeenNthCalledWith(2, {
+      event: 'message',
+      data: { hello2: true },
+      meta: { id: 'id-1', retry: 2000, comments: [] },
+    })
+
+    expect(callback).toHaveBeenNthCalledWith(3, {
+      event: 'message',
+      data: 'hello3',
+    })
+
+    /**
+     * always emit an error event
+     * even if the error is not an ErrorEvent
+     * so that the iterator can be closed properly
+     */
+    expect(callback).toHaveBeenNthCalledWith(4, {
+      event: 'error',
+      data: undefined,
     })
   })
 })

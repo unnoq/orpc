@@ -1,6 +1,14 @@
-import { isAsyncIteratorObject } from '@orpc/shared'
+import * as shared from '@orpc/shared'
 import { ErrorEvent, getEventMeta, withEventMeta } from '@orpc/standard-server'
 import { toEventIterator, toEventStream } from './event-iterator'
+
+const isAsyncIteratorObject = shared.isAsyncIteratorObject
+const startSpanSpy = vi.spyOn(shared, 'startSpan')
+const runInSpanContextSpy = vi.spyOn(shared, 'runInSpanContext')
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe('toEventIterator', () => {
   it('with done event', async () => {
@@ -40,6 +48,9 @@ describe('toEventIterator', () => {
 
       return true
     })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(5)
   })
 
   it('without done event', async () => {
@@ -80,6 +91,9 @@ describe('toEventIterator', () => {
     })
 
     await expect(stream.getReader().closed).resolves.toBe(undefined)
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(5)
   })
 
   it('with empty stream', async () => {
@@ -87,6 +101,9 @@ describe('toEventIterator', () => {
     expect(generator).toSatisfy(isAsyncIteratorObject)
     expect(await generator.next()).toEqual({ done: true, value: undefined })
     expect(await generator.next()).toEqual({ done: true, value: undefined })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(1)
   })
 
   it('with error event', async () => {
@@ -128,6 +145,9 @@ describe('toEventIterator', () => {
     })
 
     await expect(stream.getReader().closed).resolves.toBe(undefined)
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
   })
 
   it('when .return() before finish reading', async () => {
@@ -155,6 +175,34 @@ describe('toEventIterator', () => {
     await generator.return(undefined)
 
     await vi.waitFor(() => expect(stream.getReader().closed).resolves.toBe(undefined))
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('error while reading', async () => {
+    const stream = new ReadableStream<string>({
+      async pull(controller) {
+        controller.enqueue('event: message\ndata: {"order": 1}\nid: id-1\nretry: 10000\n\n')
+        await new Promise(resolve => setTimeout(resolve, 10))
+        controller.error(new Error('Test error'))
+      },
+    }).pipeThrough(new TextEncoderStream())
+
+    const generator = toEventIterator(stream)
+
+    expect(await generator.next()).toSatisfy(({ done, value }) => {
+      expect(done).toEqual(false)
+      expect(value).toEqual({ order: 1 })
+      expect(getEventMeta(value)).toEqual(expect.objectContaining({ id: 'id-1', retry: 10000 }))
+
+      return true
+    })
+
+    await expect(generator.next()).rejects.toThrow('Test error')
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
   })
 })
 
@@ -176,6 +224,9 @@ describe('toEventStream', () => {
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: done\nretry: 40000\nid: id-4\ndata: {"order":4}\n\n' })
     expect((await reader.read())).toEqual({ done: true, value: undefined })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
   })
 
   it('without return', async () => {
@@ -193,9 +244,12 @@ describe('toEventStream', () => {
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nretry: 20000\ndata: {"order":2}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\n\n' })
     expect((await reader.read())).toEqual({ done: true, value: undefined })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
   })
 
-  it('with normal error', async () => {
+  it('with non-ErrorEvent error', async () => {
     async function* gen() {
       yield withEventMeta({ order: 1 }, { id: 'id-1' })
       yield withEventMeta({ order: 2 }, { retry: 20000 })
@@ -210,8 +264,10 @@ describe('toEventStream', () => {
     expect((await reader.read()).value).toEqual('event: message\nid: id-1\ndata: {"order":1}\n\n')
     expect((await reader.read()).value).toEqual('event: message\nretry: 20000\ndata: {"order":2}\n\n')
     expect((await reader.read()).value).toEqual('event: message\n\n')
-    expect((await reader.read()).value).toEqual('event: error\nretry: 40000\nid: id-4\n\n')
-    expect((await reader.read()).done).toEqual(true)
+    await expect(reader.read()).rejects.toThrow('order-4')
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
   })
 
   it('with ErrorEvent error', async () => {
@@ -231,6 +287,9 @@ describe('toEventStream', () => {
     expect((await reader.read()).value).toEqual('event: message\n\n')
     expect((await reader.read()).value).toEqual('event: error\nretry: 40000\nid: id-4\ndata: {"order":4}\n\n')
     expect((await reader.read()).done).toEqual(true)
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
   })
 
   it('when canceled from client - return', async () => {
@@ -257,6 +316,9 @@ describe('toEventStream', () => {
     await vi.waitFor(() => {
       expect(hasFinally).toBe(true)
     })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
   })
 
   it('when canceled from client - throw', async () => {
@@ -283,6 +345,42 @@ describe('toEventStream', () => {
     await vi.waitFor(() => {
       expect(hasFinally).toBe(true)
     })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
+  })
+
+  it('throw while cleanup', async () => {
+    let hasFinally = false
+
+    async function* gen() {
+      try {
+        yield 1
+        await new Promise(resolve => setTimeout(resolve, 10))
+        yield 2
+      }
+      finally {
+        hasFinally = true
+        // eslint-disable-next-line no-unsafe-finally
+        throw new Error('something')
+      }
+    }
+
+    const stream = toEventStream(gen(), {})
+
+    const reader = stream.getReader()
+    await reader.read()
+    /**
+     * This should throw, but because TextEncoderStream not rethrows cancel errors from the source stream,
+     */
+    await reader.cancel()
+
+    await vi.waitFor(() => {
+      expect(hasFinally).toBe(true)
+    })
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
   })
 
   it('keep alive', { retry: 5 }, async () => {
@@ -316,6 +414,9 @@ describe('toEventStream', () => {
     await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
     expect(Date.now() - now).toBeGreaterThanOrEqual(80)
     expect(Date.now() - now).toBeLessThan(120)
+
+    expect(startSpanSpy).toHaveBeenCalledTimes(1)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
   })
 })
 

@@ -8,11 +8,13 @@ import { toStandardHeaders } from './headers'
 import { toStandardUrl } from './url'
 
 export function toStandardLazyRequest(event: APIGatewayProxyEventV2, responseStream: Stream.Writable): StandardLazyRequest {
+  const signal = toAbortSignal(responseStream)
+
   return {
     url: toStandardUrl(event),
     method: event.requestContext.http.method,
     headers: toStandardHeaders(event.headers, event.cookies),
-    signal: toAbortSignal(responseStream),
-    body: once(() => toStandardBody(event)),
+    signal,
+    body: once(() => toStandardBody(event, { signal })),
   }
 }

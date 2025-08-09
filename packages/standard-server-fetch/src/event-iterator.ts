@@ -1,67 +1,99 @@
-import { AsyncIteratorClass, isTypescriptObject, parseEmptyableJSON, stringifyJSON } from '@orpc/shared'
-import {
-  encodeEventMessage,
-  ErrorEvent,
-  EventDecoderStream,
-  getEventMeta,
-  withEventMeta,
-} from '@orpc/standard-server'
+import type { SetSpanErrorOptions } from '@orpc/shared'
+import { AsyncIteratorClass, isTypescriptObject, parseEmptyableJSON, runInSpanContext, setSpanError, startSpan, stringifyJSON } from '@orpc/shared'
+import { encodeEventMessage, ErrorEvent, EventDecoderStream, getEventMeta, withEventMeta } from '@orpc/standard-server'
+
+export interface ToEventIteratorOptions extends SetSpanErrorOptions {}
 
 export function toEventIterator(
   stream: ReadableStream<Uint8Array> | null,
+  options: ToEventIteratorOptions = {},
 ): AsyncIteratorClass<unknown> {
   const eventStream = stream
     ?.pipeThrough(new TextDecoderStream())
     .pipeThrough(new EventDecoderStream())
 
   const reader = eventStream?.getReader()
+  let span: ReturnType<typeof startSpan> | undefined
 
   return new AsyncIteratorClass(async () => {
-    while (true) {
-      if (reader === undefined) {
-        return { done: true, value: undefined }
-      }
+    span ??= startSpan('consume_event_iterator_stream')
 
-      const { done, value } = await reader.read()
-
-      if (done) {
-        return { done: true, value: undefined }
-      }
-
-      switch (value.event) {
-        case 'message': {
-          let message = parseEmptyableJSON(value.data)
-
-          if (isTypescriptObject(message)) {
-            message = withEventMeta(message, value)
-          }
-
-          return { done: false, value: message }
+    try {
+      while (true) {
+        if (reader === undefined) {
+          return { done: true, value: undefined }
         }
 
-        case 'error': {
-          let error = new ErrorEvent({
-            data: parseEmptyableJSON(value.data),
-          })
+        const { done, value } = await runInSpanContext(span, () => reader.read())
 
-          error = withEventMeta(error, value)
-
-          throw error
+        if (done) {
+          return { done: true, value: undefined }
         }
 
-        case 'done': {
-          let done = parseEmptyableJSON(value.data)
+        switch (value.event) {
+          case 'message': {
+            let message = parseEmptyableJSON(value.data)
 
-          if (isTypescriptObject(done)) {
-            done = withEventMeta(done, value)
+            if (isTypescriptObject(message)) {
+              message = withEventMeta(message, value)
+            }
+
+            span?.addEvent('message')
+            return { done: false, value: message }
           }
 
-          return { done: true, value: done }
+          case 'error': {
+            let error = new ErrorEvent({
+              data: parseEmptyableJSON(value.data),
+            })
+
+            error = withEventMeta(error, value)
+
+            span?.addEvent('error')
+            throw error
+          }
+
+          case 'done': {
+            let done = parseEmptyableJSON(value.data)
+
+            if (isTypescriptObject(done)) {
+              done = withEventMeta(done, value)
+            }
+
+            span?.addEvent('done')
+            return { done: true, value: done }
+          }
+          default: {
+            span?.addEvent('maybe_keepalive')
+          }
         }
       }
     }
-  }, async () => {
-    await reader?.cancel()
+    catch (e) {
+      /**
+       * Shouldn't treat an error event as an error.
+       */
+      if (!(e instanceof ErrorEvent)) {
+        setSpanError(span, e, options)
+      }
+
+      throw e
+    }
+  }, async (reason) => {
+    try {
+      if (reason !== 'next') {
+        span?.addEvent('cancelled')
+      }
+
+      await runInSpanContext(span, () => reader?.cancel())
+    }
+    catch (e) {
+      setSpanError(span, e, options)
+      throw e
+    }
+    finally {
+      span?.end()
+    }
   })
 }
 
@@ -98,8 +130,12 @@ export function toEventStream(
 
   let cancelled = false
   let timeout: ReturnType<typeof setInterval> | undefined
+  let span: ReturnType<typeof startSpan> | undefined
 
   const stream = new ReadableStream<string>({
+    start() {
+      span = startSpan('stream_event_iterator')
+    },
     async pull(controller) {
       try {
         if (keepAliveEnabled) {
@@ -107,10 +143,11 @@ export function toEventStream(
             controller.enqueue(encodeEventMessage({
               comments: [keepAliveComment],
             }))
+            span?.addEvent('keepalive')
           }, keepAliveInterval)
         }
 
-        const value = await iterator.next()
+        const value = await runInSpanContext(span, () => iterator.next())
 
         clearInterval(timeout)
 
@@ -121,15 +158,18 @@ export function toEventStream(
         const meta = getEventMeta(value.value)
 
         if (!value.done || value.value !== undefined || meta !== undefined) {
+          const event = value.done ? 'done' : 'message'
           controller.enqueue(encodeEventMessage({
             ...meta,
-            event: value.done ? 'done' : 'message',
+            event,
             data: stringifyJSON(value.value),
           }))
+          span?.addEvent(event)
         }
 
         if (value.done) {
           controller.close()
+          span?.end()
         }
       }
       catch (err) {
@@ -139,20 +179,41 @@ export function toEventStream(
           return
         }
 
-        controller.enqueue(encodeEventMessage({
-          ...getEventMeta(err),
-          event: 'error',
-          data: err instanceof ErrorEvent ? stringifyJSON(err.data) : undefined,
-        }))
+        if (err instanceof ErrorEvent) {
+          controller.enqueue(encodeEventMessage({
+            ...getEventMeta(err),
+            event: 'error',
+            data: stringifyJSON(err.data),
+          }))
+          span?.addEvent('error')
+          controller.close()
+        }
+        else {
+          /**
+           * Should treat a non-ErrorEvent as an error.
+           */
+          setSpanError(span, err)
+          controller.error(err)
+        }
 
-        controller.close()
+        span?.end()
       }
     },
     async cancel() {
-      cancelled = true
-      clearInterval(timeout)
+      try {
+        cancelled = true
+        clearInterval(timeout)
+        span?.addEvent('cancelled')
 
-      await iterator.return?.()
+        await runInSpanContext(span, () => iterator.return?.())
+      }
+      catch (e) {
+        setSpanError(span, e)
+        throw e
+      }
+      finally {
+        span?.end()
+      }
     },
   }).pipeThrough(new TextEncoderStream())
 

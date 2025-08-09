@@ -3,7 +3,7 @@ import type { StandardLazyResponse, StandardRequest } from '@orpc/standard-serve
 import type { ClientContext, ClientLink, ClientOptions } from '../../types'
 import type { StandardLinkPlugin } from './plugin'
 import type { StandardLinkClient, StandardLinkCodec } from './types'
-import { intercept, toArray } from '@orpc/shared'
+import { asyncIteratorWithSpan, getGlobalOtelConfig, intercept, isAsyncIteratorObject, ORPC_NAME, runWithSpan, toArray } from '@orpc/shared'
 import { CompositeStandardLinkPlugin } from './plugin'
 
 export interface StandardLinkInterceptorOptions<T extends ClientContext> extends ClientOptions<T> {
@@ -39,24 +39,71 @@ export class StandardLink<T extends ClientContext> implements ClientLink<T> {
   }
 
   call(path: readonly string[], input: unknown, options: ClientOptions<T>): Promise<unknown> {
-    return intercept(this.interceptors, { ...options, path, input }, async ({ path, input, ...options }) => {
-      const output = await this.#call(path, input, options)
+    /**
+     * [Semantic conventions for RPC spans](https://opentelemetry.io/docs/specs/semconv/rpc/rpc-spans/)
+     */
+    return runWithSpan(
+      { name: `${ORPC_NAME}.${path.join('/')}`, signal: options.signal },
+      (span) => {
+        /**
+         * [Semantic conventions for RPC spans](https://opentelemetry.io/docs/specs/semconv/rpc/rpc-spans/)
+         */
+        span?.setAttribute('rpc.system', ORPC_NAME)
+        span?.setAttribute('rpc.method', path.join('.'))
 
-      return output
-    })
-  }
+        if (isAsyncIteratorObject(input)) {
+          input = asyncIteratorWithSpan(
+            { name: 'consume_event_iterator_input', signal: options.signal },
+            input,
+          )
+        }
 
-  async #call(path: readonly string[], input: unknown, options: ClientOptions<T>): Promise<unknown> {
-    const request = await this.codec.encode(path, input, options)
+        return intercept(this.interceptors, { ...options, path, input }, async ({ path, input, ...options }) => {
+        /**
+         * In browsers, the OpenTelemetry context manager may not work reliably with async functions,
+         * so we manually manage the context here.
+         */
+          const otelConfig = getGlobalOtelConfig()
+          let otelContext: ReturnType<Exclude<typeof otelConfig, undefined>['context']['active']> | undefined
+          const currentSpan = otelConfig?.trace.getActiveSpan() ?? span
+          if (currentSpan && otelConfig) {
+            otelContext = otelConfig?.trace.setSpan(otelConfig.context.active(), currentSpan)
+          }
 
-    const response = await intercept(
-      this.clientInterceptors,
-      { ...options, input, path, request },
-      ({ input, path, request, ...options }) => this.sender.call(request, options, path, input),
+          const request = await runWithSpan(
+            { name: 'encode_request', context: otelContext },
+            () => this.codec.encode(path, input, options),
+          )
+
+          const response = await intercept(
+            this.clientInterceptors,
+            { ...options, input, path, request },
+            ({ input, path, request, ...options }) => {
+              return runWithSpan(
+                { name: 'send_request', signal: options.signal, context: otelContext },
+                () => this.sender.call(request, options, path, input),
+              )
+            },
+          )
+
+          const output = await runWithSpan(
+            { name: 'decode_response', context: otelContext },
+            () => this.codec.decode(response, options, path, input),
+          )
+
+          if (isAsyncIteratorObject(output)) {
+            /**
+             * Do not use otelContext here, as it is a lazy span.
+             */
+            return asyncIteratorWithSpan(
+              { name: 'consume_event_iterator_output', signal: options.signal },
+              output,
+            )
+          }
+
+          return output
+        })
+      },
     )
-
-    const output = await this.codec.decode(response, options, path, input)
-
-    return output
   }
 }

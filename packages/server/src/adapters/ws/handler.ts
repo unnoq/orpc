@@ -7,9 +7,7 @@ import type {
 } from '../standard-peer'
 import { readAsBuffer, resolveMaybeOptionalOptions } from '@orpc/shared'
 import { ServerPeer } from '@orpc/standard-server-peer'
-import {
-  handleStandardServerPeerMessage,
-} from '../standard-peer'
+import { createServerPeerHandleRequestFn } from '../standard-peer'
 
 export class WsHandler<T extends Context> {
   constructor(
@@ -28,11 +26,9 @@ export class WsHandler<T extends Context> {
         ? await readAsBuffer(new Blob(event.data))
         : event.data
 
-      await handleStandardServerPeerMessage(
-        this.standardHandler,
-        peer,
+      await peer.message(
         message,
-        resolveMaybeOptionalOptions(rest),
+        createServerPeerHandleRequestFn(this.standardHandler, resolveMaybeOptionalOptions(rest)),
       )
     })
 

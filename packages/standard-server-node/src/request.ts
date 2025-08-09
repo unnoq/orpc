@@ -10,11 +10,13 @@ export function toStandardLazyRequest(
   req: NodeHttpRequest,
   res: NodeHttpResponse,
 ): StandardLazyRequest {
+  const signal = toAbortSignal(res)
+
   return {
     method: toStandardMethod(req.method),
     url: toStandardUrl(req),
     headers: req.headers,
-    body: once(() => toStandardBody(req)),
-    signal: toAbortSignal(res),
+    body: once(() => toStandardBody(req, { signal })),
+    signal,
   }
 }

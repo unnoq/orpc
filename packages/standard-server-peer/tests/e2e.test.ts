@@ -12,20 +12,15 @@ describe('client/server peer', () => {
       await client.message(typeof raw === 'string' ? Math.random() < 0.5 ? raw : new TextEncoder().encode(raw) : raw)
     })
 
-    const [id, request] = await server.message(
+    server.message(
       typeof raw === 'string'
         ? Math.random() < 0.5 ? raw : new TextEncoder().encode(raw) /** increase coverage  */
         : raw,
+      async request => ({
+        status: 200,
+        ...request,
+      }),
     )
-
-    if (!request) {
-      return
-    }
-
-    server.response(id, {
-      status: 200,
-      ...request,
-    })
   })
 
   const serializer = new StandardRPCSerializer(new StandardRPCJsonSerializer())

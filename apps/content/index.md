@@ -28,6 +28,9 @@ features:
   - icon: 📝
     title: Contract-First Development
     details: Optionally define your API contract before implementation.
+  - icon: 🔍
+    title: First-Class OpenTelemetry
+    details: Seamlessly integrate with OpenTelemetry for observability.
   - icon: ⚙️
     title: Framework Integrations
     details: Seamlessly integrate with TanStack Query (React, Vue, Solid, Svelte, Angular, etc.), Pinia Colada, NestJS, and more.
@@ -52,9 +55,6 @@ features:
   - icon: 🔌
     title: Extendability
     details: Easily extend functionality with plugins, middleware, and interceptors.
-  - icon: 🛡️
-    title: Reliability
-    details: Well-tested, TypeScript-based, production-ready, and MIT licensed.
 ---
 
 <script setup>

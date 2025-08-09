@@ -83,7 +83,8 @@ describe('toStandardLazyResponse', () => {
       status: 206,
     })
 
-    const lazyResponse = toStandardLazyResponse(response)
+    const signal = AbortSignal.timeout(100)
+    const lazyResponse = toStandardLazyResponse(response, { signal })
 
     expect(lazyResponse.status).toBe(206)
 
@@ -93,7 +94,7 @@ describe('toStandardLazyResponse', () => {
 
     expect(lazyResponse.body()).toBe(toStandardBodySpy.mock.results[0]!.value)
     expect(toStandardBodySpy).toBeCalledTimes(1)
-    expect(toStandardBodySpy).toBeCalledWith(response)
+    expect(toStandardBodySpy).toBeCalledWith(response, { signal })
   })
 
   it('lazy headers', async () => {

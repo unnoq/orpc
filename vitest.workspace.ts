@@ -8,13 +8,14 @@ export default defineWorkspace([
     test: {
       globals: true,
       include: ['**/*.test.ts'],
+      setupFiles: ['./vitest.javascript.ts'],
     },
   },
   {
     test: {
       globals: true,
       environment: 'jsdom',
-      setupFiles: ['./vitest.jsdom.ts'],
+      setupFiles: ['./vitest.javascript.ts', './vitest.jsdom.ts'],
       include: [
         './packages/react/**/*.test.tsx',
         './packages/react-query/**/*.test.tsx',
@@ -28,7 +29,7 @@ export default defineWorkspace([
     test: {
       globals: true,
       environment: 'jsdom',
-      setupFiles: ['./vitest.jsdom.ts'],
+      setupFiles: ['./vitest.javascript.ts', './vitest.jsdom.ts'],
       include: [
         './packages/solid-query/**/*.test.tsx',
       ],
@@ -45,7 +46,7 @@ export default defineWorkspace([
     test: {
       globals: true,
       environment: 'jsdom',
-      setupFiles: ['./vitest.jsdom.ts'],
+      setupFiles: ['./vitest.javascript.ts', './vitest.jsdom.ts'],
       include: [
         './packages/svelte-query/**/*.test.tsx',
       ],

@@ -1,45 +1,53 @@
 import type { StandardBody, StandardHeaders } from '@orpc/standard-server'
 import type { ToNodeHttpBodyOptions } from '@orpc/standard-server-node'
 import type { Readable } from 'node:stream'
+import type { ToEventIteratorOptions } from './event-iterator'
 import type { APIGatewayProxyEventV2 } from './types'
 import { Buffer } from 'node:buffer'
-import { parseEmptyableJSON } from '@orpc/shared'
+import { parseEmptyableJSON, runWithSpan } from '@orpc/shared'
 import { getFilenameFromContentDisposition } from '@orpc/standard-server'
 import { toNodeHttpBody } from '@orpc/standard-server-node'
 import { toEventIterator } from './event-iterator'
 
-export async function toStandardBody(event: APIGatewayProxyEventV2): Promise<StandardBody> {
-  const contentType = event.headers['content-type']
-  const contentDisposition = event.headers['content-disposition']
+export interface ToStandardBodyOptions extends ToEventIteratorOptions {}
 
-  if (typeof contentDisposition === 'string') {
-    const fileName = getFilenameFromContentDisposition(contentDisposition) ?? 'blob'
+export function toStandardBody(
+  event: APIGatewayProxyEventV2,
+  options: ToStandardBodyOptions = {},
+): Promise<StandardBody> {
+  return runWithSpan({ name: 'parse_standard_body', signal: options.signal }, async () => {
+    const contentType = event.headers['content-type']
+    const contentDisposition = event.headers['content-disposition']
 
-    return _parseAsFile(event.body, event.isBase64Encoded, fileName, contentType ?? '')
-  }
+    if (typeof contentDisposition === 'string') {
+      const fileName = getFilenameFromContentDisposition(contentDisposition) ?? 'blob'
 
-  if (!contentType || contentType.startsWith('application/json')) {
-    const text = _parseAsString(event.body, event.isBase64Encoded)
-    return parseEmptyableJSON(text)
-  }
+      return _parseAsFile(event.body, event.isBase64Encoded, fileName, contentType ?? '')
+    }
 
-  if (contentType.startsWith('multipart/form-data')) {
-    return _parseAsFormData(event.body, event.isBase64Encoded, contentType)
-  }
+    if (!contentType || contentType.startsWith('application/json')) {
+      const text = _parseAsString(event.body, event.isBase64Encoded)
+      return parseEmptyableJSON(text)
+    }
 
-  if (contentType.startsWith('application/x-www-form-urlencoded')) {
-    return new URLSearchParams(_parseAsString(event.body, event.isBase64Encoded))
-  }
+    if (contentType.startsWith('multipart/form-data')) {
+      return _parseAsFormData(event.body, event.isBase64Encoded, contentType)
+    }
 
-  if (contentType.startsWith('text/event-stream')) {
-    return toEventIterator(_parseAsString(event.body, event.isBase64Encoded))
-  }
+    if (contentType.startsWith('application/x-www-form-urlencoded')) {
+      return new URLSearchParams(_parseAsString(event.body, event.isBase64Encoded))
+    }
 
-  if (contentType.startsWith('text/plain')) {
-    return _parseAsString(event.body, event.isBase64Encoded)
-  }
+    if (contentType.startsWith('text/event-stream')) {
+      return toEventIterator(_parseAsString(event.body, event.isBase64Encoded), options)
+    }
 
-  return _parseAsFile(event.body, event.isBase64Encoded, 'blob', contentType)
+    if (contentType.startsWith('text/plain')) {
+      return _parseAsString(event.body, event.isBase64Encoded)
+    }
+
+    return _parseAsFile(event.body, event.isBase64Encoded, 'blob', contentType)
+  })
 }
 
 export interface ToLambdaBodyOptions extends ToNodeHttpBodyOptions {}

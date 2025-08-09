@@ -4,7 +4,8 @@ import topLevelAwait from 'vite-plugin-top-level-await'
 export default defineConfig({
   vite: {
     plugins: [
-      topLevelAwait(),
+      // TODO: remove `as any`
+      topLevelAwait() as any,
     ],
   },
 })

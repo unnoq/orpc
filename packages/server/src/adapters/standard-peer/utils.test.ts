@@ -1,5 +1,6 @@
 import { encodeRequestMessage, encodeResponseMessage, MessageType, ServerPeer } from '@orpc/standard-server-peer'
 import {
+  createServerPeerHandleRequestFn,
   handleStandardServerPeerMessage,
 } from './utils'
 
@@ -82,6 +83,50 @@ describe('handleStandardServerPeerMessage', () => {
       await encodeResponseMessage('test', MessageType.RESPONSE, { status: 404, headers: {}, body: 'No procedure matched' }),
     )
 
+    expect(handler.handle).toHaveBeenCalledTimes(1)
+    expect(handler.handle).toHaveBeenCalledWith(
+      { ...request, body: expect.any(Function), signal: expect.any(AbortSignal) },
+      { context: { context: true } },
+    )
+  })
+})
+
+describe('createServerPeerHandleRequestFn', () => {
+  const handler = {
+    handle: vi.fn(async () => ({ response: undefined })),
+  } as any
+
+  const handleRequest = createServerPeerHandleRequestFn(handler, { context: { context: true } })
+
+  const request = {
+    body: 'test',
+    headers: { 'x-custom': 'value' },
+    method: 'GET',
+    url: new URL('http://localhost/test'),
+    signal: new AbortController().signal,
+  }
+
+  it('on matched', async () => {
+    const response = { status: 200, headers: {}, body: 'ok' }
+
+    handler.handle.mockResolvedValueOnce({ matched: true, response })
+
+    const result = await handleRequest(request)
+
+    expect(result).toBe(response)
+    expect(handler.handle).toHaveBeenCalledTimes(1)
+    expect(handler.handle).toHaveBeenCalledWith(
+      { ...request, body: expect.any(Function), signal: expect.any(AbortSignal) },
+      { context: { context: true } },
+    )
+  })
+
+  it('on not matched', async () => {
+    handler.handle.mockResolvedValueOnce({ matched: false, response: undefined })
+
+    const result = await handleRequest(request)
+
+    expect(result).toEqual({ status: 404, headers: {}, body: 'No procedure matched' })
     expect(handler.handle).toHaveBeenCalledTimes(1)
     expect(handler.handle).toHaveBeenCalledWith(
       { ...request, body: expect.any(Function), signal: expect.any(AbortSignal) },

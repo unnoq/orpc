@@ -1,3 +1,4 @@
+import type { StandardRequest, StandardResponse } from '@orpc/standard-server'
 import { StandardLink } from './link'
 
 beforeEach(() => {
@@ -17,8 +18,22 @@ describe('standardLink', () => {
       clientInterceptors: [clientInterceptor],
     })
 
-    codec.encode.mockReturnValueOnce('__standard_request__')
-    client.call.mockResolvedValueOnce('__standard_response__')
+    const __standardRequest: StandardRequest = {
+      method: 'POST',
+      url: new URL('http://localhost:3000'),
+      headers: {},
+      body: '__standard_request__',
+      signal: AbortSignal.timeout(100),
+    }
+
+    const __standardResponse: StandardResponse = {
+      status: 200,
+      headers: {},
+      body: '__standard_response__',
+    }
+
+    codec.encode.mockReturnValueOnce(__standardRequest)
+    client.call.mockResolvedValueOnce(__standardResponse)
     codec.decode.mockReturnValueOnce('__output__')
 
     const context = { context: true }
@@ -33,10 +48,10 @@ describe('standardLink', () => {
     expect(codec.encode).toHaveBeenCalledWith(['planet', 'create'], { name: 'Earth' }, { context, signal, lastEventId })
 
     expect(client.call).toHaveBeenCalledTimes(1)
-    expect(client.call).toHaveBeenCalledWith('__standard_request__', { context, signal, lastEventId }, ['planet', 'create'], { name: 'Earth' })
+    expect(client.call).toHaveBeenCalledWith(__standardRequest, { context, signal, lastEventId }, ['planet', 'create'], { name: 'Earth' })
 
     expect(codec.decode).toHaveBeenCalledTimes(1)
-    expect(codec.decode).toHaveBeenCalledWith('__standard_response__', { context, signal, lastEventId }, ['planet', 'create'], { name: 'Earth' })
+    expect(codec.decode).toHaveBeenCalledWith(__standardResponse, { context, signal, lastEventId }, ['planet', 'create'], { name: 'Earth' })
 
     expect(interceptor).toHaveBeenCalledTimes(1)
     expect(interceptor).toHaveBeenCalledWith({
@@ -51,7 +66,7 @@ describe('standardLink', () => {
     expect(clientInterceptor).toHaveBeenCalledTimes(1)
     expect(clientInterceptor).toHaveBeenCalledWith({
       next: expect.any(Function),
-      request: '__standard_request__',
+      request: __standardRequest,
       path: ['planet', 'create'],
       input: { name: 'Earth' },
       context,

@@ -9,7 +9,7 @@ export function toStandardLazyRequest(request: Request): StandardLazyRequest {
     url: new URL(request.url),
     signal: request.signal,
     method: request.method,
-    body: once(() => toStandardBody(request)),
+    body: once(() => toStandardBody(request, { signal: request.signal })),
     get headers() {
       const headers = toStandardHeaders(request.headers)
       Object.defineProperty(this, 'headers', { value: headers, writable: true })

@@ -7,7 +7,8 @@ import type { Lazyable } from './lazy'
 import type { AnyProcedure, Procedure, ProcedureHandlerOptions } from './procedure'
 import { ORPCError } from '@orpc/client'
 import { ValidationError } from '@orpc/contract'
-import { intercept, resolveMaybeOptionalOptions, toArray, value } from '@orpc/shared'
+import { asyncIteratorWithSpan, intercept, isAsyncIteratorObject, resolveMaybeOptionalOptions, runWithSpan, toArray, value } from '@orpc/shared'
+import { experimental_HibernationEventIterator as HibernationEventIterator } from '@orpc/standard-server'
 import { mergeCurrentContext } from './context'
 import { createORPCErrorConstructorMap, validateORPCError } from './error'
 import { unlazy } from './lazy'
@@ -98,19 +99,50 @@ export function createProcedureClient<
     const errors = createORPCErrorConstructorMap(procedure['~orpc'].errorMap)
 
     try {
-      return await intercept(
-        toArray(options.interceptors),
-        {
-          context,
-          input: input as InferSchemaInput<TInputSchema>, // input only optional when it undefinable so we can safely cast it
-          errors,
-          path,
-          procedure: procedure as AnyProcedure,
-          signal: callerOptions?.signal,
-          lastEventId: callerOptions?.lastEventId,
+      const output = await runWithSpan(
+        { name: 'call_procedure', signal: callerOptions?.signal },
+        (span) => {
+          span?.setAttribute('procedure.path', [...path])
+
+          return intercept(
+            toArray(options.interceptors),
+            {
+              context,
+              input: input as InferSchemaInput<TInputSchema>, // input only optional when it undefinable so we can safely cast it
+              errors,
+              path,
+              procedure: procedure as AnyProcedure,
+              signal: callerOptions?.signal,
+              lastEventId: callerOptions?.lastEventId,
+            },
+            interceptorOptions => executeProcedureInternal(interceptorOptions.procedure, interceptorOptions),
+          )
         },
-        interceptorOptions => executeProcedureInternal(interceptorOptions.procedure, interceptorOptions),
       )
+
+      if (isAsyncIteratorObject(output)) {
+        /**
+         * HibernationEventIterator is a special case - do not transform or track it.
+         */
+        if ((output as AsyncIteratorObject<any>) instanceof HibernationEventIterator) {
+          return output
+        }
+
+        /**
+         * asyncIteratorWithSpan return AsyncIteratorClass
+         * which is backwards compatible with Event Iterator & almost async iterator.
+         *
+         * @warning
+         * If remove this return, can be breaking change
+         * because AsyncIteratorClass convert `.throw` to `.return` (rarely used)
+         */
+        return asyncIteratorWithSpan(
+          { name: 'consume_event_iterator_output', signal: callerOptions?.signal },
+          output,
+        ) as typeof output
+      }
+
+      return output
     }
     catch (e) {
       if (!(e instanceof ORPCError)) {
@@ -131,18 +163,24 @@ async function validateInput(procedure: AnyProcedure, input: unknown): Promise<a
     return input
   }
 
-  const result = await schema['~standard'].validate(input)
-  if (result.issues) {
-    throw new ORPCError('BAD_REQUEST', {
-      message: 'Input validation failed',
-      data: {
-        issues: result.issues,
-      },
-      cause: new ValidationError({ message: 'Input validation failed', issues: result.issues }),
-    })
-  }
+  return runWithSpan(
+    { name: 'validate_input' },
+    async () => {
+      const result = await schema['~standard'].validate(input)
 
-  return result.value
+      if (result.issues) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Input validation failed',
+          data: {
+            issues: result.issues,
+          },
+          cause: new ValidationError({ message: 'Input validation failed', issues: result.issues }),
+        })
+      }
+
+      return result.value
+    },
+  )
 }
 
 async function validateOutput(procedure: AnyProcedure, output: unknown): Promise<any> {
@@ -152,15 +190,21 @@ async function validateOutput(procedure: AnyProcedure, output: unknown): Promise
     return output
   }
 
-  const result = await schema['~standard'].validate(output)
-  if (result.issues) {
-    throw new ORPCError('INTERNAL_SERVER_ERROR', {
-      message: 'Output validation failed',
-      cause: new ValidationError({ message: 'Output validation failed', issues: result.issues }),
-    })
-  }
+  return runWithSpan(
+    { name: 'validate_output' },
+    async () => {
+      const result = await schema['~standard'].validate(output)
 
-  return result.value
+      if (result.issues) {
+        throw new ORPCError('INTERNAL_SERVER_ERROR', {
+          message: 'Output validation failed',
+          cause: new ValidationError({ message: 'Output validation failed', issues: result.issues }),
+        })
+      }
+
+      return result.value
+    },
+  )
 }
 
 async function executeProcedureInternal(procedure: AnyProcedure, options: ProcedureHandlerOptions<any, any, any, any>): Promise<any> {
@@ -178,19 +222,32 @@ async function executeProcedureInternal(procedure: AnyProcedure, options: Proced
     const mid = middlewares[index]
 
     const output = mid
-      ? (await mid({
-          ...options,
-          context,
-          next: async (...[nextOptions]) => {
-            const nextContext: Context = nextOptions?.context ?? {}
+      ? await runWithSpan(
+          { name: `middleware.${mid.name}`, signal: options.signal },
+          async (span) => {
+            span?.setAttribute('middleware.index', index)
+            span?.setAttribute('middleware.name', mid.name)
 
-            return {
-              output: await next(index + 1, mergeCurrentContext(context, nextContext), currentInput),
-              context: nextContext,
-            }
+            const result = await mid({
+              ...options,
+              context,
+              next: async (...[nextOptions]) => {
+                const nextContext: Context = nextOptions?.context ?? {}
+
+                return {
+                  output: await next(index + 1, mergeCurrentContext(context, nextContext), currentInput),
+                  context: nextContext,
+                }
+              },
+            }, currentInput, middlewareOutputFn)
+
+            return result.output
           },
-        }, currentInput, middlewareOutputFn)).output
-      : await procedure['~orpc'].handler({ ...options, context, input: currentInput })
+        )
+      : await runWithSpan(
+          { name: 'handler', signal: options.signal },
+          () => procedure['~orpc'].handler({ ...options, context, input: currentInput }),
+        )
 
     if (index === outputValidationIndex) {
       return await validateOutput(procedure, output)

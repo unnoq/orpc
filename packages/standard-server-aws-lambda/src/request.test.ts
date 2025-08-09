@@ -57,7 +57,7 @@ describe('toStandardLazyRequest', () => {
     expect(toStandardHeadersSpy).toBeCalledWith(event.headers, event.cookies)
 
     expect(toStandardBodySpy).toBeCalledTimes(1)
-    expect(toStandardBodySpy).toBeCalledWith(event)
+    expect(toStandardBodySpy).toBeCalledWith(event, { signal: toAbortSignalSpy.mock.results[0]!.value })
   })
 
   it('lazy body', async () => {

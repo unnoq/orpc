@@ -5,7 +5,7 @@ import type { StandardHandler } from '../standard'
 import type { HandleStandardServerPeerMessageOptions } from '../standard-peer'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
 import { ServerPeer } from '@orpc/standard-server-peer'
-import { handleStandardServerPeerMessage } from '../standard-peer'
+import { createServerPeerHandleRequestFn } from '../standard-peer'
 
 export class experimental_CrosswsHandler<T extends Context> {
   private readonly peers: WeakMap<Pick<Peer, 'send'>, ServerPeer> = new WeakMap()
@@ -30,11 +30,9 @@ export class experimental_CrosswsHandler<T extends Context> {
 
     const encodedMessage = typeof message.rawData === 'string' ? message.rawData : message.uint8Array()
 
-    await handleStandardServerPeerMessage(
-      this.standardHandler,
-      peer,
+    await peer.message(
       encodedMessage,
-      resolveMaybeOptionalOptions(rest),
+      createServerPeerHandleRequestFn(this.standardHandler, resolveMaybeOptionalOptions(rest)),
     )
   }
 

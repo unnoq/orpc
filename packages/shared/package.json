@@ -33,11 +33,20 @@
     "build:watch": "pnpm run build --watch",
     "type:check": "tsc -b"
   },
+  "peerDependencies": {
+    "@opentelemetry/api": ">=1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "radash": "^12.1.1",
     "type-fest": "^4.39.1"
   },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "arktype": "2.1.20",
     "valibot": "^1.1.0",
     "zod": "^4.0.14"

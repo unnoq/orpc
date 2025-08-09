@@ -35,7 +35,7 @@ describe('toStandardLazyRequest', () => {
     expect(toStandardHeadersSpy).toBeCalledWith(request.headers)
 
     expect(toStandardBodySpy).toBeCalledTimes(1)
-    expect(toStandardBodySpy).toBeCalledWith(request)
+    expect(toStandardBodySpy).toBeCalledWith(request, { signal: request.signal })
   })
 
   it('lazy headers', async () => {

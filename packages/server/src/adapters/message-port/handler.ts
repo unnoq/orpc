@@ -8,9 +8,7 @@ import type {
 import { onMessagePortClose, onMessagePortMessage, postMessagePortMessage } from '@orpc/client/message-port'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
 import { ServerPeer } from '@orpc/standard-server-peer'
-import {
-  handleStandardServerPeerMessage,
-} from '../standard-peer'
+import { createServerPeerHandleRequestFn } from '../standard-peer'
 
 export class MessagePortHandler<T extends Context> {
   constructor(
@@ -27,11 +25,9 @@ export class MessagePortHandler<T extends Context> {
     })
 
     onMessagePortMessage(port, async (message) => {
-      await handleStandardServerPeerMessage(
-        this.standardHandler,
-        peer,
+      await peer.message(
         message,
-        resolveMaybeOptionalOptions(rest),
+        createServerPeerHandleRequestFn(this.standardHandler, resolveMaybeOptionalOptions(rest)),
       )
     })
 

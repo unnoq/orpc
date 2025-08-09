@@ -1,45 +1,49 @@
 import type { StandardBody, StandardHeaders } from '@orpc/standard-server'
 import type { Buffer } from 'node:buffer'
-import type { ToEventStreamOptions } from './event-iterator'
+import type { ToEventIteratorOptions, ToEventStreamOptions } from './event-iterator'
 import type { NodeHttpRequest } from './types'
 import { Readable } from 'node:stream'
-import { isAsyncIteratorObject, parseEmptyableJSON, stringifyJSON } from '@orpc/shared'
+import { isAsyncIteratorObject, parseEmptyableJSON, runWithSpan, stringifyJSON } from '@orpc/shared'
 import { flattenHeader, generateContentDisposition, getFilenameFromContentDisposition } from '@orpc/standard-server'
 import { toEventIterator, toEventStream } from './event-iterator'
 
-export async function toStandardBody(req: NodeHttpRequest): Promise<StandardBody> {
-  const contentDisposition = req.headers['content-disposition']
-  const contentType = req.headers['content-type']
+export interface ToStandardBodyOptions extends ToEventIteratorOptions {}
 
-  if (typeof contentDisposition === 'string') {
-    const fileName = getFilenameFromContentDisposition(contentDisposition) ?? 'blob'
+export function toStandardBody(req: NodeHttpRequest, options: ToStandardBodyOptions = {}): Promise<StandardBody> {
+  return runWithSpan({ name: 'parse_standard_body', signal: options.signal }, async () => {
+    const contentDisposition = req.headers['content-disposition']
+    const contentType = req.headers['content-type']
 
-    return _streamToFile(req, fileName, contentType ?? '')
-  }
+    if (typeof contentDisposition === 'string') {
+      const fileName = getFilenameFromContentDisposition(contentDisposition) ?? 'blob'
 
-  if (!contentType || contentType.startsWith('application/json')) {
-    const text = await _streamToString(req)
-    return parseEmptyableJSON(text)
-  }
+      return _streamToFile(req, fileName, contentType ?? '')
+    }
 
-  if (contentType.startsWith('multipart/form-data')) {
-    return _streamToFormData(req, contentType)
-  }
+    if (!contentType || contentType.startsWith('application/json')) {
+      const text = await _streamToString(req)
+      return parseEmptyableJSON(text)
+    }
 
-  if (contentType.startsWith('application/x-www-form-urlencoded')) {
-    const text = await _streamToString(req)
-    return new URLSearchParams(text)
-  }
+    if (contentType.startsWith('multipart/form-data')) {
+      return _streamToFormData(req, contentType)
+    }
 
-  if (contentType.startsWith('text/event-stream')) {
-    return toEventIterator(req)
-  }
+    if (contentType.startsWith('application/x-www-form-urlencoded')) {
+      const text = await _streamToString(req)
+      return new URLSearchParams(text)
+    }
 
-  if (contentType.startsWith('text/plain')) {
-    return _streamToString(req)
-  }
+    if (contentType.startsWith('text/event-stream')) {
+      return toEventIterator(req, options)
+    }
 
-  return _streamToFile(req, 'blob', contentType)
+    if (contentType.startsWith('text/plain')) {
+      return _streamToString(req)
+    }
+
+    return _streamToFile(req, 'blob', contentType)
+  })
 }
 
 export interface ToNodeHttpBodyOptions extends ToEventStreamOptions {}

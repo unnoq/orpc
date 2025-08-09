@@ -30,12 +30,15 @@ describe('linkFetchClient', () => {
 
     const response = await client.call(standardRequest, options, ['example'], { body: true })
 
-    expect(response).toBe(toStandardLazyResponseSpy.mock.results[0]!.value)
-    expect(toStandardLazyResponseSpy).toBeCalledTimes(1)
-    expect(toStandardLazyResponseSpy).toBeCalledWith(await fetch.mock.results[0]!.value)
-
     expect(toFetchRequestSpy).toBeCalledTimes(1)
     expect(toFetchRequestSpy).toBeCalledWith(standardRequest, { fetch })
+
+    expect(response).toBe(toStandardLazyResponseSpy.mock.results[0]!.value)
+    expect(toStandardLazyResponseSpy).toBeCalledTimes(1)
+    expect(toStandardLazyResponseSpy).toBeCalledWith(
+      await fetch.mock.results[0]!.value,
+      { signal: toFetchRequestSpy.mock.results[0]!.value.signal },
+    )
 
     expect(fetch).toBeCalledTimes(1)
     expect(fetch).toBeCalledWith(

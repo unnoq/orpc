@@ -1,4 +1,6 @@
+import type { SetSpanErrorOptions } from './otel'
 import { defer, once, sequential } from './function'
+import { runInSpanContext, setSpanError, startSpan } from './otel'
 import { AsyncIdQueue } from './queue'
 
 export function isAsyncIteratorObject(maybe: unknown): maybe is AsyncIteratorObject<any, any, any> {
@@ -157,4 +159,48 @@ export function replicateAsyncIterator<T, TReturn, TNext>(
   }
 
   return replicated
+}
+
+export interface AsyncIteratorWithSpanOptions extends SetSpanErrorOptions {
+  /**
+   * The name of the span to create.
+   */
+  name: string
+}
+
+export function asyncIteratorWithSpan<T, TReturn, TNext>(
+  { name, ...options }: AsyncIteratorWithSpanOptions,
+  iterator: AsyncIterator<T, TReturn, TNext>,
+): AsyncIteratorClass<T, TReturn, TNext> {
+  let span: ReturnType<typeof startSpan> | undefined
+
+  return new AsyncIteratorClass(
+    async () => {
+      span ??= startSpan(name)
+
+      try {
+        const result = await runInSpanContext(span, () => iterator.next())
+        span?.addEvent(result.done ? 'completed' : 'yielded')
+        return result
+      }
+      catch (err) {
+        setSpanError(span, err, options)
+        throw err
+      }
+    },
+    async (reason) => {
+      try {
+        if (reason !== 'next') {
+          await runInSpanContext(span, () => iterator.return?.())
+        }
+      }
+      catch (err) {
+        setSpanError(span, err, options)
+        throw err
+      }
+      finally {
+        span?.end()
+      }
+    },
+  )
 }

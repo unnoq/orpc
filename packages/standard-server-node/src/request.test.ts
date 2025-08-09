@@ -21,7 +21,7 @@ describe('toStandardLazyRequest', () => {
       await standardRequest.body() // ensure body is load before sending response
       expect(standardRequest.headers).toBe(req.headers)
       expect(toStandardBodySpy).toBeCalledTimes(1)
-      expect(toStandardBodySpy).toBeCalledWith(req)
+      expect(toStandardBodySpy).toBeCalledWith(req, { signal: standardRequest.signal })
       expect(toAbortSignalSpy).toBeCalledTimes(1)
       expect(toAbortSignalSpy).toBeCalledWith(res)
       res.end()

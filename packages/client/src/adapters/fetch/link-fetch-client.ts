@@ -28,7 +28,7 @@ export class LinkFetchClient<T extends ClientContext> implements StandardLinkCli
 
     const fetchResponse = await this.fetch(fetchRequest, { redirect: 'manual' }, options, path, input)
 
-    const lazyResponse = toStandardLazyResponse(fetchResponse)
+    const lazyResponse = toStandardLazyResponse(fetchResponse, { signal: fetchRequest.signal })
 
     return lazyResponse
   }

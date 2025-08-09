@@ -4,6 +4,11 @@ import type { StandardLinkClient } from '../standard'
 import { readAsBuffer } from '@orpc/shared'
 import { ClientPeer } from '@orpc/standard-server-peer'
 
+/**
+ * Some env maybe not available WebSocket global
+ */
+const WEBSOCKET_CONNECTING = 0 satisfies WebSocket['CONNECTING']
+
 export interface LinkWebsocketClientOptions {
   websocket: Pick<WebSocket, 'addEventListener' | 'send' | 'readyState'>
 }
@@ -13,7 +18,7 @@ export class LinkWebsocketClient<T extends ClientContext> implements StandardLin
 
   constructor(options: LinkWebsocketClientOptions) {
     const untilOpen = new Promise<void>((resolve) => {
-      if (options.websocket.readyState === 0) { // CONNECTING
+      if (options.websocket.readyState === WEBSOCKET_CONNECTING) {
         options.websocket.addEventListener('open', () => {
           resolve()
         }, { once: true })

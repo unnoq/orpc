@@ -1,14 +1,10 @@
 import type { MaybeOptionalOptions } from '@orpc/shared'
 import type { Context } from '../../context'
 import type { StandardHandler } from '../standard'
-import type {
-  HandleStandardServerPeerMessageOptions,
-} from '../standard-peer'
+import type { HandleStandardServerPeerMessageOptions } from '../standard-peer'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
 import { ServerPeer } from '@orpc/standard-server-peer'
-import {
-  handleStandardServerPeerMessage,
-} from '../standard-peer'
+import { createServerPeerHandleRequestFn } from '../standard-peer'
 
 export interface ServerWebSocket {
   send(message: string | ArrayBufferLike | Uint8Array): number
@@ -30,20 +26,18 @@ export class BunWsHandler<T extends Context> {
     let peer = this.peers.get(ws)
 
     if (!peer) {
-      this.peers.set(ws, peer = new ServerPeer((message) => {
-        ws.send(message)
-      }))
+      this.peers.set(ws, peer = new ServerPeer(
+        (message) => { ws.send(message) },
+      ))
     }
 
     const encodedMessage = typeof message === 'string'
       ? message
       : new Uint8Array(message.buffer, message.byteOffset, message.byteLength)
 
-    await handleStandardServerPeerMessage(
-      this.standardHandler,
-      peer,
+    await peer.message(
       encodedMessage,
-      resolveMaybeOptionalOptions(rest),
+      createServerPeerHandleRequestFn(this.standardHandler, resolveMaybeOptionalOptions(rest)),
     )
   }
 

@@ -4,7 +4,7 @@ import type { StandardHandler } from '../standard'
 import type { HandleStandardServerPeerMessageOptions } from '../standard-peer'
 import { readAsBuffer, resolveMaybeOptionalOptions } from '@orpc/shared'
 import { ServerPeer } from '@orpc/standard-server-peer'
-import { handleStandardServerPeerMessage } from '../standard-peer'
+import { createServerPeerHandleRequestFn } from '../standard-peer'
 
 export type MinimalWebsocket = Pick<WebSocket, 'addEventListener' | 'send'>
 
@@ -56,11 +56,9 @@ export class WebsocketHandler<T extends Context> {
       ? await readAsBuffer(data)
       : data
 
-    await handleStandardServerPeerMessage(
-      this.#handler,
-      peer,
+    await peer.message(
       message,
-      resolveMaybeOptionalOptions(rest),
+      createServerPeerHandleRequestFn(this.#handler, resolveMaybeOptionalOptions(rest)),
     )
   }
 

@@ -1,4 +1,11 @@
-import { AsyncIteratorClass, isAsyncIteratorObject, replicateAsyncIterator } from './iterator'
+import { AsyncIteratorClass, asyncIteratorWithSpan, isAsyncIteratorObject, replicateAsyncIterator } from './iterator'
+import * as trace from './otel'
+
+const runInSpanContextSpy = vi.spyOn(trace, 'runInSpanContext')
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 it('isAsyncIteratorObject', () => {
   expect(isAsyncIteratorObject(null)).toBe(false)
@@ -358,5 +365,71 @@ describe('replicateAsyncIterator', async () => {
     expect(cleanup).toBe(false)
     expect(await iterators[2]!.return()).toEqual({ done: true, value: undefined })
     expect(cleanup).toBe(true)
+  })
+})
+
+describe('asyncIteratorWithSpan', () => {
+  it('on success', async () => {
+    const iterator = (async function* () {
+      yield 1
+      yield 2
+    }())
+
+    const withSpan = asyncIteratorWithSpan({ name: 'name' }, iterator)
+
+    expect(await withSpan.next()).toEqual({ done: false, value: 1 })
+    expect(await withSpan.next()).toEqual({ done: false, value: 2 })
+    expect(await withSpan.next()).toEqual({ done: true, value: undefined })
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
+  })
+
+  it('on cancel', async () => {
+    let cleanup = false
+
+    const iterator = (async function* () {
+      try {
+        yield 1
+        yield 2
+      }
+      finally {
+        cleanup = true
+      }
+    }())
+
+    const withSpan = asyncIteratorWithSpan({ name: 'name' }, iterator)
+
+    expect(await withSpan.next()).toEqual({ done: false, value: 1 })
+    expect(await withSpan.return()).toEqual({ done: true, value: undefined })
+    expect(cleanup).toBe(true)
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('on error while yielding', async () => {
+    const iterator = (async function* () {
+      throw new Error('Forced error')
+    }())
+
+    const withSpan = asyncIteratorWithSpan({ name: 'name' }, iterator)
+
+    await expect(withSpan.next()).rejects.toThrow('Forced error')
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('on error while cleanup', async () => {
+    const iterator = (async function* () {
+      try {
+        yield 1
+      }
+      finally {
+        // eslint-disable-next-line no-unsafe-finally
+        throw new Error('Forced error')
+      }
+    }())
+
+    const withSpan = asyncIteratorWithSpan({ name: 'name' }, iterator)
+
+    await expect(withSpan.next()).resolves.toEqual({ done: false, value: 1 })
+    await expect(withSpan.return()).rejects.toThrow('Forced error')
+    expect(runInSpanContextSpy).toHaveBeenCalledTimes(2)
   })
 })

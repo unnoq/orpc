@@ -1,4 +1,5 @@
 import type Stream from 'node:stream'
+import { AbortError } from '@orpc/shared'
 
 export function toAbortSignal(stream: Stream.Writable): AbortSignal {
   const controller = new AbortController()
@@ -7,7 +8,7 @@ export function toAbortSignal(stream: Stream.Writable): AbortSignal {
 
   stream.once('close', () => {
     if (!stream.writableFinished) {
-      controller.abort(new Error('Writable stream closed before it finished writing'))
+      controller.abort(new AbortError('Writable stream closed before it finished writing'))
     }
   })
 

@@ -465,6 +465,37 @@ describe('encode/decode request message', () => {
 
     expect(await (payload as any).body.text()).toBe(json)
   })
+
+  it('decode accept buffer data', async () => {
+    const blob = new Blob(['foo'], { type: 'application/pdf' })
+
+    const message = await encodeRequestMessage('198', MessageType.REQUEST, {
+      method: 'POST',
+      url: new URL('https://example.com/api/v1/users/1'),
+      headers: {},
+      body: blob,
+    })
+
+    expect(message).toBeInstanceOf(Uint8Array)
+    const unit8Array = message as Uint8Array
+    const buffer = unit8Array.buffer.slice(unit8Array.byteOffset, unit8Array.byteOffset + unit8Array.byteLength)
+
+    const [id, type, payload] = await decodeRequestMessage(buffer)
+
+    expect(id).toBe('198')
+    expect(type).toBe(MessageType.REQUEST)
+    expect(payload).toEqual({
+      url: new URL('https://example.com/api/v1/users/1'),
+      headers: {
+        'content-type': 'application/pdf',
+        'content-disposition': expect.any(String),
+      },
+      method: 'POST',
+      body: expect.toSatisfy(blob => blob instanceof Blob),
+    })
+
+    expect(await (payload as any).body.text()).toBe('foo')
+  })
 })
 
 describe('encode/decode response message', () => {
@@ -833,5 +864,34 @@ describe('encode/decode response message', () => {
     })
 
     expect(await (payload as any).body.text()).toBe(json)
+  })
+
+  it('decode accept buffer data', async () => {
+    const blob = new Blob(['foo'], { type: 'application/pdf' })
+
+    const message = await encodeResponseMessage('198', MessageType.RESPONSE, {
+      status: 200,
+      headers: {},
+      body: blob,
+    })
+
+    expect(message).toBeInstanceOf(Uint8Array)
+    const unit8Array = message as Uint8Array
+    const buffer = unit8Array.buffer.slice(unit8Array.byteOffset, unit8Array.byteOffset + unit8Array.byteLength)
+
+    const [id, type, payload] = await decodeResponseMessage(buffer)
+
+    expect(id).toBe('198')
+    expect(type).toBe(MessageType.RESPONSE)
+    expect(payload).toEqual({
+      status: 200,
+      headers: {
+        'content-type': 'application/pdf',
+        'content-disposition': expect.any(String),
+      },
+      body: expect.toSatisfy(blob => blob instanceof Blob),
+    })
+
+    expect(await (payload as any).body.text()).toBe('foo')
   })
 })
