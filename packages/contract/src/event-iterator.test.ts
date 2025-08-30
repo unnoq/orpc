@@ -45,6 +45,7 @@ describe('eventIterator', async () => {
       expect(e.code).toEqual('EVENT_ITERATOR_VALIDATION_FAILED')
       expect(e.cause).toBeInstanceOf(ValidationError)
       expect(e.cause.issues).toHaveLength(1)
+      expect(e.cause.data).toEqual({ order: '3' })
 
       return true
     })

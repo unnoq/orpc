@@ -182,7 +182,11 @@ async function validateInput(procedure: AnyProcedure, input: unknown): Promise<a
           data: {
             issues: result.issues,
           },
-          cause: new ValidationError({ message: 'Input validation failed', issues: result.issues }),
+          cause: new ValidationError({
+            message: 'Input validation failed',
+            issues: result.issues,
+            data: input,
+          }),
         })
       }
 
@@ -206,7 +210,11 @@ async function validateOutput(procedure: AnyProcedure, output: unknown): Promise
       if (result.issues) {
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Output validation failed',
-          cause: new ValidationError({ message: 'Output validation failed', issues: result.issues }),
+          cause: new ValidationError({
+            message: 'Output validation failed',
+            issues: result.issues,
+            data: output,
+          }),
         })
       }
 

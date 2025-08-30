@@ -45,6 +45,7 @@ export function eventIterator<TYieldIn, TYieldOut, TReturnIn = unknown, TReturnO
                 cause: new ValidationError({
                   issues: result.issues,
                   message: 'Event iterator validation failed',
+                  data: value,
                 }),
               })
             }

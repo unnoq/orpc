@@ -5,6 +5,10 @@ import type { AnySchema, InferSchemaOutput, Schema, SchemaIssue } from './schema
 export interface ValidationErrorOptions extends ErrorOptions {
   message: string
   issues: readonly SchemaIssue[]
+  /**
+   * @todo require this field in v2
+   */
+  data?: unknown
 }
 
 /**
@@ -14,11 +18,13 @@ export interface ValidationErrorOptions extends ErrorOptions {
  */
 export class ValidationError extends Error {
   readonly issues: readonly SchemaIssue[]
+  readonly data: unknown
 
   constructor(options: ValidationErrorOptions) {
     super(options.message, options)
 
     this.issues = options.issues
+    this.data = options.data
   }
 }
 
