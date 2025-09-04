@@ -7,12 +7,8 @@ export class ChatRoom extends DurableEventIteratorObject<{ message: string }> {
     return os
       .input(z.object({ message: z.string() }))
       .handler(({ input }) => {
-        this.dei.websocketManager.publishEvent(this.ctx.getWebSockets(), input)
+        this.publishEvent(input)
       })
       .callable()
-  }
-
-  publishMessage(message: string) {
-    return this.dei.websocketManager.publishEvent(this.ctx.getWebSockets(), { message })
   }
 }

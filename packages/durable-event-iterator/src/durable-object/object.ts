@@ -1,53 +1,66 @@
 import type { StandardRPCHandlerOptions } from '@orpc/server/standard'
-import type { DurableEventIteratorObject as BaseDurableEventIteratorObject, TokenAttachment } from '../object'
-import type { DurableEventIteratorTokenPayload } from '../schemas'
-import type { DurableEventIteratorObjectEventStorageOptions } from './event-storage'
+import type {
+  DurableEventIteratorObject as IDurableEventIteratorObject,
+  DurableEventIteratorObjectDef as IDurableEventIteratorObjectDef,
+  TokenAtt,
+} from '../object'
+import type { TokenPayload } from '../schemas'
 import type { DurableEventIteratorObjectRouterContext } from './handler'
-import type { DurableEventIteratorObjectWebsocketAttachment, DurableEventIteratorObjectWebsocketManagerOptions } from './websocket-manager'
-import { HibernationPlugin } from '@orpc/server/hibernation'
+import type { DurableEventIteratorObjectState } from './object-state'
+import { encodeHibernationRPCEvent, HibernationPlugin } from '@orpc/server/hibernation'
 import { RPCHandler } from '@orpc/server/websocket'
 import { toArray } from '@orpc/shared'
 import { DurableObject } from 'cloudflare:workers'
-import { DURABLE_EVENT_ITERATOR_OBJECT_SYMBOL } from '../object'
 import { DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY } from './consts'
-import { DurableEventIteratorObjectEventStorage } from './event-storage'
 import { durableEventIteratorRouter } from './handler'
-import { DurableEventIteratorObjectWebsocketManager } from './websocket-manager'
+import { createDurableEventIteratorObjectState } from './object-state'
+import { toDurableEventIteratorWebsocket } from './websocket'
 
-export interface DurableEventIteratorObjectOptions<
+export interface PublishEventOptions {
+  /**
+   * Specific websockets to send the event to.
+   *
+   * @default this.ctx.getWebSockets()
+   */
+  targets?: WebSocket[]
+
+  /**
+   * Websockets to exclude from receiving the event.
+   *
+   * @default []
+   */
+  skip?: WebSocket[]
+}
+
+export interface DurableEventIteratorObjectOptions
+  extends StandardRPCHandlerOptions<DurableEventIteratorObjectRouterContext> {
+}
+
+export interface DurableEventIteratorObjectDef<
   TEventPayload extends object,
-  TTokenAttachment extends TokenAttachment,
-  TWsAttachment extends DurableEventIteratorObjectWebsocketAttachment,
->
-  extends DurableEventIteratorObjectWebsocketManagerOptions,
-  DurableEventIteratorObjectEventStorageOptions,
-  StandardRPCHandlerOptions<DurableEventIteratorObjectRouterContext<TEventPayload, TTokenAttachment, TWsAttachment>> {
-
+  TTokenAtt extends TokenAtt,
+> extends IDurableEventIteratorObjectDef<TEventPayload, TTokenAtt> {
+  handler: RPCHandler<DurableEventIteratorObjectRouterContext>
+  options: DurableEventIteratorObjectOptions
 }
 
 export class DurableEventIteratorObject<
   TEventPayload extends object,
-  TTokenAttachment extends TokenAttachment = TokenAttachment,
-  TWsAttachment extends DurableEventIteratorObjectWebsocketAttachment = DurableEventIteratorObjectWebsocketAttachment,
+  TTokenAttachment extends TokenAtt = TokenAtt,
   TEnv = unknown,
-> extends DurableObject<TEnv> implements BaseDurableEventIteratorObject<TEventPayload, TTokenAttachment> {
-  [DURABLE_EVENT_ITERATOR_OBJECT_SYMBOL]?: {
-    eventPayload: TEventPayload
-    tokenAttachment: TTokenAttachment
-  }
+> extends DurableObject<TEnv> implements IDurableEventIteratorObject<TEventPayload, TTokenAttachment> {
+  '~orpc': DurableEventIteratorObjectDef<TEventPayload, TTokenAttachment>
 
-  protected readonly dei: {
-    handler: RPCHandler<DurableEventIteratorObjectRouterContext<TEventPayload, TTokenAttachment, TWsAttachment>>
-    eventStorage: DurableEventIteratorObjectEventStorage<TEventPayload>
-    websocketManager: DurableEventIteratorObjectWebsocketManager<TEventPayload, TTokenAttachment, TWsAttachment>
-  }
+  protected override ctx: DurableEventIteratorObjectState
 
   constructor(
     ctx: DurableObjectState,
     env: TEnv,
-    options: DurableEventIteratorObjectOptions<TEventPayload, TTokenAttachment, TWsAttachment> = {},
+    options: DurableEventIteratorObjectOptions = {},
   ) {
     super(ctx, env)
+
+    this.ctx = createDurableEventIteratorObjectState(ctx)
 
     const handler = new RPCHandler(durableEventIteratorRouter, {
       ...options,
@@ -57,12 +70,9 @@ export class DurableEventIteratorObject<
       ],
     })
 
-    const eventStorage = new DurableEventIteratorObjectEventStorage<TEventPayload>(ctx, options)
-
-    this.dei = {
+    this['~orpc'] = {
       handler,
-      eventStorage,
-      websocketManager: new DurableEventIteratorObjectWebsocketManager(ctx, eventStorage, options),
+      options,
     }
   }
 
@@ -73,14 +83,13 @@ export class DurableEventIteratorObject<
    */
   override async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
-    const payload = JSON.parse(url.searchParams.get(DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY)!) as DurableEventIteratorTokenPayload
+    const payload = JSON.parse(url.searchParams.get(DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY)!) as TokenPayload
 
     const { '0': client, '1': server } = new WebSocketPair()
 
     this.ctx.acceptWebSocket(server)
-    this.dei.websocketManager.serializeInternalAttachment(server, {
-      [DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY]: payload,
-    })
+
+    toDurableEventIteratorWebsocket(server)['~orpc'].serializeTokenPayload(payload)
 
     return new Response(null, {
       status: 101,
@@ -89,16 +98,40 @@ export class DurableEventIteratorObject<
   }
 
   override async webSocketMessage(websocket: WebSocket, message: string | ArrayBuffer): Promise<void> {
-    await this.dei.handler.message(websocket, message, {
+    await this['~orpc'].handler.message(websocket, message, {
       context: {
         object: this,
-        currentWebsocket: websocket,
-        websocketManager: this.dei.websocketManager,
+        websocket: toDurableEventIteratorWebsocket(websocket),
       },
     })
   }
 
   override webSocketClose(websocket: WebSocket, _code: number, _reason: string, _wasClean: boolean): void | Promise<void> {
-    this.dei.handler.close(websocket)
+    this['~orpc'].handler.close(websocket)
+  }
+
+  /**
+   * Publish an event to clients
+   */
+  publishEvent(payload: TEventPayload, options: PublishEventOptions = {}): void {
+    const targets = options.targets ?? this.ctx.getWebSockets()
+    const skip = options.skip?.map(ws => toDurableEventIteratorWebsocket(ws))
+
+    for (const ws of targets) {
+      const durableWs = toDurableEventIteratorWebsocket(ws)
+
+      if (skip?.some(excluded => excluded['~orpc'].original === durableWs['~orpc'].original)) {
+        continue
+      }
+
+      const hibernationId = durableWs['~orpc'].deserializeHibernationId()
+
+      // Maybe the connection not finished the subscription process yet
+      if (typeof hibernationId !== 'string') {
+        continue
+      }
+
+      ws.send(encodeHibernationRPCEvent(hibernationId, payload, this['~orpc'].options))
+    }
   }
 }

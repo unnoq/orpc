@@ -1,47 +1,29 @@
 import type { Client } from '@orpc/client'
 import type { DurableObject } from 'cloudflare:workers'
-import type { TokenAttachment } from '../object'
-import type { DurableEventIteratorObjectWebsocketAttachment, DurableEventIteratorObjectWebsocketManager } from './websocket-manager'
+import type { DurableEventIteratorWebsocket } from './websocket'
 import { implement, ORPCError } from '@orpc/server'
 import { HibernationEventIterator } from '@orpc/server/hibernation'
 import { get } from '@orpc/shared'
 import { durableEventIteratorContract } from '../client/contract'
-import { DURABLE_EVENT_ITERATOR_HIBERNATION_ID_KEY, DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY } from './consts'
 
 const os = implement(durableEventIteratorContract)
 
-export interface DurableEventIteratorObjectRouterContext<
-  TEventPayload extends object,
-  TTokenAttachment extends TokenAttachment,
-  TWsAttachment extends DurableEventIteratorObjectWebsocketAttachment,
-  TEnv = unknown,
-> {
-  object: DurableObject<TEnv>
-  currentWebsocket: WebSocket
-  websocketManager: DurableEventIteratorObjectWebsocketManager<TEventPayload, TTokenAttachment, TWsAttachment>
+export interface DurableEventIteratorObjectRouterContext {
+  object: DurableObject<any>
+  websocket: DurableEventIteratorWebsocket
 }
 
-const base = os.$context<DurableEventIteratorObjectRouterContext<any, any, any>>()
+const base = os.$context<DurableEventIteratorObjectRouterContext>()
 
 export const durableEventIteratorRouter = base.router({
-  subscribe: base.subscribe.handler(({ context, lastEventId }) => {
+  subscribe: base.subscribe.handler(({ context }) => {
     return new HibernationEventIterator<any>((hibernationId) => {
-      context.websocketManager.serializeInternalAttachment(context.currentWebsocket, {
-        [DURABLE_EVENT_ITERATOR_HIBERNATION_ID_KEY]: hibernationId,
-      })
-
-      const payload = context.websocketManager.deserializeAttachment(context.currentWebsocket)[DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY]
-
-      context.websocketManager.sendEventsAfter(
-        context.currentWebsocket,
-        hibernationId,
-        lastEventId !== undefined ? lastEventId : new Date((payload.iat - 1) * 1000),
-      )
+      context.websocket['~orpc'].serializeHibernationId(hibernationId)
     })
   }),
 
   call: base.call.handler(({ context, input, signal, lastEventId }) => {
-    const allowMethods = context.websocketManager.deserializeAttachment(context.currentWebsocket)[DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY].rpc
+    const allowMethods = context.websocket['~orpc'].deserializeTokenPayload().rpc
     const [method, ...path] = input.path
 
     if (!allowMethods?.includes(method)) {
@@ -50,7 +32,7 @@ export const durableEventIteratorRouter = base.router({
       })
     }
 
-    const nestedClient = (context.object as any)[method](context.currentWebsocket)
+    const nestedClient = (context.object as any)[method](context.websocket)
 
     const client = get(nestedClient, path) as Client<any, any, any, any>
 

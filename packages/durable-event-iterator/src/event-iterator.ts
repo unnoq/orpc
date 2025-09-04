@@ -11,6 +11,14 @@ export type DurableEventIteratorOptions<
   RPC extends InferDurableEventIteratorObjectRPC<T>,
 > = {
   /**
+   * Unique identifier for the client connection.
+   * Used to distinguish between different client instances.
+   *
+   * @default crypto.randomUUID()
+   */
+  id?: string
+
+  /**
    * Time to live for the token in seconds.
    * After expiration, the token will no longer be valid.
    *
@@ -20,7 +28,8 @@ export type DurableEventIteratorOptions<
 
   /**
    * The methods that are allowed to be called remotely.
-   * You can use the `rpc` method if you cannot fill this field.
+   *
+   * @warning Please use .rpc method to set this field in case ts complains about value you pass
    *
    * @default []
    */
@@ -29,12 +38,12 @@ export type DurableEventIteratorOptions<
     T extends DurableEventIteratorObject<any, infer U>
       ? undefined extends U ? {
         /**
-         * attachment to the token.
+         * Token's attachment
          */
         att?: U
       } : {
         /**
-         * attachment to the token.
+         * Token's attachment
          */
         att: U
       }
@@ -80,7 +89,7 @@ export class DurableEventIterator<
       const nowInSeconds = Math.floor(Date.now() / 1000)
 
       const token = await signToken(this.signingKey, {
-        id: crypto.randomUUID(),
+        id: this.options.id ?? crypto.randomUUID(),
         chn: this.chn,
         att: this.options.att,
         rpc: this.options.rpc,
