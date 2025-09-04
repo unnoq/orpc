@@ -1,18 +1,21 @@
 import type { NestedClient } from '@orpc/client'
 import type { AsyncIteratorClass, JsonValue } from '@orpc/shared'
 
-export const DURABLE_EVENT_ITERATOR_OBJECT_SYMBOL: unique symbol = Symbol('ORPC_DURABLE_EVENT_ITERATOR_OBJECT')
+export type TokenAtt = JsonValue | undefined
 
-export type TokenAttachment = JsonValue | undefined
+export interface DurableEventIteratorObjectDef<
+  TEventPayload extends object,
+  TTokenAtt extends TokenAtt,
+> {
+  eventPayload?: { type: TEventPayload }
+  tokenAtt?: { type: TTokenAtt }
+}
 
 export interface DurableEventIteratorObject<
   TEventPayload extends object,
-  TTokenAttachment extends TokenAttachment = TokenAttachment,
+  TTokenAtt extends TokenAtt,
 > {
-  [DURABLE_EVENT_ITERATOR_OBJECT_SYMBOL]?: {
-    eventPayload: TEventPayload
-    tokenAttachment: TTokenAttachment
-  }
+  '~orpc'?: DurableEventIteratorObjectDef<TEventPayload, TTokenAtt>
 }
 
 export type InferDurableEventIteratorObjectRPC<

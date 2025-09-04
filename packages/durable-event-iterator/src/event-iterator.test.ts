@@ -1,7 +1,7 @@
-import { jwtVerify } from 'jose'
 import { describe, expect, it } from 'vitest'
 import { getClientDurableEventIteratorToken } from './client'
 import { DurableEventIterator } from './event-iterator'
+import { verifyToken } from './schemas'
 
 describe('durableEventIterator', () => {
   const testChannel = 'test-channel'
@@ -9,11 +9,10 @@ describe('durableEventIterator', () => {
 
   it('rpc: should return new instance with rpc methods specified', () => {
     const options = {
-      signingKey: testSigningKey,
       att: { userId: 'user123' },
     }
 
-    const iterator = new DurableEventIterator(testChannel, options) as any
+    const iterator = new DurableEventIterator(testChannel, testSigningKey, options) as any
     const rpcIterator = iterator.rpc('getUser', 'sendMessage')
 
     expect(rpcIterator).toBeInstanceOf(DurableEventIterator)
@@ -24,22 +23,21 @@ describe('durableEventIterator', () => {
     it('token & throw when interacting with client iterator', async () => {
       const date = new Date()
       const options = {
-        signingKey: testSigningKey,
         att: { userId: 'user123' },
         rpc: ['getUser', 'sendMessage'] as any,
       }
-      const iterator = new DurableEventIterator(testChannel, options) as any
+      const iterator = new DurableEventIterator(testChannel, testSigningKey, options) as any
       const clientIterator = await iterator
 
       const token = getClientDurableEventIteratorToken(clientIterator)
       expect(token).toBeDefined()
-      const { payload } = await jwtVerify(token!, new TextEncoder().encode(testSigningKey))
+      const payload = await verifyToken(testSigningKey, token!)
 
-      expect(payload.chn).toBe(testChannel)
-      expect(payload.att).toEqual({ userId: 'user123' })
-      expect(payload.rpc).toEqual(['getUser', 'sendMessage'])
-      expect(payload.iat).toEqual(Math.floor(date.getTime() / 1000))
-      expect(payload.exp).toEqual(Math.floor(date.getTime() / 1000) + 60 * 60 * 24)
+      expect(payload?.chn).toBe(testChannel)
+      expect(payload?.att).toEqual({ userId: 'user123' })
+      expect(payload?.rpc).toEqual(['getUser', 'sendMessage'])
+      expect(payload?.iat).toEqual(Math.floor(date.getTime() / 1000))
+      expect(payload?.exp).toEqual(Math.floor(date.getTime() / 1000) + 60 * 60 * 24)
 
       await expect(clientIterator.next()).rejects.toThrow()
       await expect(clientIterator.getUser()).rejects.toThrow()
@@ -48,16 +46,15 @@ describe('durableEventIterator', () => {
     it('can change token TTL', async () => {
       const date = new Date()
       const options = {
-        signingKey: testSigningKey,
         tokenTTLSeconds: 3600, // 1 hour
       }
 
-      const iterator = new DurableEventIterator(testChannel, options) as any
+      const iterator = new DurableEventIterator(testChannel, testSigningKey, options) as any
       const clientIterator = await iterator
       const token = getClientDurableEventIteratorToken(clientIterator)
-      const { payload } = await jwtVerify(token!, new TextEncoder().encode(testSigningKey))
+      const payload = await verifyToken(testSigningKey, token!)
 
-      expect(payload.exp).toEqual(Math.floor(date.getTime() / 1000) + 3600)
+      expect(payload?.exp).toEqual(Math.floor(date.getTime() / 1000) + 3600)
     })
   })
 })

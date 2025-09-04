@@ -88,3 +88,30 @@ export async function unsign(signedValue: string | undefined | null, secret: str
 
   return isValid ? value : undefined
 }
+
+/**
+ * Extracts the value part from a signed string without verification.
+ *
+ * This function simply extracts the original value from a signed string
+ * without performing any signature verification. It's useful when you need
+ * to access the value quickly without the overhead of cryptographic verification.
+ *
+ * @example
+ * ```ts
+ * const signedValue = "user123.oneQsU0r5dvwQFHFEjjV1uOI_IR3gZfkYHij3TRauVA"
+ * const value = getSignedValue(signedValue)
+ * expect(value).toEqual("user123")
+ * ```
+ */
+export function getSignedValue(signedValue: string | undefined | null): string | undefined {
+  if (typeof signedValue !== 'string') {
+    return undefined
+  }
+
+  const lastDotIndex = signedValue.lastIndexOf('.')
+  if (lastDotIndex === -1) {
+    return undefined
+  }
+
+  return signedValue.slice(0, lastDotIndex)
+}

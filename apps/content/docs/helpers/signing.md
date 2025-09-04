@@ -12,7 +12,7 @@ Signing is faster than [encryption](/docs/helpers/encryption) but users can view
 :::
 
 ```ts twoslash
-import { sign, unsign } from '@orpc/server/helpers'
+import { getSignedValue, sign, unsign } from '@orpc/server/helpers'
 
 const secret = 'your-secret-key'
 const userData = 'user123'
@@ -22,8 +22,11 @@ const signedValue = await sign(userData, secret)
 // ↑ Original data is visible to users
 
 const verifiedValue = await unsign(signedValue, secret) // 'user123'
+
+// Extract value without verification
+const extractedValue = getSignedValue(signedValue) // 'user123'
 ```
 
 ::: info
-The `unsign` helper accepts `undefined` or `null` as signed value and returns `undefined` for invalid inputs, enabling seamless handling of optional data.
+The `unsign` and `getSignedValue` helpers accept `undefined` or `null` as signed value and return `undefined` for invalid inputs, enabling seamless handling of optional data.
 :::
