@@ -1,21 +1,21 @@
 import type { Interceptor } from '@orpc/shared'
 import type { DurableEventIteratorObject } from '.'
-import type { DurableEventIteratorTokenPayload } from '../schemas'
+import type { TokenPayload } from '../schemas'
 import { intercept, stringifyJSON, toArray } from '@orpc/shared'
-import { jwtVerify } from 'jose'
-import * as v from 'valibot'
 import { DURABLE_EVENT_ITERATOR_TOKEN_PARAM } from '../consts'
-import { DurableEventIteratorTokenPayloadSchema } from '../schemas'
+import { verifyToken } from '../schemas'
 import { DURABLE_EVENT_ITERATOR_TOKEN_PAYLOAD_KEY } from './consts'
 
 export interface UpgradeDurableEventIteratorRequestOptions {
   signingKey: string
   namespace: DurableObjectNamespace<any>
-  interceptors?: Interceptor<{ payload: DurableEventIteratorTokenPayload }, Promise<Response>>[]
+  interceptors?: Interceptor<{ payload: TokenPayload }, Promise<Response>>[]
 }
 
 /**
  * Verifies and upgrades a durable event iterator request.
+ *
+ * @info Verify token before forwarding to durable object to prevent DDoS attacks
  */
 export async function upgradeDurableEventIteratorRequest(
   request: Request,
@@ -36,13 +36,9 @@ export async function upgradeDurableEventIteratorRequest(
     })
   }
 
-  let payload
+  const payload = await verifyToken(options.signingKey, token)
 
-  try {
-    const result = await jwtVerify(token, new TextEncoder().encode(options.signingKey))
-    payload = v.parse(DurableEventIteratorTokenPayloadSchema, result.payload)
-  }
-  catch {
+  if (!payload) {
     return new Response('Invalid Token', {
       status: 401,
     })

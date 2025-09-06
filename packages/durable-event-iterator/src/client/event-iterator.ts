@@ -1,11 +1,10 @@
 import type { Client, ClientLink, NestedClient, ThrowableError } from '@orpc/client'
 import type { ClientRetryPluginContext } from '@orpc/client/plugins'
+import type { AsyncIteratorClass } from '@orpc/shared'
 import type { DurableEventIteratorObject, InferDurableEventIteratorObjectRPC } from '../object'
 import { createORPCClient } from '@orpc/client'
-import { AsyncIteratorClass } from '@orpc/shared'
-import { decodeJwt } from 'jose'
-import * as v from 'valibot'
-import { DurableEventIteratorTokenPayloadSchema } from '../schemas'
+import { isAsyncIteratorObject } from '@orpc/shared'
+import { parseToken } from '../schemas'
 
 const CLIENT_DURABLE_EVENT_ITERATOR_TOKEN_SYMBOL = Symbol('ORPC_CLIENT_DURABLE_EVENT_ITERATOR_TOKEN')
 
@@ -42,7 +41,7 @@ export function createClientDurableEventIterator<
   link: ClientLink<object>,
   options: CreateClientDurableEventIteratorOptions,
 ): ClientDurableEventIterator<T, RPC> {
-  const { rpc: allowMethods } = v.parse(DurableEventIteratorTokenPayloadSchema, decodeJwt(options.token))
+  const { rpc: allowMethods } = parseToken(options.token)
 
   const proxy = new Proxy(iterator, {
     get(target, prop) {
@@ -74,7 +73,7 @@ export function createClientDurableEventIterator<
 export function getClientDurableEventIteratorToken(
   client: unknown,
 ): string | undefined {
-  if (client instanceof AsyncIteratorClass) {
+  if (isAsyncIteratorObject(client)) {
     return Reflect.get(client, CLIENT_DURABLE_EVENT_ITERATOR_TOKEN_SYMBOL) as string | undefined
   }
 }

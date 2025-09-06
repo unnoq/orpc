@@ -1,20 +1,22 @@
 import type { ClientLink } from '@orpc/client'
+import type { MaybeOptionalOptions } from '@orpc/shared'
 import type { ClientDurableEventIterator } from './client'
 import type { DurableEventIteratorObject, InferDurableEventIteratorObjectRPC } from './object'
-import type { DurableEventIteratorTokenPayload } from './schemas'
-import { AsyncIteratorClass, toArray } from '@orpc/shared'
-import { SignJWT } from 'jose'
+import { AsyncIteratorClass, resolveMaybeOptionalOptions } from '@orpc/shared'
 import { createClientDurableEventIterator } from './client'
+import { signToken } from './schemas'
 
 export type DurableEventIteratorOptions<
   T extends DurableEventIteratorObject<any, any>,
   RPC extends InferDurableEventIteratorObjectRPC<T>,
 > = {
   /**
-   * Signing key for the token.
+   * Unique identifier for the client connection.
+   * Used to distinguish between different client instances.
    *
+   * @default crypto.randomUUID()
    */
-  signingKey: string
+  id?: string
 
   /**
    * Time to live for the token in seconds.
@@ -26,7 +28,8 @@ export type DurableEventIteratorOptions<
 
   /**
    * The methods that are allowed to be called remotely.
-   * You can use the `rpc` method if you cannot fill this field.
+   *
+   * @warning Please use .rpc method to set this field in case ts complains about value you pass
    *
    * @default []
    */
@@ -35,12 +38,12 @@ export type DurableEventIteratorOptions<
     T extends DurableEventIteratorObject<any, infer U>
       ? undefined extends U ? {
         /**
-         * attachment to the token.
+         * Token's attachment
          */
         att?: U
       } : {
         /**
-         * attachment to the token.
+         * Token's attachment
          */
         att: U
       }
@@ -51,17 +54,26 @@ export class DurableEventIterator<
   T extends DurableEventIteratorObject<any, any>,
   RPC extends InferDurableEventIteratorObjectRPC<T> = never,
 > implements PromiseLike<ClientDurableEventIterator<T, RPC>> {
+  private readonly options: DurableEventIteratorOptions<T, RPC>
+
+  /**
+   * @param chn - The channel name.
+   * @param signingKey - The signing key for the token.
+   * @param rest - options.
+   */
   constructor(
     private readonly chn: string,
-    private readonly options: DurableEventIteratorOptions<T, RPC>,
+    private readonly signingKey: string,
+    ...rest: MaybeOptionalOptions<DurableEventIteratorOptions<T, RPC>>
   ) {
+    this.options = resolveMaybeOptionalOptions(rest)
   }
 
   /**
-   * List of methods that can be called remotely.
+   * List of methods that are allowed to be called remotely.
    */
   rpc<U extends InferDurableEventIteratorObjectRPC<T>>(...rpc: U[]): Omit<DurableEventIterator<T, U>, 'rpc'> {
-    return new DurableEventIterator<T, U>(this.chn, {
+    return new DurableEventIterator<T, U>(this.chn, this.signingKey, {
       ...this.options,
       rpc,
     })
@@ -72,20 +84,18 @@ export class DurableEventIterator<
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined,
   ): PromiseLike<TResult1 | TResult2> {
     return (async () => {
-      const signingKey = new TextEncoder().encode(this.options.signingKey)
       const tokenTTLSeconds = this.options.tokenTTLSeconds ?? 60 * 60 * 24 // 24 hours
 
-      const tokenPayload: Omit<DurableEventIteratorTokenPayload, 'iat' | 'exp'> = {
-        chn: this.chn,
-        rpc: toArray(this.options.rpc),
-        att: this.options.att,
-      }
+      const nowInSeconds = Math.floor(Date.now() / 1000)
 
-      const token = await new SignJWT(tokenPayload)
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime(new Date(Date.now() + tokenTTLSeconds * 1000))
-        .sign(signingKey)
+      const token = await signToken(this.signingKey, {
+        id: this.options.id ?? crypto.randomUUID(),
+        chn: this.chn,
+        att: this.options.att,
+        rpc: this.options.rpc,
+        iat: nowInSeconds,
+        exp: nowInSeconds + tokenTTLSeconds,
+      })
 
       const iterator = new AsyncIteratorClass<any>(
         () => Promise.reject(new Error('[DurableEventIteratorServer] cannot be iterated directly.')),
