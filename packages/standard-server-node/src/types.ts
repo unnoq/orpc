@@ -7,6 +7,11 @@ export type NodeHttpRequest = (IncomingMessage | Http2ServerRequest) & {
    * This is useful for `express.js` middleware.
    */
   originalUrl?: string
+
+  /**
+   * Prefer parsed body if it is available.
+   */
+  body?: unknown
 }
 
 export type NodeHttpResponse = ServerResponse | Http2ServerResponse

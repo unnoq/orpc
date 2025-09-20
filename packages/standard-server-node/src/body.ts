@@ -10,6 +10,10 @@ import { toEventIterator, toEventStream } from './event-iterator'
 export interface ToStandardBodyOptions extends ToEventIteratorOptions {}
 
 export function toStandardBody(req: NodeHttpRequest, options: ToStandardBodyOptions = {}): Promise<StandardBody> {
+  if (req.body !== undefined) {
+    return Promise.resolve(req.body)
+  }
+
   return runWithSpan({ name: 'parse_standard_body', signal: options.signal }, async () => {
     const contentDisposition = req.headers['content-disposition']
     const contentType = req.headers['content-type']

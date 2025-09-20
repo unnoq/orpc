@@ -126,7 +126,9 @@ export class ImplementInterceptor implements NestInterceptor {
         const standardRequest = toStandardLazyRequest(nodeReq, nodeRes)
         const fallbackStandardBody = standardRequest.body.bind(standardRequest)
         // Prefer NestJS parsed body (in nodejs body only allow parse once)
-        standardRequest.body = () => Promise.resolve(req.body ?? fallbackStandardBody())
+        standardRequest.body = () => Promise.resolve(
+          req.body === undefined ? fallbackStandardBody() : req.body,
+        )
 
         const standardResponse: StandardResponse = await (async () => {
           let isDecoding = false
