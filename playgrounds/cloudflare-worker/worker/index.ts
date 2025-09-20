@@ -2,7 +2,7 @@ import { RPCHandler } from '@orpc/server/fetch'
 import { OpenAPIHandler } from '@orpc/openapi/fetch'
 import { OpenAPIReferencePlugin } from '@orpc/openapi/plugins'
 import { experimental_SmartCoercionPlugin as SmartCoercionPlugin } from '@orpc/json-schema'
-import { upgradeDurableEventIteratorRequest } from '@orpc/experimental-durable-event-iterator/durable-object'
+import { upgradeDurableIteratorRequest } from '@orpc/experimental-durable-iterator/durable-object'
 import { BatchHandlerPlugin } from '@orpc/server/plugins'
 import { router } from './routers'
 import { onError } from '@orpc/client'
@@ -10,7 +10,7 @@ import { ZodToJsonSchemaConverter } from '@orpc/zod/zod4'
 import { NewUserSchema, UserSchema } from './schemas/user'
 import { CredentialSchema, TokenSchema } from './schemas/auth'
 import { NewPlanetSchema, PlanetSchema, UpdatePlanetSchema } from './schemas/planet'
-import { DurableEventIteratorHandlerPlugin } from '@orpc/experimental-durable-event-iterator'
+import { DurableIteratorHandlerPlugin } from '@orpc/experimental-durable-iterator'
 
 const rpcHandler = new RPCHandler(router, {
   interceptors: [
@@ -20,7 +20,7 @@ const rpcHandler = new RPCHandler(router, {
   ],
   plugins: [
     new BatchHandlerPlugin(),
-    new DurableEventIteratorHandlerPlugin(),
+    new DurableIteratorHandlerPlugin(),
   ],
 })
 
@@ -83,7 +83,7 @@ export default {
     const url = new URL(request.url)
 
     if (url.pathname === '/chat-room') {
-      return upgradeDurableEventIteratorRequest(request, {
+      return upgradeDurableIteratorRequest(request, {
         signingKey: 'key',
         namespace: env.CHAT_ROOM,
       })

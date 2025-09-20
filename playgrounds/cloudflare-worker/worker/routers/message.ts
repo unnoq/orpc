@@ -1,11 +1,12 @@
-import { DurableEventIterator } from '@orpc/experimental-durable-event-iterator'
+import { DurableIterator } from '@orpc/experimental-durable-iterator'
 import { pub } from '../orpc'
 import * as z from 'zod'
 import type { ChatRoom } from '../dos/chat-room'
 
 export const onMessage = pub.handler(({ context }) => {
-  return new DurableEventIterator<ChatRoom>('some-room', {
+  return new DurableIterator<ChatRoom>('some-room', {
     signingKey: 'key',
+    tags: ['tag1', 'tag2'],
     tokenTTLSeconds: 60 * 60 * 24, // 24 hours
     att: { some: 'attachment' },
   }).rpc('publishMessageRPC')
@@ -17,5 +18,5 @@ export const sendMessage = pub
     const id = context.env.CHAT_ROOM.idFromName('some-room')
     const stub = context.env.CHAT_ROOM.get(id)
 
-    await stub.publishMessage(input.message)
+    await stub.publishEvent(input)
   })

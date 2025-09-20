@@ -14,7 +14,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.12.2",
     "@orpc/client": "next",
-    "@orpc/experimental-durable-event-iterator": "next",
+    "@orpc/experimental-durable-iterator": "next",
     "@orpc/json-schema": "next",
     "@orpc/openapi": "next",
     "@orpc/server": "next",

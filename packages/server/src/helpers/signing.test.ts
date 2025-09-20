@@ -1,4 +1,4 @@
-import { sign, unsign } from './signing'
+import { getSignedValue, sign, unsign } from './signing'
 
 describe('signing', () => {
   const secret = 'test-secret-key'
@@ -173,6 +173,19 @@ describe('signing', () => {
         expect(unsignedValue).toBeUndefined()
       }
     })
+  })
+
+  it.each([
+    [undefined, undefined],
+    [null, undefined],
+    ['value', undefined],
+    ['value.', 'value'],
+    ['.signature', ''],
+    ['multiple.dots.test', 'multiple.dots'],
+    ['value.invalid-signature-length', 'value'],
+    ['value.!@#$%^&*', 'value'],
+  ])('getSignedValue: %s', (input, expected) => {
+    expect(getSignedValue(input)).toBe(expected)
   })
 
   describe('integration tests', () => {
