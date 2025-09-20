@@ -331,8 +331,8 @@ importers:
         version: link:../shared
     devDependencies:
       '@hey-api/openapi-ts':
-        specifier: ^0.80.8
-        version: 0.80.8(magicast@0.3.5)(typescript@5.8.3)
+        specifier: ^0.83.1
+        version: 0.83.1(magicast@0.3.5)(typescript@5.8.3)
 
   packages/interop:
     devDependencies:
@@ -3268,12 +3268,18 @@ packages:
     peerDependencies:
       vue: ^3.2.0
 
-  '@hey-api/json-schema-ref-parser@1.0.6':
-    resolution: {integrity: sha512-yktiFZoWPtEW8QKS65eqKwA5MTKp88CyiL8q72WynrBs/73SAaxlSWlA2zW/DZlywZ5hX1OYzrCC0wFdvO9c2w==}
+  '@hey-api/codegen-core@0.1.0':
+    resolution: {integrity: sha512-7B6B9Zuw4uQWoG5YwAwNC+UTz6ErAujqaQrJuMu/OgPkUHq+hl6zdKKi2MX/399vPYilo0IGBxQHmY1UfmTHsw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=22.10.0}
+    peerDependencies:
+      typescript: ~5.8.3
+
+  '@hey-api/json-schema-ref-parser@1.1.0':
+    resolution: {integrity: sha512-+5eg9pgAAM9oSqJQuUtfTKbLz8yieFKN91myyXiLnprqFj8ROfxUKJLr9DKq/hGKyybKT1WxFSetDqCFm80pCA==}
     engines: {node: '>= 16'}
 
-  '@hey-api/openapi-ts@0.80.8':
-    resolution: {integrity: sha512-mCTHtZRoQiSGywwdA9IeeiB5r0LmyZEe560HpziOUmyEbzL6V4jQ4iiHf0DHWa+Jx8MvTyWbNZR0xKRCLvJUHw==}
+  '@hey-api/openapi-ts@0.83.1':
+    resolution: {integrity: sha512-AJIXDsXBLXS4uzhU+yVeNmD43uN6FYPcWpcid7Q0bA4JRXpI+6livOzUUMiuszt3NlgHy1gcf6x15W2xHNSoag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=22.10.0}
     hasBin: true
     peerDependencies:
@@ -7810,6 +7816,14 @@ packages:
       magicast:
         optional: true
 
+  c12@3.3.0:
+    resolution: {integrity: sha512-K9ZkuyeJQeqLEyqldbYLG3wjqwpw4BVaAqvmxq3GYKK0b1A/yYQdIcJxkzAOWcNVWhJpRXAPfZFueekiY/L8Dw==}
+    peerDependencies:
+      magicast: ^0.3.5
+    peerDependenciesMeta:
+      magicast:
+        optional: true
+
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
@@ -8901,6 +8915,10 @@ packages:
 
   dotenv@17.2.1:
     resolution: {integrity: sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==}
+    engines: {node: '>=12'}
+
+  dotenv@17.2.2:
+    resolution: {integrity: sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q==}
     engines: {node: '>=12'}
 
   dset@3.1.4:
@@ -12902,8 +12920,8 @@ packages:
     resolution: {integrity: sha512-XcT5rBksx1QdIhlFOCtgZkB99ZEouFZ1E2Kc2LHqNW13U3/74YGdkQRmThTwxy4QIyookibDKYZOPqX//6BlAg==}
     engines: {node: '>=12'}
 
-  run-applescript@7.0.0:
-    resolution: {integrity: sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A==}
+  run-applescript@7.1.0:
+    resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
     engines: {node: '>=18'}
 
   run-parallel@1.2.0:
@@ -16997,16 +17015,21 @@ snapshots:
       '@tanstack/vue-virtual': 3.13.12(vue@3.5.21(typescript@5.8.3))
       vue: 3.5.21(typescript@5.8.3)
 
-  '@hey-api/json-schema-ref-parser@1.0.6':
+  '@hey-api/codegen-core@0.1.0(typescript@5.8.3)':
+    dependencies:
+      typescript: 5.8.3
+
+  '@hey-api/json-schema-ref-parser@1.1.0':
     dependencies:
       '@jsdevtools/ono': 7.1.3
       '@types/json-schema': 7.0.15
       js-yaml: 4.1.0
       lodash: 4.17.21
 
-  '@hey-api/openapi-ts@0.80.8(magicast@0.3.5)(typescript@5.8.3)':
+  '@hey-api/openapi-ts@0.83.1(magicast@0.3.5)(typescript@5.8.3)':
     dependencies:
-      '@hey-api/json-schema-ref-parser': 1.0.6
+      '@hey-api/codegen-core': 0.1.0(typescript@5.8.3)
+      '@hey-api/json-schema-ref-parser': 1.1.0
       ansi-colors: 4.1.3
       c12: 2.0.1(magicast@0.3.5)
       color-support: 1.1.3
@@ -17905,7 +17928,7 @@ snapshots:
 
   '@nuxt/cli@3.27.0(magicast@0.3.5)':
     dependencies:
-      c12: 3.2.0(magicast@0.3.5)
+      c12: 3.3.0(magicast@0.3.5)
       citty: 0.1.6
       clipboardy: 4.0.0
       confbox: 0.2.2
@@ -17951,7 +17974,7 @@ snapshots:
       execa: 8.0.1
       magicast: 0.3.5
       pathe: 2.0.3
-      pkg-types: 2.2.0
+      pkg-types: 2.3.0
       prompts: 2.4.2
       semver: 7.7.2
 
@@ -17998,7 +18021,7 @@ snapshots:
 
   '@nuxt/kit@3.18.1(magicast@0.3.5)':
     dependencies:
-      c12: 3.2.0(magicast@0.3.5)
+      c12: 3.3.0(magicast@0.3.5)
       consola: 3.4.2
       defu: 6.1.4
       destr: 2.0.5
@@ -22860,7 +22883,7 @@ snapshots:
 
   bundle-name@4.1.0:
     dependencies:
-      run-applescript: 7.0.0
+      run-applescript: 7.1.0
 
   busboy@1.6.0:
     dependencies:
@@ -22895,7 +22918,7 @@ snapshots:
       dotenv: 16.6.1
       giget: 1.2.5
       jiti: 2.5.1
-      mlly: 1.7.4
+      mlly: 1.8.0
       ohash: 1.1.6
       pathe: 1.1.2
       perfect-debounce: 1.0.0
@@ -22916,6 +22939,23 @@ snapshots:
       ohash: 2.0.11
       pathe: 2.0.3
       perfect-debounce: 1.0.0
+      pkg-types: 2.3.0
+      rc9: 2.1.2
+    optionalDependencies:
+      magicast: 0.3.5
+
+  c12@3.3.0(magicast@0.3.5):
+    dependencies:
+      chokidar: 4.0.3
+      confbox: 0.2.2
+      defu: 6.1.4
+      dotenv: 17.2.2
+      exsolve: 1.0.7
+      giget: 2.0.0
+      jiti: 2.5.1
+      ohash: 2.0.11
+      pathe: 2.0.3
+      perfect-debounce: 2.0.0
       pkg-types: 2.3.0
       rc9: 2.1.2
     optionalDependencies:
@@ -24073,6 +24113,8 @@ snapshots:
 
   dotenv@17.2.1: {}
 
+  dotenv@17.2.2: {}
+
   dset@3.1.4: {}
 
   dunder-proto@1.0.1:
@@ -24868,7 +24910,7 @@ snapshots:
   externality@1.0.2:
     dependencies:
       enhanced-resolve: 5.18.3
-      mlly: 1.7.4
+      mlly: 1.8.0
       pathe: 1.1.2
       ufo: 1.6.1
 
@@ -26423,7 +26465,7 @@ snapshots:
       h3: 1.15.4
       http-shutdown: 1.2.2
       jiti: 2.5.1
-      mlly: 1.7.4
+      mlly: 1.8.0
       node-forge: 1.3.1
       pathe: 1.1.2
       std-env: 3.9.0
@@ -26561,7 +26603,7 @@ snapshots:
     dependencies:
       estree-walker: 3.0.3
       magic-string: 0.30.18
-      mlly: 1.7.4
+      mlly: 1.8.0
       regexp-tree: 0.1.27
       type-level-regexp: 0.1.17
       ufo: 1.6.1
@@ -27349,7 +27391,7 @@ snapshots:
       '@rollup/plugin-terser': 0.4.4(rollup@4.50.1)
       '@vercel/nft': 0.29.4(encoding@0.1.13)(rollup@4.50.1)
       archiver: 7.0.1
-      c12: 3.2.0(magicast@0.3.5)
+      c12: 3.3.0(magicast@0.3.5)
       chokidar: 4.0.3
       citty: 0.1.6
       compatx: 0.2.0
@@ -27451,7 +27493,7 @@ snapshots:
       '@rollup/plugin-terser': 0.4.4(rollup@4.50.1)
       '@vercel/nft': 0.30.1(rollup@4.50.1)
       archiver: 7.0.1
-      c12: 3.2.0(magicast@0.3.5)
+      c12: 3.3.0(magicast@0.3.5)
       chokidar: 4.0.3
       citty: 0.1.6
       compatx: 0.2.0
@@ -29252,7 +29294,7 @@ snapshots:
     dependencies:
       execa: 5.1.1
 
-  run-applescript@7.0.0: {}
+  run-applescript@7.1.0: {}
 
   run-parallel@1.2.0:
     dependencies:
@@ -30754,7 +30796,7 @@ snapshots:
     dependencies:
       knitwork: 1.2.0
       magic-string: 0.30.18
-      mlly: 1.7.4
+      mlly: 1.8.0
       pathe: 1.1.2
       pkg-types: 1.3.1
       unplugin: 1.16.1
