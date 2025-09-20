@@ -15,7 +15,7 @@ import type {
 export type experimental_StreamedQueryOutput<TOutput> = TOutput extends AsyncIterable<infer U> ? U[] : never
 export type experimental_LiveQueryOutput<TOutput> = TOutput extends AsyncIterable<infer U> ? U : never
 
-type experimental_StreamedQueryOptions = Omit<Parameters<typeof experimental_streamedQuery>[0], 'queryFn'>
+type experimental_StreamedQueryOptions = Omit<Parameters<typeof experimental_streamedQuery>[0], 'streamFn'>
 
 export type OperationType = 'query' | 'streamed' | 'live' | 'infinite' | 'mutation'
 

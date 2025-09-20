@@ -3,7 +3,8 @@ import type { ErrorFromErrorMap } from '../../contract/src/error'
 import type { baseErrorMap } from '../../contract/tests/shared'
 import type { ProcedureUtils } from './procedure-utils'
 import { signal } from '@angular/core'
-import { injectInfiniteQuery, injectMutation, injectQueries, injectQuery, QueryClient } from '@tanstack/angular-query-experimental'
+import { injectInfiniteQuery, injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental'
+import { injectQueries } from '@tanstack/angular-query-experimental/inject-queries-experimental'
 
 describe('ProcedureUtils', () => {
   type UtilsInput = { search?: string, cursor?: number } | undefined

@@ -87,7 +87,15 @@ it('case: with streamed/useQuery', async () => {
   })
 
   expect(
-    queryClient.getQueryData(streamedOrpc.streamed.experimental_streamedKey({ input: { input: 2 }, queryFnOptions: { refetchMode: 'append', maxChunks: 3 } })),
+    queryClient.getQueryData(
+      streamedOrpc.streamed.experimental_streamedKey({
+        input: { input: 2 },
+        queryFnOptions: {
+          refetchMode: 'append',
+          reducer: (acc, chunk) => acc,
+        },
+      }),
+    ),
   ).toEqual([{ output: '0' }, { output: '1' }])
 
   // make sure refetch mode works

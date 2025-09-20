@@ -180,7 +180,7 @@ describe('createProcedureUtils', () => {
     expect(generateOperationKeySpy).toHaveBeenCalledTimes(1)
     expect(generateOperationKeySpy).toHaveBeenCalledWith(['ping'], { type: 'mutation' })
 
-    await expect(options.mutationFn!('__input__')).resolves.toEqual('__output__')
+    await expect(options.mutationFn!('__input__', {} as any)).resolves.toEqual('__output__')
     expect(client).toHaveBeenCalledTimes(1)
     expect(client).toBeCalledWith('__input__', { context: { batch: '__batch__' } })
   })

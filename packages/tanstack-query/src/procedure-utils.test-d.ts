@@ -208,7 +208,9 @@ describe('ProcedureUtils', () => {
       expectTypeOf(optionalUtils.experimental_streamedKey({
         input: { search: 'search' },
         queryFnOptions: {
-          maxChunks: 1,
+          reducer(acc, chunk) {
+            return acc
+          },
           refetchMode: 'replace',
         },
       })).toExtend<QueryKey>()
@@ -730,7 +732,7 @@ describe('ProcedureUtils', () => {
       optionalUtils.mutationOptions({
         onMutate: variables => ({ customContext: true }),
         onSuccess: (data, variables, context) => {
-          expectTypeOf(context.customContext).toEqualTypeOf<boolean>()
+          expectTypeOf(context?.customContext).toEqualTypeOf<undefined | boolean>()
         },
         onError: (e, variables, context) => {
           expectTypeOf(context?.customContext).toEqualTypeOf<boolean | undefined>()

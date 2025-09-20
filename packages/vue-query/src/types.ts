@@ -36,7 +36,7 @@ export interface QueryOptionsBase<TOutput, TError> {
   enabled: ComputedRef<boolean | undefined>
 }
 
-type experimental_StreamedQueryOptions = Omit<Parameters<typeof experimental_streamedQuery>[0], 'queryFn'>
+type experimental_StreamedQueryOptions = Omit<Parameters<typeof experimental_streamedQuery>[0], 'streamFn'>
 
 export type experimental_InferStreamedOutput<TOutput> = TOutput extends AsyncIterable<infer U> ? U[] : never
 

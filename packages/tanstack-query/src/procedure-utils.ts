@@ -201,7 +201,7 @@ export function createProcedureUtils<TClientContext extends ClientContext, TInpu
 
       return {
         queryFn: experimental_streamedQuery({
-          queryFn: async ({ signal }) => {
+          streamFn: async ({ signal }) => {
             if (optionsIn.input === skipToken) {
               throw new Error('queryFn should not be called with skipToken used as input')
             }

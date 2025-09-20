@@ -115,7 +115,7 @@ describe('createProcedureUtils', () => {
       expect(streamedQuery).toHaveBeenCalledTimes(1)
       expect(streamedQuery).toHaveBeenCalledWith({
         refetchMode: 'replace',
-        queryFn: expect.any(Function),
+        streamFn: expect.any(Function),
       })
 
       client.mockImplementationOnce(async function* (input) {
@@ -342,7 +342,7 @@ describe('createProcedureUtils', () => {
     expect(generateOperationKeySpy).toHaveBeenCalledWith(['ping'], { type: 'mutation' })
 
     client.mockResolvedValueOnce('__output__')
-    await expect(options.mutationFn!('__input__')).resolves.toEqual('__output__')
+    await expect(options.mutationFn!('__input__', {} as any)).resolves.toEqual('__output__')
     expect(client).toHaveBeenCalledTimes(1)
     expect(client).toBeCalledWith('__input__', { context: {
       batch: '__batch__',

@@ -23,7 +23,7 @@ export interface QueryOptionsBase<TOutput, TError> {
   enabled?: boolean
 }
 
-type experimental_StreamedQueryOptions = Omit<Parameters<typeof streamedQuery>[0], 'queryFn'>
+type experimental_StreamedQueryOptions = Omit<Parameters<typeof streamedQuery>[0], 'streamFn'>
 
 export type experimental_InferStreamedOutput<TOutput> = TOutput extends AsyncIterable<infer U> ? U[] : never
 
