@@ -3,6 +3,9 @@ import type { EncodedMessage } from './types'
 import { isAsyncIteratorObject, readAsBuffer, stringifyJSON } from '@orpc/shared'
 import { flattenHeader, generateContentDisposition, getFilenameFromContentDisposition } from '@orpc/standard-server'
 
+const SHORTABLE_ORIGIN = 'orpc://localhost'
+const SHORTABLE_ORIGIN_MATCHER = /^orpc:\/\/localhost\//
+
 export enum MessageType {
   REQUEST = 1,
   RESPONSE = 2,
@@ -54,7 +57,7 @@ interface SerializedRequestPayload {
   /**
    * The url of the request
    *
-   * might be relative path if it starts with `orpc:/`
+   * might be relative path if origin is `orpc://localhost`
    */
   u: string
 
@@ -120,7 +123,7 @@ export async function encodeRequestMessage<T extends keyof RequestMessageMap>(
   )
 
   const serializedPayload: SerializedRequestPayload = {
-    u: request.url.toString().replace(/^orpc:\//, '/'),
+    u: request.url.toString().replace(SHORTABLE_ORIGIN_MATCHER, '/'),
     b: processedBody instanceof Blob ? undefined : processedBody,
     h: Object.keys(processedHeaders).length > 0 ? processedHeaders : undefined,
     m: request.method === 'POST' ? undefined : request.method,
@@ -159,7 +162,12 @@ export async function decodeRequestMessage(raw: EncodedMessage): Promise<Decoded
   const headers = payload.h ?? {}
   const body = await deserializeBody(headers, payload.b, buffer)
 
-  return [id, MessageType.REQUEST, { url: new URL(payload.u, 'orpc:/'), headers, method: payload.m ?? 'POST', body }]
+  return [id, MessageType.REQUEST, {
+    url: payload.u.startsWith('/') ? new URL(`${SHORTABLE_ORIGIN}${payload.u}`) : new URL(payload.u),
+    headers,
+    method: payload.m ?? 'POST',
+    body,
+  }]
 }
 
 export async function encodeResponseMessage<T extends keyof ResponseMessageMap>(
