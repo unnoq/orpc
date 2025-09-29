@@ -74,8 +74,7 @@ export default async (req, res) => {
 ```
 
 ::: warning
-
-Next.js default [body parser](https://nextjs.org/docs/pages/building-your-application/routing/api-routes#custom-config) blocks oRPC raw‑request handling. Ensure `bodyParser` is disabled in your API route:
+Next.js [body parser](https://nextjs.org/docs/pages/building-your-application/routing/api-routes#custom-config) may handle common request body types, and oRPC will use the parsed body if available. However, it doesn't support features like [Bracket Notation](/docs/openapi/bracket-notation), and in case you upload a file with `application/json`, it may be parsed as plain JSON instead of a `File`. To avoid these issues, disable the body parser:
 
 ```ts
 export const config = {

@@ -8,7 +8,7 @@ description: Use oRPC inside an Express.js project
 [Express.js](https://expressjs.com/) is a popular Node.js framework for building web applications. For additional context, refer to the [HTTP Adapter](/docs/adapters/http) guide.
 
 ::: warning
-oRPC uses its own request parser. To avoid conflicts, register any body-parsing middleware **after** your oRPC middleware or only on routes that don't use oRPC.
+Express's [body-parser](https://expressjs.com/en/resources/middleware/body-parser.html) handles common request body types, and oRPC will use the parsed body if available. However, it doesn't support features like [Bracket Notation](/docs/openapi/bracket-notation), and in case you upload a file with `application/json`, it may be parsed as plain JSON instead of a `File`. To avoid these issues, register any body-parsing middleware **after** your oRPC middleware or only on routes that don't use oRPC.
 :::
 
 ## Basic

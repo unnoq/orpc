@@ -187,6 +187,19 @@ describe('toStandardBody', () => {
     expect(getFilenameFromContentDispositionSpy).toHaveBeenCalledTimes(1)
     expect(getFilenameFromContentDispositionSpy).toHaveBeenCalledWith('attachment')
   })
+
+  it('prefer parsed body', async () => {
+    let standardBody: StandardBody = {} as any
+
+    await request(async (req: IncomingMessage, res: ServerResponse) => {
+      // @ts-expect-error fake body is parsed
+      req.body = { value: 123 }
+      standardBody = await toStandardBody(req)
+      res.end()
+    }).post('/').send()
+
+    expect(standardBody).toEqual({ value: 123 })
+  })
 })
 
 describe('toNodeHttpBody', () => {
