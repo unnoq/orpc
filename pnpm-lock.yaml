@@ -1156,8 +1156,8 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2(electron@38.2.0)
       '@electron-toolkit/tsconfig':
-        specifier: ^1.0.1
-        version: 1.0.1(@types/node@22.17.0)
+        specifier: ^2.0.0
+        version: 2.0.0(@types/node@22.17.0)
       '@electron-toolkit/utils':
         specifier: ^4.0.0
         version: 4.0.0(electron@38.2.0)
@@ -2287,8 +2287,8 @@ packages:
     peerDependencies:
       electron: '>=13.0.0'
 
-  '@electron-toolkit/tsconfig@1.0.1':
-    resolution: {integrity: sha512-M0Mol3odspvtCuheyujLNAW7bXq7KFNYVMRtpjFa4ZfES4MuklXBC7Nli/omvc+PRKlrklgAGx3l4VakjNo8jg==}
+  '@electron-toolkit/tsconfig@2.0.0':
+    resolution: {integrity: sha512-AdPsP770WhW7b260h13SHMdmjEEHJL6xFtgi3jwgdsSQbJOkJLeNnnpZW9qxTPCvmRI6vmdzWz5K3gibFS6SNg==}
     peerDependencies:
       '@types/node': '*'
 
@@ -16598,7 +16598,7 @@ snapshots:
     dependencies:
       electron: 38.2.0
 
-  '@electron-toolkit/tsconfig@1.0.1(@types/node@22.17.0)':
+  '@electron-toolkit/tsconfig@2.0.0(@types/node@22.17.0)':
     dependencies:
       '@types/node': 22.17.0
 
