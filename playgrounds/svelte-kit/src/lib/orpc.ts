@@ -5,11 +5,17 @@ import { RPCLink } from '@orpc/client/fetch'
 import { BatchLinkPlugin } from '@orpc/client/plugins'
 import { createTanstackQueryUtils } from '@orpc/tanstack-query'
 
-const rpcLink = new RPCLink({
+/**
+ * This is part of the Optimize SSR setup.
+ *
+ * @see {@link https://orpc.unnoq.com/docs/adapters/svelte-kit#optimize-ssr}
+ */
+declare global {
+  var $client: RouterClient<typeof router> | undefined
+}
+
+const link = new RPCLink({
   url: `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/rpc`,
-  headers: () => ({
-    Authorization: 'Bearer default-token',
-  }),
   plugins: [
     new BatchLinkPlugin({
       exclude: ({ path }) => path[0] === 'sse',
@@ -21,6 +27,6 @@ const rpcLink = new RPCLink({
   ],
 })
 
-export const client: RouterClient<typeof router> = createORPCClient(rpcLink)
+export const client: RouterClient<typeof router> = globalThis.$client ?? createORPCClient(link)
 
 export const orpc = createTanstackQueryUtils(client)
