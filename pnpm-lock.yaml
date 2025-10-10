@@ -177,8 +177,8 @@ importers:
         specifier: ^5.90.3
         version: 5.90.3(solid-js@1.9.9)
       '@tanstack/svelte-query':
-        specifier: ^5.90.2
-        version: 5.90.2(svelte@5.39.11)
+        specifier: ^6.0.0
+        version: 6.0.0(svelte@5.39.11)
       '@tanstack/vue-query':
         specifier: ^5.90.2
         version: 5.90.2(vue@3.5.22(typescript@5.8.3))
@@ -736,8 +736,8 @@ importers:
         version: 5.39.11
     devDependencies:
       '@tanstack/svelte-query':
-        specifier: ^5.90.2
-        version: 5.90.2(svelte@5.39.11)
+        specifier: ^6.0.0
+        version: 6.0.0(svelte@5.39.11)
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -767,8 +767,8 @@ importers:
         specifier: ^5.90.3
         version: 5.90.3(solid-js@1.9.9)
       '@tanstack/svelte-query':
-        specifier: ^5.90.2
-        version: 5.90.2(svelte@5.39.11)
+        specifier: ^6.0.0
+        version: 6.0.0(svelte@5.39.11)
       '@tanstack/vue-query':
         specifier: ^5.90.2
         version: 5.90.2(vue@3.5.22(typescript@5.8.3))
@@ -1459,8 +1459,8 @@ importers:
         specifier: ^6.2.1
         version: 6.2.1(svelte@5.39.11)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
       '@tanstack/svelte-query':
-        specifier: ^5.90.2
-        version: 5.90.2(svelte@5.39.11)
+        specifier: ^6.0.0
+        version: 6.0.0(svelte@5.39.11)
       svelte:
         specifier: ^5.39.11
         version: 5.39.11
@@ -6748,10 +6748,10 @@ packages:
   '@tanstack/store@0.7.7':
     resolution: {integrity: sha512-xa6pTan1bcaqYDS9BDpSiS63qa6EoDkPN9RsRaxHuDdVDNntzq3xNwR5YKTU/V3SkSyC9T4YVOPh2zRQN0nhIQ==}
 
-  '@tanstack/svelte-query@5.90.2':
-    resolution: {integrity: sha512-owjnp0w8sOXlMhLZhucHrsYvCjgjHrVyII/wlqMGefxKFyroZS3xCwTee+IUx7UHbL+QmKr/HQTeTqhgxmxPQw==}
+  '@tanstack/svelte-query@6.0.0':
+    resolution: {integrity: sha512-CeG4fidH4O5w3r64qWVZnx8m508BYElZL0D7x3PBhxC6bGrNYstsWQZiquOOI/ie3eAqoefg7+cscDsObu5eGQ==}
     peerDependencies:
-      svelte: ^3.54.0 || ^4.0.0 || ^5.0.0
+      svelte: ^5.25.0
 
   '@tanstack/virtual-core@3.13.12':
     resolution: {integrity: sha512-1YBOJfRHV4sXUmWsFSf5rQor4Ss82G8dQWLRbnk3GA4jeP8hQt1hxXh0tmflpC0dz3VgEv/1+qwPyLeWkQuPFA==}
@@ -21750,7 +21750,7 @@ snapshots:
 
   '@tanstack/store@0.7.7': {}
 
-  '@tanstack/svelte-query@5.90.2(svelte@5.39.11)':
+  '@tanstack/svelte-query@6.0.0(svelte@5.39.11)':
     dependencies:
       '@tanstack/query-core': 5.90.2
       svelte: 5.39.11
