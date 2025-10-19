@@ -106,9 +106,36 @@ const example = os
   })
 ```
 
+## Publisher Helper
+
+You can combine the event iterator with the [Publisher Helper](/docs/helpers/publisher) to build real-time features like chat, notifications, or live updates with resume support.
+
+```ts
+const publisher = new MemoryPublisher<{
+  'something-updated': {
+    id: string
+  }
+}>()
+
+const live = os
+  .handler(async function* ({ input, signal }) {
+    const iterator = publisher.subscribe('something-updated', { signal })
+    for await (const payload of iterator) {
+      // Handle payload here or yield directly to client
+      yield payload
+    }
+  })
+
+const publish = os
+  .input(z.object({ id: z.string() }))
+  .handler(async ({ input }) => {
+    await publisher.publish('something-updated', { id: input.id })
+  })
+```
+
 ## Event Publisher
 
-oRPC includes a built-in `EventPublisher` for real-time features like chat, notifications, or live updates. It supports broadcasting and subscribing to named events.
+Unlike the [Publisher Helper](/docs/helpers/publisher), the `EventPublisher` is more lightweight with synchronous publishing and no resume support.
 
 ::: code-group
 
