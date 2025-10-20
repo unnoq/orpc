@@ -22,11 +22,15 @@ import { os } from '@orpc/server'
 import * as z from 'zod'
 // ---cut---
 const example = os
-  .input(z.object({ file: z.file() }))
-  .output(z.instanceof(File))
+  .input(z.file())
+  .output(z.object({ anyFieldName: z.instanceof(File) }))
   .handler(async ({ input }) => {
-    console.log(input.file.name)
+    const file = input
 
-    return new File(['Hello World'], 'hello.txt', { type: 'text/plain' })
+    console.log(file.name)
+
+    return {
+      anyFieldName: new File(['Hello World'], 'hello.txt', { type: 'text/plain' }),
+    }
   })
 ```
