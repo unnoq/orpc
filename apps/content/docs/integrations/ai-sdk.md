@@ -35,7 +35,7 @@ export const chat = os
 
 ## Client
 
-On the client side, convert the event iterator back to a stream using `eventIteratorToStream`.
+On the client side, convert the event iterator back to a stream using `eventIteratorToStream` or `eventIteratorToUnproxiedDataStream`.
 
 ```tsx twoslash
 import React, { useState } from 'react'
@@ -119,5 +119,5 @@ The `reconnectToStream` function is not supported by default, which is fine for 
 ::: info
 Prefer `eventIteratorToUnproxiedDataStream` over `eventIteratorToStream`.
 AI SDK internally uses `structuredClone`, which doesn't support proxied data.
-oRPC may proxy events for metadata, so unproxy before passing to AI SDK.
+oRPC may proxy events for [metadata](/docs/event-iterator#last-event-id-event-metadata), so unproxy before passing to AI SDK.
 :::
