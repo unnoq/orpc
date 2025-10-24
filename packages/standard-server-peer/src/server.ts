@@ -2,7 +2,7 @@ import type { AsyncIdQueueCloseOptions, Promisable } from '@orpc/shared'
 import type { StandardRequest, StandardResponse } from '@orpc/standard-server'
 import type { DecodedRequestMessage, DecodedResponseMessage, EventIteratorPayload } from './codec'
 import type { EncodedMessage, EncodedMessageSendFn } from './types'
-import { AbortError, AsyncIdQueue, getGlobalOtelConfig, isAsyncIteratorObject, runWithSpan } from '@orpc/shared'
+import { AbortError, AsyncIdQueue, getGlobalOtelConfig, isAsyncIteratorObject, isInSentryContext, runWithSpan } from '@orpc/shared'
 import { HibernationEventIterator, isEventIteratorHeaders } from '@orpc/standard-server'
 import { decodeRequestMessage, encodeResponseMessage, MessageType } from './codec'
 import { resolveEventIterator, toEventIterator } from './event-iterator'
@@ -154,10 +154,18 @@ export class experimental_ServerPeerWithoutCodec {
 
       await runWithSpan(
         { name: 'receive_peer_request', context },
-        async () => {
+        async (span) => {
+          if (isInSentryContext()) {
+            span?.setAttribute('sentry.op', 'orpc')
+          }
+
           const response = await runWithSpan(
             { name: 'handle_request' },
-            async () => {
+            async (span) => {
+              if (isInSentryContext()) {
+                span?.setAttribute('sentry.op', 'orpc')
+              }
+
               try {
                 return await handleRequest(request)
               }
@@ -178,7 +186,13 @@ export class experimental_ServerPeerWithoutCodec {
            */
           await runWithSpan(
             { name: 'send_peer_response' },
-            () => this.response(id, response),
+            (span) => {
+              if (isInSentryContext()) {
+                span?.setAttribute('sentry.op', 'orpc')
+              }
+
+              return this.response(id, response)
+            },
           )
         },
       )

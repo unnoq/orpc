@@ -2,7 +2,7 @@ import type { AsyncIdQueueCloseOptions, Promisable } from '@orpc/shared'
 import type { StandardRequest, StandardResponse } from '@orpc/standard-server'
 import type { DecodedRequestMessage, DecodedResponseMessage, EventIteratorPayload } from './codec'
 import type { EncodedMessage, EncodedMessageSendFn } from './types'
-import { AsyncIdQueue, clone, getGlobalOtelConfig, isAsyncIteratorObject, runWithSpan, SequentialIdGenerator } from '@orpc/shared'
+import { AsyncIdQueue, clone, getGlobalOtelConfig, isAsyncIteratorObject, isInSentryContext, runWithSpan, SequentialIdGenerator } from '@orpc/shared'
 import { isEventIteratorHeaders } from '@orpc/standard-server'
 import { decodeResponseMessage, encodeRequestMessage, MessageType } from './codec'
 import { resolveEventIterator, toEventIterator } from './event-iterator'
@@ -114,7 +114,10 @@ export class experimental_ClientPeerWithoutCodec {
 
     return runWithSpan(
       { name: 'send_peer_request', signal },
-      async () => {
+      async (span) => {
+        if (isInSentryContext()) {
+          span?.setAttribute('sentry.op', 'orpc')
+        }
         if (signal?.aborted) {
           throw signal.reason
         }
