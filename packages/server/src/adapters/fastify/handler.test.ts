@@ -1,9 +1,9 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
-import { sendStandardResponse, toStandardLazyRequest } from '@orpc/standard-server-node'
+import { sendStandardResponse, toStandardLazyRequest } from '@orpc/standard-server-fastify'
+import Fastify from 'fastify'
 import request from 'supertest'
-import { NodeHttpHandler } from './handler'
+import { FastifyHandler } from './handler'
 
-vi.mock('@orpc/standard-server-node', () => ({
+vi.mock('@orpc/standard-server-fastify', () => ({
   toStandardLazyRequest: vi.fn(),
   sendStandardResponse: vi.fn(),
 }))
@@ -17,24 +17,28 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('nodeHttpHandlerOptions', async () => {
+describe('fastifyHandler', async () => {
   const handle = vi.fn()
   const interceptor = vi.fn(({ next }) => next())
 
   const handlerOptions = { eventIteratorKeepAliveComment: '__test__', adapterInterceptors: [interceptor] }
 
-  const handler = new NodeHttpHandler({
+  const handler = new FastifyHandler({
     handle,
   } as any, handlerOptions)
 
-  let req: any, res: any
+  let req: any, reply: any
+  const fastify = Fastify()
 
-  await request(async (_req: IncomingMessage, _res: ServerResponse) => {
+  fastify.get('/api/v1', (_req, _reply) => {
     req = _req
-    res = _res
+    reply = _reply
 
-    res.end()
-  }).get('/api/v1')
+    return 'body'
+  })
+
+  await fastify.ready()
+  await request(fastify.server).get('/api/v1')
 
   const standardRequest = {
     method: 'POST',
@@ -59,7 +63,7 @@ describe('nodeHttpHandlerOptions', async () => {
     })
     const options = { prefix: '/api/v1', context: { db: 'postgres' } } as const
 
-    const result = await handler.handle(req, res, options)
+    const result = await handler.handle(req, reply, options)
 
     expect(result).toEqual({
       matched: true,
@@ -72,10 +76,10 @@ describe('nodeHttpHandlerOptions', async () => {
     )
 
     expect(toStandardLazyRequest).toHaveBeenCalledOnce()
-    expect(toStandardLazyRequest).toHaveBeenCalledWith(req, res)
+    expect(toStandardLazyRequest).toHaveBeenCalledWith(req, reply)
 
     expect(sendStandardResponse).toHaveBeenCalledOnce()
-    expect(sendStandardResponse).toHaveBeenCalledWith(res, {
+    expect(sendStandardResponse).toHaveBeenCalledWith(reply, {
       status: 200,
       headers: {},
       body: '__body__',
@@ -84,7 +88,7 @@ describe('nodeHttpHandlerOptions', async () => {
     expect(interceptor).toHaveBeenCalledOnce()
     expect(interceptor).toHaveBeenCalledWith({
       request: req,
-      response: res,
+      reply,
       sendStandardResponseOptions: handlerOptions,
       ...options,
       next: expect.any(Function),
@@ -99,7 +103,7 @@ describe('nodeHttpHandlerOptions', async () => {
     handle.mockReturnValueOnce({ matched: false })
 
     const options = { prefix: '/api/v1', context: { db: 'postgres' } } as const
-    const result = await handler.handle(req, res, options)
+    const result = await handler.handle(req, reply, options)
 
     expect(result).toEqual({ matched: false })
 
@@ -110,41 +114,20 @@ describe('nodeHttpHandlerOptions', async () => {
     )
 
     expect(toStandardLazyRequest).toHaveBeenCalledOnce()
-    expect(toStandardLazyRequest).toHaveBeenCalledWith(req, res)
+    expect(toStandardLazyRequest).toHaveBeenCalledWith(req, reply)
 
     expect(sendStandardResponse).not.toHaveBeenCalled()
 
     expect(interceptor).toHaveBeenCalledOnce()
     expect(interceptor).toHaveBeenCalledWith({
       request: req,
-      response: res,
+      reply,
       sendStandardResponseOptions: handlerOptions,
       ...options,
       next: expect.any(Function),
     })
     expect(await interceptor.mock.results[0]!.value).toEqual({
       matched: false,
-    })
-  })
-
-  it('plugins', () => {
-    const initRuntimeAdapter = vi.fn()
-
-    const handler = new NodeHttpHandler({
-      handle,
-    } as any, {
-      plugins: [
-        { initRuntimeAdapter },
-      ],
-      eventIteratorKeepAliveComment: '__test__',
-    })
-
-    expect(initRuntimeAdapter).toHaveBeenCalledOnce()
-    expect(initRuntimeAdapter).toHaveBeenCalledWith({
-      plugins: [
-        { initRuntimeAdapter },
-      ],
-      eventIteratorKeepAliveComment: '__test__',
     })
   })
 })
