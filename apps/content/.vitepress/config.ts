@@ -73,11 +73,13 @@ export default withMermaid(defineConfig({
       { text: 'Blog', link: '/blog/v1-announcement', activeMatch: '/blog/' },
       { text: 'Learn & Contribute', link: '/learn-and-contribute/overview', activeMatch: '/learn-and-contribute/' },
       {
-        text: 'About',
+        text: 'More',
         items: [
           { text: 'Discussions', link: 'https://github.com/unnoq/orpc/discussions' },
           { text: 'Sponsor', link: 'https://github.com/sponsors/unnoq' },
           { text: 'Releases', link: 'https://github.com/unnoq/orpc/releases' },
+          { text: 'LLM Context', link: '/llms.txt' },
+          { text: 'LLM Context (Full)', link: '/llms-full.txt' },
         ],
       },
     ],
