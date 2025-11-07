@@ -54,7 +54,7 @@ export interface ToNodeHttpBodyOptions extends ToEventStreamOptions {}
 
 /**
  * @param body
- * @param headers - WARNING: The headers can be changed by the function and effects on the original headers.
+ * @param headers - WARNING: The headers can be mutated by the function and may affect the original headers.
  * @param options
  */
 export function toNodeHttpBody(
