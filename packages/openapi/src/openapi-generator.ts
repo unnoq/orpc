@@ -11,7 +11,7 @@ import { getDynamicParams, StandardOpenAPIJsonSerializer } from '@orpc/openapi-c
 import { resolveContractProcedures } from '@orpc/server'
 import { clone, stringifyJSON, toArray, value } from '@orpc/shared'
 import { applyCustomOpenAPIOperation } from './openapi-custom'
-import { checkParamsSchema, resolveOpenAPIJsonSchemaRef, toOpenAPIContent, toOpenAPIEventIteratorContent, toOpenAPIMethod, toOpenAPIParameters, toOpenAPIPath, toOpenAPISchema } from './openapi-utils'
+import { checkParamsSchema, resolveOpenAPIJsonSchemaRef, simplifyComposedObjectJsonSchemasAndRefs, toOpenAPIContent, toOpenAPIEventIteratorContent, toOpenAPIMethod, toOpenAPIParameters, toOpenAPIPath, toOpenAPISchema } from './openapi-utils'
 import { CompositeSchemaConverter } from './schema-converter'
 import { applySchemaOptionality, expandUnionSchema, isAnySchema, isObjectSchema, separateObjectSchema } from './schema-utils'
 
@@ -304,12 +304,15 @@ export class OpenAPIGenerator {
       {
         ...baseSchemaConvertOptions,
         strategy: 'input',
-        minStructureDepthForRef: dynamicParams?.length || inputStructure === 'detailed' ? 1 : 0,
       },
     )
 
     if (isAnySchema(schema) && !dynamicParams?.length) {
       return
+    }
+
+    if (inputStructure === 'detailed' || (inputStructure === 'compact' && (dynamicParams?.length || method === 'GET'))) {
+      schema = simplifyComposedObjectJsonSchemasAndRefs(schema, doc)
     }
 
     if (inputStructure === 'compact') {
@@ -336,16 +339,14 @@ export class OpenAPIGenerator {
       }
 
       if (method === 'GET') {
-        const resolvedSchema = resolveOpenAPIJsonSchemaRef(doc, schema)
-
-        if (!isObjectSchema(resolvedSchema)) {
+        if (!isObjectSchema(schema)) {
           throw new OpenAPIGeneratorError(
             'When method is "GET", input schema must satisfy: object | any | unknown',
           )
         }
 
         ref.parameters ??= []
-        ref.parameters.push(...toOpenAPIParameters(resolvedSchema, 'query'))
+        ref.parameters.push(...toOpenAPIParameters(schema, 'query'))
       }
       else {
         ref.requestBody = {
@@ -367,7 +368,7 @@ export class OpenAPIGenerator {
     }
 
     const resolvedParamSchema = schema.properties?.params !== undefined
-      ? resolveOpenAPIJsonSchemaRef(doc, schema.properties.params)
+      ? simplifyComposedObjectJsonSchemasAndRefs(schema.properties.params, doc)
       : undefined
 
     if (
@@ -385,7 +386,7 @@ export class OpenAPIGenerator {
     for (const from of ['params', 'query', 'headers']) {
       const fromSchema = schema.properties?.[from]
       if (fromSchema !== undefined) {
-        const resolvedSchema = resolveOpenAPIJsonSchemaRef(doc, fromSchema)
+        const resolvedSchema = simplifyComposedObjectJsonSchemasAndRefs(fromSchema, doc)
 
         if (!isObjectSchema(resolvedSchema)) {
           throw error
@@ -469,15 +470,17 @@ export class OpenAPIGenerator {
         But got: ${stringifyJSON(item)}
       `)
 
-      if (!isObjectSchema(item)) {
+      const simplifiedItem = simplifyComposedObjectJsonSchemasAndRefs(item, doc)
+
+      if (!isObjectSchema(simplifiedItem)) {
         throw error
       }
 
       let schemaStatus: number | undefined
       let schemaDescription: string | undefined
 
-      if (item.properties?.status !== undefined) {
-        const statusSchema = resolveOpenAPIJsonSchemaRef(doc, item.properties.status)
+      if (simplifiedItem.properties?.status !== undefined) {
+        const statusSchema = resolveOpenAPIJsonSchemaRef(doc, simplifiedItem.properties.status)
 
         if (typeof statusSchema !== 'object'
           || statusSchema.const === undefined
@@ -509,8 +512,8 @@ export class OpenAPIGenerator {
         description: itemDescription,
       }
 
-      if (item.properties?.headers !== undefined) {
-        const headersSchema = resolveOpenAPIJsonSchemaRef(doc, item.properties.headers)
+      if (simplifiedItem.properties?.headers !== undefined) {
+        const headersSchema = simplifyComposedObjectJsonSchemasAndRefs(simplifiedItem.properties.headers, doc)
 
         if (!isObjectSchema(headersSchema)) {
           throw error
@@ -523,15 +526,15 @@ export class OpenAPIGenerator {
             ref.responses[itemStatus].headers ??= {}
             ref.responses[itemStatus].headers[key] = {
               schema: toOpenAPISchema(headerSchema) as any,
-              required: item.required?.includes('headers') && headersSchema.required?.includes(key),
+              required: simplifiedItem.required?.includes('headers') && headersSchema.required?.includes(key),
             }
           }
         }
       }
 
-      if (item.properties?.body !== undefined) {
+      if (simplifiedItem.properties?.body !== undefined) {
         ref.responses[itemStatus].content = toOpenAPIContent(
-          applySchemaOptionality(item.required?.includes('body') ?? false, item.properties.body),
+          applySchemaOptionality(simplifiedItem.required?.includes('body') ?? false, simplifiedItem.properties.body),
         )
       }
     }
