@@ -40,7 +40,7 @@ export class MemoryPublisher<T extends Record<string, object>> extends Publisher
     return size
   }
 
-  protected get isResumeEnabled(): boolean {
+  private get isResumeEnabled(): boolean {
     return Number.isFinite(this.retentionSeconds) && this.retentionSeconds > 0
   }
 
@@ -89,8 +89,8 @@ export class MemoryPublisher<T extends Record<string, object>> extends Publisher
     }
   }
 
-  protected lastCleanupTime: number | null = null
-  protected cleanup(): void {
+  private lastCleanupTime: number | null = null
+  private cleanup(): void {
     if (!this.isResumeEnabled) {
       return
     }

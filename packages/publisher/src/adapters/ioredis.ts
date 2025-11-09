@@ -45,21 +45,21 @@ export interface IORedisPublisherOptions extends PublisherOptions, StandardRPCJs
 }
 
 export class IORedisPublisher<T extends Record<string, object>> extends Publisher<T> {
-  protected readonly commander: Redis
-  protected readonly listener: Redis
+  private readonly commander: Redis
+  private readonly listener: Redis
 
-  protected readonly prefix: string
-  protected readonly serializer: StandardRPCJsonSerializer
-  protected readonly retentionSeconds: number
-  protected readonly subscriptionPromiseMap = new Map<string, Promise<any>>()
-  protected readonly listenersMap = new Map<string, Array<(payload: any) => void>>()
-  protected readonly onErrorsMap = new Map<string, Array<(error: ThrowableError) => void>>()
-  protected redisListenerAndOnError: undefined | {
+  private readonly prefix: string
+  private readonly serializer: StandardRPCJsonSerializer
+  private readonly retentionSeconds: number
+  private readonly subscriptionPromiseMap = new Map<string, Promise<any>>()
+  private readonly listenersMap = new Map<string, Array<(payload: any) => void>>()
+  private readonly onErrorsMap = new Map<string, Array<(error: ThrowableError) => void>>()
+  private redisListenerAndOnError: undefined | {
     listener: (channel: string, message: string) => void
     onError: (error: ThrowableError) => void
   }
 
-  protected get isResumeEnabled(): boolean {
+  private get isResumeEnabled(): boolean {
     return Number.isFinite(this.retentionSeconds) && this.retentionSeconds > 0
   }
 
@@ -100,7 +100,7 @@ export class IORedisPublisher<T extends Record<string, object>> extends Publishe
     this.serializer = new StandardRPCJsonSerializer(options)
   }
 
-  protected lastCleanupTimeMap: Map<string, number> = new Map()
+  private lastCleanupTimeMap: Map<string, number> = new Map()
   override async publish<K extends keyof T & string>(event: K, payload: T[K]): Promise<void> {
     const key = this.prefixKey(event)
 
@@ -308,17 +308,17 @@ export class IORedisPublisher<T extends Record<string, object>> extends Publishe
     }
   }
 
-  protected prefixKey(key: string): string {
+  private prefixKey(key: string): string {
     return `${this.prefix}${key}`
   }
 
-  protected serializePayload(payload: object): SerializedPayload {
+  private serializePayload(payload: object): SerializedPayload {
     const eventMeta = getEventMeta(payload)
     const [json, meta] = this.serializer.serialize(payload)
     return { json: json as object, meta, eventMeta }
   }
 
-  protected deserializePayload(id: string | undefined, { json, meta, eventMeta }: SerializedPayload): any {
+  private deserializePayload(id: string | undefined, { json, meta, eventMeta }: SerializedPayload): any {
     return withEventMeta(
       this.serializer.deserialize(json, meta) as object,
       id === undefined ? { ...eventMeta } : { ...eventMeta, id },

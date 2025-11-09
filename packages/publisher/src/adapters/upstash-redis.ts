@@ -32,15 +32,15 @@ export interface UpstashRedisPublisherOptions extends PublisherOptions, Standard
 }
 
 export class UpstashRedisPublisher<T extends Record<string, object>> extends Publisher<T> {
-  protected readonly prefix: string
-  protected readonly serializer: StandardRPCJsonSerializer
-  protected readonly retentionSeconds: number
-  protected readonly listenersMap = new Map<string, Array<(payload: any) => void>>()
-  protected readonly onErrorsMap = new Map<string, Array<(error: ThrowableError) => void>>()
-  protected readonly subscriptionPromiseMap = new Map<string, Promise<void>>()
-  protected readonly subscriptionsMap = new Map<string, any>() // Upstash subscription objects
+  private readonly prefix: string
+  private readonly serializer: StandardRPCJsonSerializer
+  private readonly retentionSeconds: number
+  private readonly listenersMap = new Map<string, Array<(payload: any) => void>>()
+  private readonly onErrorsMap = new Map<string, Array<(error: ThrowableError) => void>>()
+  private readonly subscriptionPromiseMap = new Map<string, Promise<void>>()
+  private readonly subscriptionsMap = new Map<string, any>() // Upstash subscription objects
 
-  protected get isResumeEnabled(): boolean {
+  private get isResumeEnabled(): boolean {
     return Number.isFinite(this.retentionSeconds) && this.retentionSeconds > 0
   }
 
@@ -70,7 +70,7 @@ export class UpstashRedisPublisher<T extends Record<string, object>> extends Pub
   }
 
   constructor(
-    protected readonly redis: Redis,
+    private readonly redis: Redis,
     { resumeRetentionSeconds, prefix, ...options }: UpstashRedisPublisherOptions = {},
   ) {
     super(options)
@@ -80,7 +80,7 @@ export class UpstashRedisPublisher<T extends Record<string, object>> extends Pub
     this.serializer = new StandardRPCJsonSerializer(options)
   }
 
-  protected lastCleanupTimeMap: Map<string, number> = new Map()
+  private lastCleanupTimeMap: Map<string, number> = new Map()
   override async publish<K extends keyof T & string>(event: K, payload: T[K]): Promise<void> {
     const key = this.prefixKey(event)
 
@@ -282,17 +282,17 @@ export class UpstashRedisPublisher<T extends Record<string, object>> extends Pub
     }
   }
 
-  protected prefixKey(key: string): string {
+  private prefixKey(key: string): string {
     return `${this.prefix}${key}`
   }
 
-  protected serializePayload(payload: object): SerializedPayload {
+  private serializePayload(payload: object): SerializedPayload {
     const eventMeta = getEventMeta(payload)
     const [json, meta] = this.serializer.serialize(payload)
     return { json: json as object, meta, eventMeta }
   }
 
-  protected deserializePayload(id: string | undefined, { json, meta, eventMeta }: SerializedPayload): any {
+  private deserializePayload(id: string | undefined, { json, meta, eventMeta }: SerializedPayload): any {
     return withEventMeta(
       this.serializer.deserialize(json, meta) as object,
       id === undefined ? { ...eventMeta } : { ...eventMeta, id },
