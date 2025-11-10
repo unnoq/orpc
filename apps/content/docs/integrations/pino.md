@@ -77,16 +77,20 @@ npm run dev | npx pino-pretty
 You can access the logger from the context object using the `getLogger` function:
 
 ```ts
-import { getLogger } from '@orpc/experimental-pino'
+import { getLogger, LoggerContext } from '@orpc/experimental-pino'
 
-const procedure = os.handler(({ context }) => {
-  const logger = getLogger(context) // [!code highlight]
+interface ORPCContext extends LoggerContext {} // [!code highlight]
 
-  logger?.info('Processing request')
-  logger?.debug({ userId: 123 }, 'User data')
+const procedure = os
+  .$context<ORPCContext>()
+  .handler(({ context }) => {
+    const logger = getLogger(context) // [!code highlight]
 
-  return { success: true }
-})
+    logger?.info('Processing request')
+    logger?.debug({ userId: 123 }, 'User data')
+
+    return { success: true }
+  })
 ```
 
 ## Providing Custom Logger per Request
