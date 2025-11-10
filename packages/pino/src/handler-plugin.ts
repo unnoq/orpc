@@ -3,7 +3,7 @@ import type { StandardHandlerInterceptorOptions, StandardHandlerOptions, Standar
 import type { Logger } from 'pino'
 import type { LoggerContext } from './context'
 import { mapEventIterator } from '@orpc/client'
-import { isAsyncIteratorObject, overlayProxy } from '@orpc/shared'
+import { isAsyncIteratorObject, ORPC_NAME, overlayProxy } from '@orpc/shared'
 import pino from 'pino'
 import { CONTEXT_LOGGER_SYMBOL, getLogger } from './context'
 
@@ -71,7 +71,7 @@ export class LoggingHandlerPlugin<T extends Context> implements StandardHandlerP
       const logger = (
         (interceptorOptions.context as LoggerContext)[CONTEXT_LOGGER_SYMBOL] ?? this.logger
       ).child({
-        orpc: { id: this.generateId(interceptorOptions) },
+        rpc: { id: this.generateId(interceptorOptions), system: ORPC_NAME },
       })
 
       /**
@@ -165,7 +165,7 @@ export class LoggingHandlerPlugin<T extends Context> implements StandardHandlerP
 
     options.clientInterceptors.unshift(async ({ next, path, context, signal }) => {
       const logger = getLogger(context)
-      logger?.setBindings({ orpc: { ...logger.bindings().orpc, path } })
+      logger?.setBindings({ rpc: { ...logger.bindings().rpc, method: path.join('.') } })
 
       const output = await next()
 

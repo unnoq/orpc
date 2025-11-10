@@ -233,7 +233,7 @@ describe('loggingHandlerPlugin', () => {
     expect(result.matched).toBe(true)
     // The path should be set before the handler returns
     // because clientInterceptor wraps the procedure call
-    expect(capturedBeforeReturn.orpc.path).toEqual(['ping'])
+    expect(capturedBeforeReturn.rpc.method).toEqual('ping')
   })
 
   it('logs stream errors as error and abort stream errors as info', async () => {
@@ -321,11 +321,9 @@ describe('loggingHandlerPlugin', () => {
 
       // Check that child logger was created
       expect(globalSpies.child).toHaveBeenCalled()
-      expect(globalSpies.child).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orpc: expect.objectContaining({ id: 'test-id' }),
-        }),
-      )
+      expect(globalSpies.child).toHaveBeenCalledWith({
+        rpc: { id: 'test-id', system: 'orpc' },
+      })
 
       // Verify id and req were set
       expect(globalSpies.setBindings).toHaveBeenCalledWith(
