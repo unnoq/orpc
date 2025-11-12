@@ -218,10 +218,11 @@ describe('toEventStream', () => {
       return withEventMeta({ order: 4 }, { id: 'id-4', retry: 40000 })
     }
 
-    const reader = toEventStream(gen(), {})
+    const reader = toEventStream(gen())
       .pipeThrough(new TextDecoderStream())
       .getReader()
 
+    expect((await reader.read())).toEqual({ done: false, value: ': \n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nid: id-1\ndata: {"order":1}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nretry: 20000\ndata: {"order":2}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\n\n' })
@@ -239,10 +240,11 @@ describe('toEventStream', () => {
       yield undefined
     }
 
-    const reader = toEventStream(gen(), {})
+    const reader = toEventStream(gen())
       .pipeThrough(new TextDecoderStream())
       .getReader()
 
+    expect((await reader.read())).toEqual({ done: false, value: ': \n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nid: id-1\ndata: {"order":1}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nretry: 20000\ndata: {"order":2}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\n\n' })
@@ -260,10 +262,11 @@ describe('toEventStream', () => {
       throw withEventMeta(new Error('order-4'), { id: 'id-4', retry: 40000 })
     }
 
-    const reader = toEventStream(gen(), {})
+    const reader = toEventStream(gen())
       .pipeThrough(new TextDecoderStream())
       .getReader()
 
+    expect((await reader.read())).toEqual({ done: false, value: ': \n\n' })
     expect((await reader.read()).value).toEqual('event: message\nid: id-1\ndata: {"order":1}\n\n')
     expect((await reader.read()).value).toEqual('event: message\nretry: 20000\ndata: {"order":2}\n\n')
     expect((await reader.read()).value).toEqual('event: message\n\n')
@@ -281,10 +284,11 @@ describe('toEventStream', () => {
       throw withEventMeta(new ErrorEvent({ data: { order: 4 } }), { id: 'id-4', retry: 40000 })
     }
 
-    const reader = toEventStream(gen(), {})
+    const reader = toEventStream(gen())
       .pipeThrough(new TextDecoderStream())
       .getReader()
 
+    expect((await reader.read())).toEqual({ done: false, value: ': \n\n' })
     expect((await reader.read()).value).toEqual('event: message\nid: id-1\ndata: {"order":1}\n\n')
     expect((await reader.read()).value).toEqual('event: message\nretry: 20000\ndata: {"order":2}\n\n')
     expect((await reader.read()).value).toEqual('event: message\n\n')
@@ -310,9 +314,10 @@ describe('toEventStream', () => {
       }
     }
 
-    const stream = toEventStream(gen(), {})
+    const stream = toEventStream(gen())
 
     const reader = stream.getReader()
+    await reader.read()
     await reader.read()
     await reader.cancel()
 
@@ -339,9 +344,10 @@ describe('toEventStream', () => {
       }
     }
 
-    const stream = toEventStream(gen(), {})
+    const stream = toEventStream(gen())
 
     const reader = stream.getReader()
+    await reader.read()
     await reader.read()
     await reader.cancel()
 
@@ -369,9 +375,10 @@ describe('toEventStream', () => {
       }
     }
 
-    const stream = toEventStream(gen(), {})
+    const stream = toEventStream(gen())
 
     const reader = stream.getReader()
+    await reader.read()
     await reader.read()
     /**
      * This should throw, but because TextEncoderStream not rethrows cancel errors from the source stream,
@@ -386,40 +393,133 @@ describe('toEventStream', () => {
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
   })
 
-  it('keep alive', { retry: 5 }, async () => {
-    async function* gen() {
-      while (true) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-        yield 'hello'
+  describe('keep alive', () => {
+    it('enabled', async () => {
+      async function* gen() {
+        while (true) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          yield 'hello'
+        }
       }
-    }
 
-    const stream = toEventStream(gen(), {
-      eventIteratorKeepAliveEnabled: true,
-      eventIteratorKeepAliveInterval: 40,
-      eventIteratorKeepAliveComment: 'ping',
+      const stream = toEventStream(gen(), {
+        eventIteratorInitialCommentEnabled: false,
+        eventIteratorKeepAliveEnabled: true,
+        eventIteratorKeepAliveInterval: 40,
+        eventIteratorKeepAliveComment: 'ping',
+      })
+
+      const reader = stream
+        .pipeThrough(new TextDecoderStream())
+        .getReader()
+
+      const now = Date.now()
+      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(40)
+      expect(Date.now() - now).toBeLessThan(50)
+
+      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(80)
+      expect(Date.now() - now).toBeLessThan(100)
+
+      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(100)
+      expect(Date.now() - now).toBeLessThan(130)
+
+      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(140)
+      expect(Date.now() - now).toBeLessThan(180)
+
+      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(180)
+      expect(Date.now() - now).toBeLessThan(230)
+
+      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(200)
+      expect(Date.now() - now).toBeLessThan(260)
+
+      expect(startSpanSpy).toHaveBeenCalledTimes(1)
+      expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
     })
 
-    const reader = stream
-      .pipeThrough(new TextDecoderStream())
-      .getReader()
+    it('disabled', async () => {
+      async function* gen() {
+        while (true) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          yield 'hello'
+        }
+      }
 
-    let now = Date.now()
-    await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-    await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-    await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-    expect(Date.now() - now).toBeGreaterThanOrEqual(80)
-    expect(Date.now() - now).toBeLessThan(120)
+      const stream = toEventStream(gen(), {
+        eventIteratorInitialCommentEnabled: false,
+        eventIteratorKeepAliveEnabled: false,
+        eventIteratorKeepAliveInterval: 40,
+        eventIteratorKeepAliveComment: 'ping',
+      })
 
-    now = Date.now()
-    await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-    await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-    await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-    expect(Date.now() - now).toBeGreaterThanOrEqual(80)
-    expect(Date.now() - now).toBeLessThan(120)
+      const reader = stream
+        .pipeThrough(new TextDecoderStream())
+        .getReader()
 
-    expect(startSpanSpy).toHaveBeenCalledTimes(1)
-    expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
+      const now = Date.now()
+      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(100)
+      expect(Date.now() - now).toBeLessThan(110)
+
+      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
+      expect(Date.now() - now).toBeGreaterThanOrEqual(200)
+      expect(Date.now() - now).toBeLessThan(220)
+
+      expect(startSpanSpy).toHaveBeenCalledTimes(1)
+      expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
+    })
+  })
+
+  describe('initial comment', () => {
+    it('enabled', async () => {
+      async function* gen() {
+        await shared.sleep(50)
+        yield 'hello'
+      }
+
+      const stream = toEventStream(gen(), {
+        eventIteratorInitialCommentEnabled: true,
+        eventIteratorInitialComment: 'stream-started',
+        eventIteratorKeepAliveEnabled: false,
+      })
+
+      const reader = stream
+        .pipeThrough(new TextDecoderStream())
+        .getReader()
+
+      const start = Date.now()
+      await expect(reader.read()).resolves.toEqual({ done: false, value: ': stream-started\n\n' })
+      expect(Date.now() - start).toBeLessThan(10)
+      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
+      expect(Date.now() - start).toBeGreaterThanOrEqual(50)
+      expect(Date.now() - start).toBeLessThan(60)
+    })
+
+    it('disabled', async () => {
+      async function* gen() {
+        await shared.sleep(50)
+        yield 'hello'
+      }
+
+      const stream = toEventStream(gen(), {
+        eventIteratorInitialCommentEnabled: false,
+        eventIteratorKeepAliveEnabled: false,
+      })
+
+      const reader = stream
+        .pipeThrough(new TextDecoderStream())
+        .getReader()
+
+      const start = Date.now()
+      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
+      expect(Date.now() - start).toBeGreaterThanOrEqual(50)
+      expect(Date.now() - start).toBeLessThan(60)
+    })
   })
 })
 
@@ -429,9 +529,10 @@ it.each([
 ])('toEventStream + toEventIterator: %#', async (...values) => {
   const iterator = toEventIterator(toEventStream((async function* () {
     for (const value of values) {
+      await new Promise(resolve => setTimeout(resolve, 50))
       yield value
     }
-  })(), { eventIteratorKeepAliveInterval: 0 }))
+  })(), { eventIteratorKeepAliveInterval: 10 }))
 
   for await (const value of iterator) {
     expect(value).toEqual(values.shift())
