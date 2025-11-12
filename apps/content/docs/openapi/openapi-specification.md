@@ -94,6 +94,9 @@ const specFromContract = await openAPIGenerator.generate(contract, {
     title: 'My App',
     version: '0.0.0',
   },
+  servers: [
+    { url: 'https://api.example.com/v1', },
+  ],
 })
 
 const specFromRouter = await openAPIGenerator.generate(router, {
@@ -101,6 +104,9 @@ const specFromRouter = await openAPIGenerator.generate(router, {
     title: 'My App',
     version: '0.0.0',
   },
+  servers: [
+    { url: 'https://api.example.com/v1', },
+  ],
 })
 ```
 

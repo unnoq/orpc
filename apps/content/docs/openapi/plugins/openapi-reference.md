@@ -29,6 +29,9 @@ const handler = new OpenAPIHandler(router, {
           title: 'ORPC Playground',
           version: '1.0.0',
         },
+        servers: [ // or let the plugin auto-infer from the request
+          { url: 'https://api.example.com/v1', },
+        ],
       },
     }),
   ]
