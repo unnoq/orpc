@@ -8,6 +8,12 @@ const runInSpanContextSpy = vi.spyOn(shared, 'runInSpanContext')
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.useFakeTimers()
+})
+
+afterEach(() => {
+  expect(vi.getTimerCount()).toBe(0) // ensure no timers are left hanging
+  vi.useRealTimers()
 })
 
 describe('toEventIterator', () => {
@@ -99,8 +105,8 @@ describe('toEventIterator', () => {
   it('with empty stream', async () => {
     const generator = toEventIterator(null)
     expect(generator).toSatisfy(isAsyncIteratorObject)
-    expect(await generator.next()).toEqual({ done: true, value: undefined })
-    expect(await generator.next()).toEqual({ done: true, value: undefined })
+    expect(await generator.next()).toEqual({ done: true })
+    expect(await generator.next()).toEqual({ done: true })
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(1)
@@ -172,12 +178,13 @@ describe('toEventIterator', () => {
 
     // should throw if .return is called while waiting for .next()
     const nextPromise = expect(generator.next()).rejects.toBeInstanceOf(shared.AbortError)
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await vi.advanceTimersByTimeAsync(0)
 
     await generator.return(undefined)
     await nextPromise
 
-    await vi.waitFor(() => expect(stream.getReader().closed).resolves.toBe(undefined))
+    await vi.advanceTimersByTimeAsync(25)
+    await expect(stream.getReader().closed).resolves.toBe(undefined)
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
@@ -202,7 +209,9 @@ describe('toEventIterator', () => {
       return true
     })
 
-    await expect(generator.next()).rejects.toThrow('Test error')
+    const errorPromise = expect(generator.next()).rejects.toThrow('Test error')
+    await vi.advanceTimersByTimeAsync(10)
+    await errorPromise
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
@@ -227,7 +236,7 @@ describe('toEventStream', () => {
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nretry: 20000\ndata: {"order":2}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: done\nretry: 40000\nid: id-4\ndata: {"order":4}\n\n' })
-    expect((await reader.read())).toEqual({ done: true, value: undefined })
+    expect((await reader.read())).toEqual({ done: true })
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
@@ -248,7 +257,7 @@ describe('toEventStream', () => {
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nid: id-1\ndata: {"order":1}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\nretry: 20000\ndata: {"order":2}\n\n' })
     expect((await reader.read())).toEqual({ done: false, value: 'event: message\n\n' })
-    expect((await reader.read())).toEqual({ done: true, value: undefined })
+    expect((await reader.read())).toEqual({ done: true })
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(4)
@@ -315,15 +324,20 @@ describe('toEventStream', () => {
     }
 
     const stream = toEventStream(gen())
-
     const reader = stream.getReader()
-    await reader.read()
-    await reader.read()
-    await reader.cancel()
 
-    await vi.waitFor(() => {
-      expect(hasFinally).toBe(true)
-    })
+    await Promise.all([
+      reader.read(),
+      vi.advanceTimersByTimeAsync(10),
+    ])
+
+    await Promise.all([
+      reader.read(),
+      vi.advanceTimersByTimeAsync(10),
+    ])
+
+    await reader.cancel()
+    expect(hasFinally).toBe(true)
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
@@ -347,13 +361,22 @@ describe('toEventStream', () => {
     const stream = toEventStream(gen())
 
     const reader = stream.getReader()
-    await reader.read()
-    await reader.read()
+
+    await Promise.all([
+      reader.read(),
+      vi.advanceTimersByTimeAsync(10),
+    ])
+
+    reader.read()
+    // start waiting for the error
+    await vi.advanceTimersByTimeAsync(5)
+
+    // Cancel before the error is thrown
     await reader.cancel()
 
-    await vi.waitFor(() => {
-      expect(hasFinally).toBe(true)
-    })
+    // finish the error throwing
+    await vi.advanceTimersByTimeAsync(5)
+    expect(hasFinally).toBe(true)
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
@@ -379,15 +402,18 @@ describe('toEventStream', () => {
 
     const reader = stream.getReader()
     await reader.read()
-    await reader.read()
+
+    // start iterator
+    await Promise.all([
+      reader.read(),
+      vi.advanceTimersByTimeAsync(10),
+    ])
+
     /**
      * This should throw, but because TextEncoderStream not rethrows cancel errors from the source stream,
      */
     await reader.cancel()
-
-    await vi.waitFor(() => {
-      expect(hasFinally).toBe(true)
-    })
+    expect(hasFinally).toBe(true)
 
     expect(startSpanSpy).toHaveBeenCalledTimes(1)
     expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
@@ -396,7 +422,7 @@ describe('toEventStream', () => {
   describe('keep alive', () => {
     it('enabled', async () => {
       async function* gen() {
-        while (true) {
+        for (let i = 0; i < 2; i++) {
           await new Promise(resolve => setTimeout(resolve, 100))
           yield 'hello'
         }
@@ -413,41 +439,47 @@ describe('toEventStream', () => {
         .pipeThrough(new TextDecoderStream())
         .getReader()
 
-      const now = Date.now()
-      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(40)
-      expect(Date.now() - now).toBeLessThan(50)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' }),
+        vi.advanceTimersByTimeAsync(40),
+      ])
 
-      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(80)
-      expect(Date.now() - now).toBeLessThan(100)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' }),
+        vi.advanceTimersByTimeAsync(40),
+      ])
 
-      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(100)
-      expect(Date.now() - now).toBeLessThan(130)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' }),
+        vi.advanceTimersByTimeAsync(20),
+      ])
 
-      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(140)
-      expect(Date.now() - now).toBeLessThan(180)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' }),
+        vi.advanceTimersByTimeAsync(40),
+      ])
 
-      await expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(180)
-      expect(Date.now() - now).toBeLessThan(230)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: ': ping\n\n' }),
+        vi.advanceTimersByTimeAsync(40),
+      ])
 
-      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(200)
-      expect(Date.now() - now).toBeLessThan(260)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' }),
+        vi.advanceTimersByTimeAsync(20),
+      ])
 
+      await expect(reader.read()).resolves.toEqual({ done: true })
       expect(startSpanSpy).toHaveBeenCalledTimes(1)
       expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
     })
 
     it('disabled', async () => {
       async function* gen() {
-        while (true) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          yield 'hello'
-        }
+        await new Promise(resolve => setTimeout(resolve, 100))
+        yield 'hello1'
+        await new Promise(resolve => setTimeout(resolve, 100))
+        yield 'hello2'
       }
 
       const stream = toEventStream(gen(), {
@@ -461,15 +493,17 @@ describe('toEventStream', () => {
         .pipeThrough(new TextDecoderStream())
         .getReader()
 
-      const now = Date.now()
-      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(100)
-      expect(Date.now() - now).toBeLessThan(110)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello1"\n\n' }),
+        vi.advanceTimersByTimeAsync(100),
+      ])
 
-      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-      expect(Date.now() - now).toBeGreaterThanOrEqual(200)
-      expect(Date.now() - now).toBeLessThan(220)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello2"\n\n' }),
+        vi.advanceTimersByTimeAsync(100),
+      ])
 
+      await expect(reader.read()).resolves.toEqual({ done: true })
       expect(startSpanSpy).toHaveBeenCalledTimes(1)
       expect(runInSpanContextSpy).toHaveBeenCalledTimes(3)
     })
@@ -492,12 +526,15 @@ describe('toEventStream', () => {
         .pipeThrough(new TextDecoderStream())
         .getReader()
 
-      const start = Date.now()
+      // Initial comment is sent immediately
       await expect(reader.read()).resolves.toEqual({ done: false, value: ': stream-started\n\n' })
-      expect(Date.now() - start).toBeLessThan(10)
-      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-      expect(Date.now() - start).toBeGreaterThanOrEqual(50)
-      expect(Date.now() - start).toBeLessThan(60)
+
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' }),
+        vi.advanceTimersByTimeAsync(50),
+      ])
+
+      await expect(reader.read()).resolves.toEqual({ done: true })
     })
 
     it('disabled', async () => {
@@ -515,10 +552,12 @@ describe('toEventStream', () => {
         .pipeThrough(new TextDecoderStream())
         .getReader()
 
-      const start = Date.now()
-      await expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' })
-      expect(Date.now() - start).toBeGreaterThanOrEqual(50)
-      expect(Date.now() - start).toBeLessThan(60)
+      await Promise.all([
+        expect(reader.read()).resolves.toEqual({ done: false, value: 'event: message\ndata: "hello"\n\n' }),
+        vi.advanceTimersByTimeAsync(50),
+      ])
+
+      await expect(reader.read()).resolves.toEqual({ done: true })
     })
   })
 })
@@ -534,7 +573,12 @@ it.each([
     }
   })(), { eventIteratorKeepAliveInterval: 10 }))
 
-  for await (const value of iterator) {
-    expect(value).toEqual(values.shift())
+  for (const expectedValue of values) {
+    await Promise.all([
+      expect(iterator.next()).resolves.toEqual({ done: false, value: expectedValue }),
+      vi.advanceTimersByTimeAsync(50),
+    ])
   }
+
+  await iterator.next()
 })
