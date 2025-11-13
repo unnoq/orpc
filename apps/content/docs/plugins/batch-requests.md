@@ -7,6 +7,10 @@ description: A plugin for oRPC to batch requests and responses.
 
 The **Batch Requests Plugin** allows you to combine multiple requests and responses into a single batch, reducing the overhead of sending each one separately.
 
+::: info
+HTTP/2, HTTP/3, and later versions already support multiplexing, allowing multiple requests and responses over a single connection. Since these protocols are now widely adopted, the batch plugin may be less beneficial in most scenarios.
+:::
+
 ## Setup
 
 This plugin requires configuration on both the server and client sides.
