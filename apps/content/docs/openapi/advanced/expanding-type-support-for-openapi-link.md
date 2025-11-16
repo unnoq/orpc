@@ -19,8 +19,8 @@ Beyond JSON limitations, outputs containing `Blob` or `File` types (outside the 
 
 ```ts
 const contract = oc.output(z.object({
-  date: z.coerce.date(), // [!code highlight]
-  bigint: z.coerce.bigint(), // [!code highlight]
+  date: z.coerce.date<Date>(), // [!code highlight]
+  bigint: z.coerce.bigint<bigint>(), // [!code highlight]
 }))
 
 const procedure = implement(contract).handler(() => ({
