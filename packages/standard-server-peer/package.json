@@ -1,7 +1,7 @@
 {
   "name": "@orpc/standard-server-peer",
   "type": "module",
-  "version": "1.11.2",
+  "version": "1.11.3",
   "license": "MIT",
   "homepage": "https://unnoq.com",
   "repository": {
