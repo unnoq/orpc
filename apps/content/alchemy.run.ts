@@ -11,7 +11,7 @@ const app = await alchemy('orpc-content', {
   stateStore: scope => new CloudflareStateStore(scope),
 })
 
-const content = await Website('content', {
+const website = await Website('website', {
   build: {
     command: 'pnpm run build',
   },
@@ -21,10 +21,10 @@ const content = await Website('content', {
   }),
 })
 
-console.log(`✅ Deployed to: ${content.url}`)
+console.log(`✅ Deployed to: ${website.url}`)
 
 if (process.env.PULL_REQUEST) {
-  await GitHubComment('preview-comment', {
+  await GitHubComment('pr-preview-comment', {
     owner: 'unnoq',
     repository: 'orpc',
     issueNumber: Number(process.env.PULL_REQUEST),
@@ -32,7 +32,7 @@ if (process.env.PULL_REQUEST) {
 
 Your changes have been deployed to a preview environment:
 
-**🌐 Website:** ${content.url}
+**🌐 Website:** ${website.url}
 
 Built from commit ${process.env.GITHUB_SHA?.slice(0, 7) ?? 'unknown'}
 
