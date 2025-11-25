@@ -3,7 +3,7 @@ name: Deploy Content
 on:
   push:
     branches: [main]
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize, closed]
 
 concurrency:
@@ -11,7 +11,7 @@ concurrency:
 
 env:
   STAGE: ${{ github.ref == 'refs/heads/main' && 'prod' || format('pr-{0}', github.event.number) }}
-  COMMAND: ${{ github.event_name == 'pull_request_target' && github.event.action == 'closed' && 'destroy' || 'deploy' }}
+  COMMAND: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && 'destroy' || 'deploy' }}
   SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
