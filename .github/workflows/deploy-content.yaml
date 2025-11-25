@@ -12,7 +12,6 @@ concurrency:
 env:
   STAGE: ${{ github.ref == 'refs/heads/main' && 'prod' || format('pr-{0}', github.event.number) }}
   COMMAND: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && 'destroy' || 'deploy' }}
-  SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
   deploy-or-destroy:
@@ -24,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.SHA }}
+          ref: ${{ github.sha }}
 
       - uses: pnpm/action-setup@v4
 
@@ -40,5 +39,5 @@ jobs:
           ALCHEMY_STATE_TOKEN: ${{ secrets.ALCHEMY_STATE_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           PULL_REQUEST: ${{ github.event.number }}
-          GITHUB_SHA: ${{ env.SHA }}
+          GITHUB_SHA: ${{ github.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
