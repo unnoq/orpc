@@ -40,7 +40,6 @@
     "@tanstack/vue-query": "^5.91.2",
     "@types/node": "^22.15.30",
     "ai": "5.0.76",
-    "alchemy": "^0.78.0",
     "markdown-it-task-lists": "^2.1.1",
     "mermaid": "^11.12.1",
     "openai": "^6.9.1",
