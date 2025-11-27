@@ -4,7 +4,8 @@ import { DurableIteratorLinkPlugin } from '@orpc/experimental-durable-iterator/c
 import type { RouterClient } from '@orpc/server'
 import { createTanstackQueryUtils } from '@orpc/tanstack-query'
 import type { router } from '../../worker/routers'
-import { BatchLinkPlugin } from '@orpc/client/plugins'
+import type { ClientRetryPluginContext } from '@orpc/client/plugins'
+import { BatchLinkPlugin, ClientRetryPlugin } from '@orpc/client/plugins'
 
 const link = new RPCLink({
   url: `${window.location.origin}/rpc`,
@@ -14,15 +15,16 @@ const link = new RPCLink({
       refreshTokenBeforeExpireInSeconds: 10 * 60, // 10 minutes
     }),
     new BatchLinkPlugin({
-      exclude: ({ path }) => path[0] === 'sse',
+      exclude: ({ path }) => path.includes('sse') || path.includes('on'),
       groups: [{
         condition: () => true,
         context: {},
       }],
     }),
+    new ClientRetryPlugin(),
   ],
 })
 
-export const client: RouterClient<typeof router> = createORPCClient(link)
+export const client: RouterClient<typeof router, ClientRetryPluginContext> = createORPCClient(link)
 
 export const orpc = createTanstackQueryUtils(client)
