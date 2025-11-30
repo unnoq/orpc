@@ -1,15 +1,44 @@
 import type { DynamicModule } from '@nestjs/common'
 import type { AnySchema } from '@orpc/contract'
+import type { StandardBracketNotationSerializerOptions, StandardOpenAPIJsonSerializerOptions } from '@orpc/openapi-client/standard'
+import type { StandardOpenAPICodecOptions } from '@orpc/openapi/standard'
 import type { CreateProcedureClientOptions } from '@orpc/server'
+import type { StandardHandlerOptions } from '@orpc/server/standard'
+import type { Interceptor } from '@orpc/shared'
+import type { StandardResponse } from '@orpc/standard-server'
 import type { SendStandardResponseOptions } from '@orpc/standard-server-node'
 import { Module } from '@nestjs/common'
 import { ImplementInterceptor } from './implement'
 
 export const ORPC_MODULE_CONFIG_SYMBOL = Symbol('ORPC_MODULE_CONFIG')
 
+/**
+ * You can extend this interface to add global context properties.
+ * @example
+ * ```ts
+ * declare module '@orpc/nest' {
+ *   interface ORPCGlobalContext {
+ *     user: { id: string; name: string }
+ *   }
+ * }
+ * ```
+ */
+export interface ORPCGlobalContext {
+
+}
+// TODO: replace CreateProcedureClientOptions with StandardHandlerOptions
 export interface ORPCModuleConfig extends
-  CreateProcedureClientOptions<object, AnySchema, object, object, object>,
-  SendStandardResponseOptions {
+  CreateProcedureClientOptions<ORPCGlobalContext, AnySchema, object, object, object>,
+  SendStandardResponseOptions,
+  StandardOpenAPIJsonSerializerOptions,
+  StandardBracketNotationSerializerOptions,
+  StandardOpenAPICodecOptions {
+  plugins?: StandardHandlerOptions<ORPCGlobalContext>['plugins']
+
+  sendResponseInterceptors?: Interceptor<
+    { request: any, response: any, standardResponse: StandardResponse },
+    unknown
+  >[]
 }
 
 @Module({})

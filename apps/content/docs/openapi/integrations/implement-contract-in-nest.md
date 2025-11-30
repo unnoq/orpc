@@ -220,13 +220,23 @@ oRPC will use NestJS parsed body when it's available, and only use the oRPC pars
 Configure the `@orpc/nest` module by importing `ORPCModule` in your NestJS application:
 
 ```ts
+import { Module } from '@nestjs/common'
 import { REQUEST } from '@nestjs/core'
 import { onError, ORPCModule } from '@orpc/nest'
 import { Request } from 'express' // if you use express adapter
 
+declare module '@orpc/nest' {
+  /**
+   * Extend oRPC global context to make it type-safe inside your handlers/middlewares
+   */
+  interface ORPCGlobalContext {
+    request: Request
+  }
+}
+
 @Module({
   imports: [
-    ORPCModule.forRootAsync({ // or .forRoot
+    ORPCModule.forRootAsync({ // or use .forRoot for static config
       useFactory: (request: Request) => ({
         interceptors: [
           onError((error) => {
@@ -235,6 +245,8 @@ import { Request } from 'express' // if you use express adapter
         ],
         context: { request }, // oRPC context, accessible from middlewares, etc.
         eventIteratorKeepAliveInterval: 5000, // 5 seconds
+        customJsonSerializers: [],
+        plugins: [], // most oRPC plugins are compatible
       }),
       inject: [REQUEST],
     }),
@@ -274,3 +286,47 @@ const client: JsonifiedClient<ContractRouterClient<typeof contract>> = createORP
 ::: info
 Please refer to the [OpenAPILink](/docs/openapi/client/openapi-link) documentation for more information on client setup and options.
 :::
+
+## Advanced
+
+### Custom Send Response
+
+By default, oRPC sends the response directly without returning it to the NestJS handler. However, you may want to preserve the return behavior for compatibility with certain NestJS features or third-party libraries.
+
+```ts
+import { Module } from '@nestjs/common'
+import { ORPCModule } from '@orpc/nest'
+import { Response } from 'express' // if you use express adapter
+import { isObject } from '@orpc/shared' // checks if value is a plain object (not a class instance)
+
+@Module({
+  imports: [
+    ORPCModule.forRoot({
+      sendResponseInterceptors: [
+        async ({ response, standardResponse, next }) => {
+          if (
+            standardResponse.status < 200
+            || standardResponse.status >= 300
+            || !(isObject(standardResponse.body) || Array.isArray(standardResponse.body))
+          ) {
+            // Only object and array are valid to return as response body
+            // the rest should fallback to default oRPC behavior
+            return next()
+          }
+
+          const expressResponse = response as Response
+          expressResponse.status(standardResponse.status)
+          for (const [key, value] of Object.entries(standardResponse.headers)) {
+            if (value !== undefined) {
+              expressResponse.setHeader(key, value)
+            }
+          }
+
+          return standardResponse.body
+        },
+      ],
+    }),
+  ],
+})
+export class AppModule {}
+```
