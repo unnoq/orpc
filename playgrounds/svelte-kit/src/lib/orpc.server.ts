@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
 /**
  * This is part of the Optimize SSR setup.
  *
- * @see {@link https://orpc.unnoq.com/docs/adapters/svelte-kit#optimize-ssr}
+ * @see {@link https://orpc.dev/docs/adapters/svelte-kit#optimize-ssr}
  */
 const link = new RPCLink({
   url: async () => {

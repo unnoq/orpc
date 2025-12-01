@@ -19,7 +19,7 @@ const STRICT_GET_METHOD_PLUGIN_IS_GET_METHOD_CONTEXT_SYMBOL = Symbol('STRICT_GET
  * can be called using the HTTP GET method for RPC Protocol. This helps prevent certain types of
  * Cross-Site Request Forgery (CSRF) attacks.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/strict-get-method Strict Get Method Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/strict-get-method Strict Get Method Plugin Docs}
  */
 export class StrictGetMethodPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   private readonly error: Exclude<StrictGetMethodPluginOptions['error'], undefined>

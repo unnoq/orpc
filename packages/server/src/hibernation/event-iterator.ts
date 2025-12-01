@@ -21,7 +21,7 @@ export interface EncodeHibernationRPCEventOptions extends StandardRPCJsonSeriali
 /**
  * Encodes a Hibernation RPC Event
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/hibernation Hibernation Plugin}
+ * @see {@link https://orpc.dev/docs/plugins/hibernation Hibernation Plugin}
  */
 export function encodeHibernationRPCEvent(
   id: string,

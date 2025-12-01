@@ -10,8 +10,8 @@ export interface RPCLinkOptions<T extends ClientContext>
 /**
  * The RPC Link communicates with the server using the RPC protocol over WebSocket.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/rpc-link RPC Link Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/websocket WebSocket Adapter Docs}
+ * @see {@link https://orpc.dev/docs/client/rpc-link RPC Link Docs}
+ * @see {@link https://orpc.dev/docs/adapters/websocket WebSocket Adapter Docs}
  */
 export class RPCLink<T extends ClientContext> extends StandardRPCLink<T> {
   constructor(options: RPCLinkOptions<T>) {

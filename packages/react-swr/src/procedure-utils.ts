@@ -12,14 +12,14 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Calling corresponding procedure client
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/react-swr#calling-clients React SWR Calling Procedure Client Docs}
+   * @see {@link https://orpc.dev/docs/integrations/react-swr#calling-clients React SWR Calling Procedure Client Docs}
    */
   call: Client<TClientContext, TInput, TOutput, TError>
 
   /**
    * Generate a **full matching** key for SWR operations.
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/react-swr#data-fetching React SWR Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/react-swr#data-fetching React SWR Key Docs}
    */
   key(
     ...rest: MaybeOptionalOptions<CreateKeyOptions<TInput>>
@@ -28,25 +28,25 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Generate a fetcher function for use with useSWR, useSWRInfinite, and other SWR hooks.
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/react-swr#data-fetching React SWR Data Fetching Docs}
+   * @see {@link https://orpc.dev/docs/integrations/react-swr#data-fetching React SWR Data Fetching Docs}
    */
   fetcher(
     ...rest: MaybeOptionalOptions<CreateFetcherOptions<TClientContext>>
   ): Fetcher<TInput, TOutput>
 
   /**
-   * Generate a subscriber function that subscribes to an [Event Iterator](https://orpc.unnoq.com/docs/event-iterator) for use with useSWRSubscription, etc.
+   * Generate a subscriber function that subscribes to an [Event Iterator](https://orpc.dev/docs/event-iterator) for use with useSWRSubscription, etc.
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/react-swr#subscriptions React SWR Subscriptions Docs}
+   * @see {@link https://orpc.dev/docs/integrations/react-swr#subscriptions React SWR Subscriptions Docs}
    */
   subscriber(
     ...rest: MaybeOptionalOptions<CreateSubscriberOptions<TClientContext>>
   ): Subscriber<TInput, InferAsyncIterableYield<TOutput>[], TError>
 
   /**
-   * Generate a live subscriber that subscribes to the latest events from an [Event Iterator](https://orpc.unnoq.com/docs/event-iterator) for use with useSWRSubscription, etc.
+   * Generate a live subscriber that subscribes to the latest events from an [Event Iterator](https://orpc.dev/docs/event-iterator) for use with useSWRSubscription, etc.
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/react-swr#subscriptions React SWR Subscriptions Docs}
+   * @see {@link https://orpc.dev/docs/integrations/react-swr#subscriptions React SWR Subscriptions Docs}
    */
   liveSubscriber(
     ...rest: MaybeOptionalOptions<CreateFetcherOptions<TClientContext>>
@@ -55,7 +55,7 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Generate a mutator function for use with useSWRMutation, etc.
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/react-swr#mutations React SWR Mutations Docs}
+   * @see {@link https://orpc.dev/docs/integrations/react-swr#mutations React SWR Mutations Docs}
    */
   mutator(
     ...rest: MaybeOptionalOptions<CreateFetcherOptions<TClientContext>>

@@ -32,7 +32,7 @@ export interface SimpleCsrfProtectionLinkPluginOptions<T extends ClientContext> 
  * It helps ensure that requests to your procedures originate from JavaScript code,
  * not from other sources like standard HTML forms or direct browser navigation.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/simple-csrf-protection Simple CSRF Protection Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/simple-csrf-protection Simple CSRF Protection Plugin Docs}
  */
 export class SimpleCsrfProtectionLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   private readonly headerName: Exclude<SimpleCsrfProtectionLinkPluginOptions<T>['headerName'], undefined>

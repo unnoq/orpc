@@ -7,7 +7,7 @@ import type { Procedure } from './procedure'
  * Represents a router, which defines a hierarchical structure of procedures.
  *
  * @info A procedure is a router too.
- * @see {@link https://orpc.unnoq.com/docs/contract-first/define-contract#contract-router Contract Router Docs}
+ * @see {@link https://orpc.dev/docs/contract-first/define-contract#contract-router Contract Router Docs}
  */
 export type Router<T extends AnyContractRouter, TInitialContext extends Context>
   = T extends ContractProcedure<infer UInputSchema, infer UOutputSchema, infer UErrorMap, infer UMeta>
@@ -26,7 +26,7 @@ export type InferRouterInitialContext<T extends AnyRouter> = T extends Router<an
  * Infer all initial context of the router.
  *
  * @info A procedure is a router too.
- * @see {@link https://orpc.unnoq.com/docs/router#utilities Router Utilities Docs}
+ * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
  */
 export type InferRouterInitialContexts<T extends AnyRouter>
   = T extends Procedure<infer UInitialContext, any, any, any, any, any>
@@ -39,7 +39,7 @@ export type InferRouterInitialContexts<T extends AnyRouter>
  * Infer all current context of the router.
  *
  * @info A procedure is a router too.
- * @see {@link https://orpc.unnoq.com/docs/router#utilities Router Utilities Docs}
+ * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
  */
 export type InferRouterCurrentContexts<T extends AnyRouter>
   = T extends Procedure<any, infer UCurrentContext, any, any, any, any>
@@ -52,7 +52,7 @@ export type InferRouterCurrentContexts<T extends AnyRouter>
  * Infer all router inputs
  *
  * @info A procedure is a router too.
- * @see {@link https://orpc.unnoq.com/docs/router#utilities Router Utilities Docs}
+ * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
  */
 export type InferRouterInputs<T extends AnyRouter>
   = T extends Procedure<any, any, infer UInputSchema, any, any, any>
@@ -65,7 +65,7 @@ export type InferRouterInputs<T extends AnyRouter>
  * Infer all router outputs
  *
  * @info A procedure is a router too.
- * @see {@link https://orpc.unnoq.com/docs/router#utilities Router Utilities Docs}
+ * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
  */
 export type InferRouterOutputs<T extends AnyRouter>
   = T extends Procedure<any, any, any, infer UOutputSchema, any, any>

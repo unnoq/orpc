@@ -27,7 +27,7 @@ export interface RouterImplementer<
   /**
    * Creates a middleware.
    *
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   middleware<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, TInput, TOutput = any>( // = any here is important to make middleware can be used in any output by default
     middleware: Middleware<
@@ -45,7 +45,7 @@ export interface RouterImplementer<
    *
    * @info Supports both normal middleware and inline middleware implementations.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   use<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -66,7 +66,7 @@ export interface RouterImplementer<
    * Applies all of the previously defined options to the specified router.
    * And enforces the router match the contract.
    *
-   * @see {@link https://orpc.unnoq.com/docs/router#extending-router Extending Router Docs}
+   * @see {@link https://orpc.dev/docs/router#extending-router Extending Router Docs}
    */
   router<U extends Router<T, TCurrentContext>>(
     router: U
@@ -77,7 +77,7 @@ export interface RouterImplementer<
    * And applies all of the previously defined options to the specified router.
    * And enforces the router match the contract.
    *
-   * @see {@link https://orpc.unnoq.com/docs/router#extending-router Extending Router Docs}
+   * @see {@link https://orpc.dev/docs/router#extending-router Extending Router Docs}
    */
   lazy<U extends Router<T, TCurrentContext>>(
     loader: () => Promise<{ default: U }>
@@ -197,15 +197,15 @@ export type Implementer<
     /**
      * Set or override the initial context.
      *
-     * @see {@link https://orpc.unnoq.com/docs/context Context Docs}
+     * @see {@link https://orpc.dev/docs/context Context Docs}
      */
     $context<U extends Context>(): Implementer<TContract, U & Record<never, never>, U> // We need `& Record<never, never>` to deal with `has no properties in common with type` error
 
     /**
      * Sets or overrides the config.
      *
-     * @see {@link https://orpc.unnoq.com/docs/client/server-side#middlewares-order Middlewares Order Docs}
-     * @see {@link https://orpc.unnoq.com/docs/best-practices/dedupe-middleware#configuration Dedupe Middleware Docs}
+     * @see {@link https://orpc.dev/docs/client/server-side#middlewares-order Middlewares Order Docs}
+     * @see {@link https://orpc.dev/docs/best-practices/dedupe-middleware#configuration Dedupe Middleware Docs}
      */
     $config(config: BuilderConfig): Implementer<TContract, TInitialContext, TCurrentContext>
   }

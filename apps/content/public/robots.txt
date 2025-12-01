@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://orpc.unnoq.com/sitemap.xml
+Sitemap: https://orpc.dev/sitemap.xml

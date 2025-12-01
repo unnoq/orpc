@@ -11,7 +11,7 @@ import { createIsomorphicFn } from '@tanstack/react-start'
 /**
  * This is part of the Optimize SSR setup.
  *
- * @see {@link https://orpc.unnoq.com/docs/adapters/tanstack-start#optimize-ssr}
+ * @see {@link https://orpc.dev/docs/adapters/tanstack-start#optimize-ssr}
  */
 const getORPCClient = createIsomorphicFn()
   .server(() => createRouterClient(router, {

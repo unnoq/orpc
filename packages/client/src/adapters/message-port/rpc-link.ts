@@ -10,8 +10,8 @@ export interface RPCLinkOptions<T extends ClientContext>
 /**
  * The RPC Link for common message port implementations.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/rpc-link RPC Link Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/message-port Message Port Adapter Docs}
+ * @see {@link https://orpc.dev/docs/client/rpc-link RPC Link Docs}
+ * @see {@link https://orpc.dev/docs/adapters/message-port Message Port Adapter Docs}
  */
 export class RPCLink<T extends ClientContext> extends StandardRPCLink<T> {
   constructor(options: RPCLinkOptions<T>) {

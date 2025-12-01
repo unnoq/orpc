@@ -27,7 +27,7 @@ export interface PopulateContractRouterPathsOptions {
  * This utility automatically populates any missing paths
  * Using the router's keys + `/`.
  *
- * @see {@link https://orpc.unnoq.com/docs/openapi/integrations/implement-contract-in-nest#define-your-contract NestJS Implement Contract Docs}
+ * @see {@link https://orpc.dev/docs/openapi/integrations/implement-contract-in-nest#define-your-contract NestJS Implement Contract Docs}
  */
 export function populateContractRouterPaths<T extends AnyContractRouter>(router: T, options: PopulateContractRouterPathsOptions = {}): PopulatedContractRouterPaths<T> {
   const path = toArray(options.path)

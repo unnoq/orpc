@@ -24,8 +24,8 @@ export const orpcErrorToNextHttpFallbackInterceptor: Interceptor<any, Promise<an
 /**
  * Create a server action accept a form data and deserialize with bracket notation.
  *
- * @see {@link https://orpc.unnoq.com/docs/server-action#createformaction-utility Create Form Action Utility Docs}
- * @see {@link https://orpc.unnoq.com/docs/openapi/bracket-notation Bracket Notation Docs}
+ * @see {@link https://orpc.dev/docs/server-action#createformaction-utility Create Form Action Utility Docs}
+ * @see {@link https://orpc.dev/docs/openapi/bracket-notation Bracket Notation Docs}
  */
 export function createFormAction<
   TInitialContext extends Context,

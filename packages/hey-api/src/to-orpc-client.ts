@@ -17,7 +17,7 @@ export type experimental_ToORPCClientResult<T extends Record<string, any>> = {
 /**
  * Convert a Hey API SDK to an oRPC client.
  *
- * @see {@link https://orpc.unnoq.com/docs/integrations/hey-api Hey API Docs}
+ * @see {@link https://orpc.dev/docs/integrations/hey-api Hey API Docs}
  */
 export function experimental_toORPCClient<T extends Record<string, any>>(sdk: T): experimental_ToORPCClientResult<T> {
   const client = {} as Record<string, Client<Record<never, never>, undefined | Record<any, any>, any, any>>

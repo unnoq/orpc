@@ -7,8 +7,8 @@ import { BunWsHandler } from './handler'
 /**
  * RPC Handler for Bun WS adapter
  *
- * @see {@link https://orpc.unnoq.com/docs/rpc-handler RPC Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/websocket Websocket Adapter Docs}
+ * @see {@link https://orpc.dev/docs/rpc-handler RPC Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/websocket Websocket Adapter Docs}
  */
 export class RPCHandler<T extends Context> extends BunWsHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<StandardRPCHandlerOptions<T>> = {}) {

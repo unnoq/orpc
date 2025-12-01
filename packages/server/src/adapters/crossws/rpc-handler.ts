@@ -7,8 +7,8 @@ import { experimental_CrosswsHandler as CrosswsHandler } from './handler'
 /**
  * RPC Handler for Crossws adapter
  *
- * @see {@link https://orpc.unnoq.com/docs/rpc-handler RPC Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/websocket Websocket Adapter Docs}
+ * @see {@link https://orpc.dev/docs/rpc-handler RPC Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/websocket Websocket Adapter Docs}
  */
 export class experimental_RPCHandler<T extends Context> extends CrosswsHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<StandardRPCHandlerOptions<T>> = {}) {

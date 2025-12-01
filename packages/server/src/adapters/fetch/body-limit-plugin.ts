@@ -13,7 +13,7 @@ export interface BodyLimitPluginOptions {
 /**
  * The Body Limit Plugin restricts the size of the request body for the Fetch Server.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/body-limit Body Limit Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/body-limit Body Limit Plugin Docs}
  */
 export class BodyLimitPlugin<T extends Context> implements FetchHandlerPlugin<T> {
   private readonly maxBodySize: number

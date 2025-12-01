@@ -18,8 +18,8 @@ export interface RPCHandlerOptions<T extends Context> extends NodeHttpHandlerOpt
 /**
  * RPC Handler for Node.js HTTP Server
  *
- * @see {@link https://orpc.unnoq.com/docs/rpc-handler RPC Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/http HTTP Adapter Docs}
+ * @see {@link https://orpc.dev/docs/rpc-handler RPC Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/http HTTP Adapter Docs}
  */
 export class RPCHandler<T extends Context> extends NodeHttpHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<RPCHandlerOptions<T>> = {}) {

@@ -315,10 +315,10 @@ export default withMermaid(defineConfig({
     },
   },
   head: [
-    ['meta', { property: 'og:image', content: 'https://orpc.unnoq.com/og.jpg' }],
+    ['meta', { property: 'og:image', content: 'https://orpc.dev/og.jpg' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'twitter:domain', content: 'orpc.unnoq.com' }],
-    ['meta', { property: 'twitter:image', content: 'https://orpc.unnoq.com/og.jpg' }],
+    ['meta', { property: 'twitter:domain', content: 'orpc.dev' }],
+    ['meta', { property: 'twitter:image', content: 'https://orpc.dev/og.jpg' }],
     ['meta', { property: 'twitter:card', content: 'summary_large_image' }],
     ['link', { rel: 'shortcut icon', href: '/icon.svg', type: 'image/svg+xml' }],
     ['script', {}, `

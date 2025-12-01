@@ -74,7 +74,7 @@ const server = createServer(async (req, res) => {
         <title>My Client</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/svg+xml" href="https://orpc.unnoq.com/icon.svg" />
+        <link rel="icon" type="image/svg+xml" href="https://orpc.dev/icon.svg" />
       </head>
       <body>
         <div id="app"></div>

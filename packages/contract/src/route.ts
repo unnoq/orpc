@@ -9,7 +9,7 @@ export interface Route {
    * The HTTP method of the procedure.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
    */
   method?: HTTPMethod
 
@@ -17,7 +17,7 @@ export interface Route {
    * The HTTP path of the procedure.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
    */
   path?: HTTPPath
 
@@ -33,7 +33,7 @@ export interface Route {
    * The summary of the procedure.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
    */
   summary?: string
 
@@ -41,7 +41,7 @@ export interface Route {
    * The description of the procedure.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
    */
   description?: string
 
@@ -49,7 +49,7 @@ export interface Route {
    * Marks the procedure as deprecated.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
    */
   deprecated?: boolean
 
@@ -57,7 +57,7 @@ export interface Route {
    * The tags of the procedure.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
    */
   tags?: readonly string[]
 
@@ -66,7 +66,7 @@ export interface Route {
    * The status code must be in the 200-399 range.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
    * @default 200
    */
   successStatus?: number
@@ -75,7 +75,7 @@ export interface Route {
    * The description of the response when the procedure is successful.
    *  This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
    * @default 'OK'
    */
   successDescription?: string
@@ -99,7 +99,7 @@ export interface Route {
    * }
    * ```
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
+   * @see {@link https://orpc.dev/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
    * @default 'compact'
    */
   inputStructure?: InputStructure
@@ -125,7 +125,7 @@ export interface Route {
    * };
    * ```
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
+   * @see {@link https://orpc.dev/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
    * @default 'compact'
    */
   outputStructure?: OutputStructure
@@ -133,7 +133,7 @@ export interface Route {
   /**
    * Override entire auto-generated OpenAPI Operation Object Specification.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata Operation Metadata Docs}
    */
   spec?: OpenAPI.OperationObject | ((current: OpenAPI.OperationObject) => OpenAPI.OperationObject)
 }

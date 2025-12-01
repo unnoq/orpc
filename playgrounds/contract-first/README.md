@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) + [Contract-First](https://orpc.unnoq.com/docs/contract-first/define-contract) + [Node.js](https://nodejs.org).
+This is a playground for [oRPC](https://orpc.dev) + [Contract-First](https://orpc.dev/docs/contract-first/define-contract) + [Node.js](https://nodejs.org).
 
 ## Getting Started
 

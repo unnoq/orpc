@@ -28,7 +28,7 @@ export interface BuilderWithMiddlewares<
    * Adds type-safe custom errors.
    * The provided errors are spared-merged with any existing errors.
    *
-   * @see {@link https://orpc.unnoq.com/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
+   * @see {@link https://orpc.dev/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
    */
   'errors'<U extends ErrorMap>(
     errors: U,
@@ -46,7 +46,7 @@ export interface BuilderWithMiddlewares<
    *
    * @info Supports both normal middleware and inline middleware implementations.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -70,7 +70,7 @@ export interface BuilderWithMiddlewares<
    * Sets or updates the metadata.
    * The provided metadata is spared-merged with any existing metadata.
    *
-   * @see {@link https://orpc.unnoq.com/docs/metadata Metadata Docs}
+   * @see {@link https://orpc.dev/docs/metadata Metadata Docs}
    */
   'meta'(
     meta: TMeta,
@@ -81,8 +81,8 @@ export interface BuilderWithMiddlewares<
    * The provided route is spared-merged with any existing route.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
-   * @see {@link https://orpc.unnoq.com/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
    */
   'route'(
     route: Route,
@@ -91,7 +91,7 @@ export interface BuilderWithMiddlewares<
   /**
    * Defines the input validation schema.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure#input-output-validation Input Validation Docs}
+   * @see {@link https://orpc.dev/docs/procedure#input-output-validation Input Validation Docs}
    */
   'input'<USchema extends AnySchema>(
     schema: USchema,
@@ -100,7 +100,7 @@ export interface BuilderWithMiddlewares<
   /**
    * Defines the output validation schema.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure#input-output-validation Output Validation Docs}
+   * @see {@link https://orpc.dev/docs/procedure#input-output-validation Output Validation Docs}
    */
   'output'<USchema extends AnySchema>(
     schema: USchema,
@@ -109,7 +109,7 @@ export interface BuilderWithMiddlewares<
   /**
    * Defines the handler of the procedure.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure Procedure Docs}
+   * @see {@link https://orpc.dev/docs/procedure Procedure Docs}
    */
   'handler'<UFuncOutput>(
     handler: ProcedureHandler<TCurrentContext, unknown, UFuncOutput, TErrorMap, TMeta>,
@@ -121,7 +121,7 @@ export interface BuilderWithMiddlewares<
    *
    * @note This option does not affect procedures that do not define a path in their route definition.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing#route-prefixes OpenAPI Route Prefixes Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing#route-prefixes OpenAPI Route Prefixes Docs}
    */
   'prefix'(prefix: HTTPPath): RouterBuilder<TInitialContext, TCurrentContext, TErrorMap, TMeta>
 
@@ -129,14 +129,14 @@ export interface BuilderWithMiddlewares<
    * Adds tags to all procedures in the router.
    * This helpful when you want to group procedures together in the OpenAPI specification.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
    */
   'tag'(...tags: string[]): RouterBuilder<TInitialContext, TCurrentContext, TErrorMap, TMeta>
 
   /**
    * Applies all of the previously defined options to the specified router.
    *
-   * @see {@link https://orpc.unnoq.com/docs/router#extending-router Extending Router Docs}
+   * @see {@link https://orpc.dev/docs/router#extending-router Extending Router Docs}
    */
   'router'<U extends Router<ContractRouter<TMeta>, TCurrentContext>>(
     router: U
@@ -146,7 +146,7 @@ export interface BuilderWithMiddlewares<
    * Create a lazy router
    * And applies all of the previously defined options to the specified router.
    *
-   * @see {@link https://orpc.unnoq.com/docs/router#extending-router Extending Router Docs}
+   * @see {@link https://orpc.dev/docs/router#extending-router Extending Router Docs}
    */
   'lazy'<U extends Router<ContractRouter<TMeta>, TCurrentContext>>(
     loader: () => Promise<{ default: U }>,
@@ -170,7 +170,7 @@ export interface ProcedureBuilder<
    * Adds type-safe custom errors.
    * The provided errors are spared-merged with any existing errors.
    *
-   * @see {@link https://orpc.unnoq.com/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
+   * @see {@link https://orpc.dev/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
    */
   'errors'<U extends ErrorMap>(
     errors: U,
@@ -188,7 +188,7 @@ export interface ProcedureBuilder<
    *
    * @info Supports both normal middleware and inline middleware implementations.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -212,7 +212,7 @@ export interface ProcedureBuilder<
    * Sets or updates the metadata.
    * The provided metadata is spared-merged with any existing metadata.
    *
-   * @see {@link https://orpc.unnoq.com/docs/metadata Metadata Docs}
+   * @see {@link https://orpc.dev/docs/metadata Metadata Docs}
    */
   'meta'(
     meta: TMeta,
@@ -223,8 +223,8 @@ export interface ProcedureBuilder<
    * The provided route is spared-merged with any existing route.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
-   * @see {@link https://orpc.unnoq.com/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
    */
   'route'(
     route: Route,
@@ -233,7 +233,7 @@ export interface ProcedureBuilder<
   /**
    * Defines the input validation schema.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure#input-output-validation Input Validation Docs}
+   * @see {@link https://orpc.dev/docs/procedure#input-output-validation Input Validation Docs}
    */
   'input'<USchema extends AnySchema>(
     schema: USchema,
@@ -242,7 +242,7 @@ export interface ProcedureBuilder<
   /**
    * Defines the output validation schema.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure#input-output-validation Output Validation Docs}
+   * @see {@link https://orpc.dev/docs/procedure#input-output-validation Output Validation Docs}
    */
   'output'<USchema extends AnySchema>(
     schema: USchema,
@@ -251,7 +251,7 @@ export interface ProcedureBuilder<
   /**
    * Defines the handler of the procedure.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure Procedure Docs}
+   * @see {@link https://orpc.dev/docs/procedure Procedure Docs}
    */
   'handler'<UFuncOutput>(
     handler: ProcedureHandler<TCurrentContext, unknown, UFuncOutput, TErrorMap, TMeta>,
@@ -275,7 +275,7 @@ export interface ProcedureBuilderWithInput<
    * Adds type-safe custom errors.
    * The provided errors are spared-merged with any existing errors.
    *
-   * @see {@link https://orpc.unnoq.com/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
+   * @see {@link https://orpc.dev/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
    */
   'errors'<U extends ErrorMap>(
     errors: U,
@@ -287,7 +287,7 @@ export interface ProcedureBuilderWithInput<
    * @info Supports both normal middleware and inline middleware implementations.
    * @info Pass second argument to map the input.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -313,7 +313,7 @@ export interface ProcedureBuilderWithInput<
    * @info Supports both normal middleware and inline middleware implementations.
    * @info Pass second argument to map the input.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInput, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -338,7 +338,7 @@ export interface ProcedureBuilderWithInput<
    * Sets or updates the metadata.
    * The provided metadata is spared-merged with any existing metadata.
    *
-   * @see {@link https://orpc.unnoq.com/docs/metadata Metadata Docs}
+   * @see {@link https://orpc.dev/docs/metadata Metadata Docs}
    */
   'meta'(
     meta: TMeta,
@@ -349,8 +349,8 @@ export interface ProcedureBuilderWithInput<
    * The provided route is spared-merged with any existing route.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
-   * @see {@link https://orpc.unnoq.com/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
    */
   'route'(
     route: Route,
@@ -359,7 +359,7 @@ export interface ProcedureBuilderWithInput<
   /**
    * Defines the output validation schema.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure#input-output-validation Output Validation Docs}
+   * @see {@link https://orpc.dev/docs/procedure#input-output-validation Output Validation Docs}
    */
   'output'<USchema extends AnySchema>(
     schema: USchema,
@@ -368,7 +368,7 @@ export interface ProcedureBuilderWithInput<
   /**
    * Defines the handler of the procedure.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure Procedure Docs}
+   * @see {@link https://orpc.dev/docs/procedure Procedure Docs}
    */
   'handler'<UFuncOutput>(
     handler: ProcedureHandler<TCurrentContext, InferSchemaOutput<TInputSchema>, UFuncOutput, TErrorMap, TMeta>,
@@ -392,7 +392,7 @@ export interface ProcedureBuilderWithOutput<
    * Adds type-safe custom errors.
    * The provided errors are spared-merged with any existing errors.
    *
-   * @see {@link https://orpc.unnoq.com/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
+   * @see {@link https://orpc.dev/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
    */
   'errors'<U extends ErrorMap>(
     errors: U,
@@ -410,7 +410,7 @@ export interface ProcedureBuilderWithOutput<
    *
    * @info Supports both normal middleware and inline middleware implementations.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -434,7 +434,7 @@ export interface ProcedureBuilderWithOutput<
    * Sets or updates the metadata.
    * The provided metadata is spared-merged with any existing metadata.
    *
-   * @see {@link https://orpc.unnoq.com/docs/metadata Metadata Docs}
+   * @see {@link https://orpc.dev/docs/metadata Metadata Docs}
    */
   'meta'(
     meta: TMeta,
@@ -445,8 +445,8 @@ export interface ProcedureBuilderWithOutput<
    * The provided route is spared-merged with any existing route.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
-   * @see {@link https://orpc.unnoq.com/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
    */
   'route'(
     route: Route,
@@ -455,7 +455,7 @@ export interface ProcedureBuilderWithOutput<
   /**
    * Defines the input validation schema.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure#input-output-validation Input Validation Docs}
+   * @see {@link https://orpc.dev/docs/procedure#input-output-validation Input Validation Docs}
    */
   'input'<USchema extends AnySchema>(
     schema: USchema,
@@ -464,7 +464,7 @@ export interface ProcedureBuilderWithOutput<
   /**
    * Defines the handler of the procedure.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure Procedure Docs}
+   * @see {@link https://orpc.dev/docs/procedure Procedure Docs}
    */
   'handler'(
     handler: ProcedureHandler<TCurrentContext, unknown, InferSchemaInput<TOutputSchema>, TErrorMap, TMeta>,
@@ -488,7 +488,7 @@ export interface ProcedureBuilderWithInputOutput<
    * Adds type-safe custom errors.
    * The provided errors are spared-merged with any existing errors.
    *
-   * @see {@link https://orpc.unnoq.com/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
+   * @see {@link https://orpc.dev/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
    */
   'errors'<U extends ErrorMap>(
     errors: U,
@@ -500,7 +500,7 @@ export interface ProcedureBuilderWithInputOutput<
    * @info Supports both normal middleware and inline middleware implementations.
    * @info Pass second argument to map the input.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -526,7 +526,7 @@ export interface ProcedureBuilderWithInputOutput<
    * @info Supports both normal middleware and inline middleware implementations.
    * @info Pass second argument to map the input.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInput, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -551,7 +551,7 @@ export interface ProcedureBuilderWithInputOutput<
    * Sets or updates the metadata.
    * The provided metadata is spared-merged with any existing metadata.
    *
-   * @see {@link https://orpc.unnoq.com/docs/metadata Metadata Docs}
+   * @see {@link https://orpc.dev/docs/metadata Metadata Docs}
    */
   'meta'(
     meta: TMeta,
@@ -562,8 +562,8 @@ export interface ProcedureBuilderWithInputOutput<
    * The provided route is spared-merged with any existing route.
    * This option is typically relevant when integrating with OpenAPI.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing OpenAPI Routing Docs}
-   * @see {@link https://orpc.unnoq.com/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing OpenAPI Routing Docs}
+   * @see {@link https://orpc.dev/docs/openapi/input-output-structure OpenAPI Input/Output Structure Docs}
    */
   'route'(
     route: Route,
@@ -572,7 +572,7 @@ export interface ProcedureBuilderWithInputOutput<
   /**
    * Defines the handler of the procedure.
    *
-   * @see {@link https://orpc.unnoq.com/docs/procedure Procedure Docs}
+   * @see {@link https://orpc.dev/docs/procedure Procedure Docs}
    */
   'handler'(
     handler: ProcedureHandler<TCurrentContext, InferSchemaOutput<TInputSchema>, InferSchemaInput<TOutputSchema>, TErrorMap, TMeta>,
@@ -594,7 +594,7 @@ export interface RouterBuilder<
    * Adds type-safe custom errors.
    * The provided errors are spared-merged with any existing errors.
    *
-   * @see {@link https://orpc.unnoq.com/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
+   * @see {@link https://orpc.dev/docs/error-handling#type%E2%80%90safe-error-handling Type-Safe Error Handling Docs}
    */
   'errors'<U extends ErrorMap>(
     errors: U,
@@ -605,7 +605,7 @@ export interface RouterBuilder<
    *
    * @info Supports both normal middleware and inline middleware implementations.
    * @note The current context must be satisfy middleware dependent-context
-   * @see {@link https://orpc.unnoq.com/docs/middleware Middleware Docs}
+   * @see {@link https://orpc.dev/docs/middleware Middleware Docs}
    */
   'use'<UOutContext extends IntersectPick<TCurrentContext, UOutContext>, UInContext extends Context = TCurrentContext>(
     middleware: Middleware<
@@ -629,7 +629,7 @@ export interface RouterBuilder<
    *
    * @note This option does not affect procedures that do not define a path in their route definition.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/routing#route-prefixes OpenAPI Route Prefixes Docs}
+   * @see {@link https://orpc.dev/docs/openapi/routing#route-prefixes OpenAPI Route Prefixes Docs}
    */
   'prefix'(prefix: HTTPPath): RouterBuilder<TInitialContext, TCurrentContext, TErrorMap, TMeta>
 
@@ -637,14 +637,14 @@ export interface RouterBuilder<
    * Adds tags to all procedures in the router.
    * This helpful when you want to group procedures together in the OpenAPI specification.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification#operation-metadata OpenAPI Operation Metadata Docs}
    */
   'tag'(...tags: string[]): RouterBuilder<TInitialContext, TCurrentContext, TErrorMap, TMeta>
 
   /**
    * Applies all of the previously defined options to the specified router.
    *
-   * @see {@link https://orpc.unnoq.com/docs/router#extending-router Extending Router Docs}
+   * @see {@link https://orpc.dev/docs/router#extending-router Extending Router Docs}
    */
   'router'<U extends Router<ContractRouter<TMeta>, TCurrentContext>>(
     router: U
@@ -654,7 +654,7 @@ export interface RouterBuilder<
    * Create a lazy router
    * And applies all of the previously defined options to the specified router.
    *
-   * @see {@link https://orpc.unnoq.com/docs/router#extending-router Extending Router Docs}
+   * @see {@link https://orpc.dev/docs/router#extending-router Extending Router Docs}
    */
   'lazy'<U extends Router<ContractRouter<TMeta>, TCurrentContext>>(
     loader: () => Promise<{ default: U }>,

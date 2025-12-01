@@ -42,7 +42,7 @@ export interface RetryAfterPluginOptions<T extends ClientContext> {
  * The Retry After Plugin automatically retries requests based on server `Retry-After` headers.
  * This is particularly useful for handling rate limiting and temporary server unavailability.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/retry-after Retry After Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/retry-after Retry After Plugin Docs}
  */
 export class RetryAfterPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   private readonly condition: Exclude<RetryAfterPluginOptions<T>['condition'], undefined>

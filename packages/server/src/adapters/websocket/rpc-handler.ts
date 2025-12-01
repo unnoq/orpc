@@ -9,8 +9,8 @@ export interface RPCHandlerOptions<T extends Context> extends StandardRPCHandler
 /**
  * RPC Handler for Websocket adapter
  *
- * @see {@link https://orpc.unnoq.com/docs/rpc-handler RPC Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/websocket Websocket Adapter Docs}
+ * @see {@link https://orpc.dev/docs/rpc-handler RPC Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/websocket Websocket Adapter Docs}
  */
 export class RPCHandler<T extends Context> extends WebsocketHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<RPCHandlerOptions<T>> = {}) {

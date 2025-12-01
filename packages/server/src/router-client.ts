@@ -22,7 +22,7 @@ export type RouterClient<TRouter extends AnyRouter, TClientContext extends Clien
 /**
  * Create Server-side client from a router.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/server-side Server-side Client Docs}
+ * @see {@link https://orpc.dev/docs/client/server-side Server-side Client Docs}
  */
 export function createRouterClient<T extends AnyRouter, TClientContext extends ClientContext>(
   router: Lazyable<T | undefined>,

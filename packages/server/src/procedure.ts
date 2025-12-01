@@ -50,7 +50,7 @@ export interface ProcedureDef<
 /**
  * This class represents a procedure.
  *
- * @see {@link https://orpc.unnoq.com/docs/procedure Procedure Docs}
+ * @see {@link https://orpc.dev/docs/procedure Procedure Docs}
  */
 export class Procedure<
   TInitialContext extends Context,

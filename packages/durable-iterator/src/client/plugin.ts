@@ -61,7 +61,7 @@ export interface DurableIteratorLinkPluginOptions<T extends ClientContext> exten
 }
 
 /**
- * @see {@link https://orpc.unnoq.com/docs/integrations/durable-iterator Durable Iterator Integration}
+ * @see {@link https://orpc.dev/docs/integrations/durable-iterator Durable Iterator Integration}
  */
 export class DurableIteratorLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   readonly CONTEXT_SYMBOL = Symbol('ORPC_DURABLE_ITERATOR_LINK_PLUGIN_CONTEXT')

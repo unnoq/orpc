@@ -7,8 +7,8 @@ import { WsHandler } from './handler'
 /**
  * RPC Handler for ws (node ws) adapter
  *
- * @see {@link https://orpc.unnoq.com/docs/rpc-handler RPC Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/websocket Websocket Adapter Docs}
+ * @see {@link https://orpc.dev/docs/rpc-handler RPC Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/websocket Websocket Adapter Docs}
  */
 export class RPCHandler<T extends Context> extends WsHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<StandardRPCHandlerOptions<T>> = {}) {

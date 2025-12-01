@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This playground demonstrates the integration of [oRPC](https://orpc.unnoq.com), [Bun WebSocket](https://bun.com/docs/api/websockets), and [OpenTelemetry](https://opentelemetry.io).
+This playground demonstrates the integration of [oRPC](https://orpc.dev), [Bun WebSocket](https://bun.com/docs/api/websockets), and [OpenTelemetry](https://opentelemetry.io).
 
 ## Getting Started
 

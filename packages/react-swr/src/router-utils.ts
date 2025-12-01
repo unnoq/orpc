@@ -20,7 +20,7 @@ export interface CreateRouterUtilsOptions {
  * Create a swr router utils from a client.
  *
  * @info Both client-side and server-side clients are supported.
- * @see {@link https://orpc.unnoq.com/docs/integrations/react-swr React SWR Integration}
+ * @see {@link https://orpc.dev/docs/integrations/react-swr React SWR Integration}
  */
 export function createRouterUtils<T extends NestedClient<any>>(
   client: T,

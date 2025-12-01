@@ -32,7 +32,7 @@ const MethodDecoratorMap = {
 /**
  * Decorator in controller handler to implement a oRPC contract.
  *
- * @see {@link https://orpc.unnoq.com/docs/openapi/integrations/implement-contract-in-nest#implement-your-contract NestJS Implement Contract Docs}
+ * @see {@link https://orpc.dev/docs/openapi/integrations/implement-contract-in-nest#implement-your-contract NestJS Implement Contract Docs}
  */
 export function Implement<T extends ContractRouter<any>>(
   contract: T,

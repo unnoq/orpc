@@ -9,7 +9,7 @@ export interface DurableIteratorHandlerPluginContext {
 }
 
 /**
- * @see {@link https://orpc.unnoq.com/docs/integrations/durable-iterator Durable Iterator Integration}
+ * @see {@link https://orpc.dev/docs/integrations/durable-iterator Durable Iterator Integration}
  */
 export class DurableIteratorHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   readonly CONTEXT_SYMBOL = Symbol('ORPC_DURABLE_ITERATOR_HANDLER_PLUGIN_CONTEXT')

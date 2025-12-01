@@ -5,7 +5,7 @@ import type { ClientContext, ClientLink, ClientOptions } from './types'
  * DynamicLink provides a way to dynamically resolve and delegate calls to other ClientLinks
  * based on the request path, input, and context.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/dynamic-link Dynamic Link Docs}
+ * @see {@link https://orpc.dev/docs/client/dynamic-link Dynamic Link Docs}
  */
 export class DynamicLink<TClientContext extends ClientContext> implements ClientLink<TClientContext> {
   constructor(

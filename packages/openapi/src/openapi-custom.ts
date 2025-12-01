@@ -10,7 +10,7 @@ export type OverrideOperationValue
 /**
  * Customize The Operation Object by proxy an error map item or a middleware.
  *
- * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification#customizing-operation-objects Customizing Operation Objects Docs}
+ * @see {@link https://orpc.dev/docs/openapi/openapi-specification#customizing-operation-objects Customizing Operation Objects Docs}
  */
 export function customOpenAPIOperation<T extends object>(o: T, extend: OverrideOperationValue): T {
   return new Proxy(o, {

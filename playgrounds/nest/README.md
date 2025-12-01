@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [NestJS](https://nestjs.com).
+This is a playground for [oRPC](https://orpc.dev) and [NestJS](https://nestjs.com).
 
 ## Getting Started
 

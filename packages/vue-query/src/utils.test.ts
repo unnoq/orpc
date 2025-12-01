@@ -3,7 +3,7 @@ import { unrefDeep } from './utils'
 
 it('unrefDeep', () => {
   const date = new Date()
-  const url = new URL('https://orpc.unnoq.com')
+  const url = new URL('https://orpc.dev')
   const regex = /regex/
   const set = new Set([1, 2, 3])
   const map = new Map([['a', 1], ['b', 2]])

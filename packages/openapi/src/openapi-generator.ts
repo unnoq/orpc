@@ -86,7 +86,7 @@ export interface OpenAPIGeneratorGenerateOptions extends Partial<Omit<OpenAPI.Do
 /**
  * The generator that converts oRPC routers/contracts to OpenAPI specifications.
  *
- * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification OpenAPI Specification Docs}
+ * @see {@link https://orpc.dev/docs/openapi/openapi-specification OpenAPI Specification Docs}
  */
 export class OpenAPIGenerator {
   private readonly serializer: StandardOpenAPIJsonSerializer
@@ -100,7 +100,7 @@ export class OpenAPIGenerator {
   /**
    * Generates OpenAPI specifications from oRPC routers/contracts.
    *
-   * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-specification OpenAPI Specification Docs}
+   * @see {@link https://orpc.dev/docs/openapi/openapi-specification OpenAPI Specification Docs}
    */
   async generate(
     router: AnyContractRouter | AnyRouter,

@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [Cloudflare Workers](https://workers.cloudflare.com).
+This is a playground for [oRPC](https://orpc.dev) and [Cloudflare Workers](https://workers.cloudflare.com).
 
 ## Getting Started
 

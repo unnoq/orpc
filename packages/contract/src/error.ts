@@ -15,7 +15,7 @@ export interface ValidationErrorOptions extends ErrorOptions {
 /**
  * This errors usually used for ORPCError.cause when the error is a validation error.
  *
- * @see {@link https://orpc.unnoq.com/docs/advanced/validation-errors Validation Errors Docs}
+ * @see {@link https://orpc.dev/docs/advanced/validation-errors Validation Errors Docs}
  */
 export class ValidationError extends Error {
   readonly issues: readonly SchemaIssue[]

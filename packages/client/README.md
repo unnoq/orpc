@@ -1,5 +1,5 @@
 <div align="center">
-  <image align="center" src="https://orpc.unnoq.com/logo.webp" width=280 alt="oRPC logo" />
+  <image align="center" src="https://orpc.dev/logo.webp" width=280 alt="oRPC logo" />
 </div>
 
 <h1></h1>
@@ -45,7 +45,7 @@
 
 ## Documentation
 
-You can find the full documentation [here](https://orpc.unnoq.com).
+You can find the full documentation [here](https://orpc.dev).
 
 ## Packages
 
@@ -66,7 +66,7 @@ You can find the full documentation [here](https://orpc.unnoq.com).
 
 ## `@orpc/client`
 
-Consume your API on the client with type-safety. Read the [documentation](https://orpc.unnoq.com/docs/client/client-side) for more information.
+Consume your API on the client with type-safety. Read the [documentation](https://orpc.dev/docs/client/client-side) for more information.
 
 ```ts
 import { createORPCClient } from '@orpc/client'

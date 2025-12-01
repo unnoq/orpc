@@ -2,7 +2,7 @@
 > This is an internal package. Breaking changes may be introduced without notice - use at your own risk.
 
 <div align="center">
-  <image align="center" src="https://orpc.unnoq.com/logo.webp" width=280 alt="oRPC logo" />
+  <image align="center" src="https://orpc.dev/logo.webp" width=280 alt="oRPC logo" />
 </div>
 
 <h1></h1>
@@ -48,7 +48,7 @@
 
 ## Documentation
 
-You can find the full documentation [here](https://orpc.unnoq.com).
+You can find the full documentation [here](https://orpc.dev).
 
 ## Packages
 

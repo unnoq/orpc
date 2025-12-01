@@ -43,14 +43,14 @@ export class PlanetController {
         /**
          *  1. Type-Safe Error Handling
          *
-         * {@link https://orpc.unnoq.com/docs/error-handling#type%E2%80%90safe-error-handling}
+         * {@link https://orpc.dev/docs/error-handling#type%E2%80%90safe-error-handling}
          */
         throw errors.NOT_FOUND({ data: { id: input.id } })
 
         /**
          * 2. Normal Approach
          *
-         * {@link https://orpc.unnoq.com/docs/error-handling#normal-approach}
+         * {@link https://orpc.dev/docs/error-handling#normal-approach}
          */
         // throw new ORPCError('NOT_FOUND', { message: 'Planet not found' })
       }

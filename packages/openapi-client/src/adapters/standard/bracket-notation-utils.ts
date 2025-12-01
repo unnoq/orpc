@@ -28,7 +28,7 @@ import { StandardBracketNotationSerializer } from './bracket-notation'
  * // }
  * ```
  *
- * @see {@link https://orpc.unnoq.com/docs/openapi/bracket-notation Bracket Notation Docs}
+ * @see {@link https://orpc.dev/docs/openapi/bracket-notation Bracket Notation Docs}
  */
 export function parseFormData(form: FormData): any {
   const serializer = new StandardBracketNotationSerializer()
@@ -39,7 +39,7 @@ export function parseFormData(form: FormData): any {
  * Get the issue message from the error.
  *
  * @param error - The error (can be anything) can contain `data.issues` (standard schema issues)
- * @param path - The path of the field that has the issue follow [bracket notation](https://orpc.unnoq.com/docs/openapi/bracket-notation)
+ * @param path - The path of the field that has the issue follow [bracket notation](https://orpc.dev/docs/openapi/bracket-notation)
  *
  * @example
  * ```tsx

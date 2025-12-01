@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [Tanstack Start](https://tanstack.com/start/latest).
+This is a playground for [oRPC](https://orpc.dev) and [Tanstack Start](https://tanstack.com/start/latest).
 
 ## Getting Started
 

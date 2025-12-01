@@ -22,7 +22,7 @@ const redirect = os
   .handler(async () => {
     return {
       headers: {
-        location: 'https://orpc.unnoq.com', // [!code highlight]
+        location: 'https://orpc.dev', // [!code highlight]
       },
     }
   })

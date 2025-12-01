@@ -28,7 +28,7 @@ export interface LinkMessagePortClientOptions {
    * }
    * ```
    *
-   * @see {@link https://orpc.unnoq.com/docs/adapters/message-port#transfer Message Port Transfer Docs}
+   * @see {@link https://orpc.dev/docs/adapters/message-port#transfer Message Port Transfer Docs}
    */
   experimental_transfer?: Value<Promisable<object[] | null | undefined>, [message: DecodedRequestMessage, port: SupportedMessagePort]>
 }

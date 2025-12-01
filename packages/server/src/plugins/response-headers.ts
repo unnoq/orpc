@@ -9,7 +9,7 @@ export interface ResponseHeadersPluginContext {
  * The Response Headers Plugin allows you to set response headers in oRPC.
  * It injects a resHeaders instance into the context, enabling you to modify response headers easily.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/response-headers Response Headers Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/response-headers Response Headers Plugin Docs}
  */
 export class ResponseHeadersPlugin<T extends ResponseHeadersPluginContext> implements StandardHandlerPlugin<T> {
   init(options: StandardHandlerOptions<T>): void {

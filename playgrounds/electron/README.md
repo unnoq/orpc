@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [Electron](https://www.electronjs.org).
+This is a playground for [oRPC](https://orpc.dev) and [Electron](https://www.electronjs.org).
 
 ## Getting Started
 

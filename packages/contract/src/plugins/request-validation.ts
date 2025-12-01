@@ -13,7 +13,7 @@ export class RequestValidationPluginError extends Error {}
  * ensuring that data sent to your server matches the expected types defined in your contract.
  *
  * @throws {ORPCError} with code `BAD_REQUEST` (same as server side) if input doesn't match the expected schema
- * @see {@link https://orpc.unnoq.com/docs/plugins/request-validation Request Validation Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/request-validation Request Validation Plugin Docs}
  */
 export class RequestValidationPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   constructor(

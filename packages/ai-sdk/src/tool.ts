@@ -16,11 +16,11 @@ export interface AiSdkToolMeta extends Meta {
 export class CreateToolError extends Error {}
 
 /**
- * Implements [procedure contract](https://orpc.unnoq.com/docs/contract-first/define-contract#procedure-contract)
+ * Implements [procedure contract](https://orpc.dev/docs/contract-first/define-contract#procedure-contract)
  * as an [AI SDK Tool](https://ai-sdk.dev/docs/foundations/tools) by leveraging existing contract definitions.
  *
  * @warning Requires a contract with an `input` schema defined.
- * @info Standard [procedures](https://orpc.unnoq.com/docs/procedure) are also compatible with [procedure contracts](https://orpc.unnoq.com/docs/contract-first/define-contract).
+ * @info Standard [procedures](https://orpc.dev/docs/procedure) are also compatible with [procedure contracts](https://orpc.dev/docs/contract-first/define-contract).
  *
  * @example
  * ```ts
@@ -84,7 +84,7 @@ export function implementTool<TOutInput, TInOutput>(
 }
 
 /**
- * Converts a [procedure](https://orpc.unnoq.com/docs/procedure) into an [AI SDK Tool](https://ai-sdk.dev/docs/foundations/tools)
+ * Converts a [procedure](https://orpc.dev/docs/procedure) into an [AI SDK Tool](https://ai-sdk.dev/docs/foundations/tools)
  * by leveraging existing procedure definitions.
  *
  * @warning Requires a contract with an `input` schema defined.

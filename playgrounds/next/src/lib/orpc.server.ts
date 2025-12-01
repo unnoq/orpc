@@ -7,7 +7,7 @@ import { headers } from 'next/headers'
 /**
  * This is part of the Optimize SSR setup.
  *
- * @see {@link https://orpc.unnoq.com/docs/adapters/next#optimize-ssr}
+ * @see {@link https://orpc.dev/docs/adapters/next#optimize-ssr}
  */
 globalThis.$client = createRouterClient(router, {
   /**

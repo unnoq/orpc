@@ -23,7 +23,7 @@ export interface DecoratedMiddleware<
    * Concatenates two middlewares.
    *
    * @info Pass second argument to map the input.
-   * @see {@link https://orpc.unnoq.com/docs/middleware#concatenation Middleware Concatenation Docs}
+   * @see {@link https://orpc.dev/docs/middleware#concatenation Middleware Concatenation Docs}
    */
   concat<
     UOutContext extends IntersectPick<MergedCurrentContext<TInContext, TOutContext>, UOutContext>,
@@ -51,7 +51,7 @@ export interface DecoratedMiddleware<
    * Concatenates two middlewares.
    *
    * @info Pass second argument to map the input.
-   * @see {@link https://orpc.unnoq.com/docs/middleware#concatenation Middleware Concatenation Docs}
+   * @see {@link https://orpc.dev/docs/middleware#concatenation Middleware Concatenation Docs}
    */
   concat<
     UOutContext extends IntersectPick<MergedCurrentContext<TInContext, TOutContext>, UOutContext>,

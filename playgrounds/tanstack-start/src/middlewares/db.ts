@@ -17,7 +17,7 @@ export const dbProviderMiddleware = os
     /**
      * Why we should ?? here?
      * Because it can avoid `createFakeDB` being called when unnecessary.
-     * {@link https://orpc.unnoq.com/docs/best-practices/dedupe-middleware}
+     * {@link https://orpc.dev/docs/best-practices/dedupe-middleware}
      */
     const db: DB = context.db ?? createFakeDB()
 

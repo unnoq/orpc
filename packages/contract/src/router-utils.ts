@@ -66,7 +66,7 @@ export function enhanceContractRouter<T extends AnyContractRouter, TErrorMap ext
  * You should export the result to a JSON file. On the client side, you can import this JSON file and use it as a contract router.
  * This reduces the size of the contract and helps prevent leaking internal details of the router to the client.
  *
- * @see {@link https://orpc.unnoq.com/docs/contract-first/router-to-contract#minify-export-the-contract-router-for-the-client Router to Contract Docs}
+ * @see {@link https://orpc.dev/docs/contract-first/router-to-contract#minify-export-the-contract-router-for-the-client Router to Contract Docs}
  */
 export function minifyContractRouter(router: AnyContractRouter): AnyContractRouter {
   if (isContractProcedure(router)) {

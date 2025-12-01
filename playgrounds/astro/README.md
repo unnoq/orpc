@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [Astro](https://astro.build).
+This is a playground for [oRPC](https://orpc.dev) and [Astro](https://astro.build).
 
 ## Getting Started
 

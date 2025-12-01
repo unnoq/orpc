@@ -12,7 +12,7 @@ export interface createORPCClientOptions {
 /**
  * Create a oRPC client-side client from a link.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/client-side Client-side Client Docs}
+ * @see {@link https://orpc.dev/docs/client/client-side Client-side Client Docs}
  */
 export function createORPCClient<T extends NestedClient<any>>(
   link: ClientLink<InferClientContext<T>>,

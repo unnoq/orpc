@@ -99,7 +99,7 @@ const PENDING_STATE = {
 /**
  * Use a Server Action Hook
  *
- * @see {@link https://orpc.unnoq.com/docs/server-action#useserveraction-hook Server Action Hook Docs}
+ * @see {@link https://orpc.dev/docs/server-action#useserveraction-hook Server Action Hook Docs}
  */
 export function useServerAction<TInput, TOutput, TError extends ORPCErrorJSON<any, any>>(
   action: ActionableClient<TInput, TOutput, TError>,

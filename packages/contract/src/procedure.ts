@@ -20,7 +20,7 @@ export interface ContractProcedureDef<
 /**
  * This class represents a contract procedure.
  *
- * @see {@link https://orpc.unnoq.com/docs/contract-first/define-contract#procedure-contract Contract Procedure Docs}
+ * @see {@link https://orpc.dev/docs/contract-first/define-contract#procedure-contract Contract Procedure Docs}
  */
 export class ContractProcedure<
   TInputSchema extends AnySchema,

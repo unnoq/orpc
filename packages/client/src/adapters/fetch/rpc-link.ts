@@ -10,8 +10,8 @@ export interface RPCLinkOptions<T extends ClientContext>
 /**
  * The RPC Link communicates with the server using the RPC protocol.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/rpc-link RPC Link Docs}
- * @see {@link https://orpc.unnoq.com/docs/advanced/rpc-protocol RPC Protocol Docs}
+ * @see {@link https://orpc.dev/docs/client/rpc-link RPC Link Docs}
+ * @see {@link https://orpc.dev/docs/advanced/rpc-protocol RPC Protocol Docs}
  */
 export class RPCLink<T extends ClientContext> extends StandardRPCLink<T> {
   constructor(options: RPCLinkOptions<T>) {

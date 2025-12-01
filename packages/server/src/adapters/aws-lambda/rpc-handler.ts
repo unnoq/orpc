@@ -18,8 +18,8 @@ export type RPCHandlerOptions<T extends Context> = AwsLambdaHandlerOptions & Sta
 /**
  * RPC Handler for AWS Lambda.
  *
- * @see {@link https://orpc.unnoq.com/docs/rpc-handler RPC Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/http HTTP Adapter Docs}
+ * @see {@link https://orpc.dev/docs/rpc-handler RPC Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/http HTTP Adapter Docs}
  */
 export class RPCHandler<T extends Context> extends AwsLambdaHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<RPCHandlerOptions<T>> = {}) {

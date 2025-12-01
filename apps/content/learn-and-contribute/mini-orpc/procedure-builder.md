@@ -13,7 +13,7 @@ The complete Mini oRPC implementation is available in our GitHub repository: [Mi
 
 ## Implementation
 
-Here is the complete procedure builder system implementation over the basic [procedure](https://orpc.unnoq.com/docs/procedure), [middleware](https://orpc.unnoq.com/docs/middleware), and [context](https://orpc.unnoq.com/docs/context) systems in Mini oRPC:
+Here is the complete procedure builder system implementation over the basic [procedure](/docs/procedure), [middleware](/docs/middleware), and [context](/docs/context) systems in Mini oRPC:
 
 ::: code-group
 

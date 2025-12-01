@@ -19,7 +19,7 @@ export type SafeClient<T extends NestedClient<any>>
  * const { error, data, isDefined } = await safeClient.doSomething({ id: '123' })
  * ```
  *
- * @see {@link https://orpc.unnoq.com/docs/client/error-handling#using-createsafeclient Safe Client Docs}
+ * @see {@link https://orpc.dev/docs/client/error-handling#using-createsafeclient Safe Client Docs}
  */
 export function createSafeClient<T extends NestedClient<any>>(client: T): SafeClient<T> {
   const proxy = new Proxy((...args: any[]) => safe((client as any)(...args)), {

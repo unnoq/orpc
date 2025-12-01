@@ -27,14 +27,14 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Calling corresponding procedure client
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#calling-clients Tanstack Calling Procedure Client Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#calling-clients Tanstack Calling Procedure Client Docs}
    */
   call: Client<TClientContext, TInput, TOutput, TError>
 
   /**
-   * Generate a **full matching** key for [Query Options](https://orpc.unnoq.com/docs/integrations/tanstack-query#query-options).
+   * Generate a **full matching** key for [Query Options](https://orpc.dev/docs/integrations/tanstack-query#query-options).
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   queryKey(
     ...rest: MaybeOptionalOptions<
@@ -45,7 +45,7 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Generate options used for useQuery/useSuspenseQuery/prefetchQuery/...
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-options Tanstack Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-options Tanstack Query Options Utility Docs}
    */
   queryOptions<U, USelectData = TOutput>(
     ...rest: MaybeOptionalOptions<
@@ -54,9 +54,9 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   ): NoInfer<U & Omit<QueryOptionsBase<TOutput, TError>, keyof U>>
 
   /**
-   * Generate a **full matching** key for [Streamed Query Options](https://orpc.unnoq.com/docs/integrations/tanstack-query#streamed-query-options).
+   * Generate a **full matching** key for [Streamed Query Options](https://orpc.dev/docs/integrations/tanstack-query#streamed-query-options).
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   experimental_streamedKey(
     ...rest: MaybeOptionalOptions<
@@ -65,11 +65,11 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   ): DataTag<QueryKey, experimental_StreamedQueryOutput<TOutput>, TError>
 
   /**
-   * Configure queries for [Event Iterator](https://orpc.unnoq.com/docs/event-iterator).
+   * Configure queries for [Event Iterator](https://orpc.dev/docs/event-iterator).
    * This is built on [TanStack Query streamedQuery](https://tanstack.com/query/latest/docs/reference/streamedQuery)
    * and works with hooks like `useQuery`, `useSuspenseQuery`, or `prefetchQuery`.
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#streamed-query-options Tanstack Streamed Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#streamed-query-options Tanstack Streamed Query Options Utility Docs}
    */
   experimental_streamedOptions<U, USelectData = experimental_StreamedQueryOutput<TOutput>>(
     ...rest: MaybeOptionalOptions<
@@ -78,9 +78,9 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   ): NoInfer<U & Omit<StreamedOptionsBase<experimental_StreamedQueryOutput<TOutput>, TError>, keyof U>>
 
   /**
-   * Generate a **full matching** key for [Live Query Options](https://orpc.unnoq.com/docs/integrations/tanstack-query#live-query-options).
+   * Generate a **full matching** key for [Live Query Options](https://orpc.dev/docs/integrations/tanstack-query#live-query-options).
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   experimental_liveKey(
     ...rest: MaybeOptionalOptions<
@@ -89,11 +89,11 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   ): DataTag<QueryKey, experimental_LiveQueryOutput<TOutput>, TError>
 
   /**
-   * Configure live queries for [Event Iterator](https://orpc.unnoq.com/docs/event-iterator).
+   * Configure live queries for [Event Iterator](https://orpc.dev/docs/event-iterator).
    * Unlike `.streamedOptions` which accumulates chunks, live queries replace the entire result with each new chunk received.
    * Works with hooks like `useQuery`, `useSuspenseQuery`, or `prefetchQuery`.
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#live-query-options Tanstack Live Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#live-query-options Tanstack Live Query Options Utility Docs}
    */
   experimental_liveOptions<U, USelectData = experimental_LiveQueryOutput<TOutput>>(
     ...rest: MaybeOptionalOptions<
@@ -102,9 +102,9 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   ): NoInfer<U & Omit<QueryOptionsBase<experimental_LiveQueryOutput<TOutput>, TError>, keyof U>>
 
   /**
-   * Generate a **full matching** key for [Infinite Query Options](https://orpc.unnoq.com/docs/integrations/tanstack-query#infinite-query-options).
+   * Generate a **full matching** key for [Infinite Query Options](https://orpc.dev/docs/integrations/tanstack-query#infinite-query-options).
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   infiniteKey<UPageParam>(
     options: Pick<
@@ -116,16 +116,16 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Generate options used for useInfiniteQuery/useSuspenseInfiniteQuery/prefetchInfiniteQuery/...
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#infinite-query-options Tanstack Infinite Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#infinite-query-options Tanstack Infinite Query Options Utility Docs}
    */
   infiniteOptions<U, UPageParam, USelectData = InfiniteData<TOutput, UPageParam>>(
     options: U & InfiniteOptionsIn<TClientContext, TInput, TOutput, TError, USelectData, UPageParam>
   ): NoInfer<U & Omit<InfiniteOptionsBase<TOutput, TError, UPageParam>, keyof U>>
 
   /**
-   * Generate a **full matching** key for [Mutation Options](https://orpc.unnoq.com/docs/integrations/tanstack-query#mutation-options).
+   * Generate a **full matching** key for [Mutation Options](https://orpc.dev/docs/integrations/tanstack-query#mutation-options).
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   mutationKey(
     options?: Pick<
@@ -137,7 +137,7 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Generate options used for useMutation/...
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#mutation-options Tanstack Mutation Options Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#mutation-options Tanstack Mutation Options Docs}
    */
   mutationOptions<UMutationContext>(
     ...rest: MaybeOptionalOptions<
@@ -150,7 +150,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for queryKey utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   queryKey?: Partial<
     QueryKeyOptions<TInput>
@@ -159,7 +159,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for queryOptions utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-options Tanstack Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-options Tanstack Query Options Utility Docs}
    */
   queryOptions?: Partial<
     QueryOptionsIn<TClientContext, TInput, TOutput, TError, unknown>
@@ -168,7 +168,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for experimental_streamedKey utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   experimental_streamedKey?: Partial<
     experimental_StreamedKeyOptions<TInput>
@@ -177,7 +177,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for experimental_streamedOptions utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#streamed-query-options Tanstack Streamed Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#streamed-query-options Tanstack Streamed Query Options Utility Docs}
    */
   experimental_streamedOptions?: Partial<
     StreamedOptionsIn<TClientContext, TInput, experimental_StreamedQueryOutput<TOutput>, TError, unknown>
@@ -186,7 +186,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for experimental_liveKey utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   experimental_liveKey?: Partial<
     QueryKeyOptions<TInput>
@@ -195,7 +195,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for experimental_liveOptions utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#live-query-options Tanstack Live Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#live-query-options Tanstack Live Query Options Utility Docs}
    */
   experimental_liveOptions?: Partial<
     StreamedOptionsIn<TClientContext, TInput, experimental_LiveQueryOutput<TOutput>, TError, unknown>
@@ -204,7 +204,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for infiniteKey utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   infiniteKey?: Partial<
     Pick<
@@ -216,7 +216,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for infiniteOptions utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#infinite-query-options Tanstack Infinite Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#infinite-query-options Tanstack Infinite Query Options Utility Docs}
    */
   infiniteOptions?: Partial<
     InfiniteOptionsIn<TClientContext, TInput, TOutput, TError, unknown, unknown>
@@ -225,7 +225,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for mutationKey utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#query-mutation-key Tanstack Query/Mutation Key Docs}
    */
   mutationKey?: Partial<
     Pick<
@@ -237,7 +237,7 @@ export interface experimental_ProcedureUtilsDefaults<TClientContext extends Clie
   /**
    * Default options for mutationOptions utility
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/tanstack-query#mutation-options Tanstack Mutation Options Docs}
+   * @see {@link https://orpc.dev/docs/integrations/tanstack-query#mutation-options Tanstack Mutation Options Docs}
    */
   mutationOptions?: Partial<
     MutationOptionsIn<TClientContext, TInput, TOutput, TError, unknown>

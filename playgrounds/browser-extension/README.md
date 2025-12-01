@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [WXT](https://wxt.dev/)
+This is a playground for [oRPC](https://orpc.dev) and [WXT](https://wxt.dev/)
 
 ## Getting Started
 

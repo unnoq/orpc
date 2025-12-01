@@ -8,7 +8,7 @@ import { createTanstackQueryUtils } from '@orpc/tanstack-query'
 /**
  * This is part of the Optimize SSR setup.
  *
- * @see {@link https://orpc.unnoq.com/docs/adapters/svelte-kit#optimize-ssr}
+ * @see {@link https://orpc.dev/docs/adapters/svelte-kit#optimize-ssr}
  */
 declare global {
   var $client: RouterClient<typeof router> | undefined

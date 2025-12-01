@@ -1,5 +1,5 @@
 <div align="center">
-  <image align="center" src="https://orpc.unnoq.com/logo.webp" width=280 alt="oRPC logo" />
+  <image align="center" src="https://orpc.dev/logo.webp" width=280 alt="oRPC logo" />
 </div>
 
 <h1></h1>
@@ -45,7 +45,7 @@
 
 ## Documentation
 
-You can find the full documentation [here](https://orpc.unnoq.com).
+You can find the full documentation [here](https://orpc.dev).
 
 ## Packages
 
@@ -66,7 +66,7 @@ You can find the full documentation [here](https://orpc.unnoq.com).
 
 ## `@orpc/vue-colada`
 
-Integration with [Pinia Colada](https://pinia-colada.esm.dev/). Read the [documentation](https://orpc.unnoq.com/docs/integrations/pinia-colada) for more information.
+Integration with [Pinia Colada](https://pinia-colada.esm.dev/). Read the [documentation](https://orpc.dev/docs/integrations/pinia-colada) for more information.
 
 ```ts
 export function Setup() {

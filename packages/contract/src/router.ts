@@ -6,7 +6,7 @@ import type { InferSchemaInput, InferSchemaOutput } from './schema'
  * Represents a contract router, which defines a hierarchical structure of contract procedures.
  *
  * @info A contract procedure is a contract router too.
- * @see {@link https://orpc.unnoq.com/docs/contract-first/define-contract#contract-router Contract Router Docs}
+ * @see {@link https://orpc.dev/docs/contract-first/define-contract#contract-router Contract Router Docs}
  */
 export type ContractRouter<TMeta extends Meta>
   = | ContractProcedure<any, any, any, TMeta>
@@ -20,7 +20,7 @@ export type AnyContractRouter = ContractRouter<any>
  * Infer all inputs of the contract router.
  *
  * @info A contract procedure is a contract router too.
- * @see {@link https://orpc.unnoq.com/docs/contract-first/define-contract#utilities Contract Utilities Docs}
+ * @see {@link https://orpc.dev/docs/contract-first/define-contract#utilities Contract Utilities Docs}
  */
 export type InferContractRouterInputs<T extends AnyContractRouter>
   = T extends ContractProcedure<infer UInputSchema, any, any, any>
@@ -33,7 +33,7 @@ export type InferContractRouterInputs<T extends AnyContractRouter>
  * Infer all outputs of the contract router.
  *
  * @info A contract procedure is a contract router too.
- * @see {@link https://orpc.unnoq.com/docs/contract-first/define-contract#utilities Contract Utilities Docs}
+ * @see {@link https://orpc.dev/docs/contract-first/define-contract#utilities Contract Utilities Docs}
  */
 export type InferContractRouterOutputs<T extends AnyContractRouter>
   = T extends ContractProcedure<any, infer UOutputSchema, any, any>
@@ -46,7 +46,7 @@ export type InferContractRouterOutputs<T extends AnyContractRouter>
  * Infer all errors of the contract router.
  *
  * @info A contract procedure is a contract router too.
- * @see {@link https://orpc.unnoq.com/docs/contract-first/define-contract#utilities Contract Utilities Docs}
+ * @see {@link https://orpc.dev/docs/contract-first/define-contract#utilities Contract Utilities Docs}
  */
 export type InferContractRouterErrorMap<T extends AnyContractRouter>
   = T extends ContractProcedure<any, any, infer UErrorMap, any>

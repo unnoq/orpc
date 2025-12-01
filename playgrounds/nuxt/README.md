@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [Nuxt.js](https://nuxt.com).
+This is a playground for [oRPC](https://orpc.dev) and [Nuxt.js](https://nuxt.com).
 
 ## Getting Started
 

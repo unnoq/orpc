@@ -1,6 +1,6 @@
 # ORPC Playground
 
-This is a playground for [oRPC](https://orpc.unnoq.com) and [Solid Start](https://start.solidjs.com/).
+This is a playground for [oRPC](https://orpc.dev) and [Solid Start](https://start.solidjs.com/).
 
 ## Getting Started
 

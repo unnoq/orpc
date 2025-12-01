@@ -11,7 +11,7 @@ export interface OpenAPILinkOptions<T extends ClientContext>
 /**
  * The OpenAPI Link for fetch runtime communicates with the server that follow the OpenAPI specification.
  *
- * @see {@link https://orpc.unnoq.com/docs/openapi/client/openapi-link OpenAPI Link Docs}
+ * @see {@link https://orpc.dev/docs/openapi/client/openapi-link OpenAPI Link Docs}
  * @see {@link https://swagger.io/specification/ OpenAPI Specification}
  */
 export class OpenAPILink<T extends ClientContext> extends StandardOpenAPILink<T> {

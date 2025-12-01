@@ -30,7 +30,7 @@ export interface CompressionPluginOptions {
   /**
    * Override the default content-type filter used to determine which responses should be compressed.
    *
-   * @warning [Event Iterator](https://orpc.unnoq.com/docs/event-iterator) responses are never compressed, regardless of this filter's return value.
+   * @warning [Event Iterator](https://orpc.dev/docs/event-iterator) responses are never compressed, regardless of this filter's return value.
    * @default only responses with compressible content types are compressed.
    */
   filter?: (request: Request, response: Response) => boolean
@@ -41,7 +41,7 @@ export interface CompressionPluginOptions {
  * Build on top of [CompressionStream](https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream)
  * You might need to polyfill it if your environment does not support it.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/compression Compression Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/compression Compression Plugin Docs}
  */
 export class CompressionPlugin<T extends Context> implements FetchHandlerPlugin<T> {
   private readonly encodings: Exclude<CompressionPluginOptions['encodings'], undefined>

@@ -9,14 +9,14 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Calling corresponding procedure client
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/pinia-colada#calling-procedure-clients Pinia Colada Calling Procedure Client Docs}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#calling-procedure-clients Pinia Colada Calling Procedure Client Docs}
    */
   call: Client<TClientContext, TInput, TOutput, TError>
 
   /**
    * Generate options used for useQuery/...
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/pinia-colada#query-options-utility Pinia Colada Query Options Utility Docs}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-options-utility Pinia Colada Query Options Utility Docs}
    */
   queryOptions<UInitialData extends TOutput | undefined = TOutput | undefined>(
     ...rest: MaybeOptionalOptions<
@@ -27,7 +27,7 @@ export interface ProcedureUtils<TClientContext extends ClientContext, TInput, TO
   /**
    * Generate options used for useMutation/...
    *
-   * @see {@link https://orpc.unnoq.com/docs/integrations/pinia-colada#mutation-options Pinia Colada Mutation Options Docs}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#mutation-options Pinia Colada Mutation Options Docs}
    */
   mutationOptions<UMutationContext extends Record<any, any> = _EmptyObject>(
     ...rest: MaybeOptionalOptions<

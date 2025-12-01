@@ -10,7 +10,7 @@ export interface HibernationPluginContext {
 /**
  * Enable Hibernation APIs
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/hibernation Hibernation Plugin}
+ * @see {@link https://orpc.dev/docs/plugins/hibernation Hibernation Plugin}
  */
 export class HibernationPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   readonly CONTEXT_SYMBOL = Symbol('ORPC_HIBERNATION_CONTEXT')

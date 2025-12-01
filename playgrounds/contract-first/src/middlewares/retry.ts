@@ -3,7 +3,7 @@ import { os } from '@orpc/server'
 export function retry(options: { times: number }) {
   /**
    * Best practices for dedupe-middlewares
-   * {@link https://orpc.unnoq.com/docs/best-practices/dedupe-middleware}
+   * {@link https://orpc.dev/docs/best-practices/dedupe-middleware}
    */
   return os
     .$context<{ canRetry?: boolean }>()

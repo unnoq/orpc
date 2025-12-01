@@ -7,7 +7,7 @@ import { isContractProcedure } from './procedure'
 /**
  * Help RPCLink automatically send requests using the specified HTTP method in the contract.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/rpc-link#custom-request-method RPCLink Custom Request Method}
+ * @see {@link https://orpc.dev/docs/client/rpc-link#custom-request-method RPCLink Custom Request Method}
  */
 export function inferRPCMethodFromContractRouter(contract: AnyContractRouter): (options: unknown, path: readonly string[]) => Exclude<HTTPMethod, 'HEAD'> {
   return (_, path) => {

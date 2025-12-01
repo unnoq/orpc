@@ -8,7 +8,7 @@ export interface CompressionPluginOptions extends compression.CompressionOptions
   /**
    * Override the default content-type filter used to determine which responses should be compressed.
    *
-   * @warning [Event Iterator](https://orpc.unnoq.com/docs/event-iterator) responses are never compressed, regardless of this filter's return value.
+   * @warning [Event Iterator](https://orpc.dev/docs/event-iterator) responses are never compressed, regardless of this filter's return value.
    * @default only responses with compressible content types are compressed.
    */
   filter?: (req: NodeHttpRequest, res: NodeHttpResponse) => boolean
@@ -16,7 +16,7 @@ export interface CompressionPluginOptions extends compression.CompressionOptions
 /**
  * The Compression Plugin adds response compression to the Node.js HTTP Server.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/compression Compression Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/compression Compression Plugin Docs}
  */
 export class CompressionPlugin<T extends Context> implements NodeHttpHandlerPlugin<T> {
   private readonly compressionHandler: ReturnType<typeof compression>

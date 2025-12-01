@@ -48,7 +48,7 @@ const SIMPLE_CSRF_PROTECTION_CONTEXT_SYMBOL = Symbol('SIMPLE_CSRF_PROTECTION_CON
  * It helps ensure that requests to your procedures originate from JavaScript code,
  * not from other sources like standard HTML forms or direct browser navigation.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/simple-csrf-protection Simple CSRF Protection Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/simple-csrf-protection Simple CSRF Protection Plugin Docs}
  */
 export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   private readonly headerName: Exclude<SimpleCsrfProtectionHandlerPluginOptions<T>['headerName'], undefined>

@@ -8,7 +8,7 @@ import { BatchLinkPlugin } from '@orpc/client/plugins'
 /**
  * This is part of the Optimize SSR setup.
  *
- * @see {@link https://orpc.unnoq.com/docs/adapters/next#optimize-ssr}
+ * @see {@link https://orpc.dev/docs/adapters/next#optimize-ssr}
  */
 declare global {
   var $client: RouterClient<typeof router> | undefined

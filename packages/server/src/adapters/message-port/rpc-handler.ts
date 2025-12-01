@@ -10,8 +10,8 @@ export interface RPCHandlerOptions<T extends Context> extends StandardRPCHandler
 /**
  * RPC Handler for common message port implementations.
  *
- * @see {@link https://orpc.unnoq.com/docs/rpc-handler RPC Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/message-port Message Port Adapter Docs}
+ * @see {@link https://orpc.dev/docs/rpc-handler RPC Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/message-port Message Port Adapter Docs}
  */
 export class RPCHandler<T extends Context> extends MessagePortHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<RPCHandlerOptions<T>> = {}) {

@@ -20,7 +20,7 @@ body:
       description:
         Please link to a minimal repository that reproduces the issue.
         A minimal repro is required unless the problem is obvious from your description.
-        You can create one with [oRPC Playgrounds](https://orpc.unnoq.com/docs/playgrounds).
+        You can create one with [oRPC Playgrounds](https://orpc.dev/docs/playgrounds).
       placeholder: Reproduction
     validations:
       required: true

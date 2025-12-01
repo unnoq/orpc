@@ -5,7 +5,7 @@ import { createTanstackQueryUtils } from '@orpc/tanstack-query'
 /**
  * This is part of the Optimize SSR setup.
  *
- * @see {@link https://orpc.unnoq.com/docs/adapters/nuxt#optimize-ssr}
+ * @see {@link https://orpc.dev/docs/adapters/nuxt#optimize-ssr}
  */
 export default defineNuxtPlugin((nuxt) => {
   const event = useRequestEvent()

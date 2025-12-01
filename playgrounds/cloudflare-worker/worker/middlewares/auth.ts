@@ -7,7 +7,7 @@ export const requiredAuthMiddleware = os
     /**
      * Why we should ?? here?
      * Because it can avoid `getSession` being called when unnecessary.
-     * {@link https://orpc.unnoq.com/docs/best-practices/dedupe-middleware}
+     * {@link https://orpc.dev/docs/best-practices/dedupe-middleware}
      */
     const session = context.session ?? await getSession()
 

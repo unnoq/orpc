@@ -9,7 +9,7 @@ export interface RequestHeadersPluginContext {
  * The Request Headers Plugin injects a `reqHeaders` instance into the context,
  * allowing access to request headers in oRPC.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/request-headers Request Headers Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/request-headers Request Headers Plugin Docs}
  */
 export class RequestHeadersPlugin<T extends RequestHeadersPluginContext> implements StandardHandlerPlugin<T> {
   init(options: StandardHandlerOptions<T>): void {

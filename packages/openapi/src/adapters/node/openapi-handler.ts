@@ -10,8 +10,8 @@ export interface OpenAPIHandlerOptions<T extends Context> extends NodeHttpHandle
 /**
  * OpenAPI Handler for Node Server
  *
- * @see {@link https://orpc.unnoq.com/docs/openapi/openapi-handler OpenAPI Handler Docs}
- * @see {@link https://orpc.unnoq.com/docs/adapters/http HTTP Adapter Docs}
+ * @see {@link https://orpc.dev/docs/openapi/openapi-handler OpenAPI Handler Docs}
+ * @see {@link https://orpc.dev/docs/adapters/http HTTP Adapter Docs}
  */
 export class OpenAPIHandler<T extends Context> extends NodeHttpHandler<T> {
   constructor(router: Router<any, T>, options: NoInfer<OpenAPIHandlerOptions<T>> = {}) {

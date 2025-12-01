@@ -61,7 +61,7 @@ const getting = os
   .callable() // regular function compatible
 ```
 
-Beyond built-in features, oRPC [metadata](https://orpc.unnoq.com/docs/metadata) system allows for community-driven extensions and future possibilities.
+Beyond built-in features, oRPC [metadata](/docs/metadata) system allows for community-driven extensions and future possibilities.
 
 ## Highlights
 

@@ -35,7 +35,7 @@ export interface DedupeRequestsPluginOptions<T extends ClientContext> {
 /**
  * Prevents duplicate requests by deduplicating similar ones to reduce server load.
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/dedupe-requests Dedupe Requests Plugin}
+ * @see {@link https://orpc.dev/docs/plugins/dedupe-requests Dedupe Requests Plugin}
  */
 export class DedupeRequestsPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   readonly #groups: Exclude<DedupeRequestsPluginOptions<T>['groups'], undefined>

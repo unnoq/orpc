@@ -67,7 +67,7 @@ export type CreateProcedureClientOptions<
 /**
  * Create Server-side client from a procedure.
  *
- * @see {@link https://orpc.unnoq.com/docs/client/server-side Server-side Client Docs}
+ * @see {@link https://orpc.dev/docs/client/server-side Server-side Client Docs}
  */
 export function createProcedureClient<
   TInitialContext extends Context,

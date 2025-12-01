@@ -13,7 +13,7 @@ import { isContractProcedure } from '../procedure'
  * - Throws `ValidationError` if output doesn't match the expected schema
  * - Converts mismatched defined errors to normal `ORPCError` instances
  *
- * @see {@link https://orpc.unnoq.com/docs/plugins/response-validation Response Validation Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/response-validation Response Validation Plugin Docs}
  */
 export class ResponseValidationPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   constructor(

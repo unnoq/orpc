@@ -20,7 +20,7 @@ export type TypeRest<TInput, TOutput>
  * The schema for things can be trust without validation.
  * If the TInput and TOutput are different, you need pass a map function.
  *
- * @see {@link https://orpc.unnoq.com/docs/procedure#type-utility Type Utility Docs}
+ * @see {@link https://orpc.dev/docs/procedure#type-utility Type Utility Docs}
  */
 export function type<TInput, TOutput = TInput>(...[map]: TypeRest<TInput, TOutput>): Schema<TInput, TOutput> {
   return {

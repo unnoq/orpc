@@ -9,7 +9,7 @@ if (typeof window !== 'undefined') {
 /**
  * This is part of the Optimize SSR setup.
  *
- * @see {@link https://orpc.unnoq.com/docs/adapters/solid-start#optimize-ssr}
+ * @see {@link https://orpc.dev/docs/adapters/solid-start#optimize-ssr}
  */
 globalThis.$client = createRouterClient(router, {
   /**
