@@ -45,11 +45,6 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
-
       - run: pnpm i
 
       - run: |
