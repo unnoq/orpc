@@ -60,7 +60,7 @@ export default withMermaid(defineConfig({
       { icon: 'bluesky', link: 'https://bsky.app/profile/unnoq.com' },
     ],
     editLink: {
-      pattern: 'https://github.com/middleapi/orpcorpc/blob/main/apps/content/:path',
+      pattern: 'https://github.com/middleapi/orpc/blob/main/apps/content/:path',
       text: 'Edit on GitHub',
     },
     footer: {
@@ -75,9 +75,9 @@ export default withMermaid(defineConfig({
       {
         text: 'More',
         items: [
-          { text: 'Discussions', link: 'https://github.com/middleapi/orpcorpc/discussions' },
+          { text: 'Discussions', link: 'https://github.com/middleapi/orpc/discussions' },
           { text: 'Sponsor', link: 'https://github.com/sponsors/unnoq' },
-          { text: 'Releases', link: 'https://github.com/middleapi/orpcorpc/releases' },
+          { text: 'Releases', link: 'https://github.com/middleapi/orpc/releases' },
           { text: 'LLM Context', link: '/llms.txt' },
           { text: 'LLM Context (Full)', link: '/llms-full.txt' },
         ],

@@ -21,29 +21,29 @@ You can implement these features in any order. Pick the ones you find interestin
 
 - [ ] [Middleware Typed Input](/docs/middleware#middleware-input) Support ([reference](https://github.com/middleapi/orpc/blob/main/packages/server/src/middleware.ts))
 
-- [ ] Builder Variants ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/server/src/builder-variants.ts))
+- [ ] Builder Variants ([reference](https://github.com/middleapi/orpc/blob/main/packages/server/src/builder-variants.ts))
   - [ ] Prevent redefinition of `.input` and `.output` methods
 
-- [ ] [Type-Safe Error](/docs/error-handling#type%E2%80%90safe-error-handling) Support ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/server/src/procedure-client.ts#L113-L120))
+- [ ] [Type-Safe Error](/docs/error-handling#type%E2%80%90safe-error-handling) Support ([reference](https://github.com/middleapi/orpc/blob/main/packages/server/src/procedure-client.ts#L113-L120))
 
-- [ ] [RPC Protocol](/docs/advanced/rpc-protocol) Implementation ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/client/src/adapters/standard/rpc-serializer.ts))
+- [ ] [RPC Protocol](/docs/advanced/rpc-protocol) Implementation ([reference](https://github.com/middleapi/orpc/blob/main/packages/client/src/adapters/standard/rpc-serializer.ts))
   - [ ] Support native types like `Date`, `Map`, `Set`, etc.
   - [ ] Support `File`/`Blob` types
   - [ ] Support [Event Iterator](/docs/event-iterator) types
 
 - [ ] Multi-runtime support
-  - [ ] Standard Server Concept ([reference](https://github.com/middleapi/orpcorpc/tree/main/packages/standard-server))
-  - [ ] Fetch Adapter ([reference](https://github.com/middleapi/orpcorpc/tree/main/packages/standard-server-fetch))
-  - [ ] Node HTTP Adapter ([reference](https://github.com/middleapi/orpcorpc/tree/main/packages/standard-server-node))
-  - [ ] Peer Adapter (WebSocket, MessagePort, etc.) ([reference](https://github.com/middleapi/orpcorpc/tree/main/packages/standard-server-peer))
+  - [ ] Standard Server Concept ([reference](https://github.com/middleapi/orpc/tree/main/packages/standard-server))
+  - [ ] Fetch Adapter ([reference](https://github.com/middleapi/orpc/tree/main/packages/standard-server-fetch))
+  - [ ] Node HTTP Adapter ([reference](https://github.com/middleapi/orpc/tree/main/packages/standard-server-node))
+  - [ ] Peer Adapter (WebSocket, MessagePort, etc.) ([reference](https://github.com/middleapi/orpc/tree/main/packages/standard-server-peer))
 
 - [ ] [Contract First](/docs/contract-first/define-contract) Support
-  - [ ] Contract Builder ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/contract/src/builder.ts))
-  - [ ] Contract Implementer ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/server/src/implementer.ts))
+  - [ ] Contract Builder ([reference](https://github.com/middleapi/orpc/blob/main/packages/contract/src/builder.ts))
+  - [ ] Contract Implementer ([reference](https://github.com/middleapi/orpc/blob/main/packages/server/src/implementer.ts))
 
 - [ ] [OpenAPI](/docs/openapi/getting-started) Support
-  - [ ] OpenAPI Handler ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/openapi/src/adapters/standard/openapi-handler.ts))
-  - [ ] OpenAPI Generator ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/openapi/src/openapi-generator.ts))
-  - [ ] OpenAPI Link ([reference](https://github.com/middleapi/orpcorpc/blob/main/packages/openapi-client/src/adapters/fetch/openapi-link.ts))
+  - [ ] OpenAPI Handler ([reference](https://github.com/middleapi/orpc/blob/main/packages/openapi/src/adapters/standard/openapi-handler.ts))
+  - [ ] OpenAPI Generator ([reference](https://github.com/middleapi/orpc/blob/main/packages/openapi/src/openapi-generator.ts))
+  - [ ] OpenAPI Link ([reference](https://github.com/middleapi/orpc/blob/main/packages/openapi-client/src/adapters/fetch/openapi-link.ts))
 
-- [ ] [Tanstack Query](/docs/integrations/tanstack-query) Integration ([reference](https://github.com/middleapi/orpcorpc/tree/main/packages/tanstack-query))
+- [ ] [Tanstack Query](/docs/integrations/tanstack-query) Integration ([reference](https://github.com/middleapi/orpc/tree/main/packages/tanstack-query))

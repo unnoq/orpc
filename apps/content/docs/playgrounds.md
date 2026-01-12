@@ -10,22 +10,22 @@ featuring pre-configured examples accessible instantly via StackBlitz or local s
 
 ## Available Playgrounds
 
-| Environment                      | StackBlitz                                                                                                     | GitHub Source                                                                                 |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Next.js Playground               | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/next)                  | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/next)                   |
-| TanStack Start Playground        | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/tanstack-start)    | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/tanstack-start)     |
-| Nuxt.js Playground               | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/nuxt)              | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/nuxt)               |
-| Solid Start Playground           | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/solid-start)       | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/solid-start)        |
-| Svelte Kit Playground            | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/svelte-kit)        | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/svelte-kit)         |
-| Astro Playground                 | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/astro)             | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/astro)              |
-| Contract-First Playground        | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/contract-first)    | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/contract-first)     |
-| NestJS Playground                | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/nest)              | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/nest)               |
-| Cloudflare Worker                | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpcorpc/tree/main/playgrounds/cloudflare-worker) | [View Source](https://github.middleapi/orpcapi/orpc/tree/main/playgrounds/cloudflare-worker)  |
-| Bun WebSocket + OpenTelemetry    |                                                                                                                | [View Source](https://github.com/middleapi/orpcorpc/tree/main/playgrounds/bun-websocket-otel) |
-| Electron Playground              |                                                                                                                | [View Source](https://github.com/middleapi/orpcorpc/tree/main/playgrounds/electron)           |
-| Browser Extension Playground     |                                                                                                                | [View Source](https://github.com/middleapi/orpcorpc/tree/main/playgrounds/browser-extension)  |
-| Multiservice Monorepo Playground |                                                                                                                | [View Source](https://github.com/middleapi/orpcorpc-multiservice-monorepo-playground)         |
-| Vue + Bun + Monorepo (Community) |                                                                                                                | [View Source](https://github.com/hunterwilhelm/orpc-community-playgrounds/tree/main/vue-bun)  |
+| Environment                      | StackBlitz                                                                                                 | GitHub Source                                                                                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Next.js Playground               | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/next)              | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/next)                  |
+| TanStack Start Playground        | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/tanstack-start)    | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/tanstack-start)        |
+| Nuxt.js Playground               | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/nuxt)              | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/nuxt)                  |
+| Solid Start Playground           | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/solid-start)       | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/solid-start)           |
+| Svelte Kit Playground            | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/svelte-kit)        | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/svelte-kit)            |
+| Astro Playground                 | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/astro)             | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/astro)                 |
+| Contract-First Playground        | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/contract-first)    | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/contract-first)        |
+| NestJS Playground                | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/nest)              | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/nest)                  |
+| Cloudflare Worker                | [Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc/tree/main/playgrounds/cloudflare-worker) | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/cloudflare-worker)     |
+| Bun WebSocket + OpenTelemetry    |                                                                                                            | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/bun-websocket-otel)    |
+| Electron Playground              |                                                                                                            | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/electron)              |
+| Browser Extension Playground     |                                                                                                            | [View Source](https://github.com/middleapi/orpc/tree/main/playgrounds/browser-extension)     |
+| Multiservice Monorepo Playground |                                                                                                            | [View Source](https://github.com/middleapi/orpc-multiservice-monorepo-playground)            |
+| Vue + Bun + Monorepo (Community) |                                                                                                            | [View Source](https://github.com/hunterwilhelm/orpc-community-playgrounds/tree/main/vue-bun) |
 
 :::warning
 StackBlitz has own limitations, so some features may not work as expected.
@@ -36,19 +36,19 @@ StackBlitz has own limitations, so some features may not work as expected.
 If you prefer working locally, you can clone any playground using the following commands:
 
 ```bash
-npx degit middleapi/orpcorpc/playgrounds/next orpc-next-playground
-npx degit middleapi/orpcorpc/playgrounds/tanstack-start orpc-tanstack-start-playground
-npx degit middleapi/orpcorpc/playgrounds/nuxt orpc-nuxt-playground
-npx degit middleapi/orpcorpc/playgrounds/solid-start orpc-solid-start-playground
-npx degit middleapi/orpcorpc/playgrounds/svelte-kit orpc-svelte-kit-playground
-npx degit middleapi/orpcorpc/playgrounds/astro orpc-astro-playground
-npx degit middleapi/orpcorpc/playgrounds/contract-first orpc-contract-first-playground
-npx degit middleapi/orpcorpc/playgrounds/nest orpc-nest-playground
-npx degit middleapi/orpcorpc/playgrounds/cloudflare-worker orpc-cloudflare-worker-playground
-npx degit middleapi/orpcorpc/playgrounds/bun-websocket-otel orpc-bun-websocket-otel-playground
-npx degit middleapi/orpcorpc/playgrounds/electron orpc-electron-playground
-npx degit middleapi/orpcorpc/playgrounds/browser-extension orpc-browser-extension-playground
-npx degit middleapi/orpcorpc-multiservice-monorepo-playground orpc-multiservice-monorepo-playground
+npx degit middleapi/orpc/playgrounds/next orpc-next-playground
+npx degit middleapi/orpc/playgrounds/tanstack-start orpc-tanstack-start-playground
+npx degit middleapi/orpc/playgrounds/nuxt orpc-nuxt-playground
+npx degit middleapi/orpc/playgrounds/solid-start orpc-solid-start-playground
+npx degit middleapi/orpc/playgrounds/svelte-kit orpc-svelte-kit-playground
+npx degit middleapi/orpc/playgrounds/astro orpc-astro-playground
+npx degit middleapi/orpc/playgrounds/contract-first orpc-contract-first-playground
+npx degit middleapi/orpc/playgrounds/nest orpc-nest-playground
+npx degit middleapi/orpc/playgrounds/cloudflare-worker orpc-cloudflare-worker-playground
+npx degit middleapi/orpc/playgrounds/bun-websocket-otel orpc-bun-websocket-otel-playground
+npx degit middleapi/orpc/playgrounds/electron orpc-electron-playground
+npx degit middleapi/orpc/playgrounds/browser-extension orpc-browser-extension-playground
+npx degit middleapi/orpc-multiservice-monorepo-playground orpc-multiservice-monorepo-playground
 
 # Community (clone at your own risk)
 npx degit hunterwilhelm/orpc-community-playgrounds/vue-bun orpc-vue-bun-monorepo-playground

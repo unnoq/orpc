@@ -73,13 +73,13 @@ Link plugins enhance your client-side communication. They work with [RPCLink](/d
 
 Link plugins use interceptors from the [Link Lifecycle](/docs/client/rpc-link#lifecycle) to modify requests before they're sent or responses after they're received. This is perfect for adding authentication, logging, retry logic, or request/response transformations.
 
-Browse the [built-in link plugins](https://github.com/middleapi/orpcorpc/tree/main/packages/client/src/plugins) for inspiration on handling common client-side scenarios.
+Browse the [built-in link plugins](https://github.com/middleapi/orpc/tree/main/packages/client/src/plugins) for inspiration on handling common client-side scenarios.
 
 ## Communication Between Interceptors
 
 Sometimes you need interceptors to share data. For example, one interceptor might collect information that another interceptor uses later. You can achieve this by injecting context using a unique symbol.
 
-The [Strict Get Method Plugin](/docs/plugins/strict-get-method) ([Source Code](https://github.com/middleapi/orpcorpc/blob/main/packages/server/src/plugins/strict-get-method.ts)) demonstrates this pattern. It uses `rootInterceptors` to collect HTTP methods and combines this data with procedure information in `clientInterceptors` to determine whether the method is allowed.
+The [Strict Get Method Plugin](/docs/plugins/strict-get-method) ([Source Code](https://github.com/middleapi/orpc/blob/main/packages/server/src/plugins/strict-get-method.ts)) demonstrates this pattern. It uses `rootInterceptors` to collect HTTP methods and combines this data with procedure information in `clientInterceptors` to determine whether the method is allowed.
 
 ## Plugin Order
 

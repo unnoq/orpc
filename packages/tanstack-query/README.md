@@ -6,18 +6,18 @@
 
 <div align="center">
   <a href="https://codecov.io/gh/middleapi/orpc">
-    <img alt="codecov" src="https://codecov.io/gh/middleapi/orpcorpc/branch/main/graph/badge.svg">
+    <img alt="codecov" src="https://codecov.io/gh/middleapi/orpc/branch/main/graph/badge.svg">
   </a>
   <a href="https://www.npmjs.com/package/@orpc/tanstack-query">
     <img alt="weekly downloads" src="https://img.shields.io/npm/dw/%40orpc%2Ftanstack-query?logo=npm" />
   </a>
-  <a href="https://github.com/middleapi/orpcorpc/blob/main/LICENSE">
-    <img alt="MIT License" src="https://img.shields.io/github/license/middleapi/orpcorpc?logo=open-source-initiative" />
+  <a href="https://github.com/middleapi/orpc/blob/main/LICENSE">
+    <img alt="MIT License" src="https://img.shields.io/github/license/middleapi/orpc?logo=open-source-initiative" />
   </a>
   <a href="https://discord.gg/TXEbwRBvQn">
     <img alt="Discord" src="https://img.shields.io/discord/1308966753044398161?color=7389D8&label&logo=discord&logoColor=ffffff" />
   </a>
-  <a href="https://deepwiki.com/middleapi/orpcorpc">
+  <a href="https://deepwiki.com/middleapi/orpc">
     <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
   </a>
 </div>
@@ -78,4 +78,4 @@ Shared logic for oRPC integrations with [TanStack Query](https://tanstack.com/qu
 
 ## License
 
-Distributed under the MIT License. See [LICENSE](https://github.com/middleapi/orpcorpc/blob/main/LICENSE) for more information.
+Distributed under the MIT License. See [LICENSE](https://github.com/middleapi/orpc/blob/main/LICENSE) for more information.
