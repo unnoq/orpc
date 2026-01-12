@@ -6,11 +6,10 @@
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unnoq/orpc.git",
+    "url": "git+https://github.com/middleapi/orpc.git",
     "directory": "packages/react-query"
   },
   "keywords": [
-    "unnoq",
     "orpc",
     "react-query",
     "tanstack query",
@@ -48,6 +47,6 @@
   "devDependencies": {
     "@tanstack/react-query": "^5.90.16",
     "react": "^19.2.3",
-    "zod": "^4.3.5"
+    "zod": "^4.3.2"
   }
 }

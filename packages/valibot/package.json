@@ -6,11 +6,10 @@
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unnoq/orpc.git",
+    "url": "git+https://github.com/middleapi/orpc.git",
     "directory": "packages/valibot"
   },
   "keywords": [
-    "unnoq",
     "orpc"
   ],
   "publishConfig": {
@@ -44,6 +43,6 @@
   },
   "devDependencies": {
     "valibot": "^1.2.0",
-    "zod": "^4.3.5"
+    "zod": "^4.3.2"
   }
 }
