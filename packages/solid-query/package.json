@@ -6,11 +6,10 @@
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unnoq/orpc.git",
+    "url": "git+https://github.com/middleapi/orpc.git",
     "directory": "packages/solid-query"
   },
   "keywords": [
-    "unnoq",
     "orpc",
     "solid-query",
     "tanstack query",
@@ -47,6 +46,6 @@
   },
   "devDependencies": {
     "@tanstack/solid-query": "^5.90.19",
-    "zod": "^4.3.5"
+    "zod": "^4.3.2"
   }
 }

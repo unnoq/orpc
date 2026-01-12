@@ -1,10 +1,12 @@
+import { client } from '@/lib/orpc'
 import { redirectToScalarForm } from './actions'
 import { CreatePlanetMutationForm } from './orpc-mutation'
 import { ListPlanetsQuery } from './orpc-query'
 import { OrpcServerAction } from './orpc-server-action'
 import { EventIteratorQueries } from './orpc-stream'
 
-export default function Home() {
+export default async function Home() {
+  console.log('---------', await client.auth.me())
   return (
     <div>
       <h1>ORPC Playground</h1>

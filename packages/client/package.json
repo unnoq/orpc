@@ -6,11 +6,10 @@
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unnoq/orpc.git",
+    "url": "git+https://github.com/middleapi/orpc.git",
     "directory": "packages/client"
   },
   "keywords": [
-    "unnoq",
     "orpc"
   ],
   "publishConfig": {
@@ -70,6 +69,6 @@
     "@orpc/standard-server-peer": "workspace:*"
   },
   "devDependencies": {
-    "zod": "^4.3.5"
+    "zod": "^4.3.2"
   }
 }

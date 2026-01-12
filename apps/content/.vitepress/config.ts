@@ -54,18 +54,18 @@ export default withMermaid(defineConfig({
       placement: 'orpcunnoqcom',
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/unnoq/orpc' },
+      { icon: 'github', link: 'https://github.com/middleapi/orpc' },
       { icon: 'discord', link: 'https://discord.gg/TXEbwRBvQn' },
       { icon: 'x', link: 'https://x.com/unnoqcom' },
       { icon: 'bluesky', link: 'https://bsky.app/profile/unnoq.com' },
     ],
     editLink: {
-      pattern: 'https://github.com/unnoq/orpc/blob/main/apps/content/:path',
+      pattern: 'https://github.com/middleapi/orpc/blob/main/apps/content/:path',
       text: 'Edit on GitHub',
     },
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-present Unnoq & oRPC contributors.',
+      copyright: 'Copyright © 2024-present MiddleAPI & oRPC contributors.',
     },
     nav: [
       { text: 'Docs', link: '/docs/getting-started', activeMatch: '/docs/(?!openapi/)' },
@@ -75,9 +75,9 @@ export default withMermaid(defineConfig({
       {
         text: 'More',
         items: [
-          { text: 'Discussions', link: 'https://github.com/unnoq/orpc/discussions' },
+          { text: 'Discussions', link: 'https://github.com/middleapi/orpc/discussions' },
           { text: 'Sponsor', link: 'https://github.com/sponsors/unnoq' },
-          { text: 'Releases', link: 'https://github.com/unnoq/orpc/releases' },
+          { text: 'Releases', link: 'https://github.com/middleapi/orpc/releases' },
           { text: 'LLM Context', link: '/llms.txt' },
           { text: 'LLM Context (Full)', link: '/llms-full.txt' },
         ],

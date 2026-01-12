@@ -5,19 +5,19 @@
 <h1></h1>
 
 <div align="center">
-  <a href="https://codecov.io/gh/unnoq/orpc">
-    <img alt="codecov" src="https://codecov.io/gh/unnoq/orpc/branch/main/graph/badge.svg">
+  <a href="https://codecov.io/gh/middleapi/orpc">
+    <img alt="codecov" src="https://codecov.io/gh/middleapi/orpc/branch/main/graph/badge.svg">
   </a>
   <a href="https://www.npmjs.com/package/@orpc/hey-api">
     <img alt="weekly downloads" src="https://img.shields.io/npm/dw/%40orpc%2Fhey-api?logo=npm" />
   </a>
-  <a href="https://github.com/unnoq/orpc/blob/main/LICENSE">
-    <img alt="MIT License" src="https://img.shields.io/github/license/unnoq/orpc?logo=open-source-initiative" />
+  <a href="https://github.com/middleapi/orpc/blob/main/LICENSE">
+    <img alt="MIT License" src="https://img.shields.io/github/license/middleapi/orpc?logo=open-source-initiative" />
   </a>
   <a href="https://discord.gg/TXEbwRBvQn">
     <img alt="Discord" src="https://img.shields.io/discord/1308966753044398161?color=7389D8&label&logo=discord&logoColor=ffffff" />
   </a>
-  <a href="https://deepwiki.com/unnoq/orpc">
+  <a href="https://deepwiki.com/middleapi/orpc">
     <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
   </a>
 </div>
@@ -78,4 +78,4 @@ Integration with [Hey API](https://heyapi.dev/).
 
 ## License
 
-Distributed under the MIT License. See [LICENSE](https://github.com/unnoq/orpc/blob/main/LICENSE) for more information.
+Distributed under the MIT License. See [LICENSE](https://github.com/middleapi/orpc/blob/main/LICENSE) for more information.
