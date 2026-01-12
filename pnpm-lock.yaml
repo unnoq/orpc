@@ -279,7 +279,7 @@ importers:
         specifier: ^2.1.29
         version: 2.1.29
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/client:
@@ -298,7 +298,7 @@ importers:
         version: link:../standard-server-peer
     devDependencies:
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/contract:
@@ -323,7 +323,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.8.3)
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/durable-iterator:
@@ -348,7 +348,7 @@ importers:
         version: 1.2.0(typescript@5.8.3)
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20260109.0
+        specifier: ^4.20251231.0
         version: 4.20260109.0
       '@orpc/standard-server-peer':
         specifier: workspace:*
@@ -401,7 +401,7 @@ importers:
         version: 8.0.2
     devDependencies:
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/nest:
@@ -468,10 +468,10 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
       supertest:
-        specifier: ^7.2.2
+        specifier: ^7.1.4
         version: 7.2.2
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/openapi:
@@ -508,7 +508,7 @@ importers:
         specifier: ^5.6.2
         version: 5.6.2
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/openapi-client:
@@ -540,8 +540,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       '@opentelemetry/instrumentation':
-        specifier: ^0.209.0
-        version: 0.209.0(@opentelemetry/api@1.9.0)
+        specifier: ^0.208.0
+        version: 0.208.0(@opentelemetry/api@1.9.0)
 
   packages/pino:
     dependencies:
@@ -572,10 +572,10 @@ importers:
         version: link:../standard-server
     devDependencies:
       '@upstash/redis':
-        specifier: ^1.36.1
+        specifier: ^1.36.0
         version: 1.36.1
       ioredis:
-        specifier: ^5.9.1
+        specifier: ^5.8.2
         version: 5.9.1
 
   packages/publisher-durable-object:
@@ -594,7 +594,7 @@ importers:
         version: link:../standard-server
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20260109.0
+        specifier: ^4.20251231.0
         version: 4.20260109.0
       '@orpc/standard-server-peer':
         specifier: workspace:*
@@ -650,7 +650,7 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/react-query:
@@ -672,7 +672,7 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/react-swr:
@@ -725,7 +725,7 @@ importers:
         version: 1.1.1
     devDependencies:
       '@tanstack/router-core':
-        specifier: ^1.146.2
+        specifier: ^1.144.0
         version: 1.146.2
       '@types/ws':
         specifier: ^8.18.1
@@ -740,13 +740,13 @@ importers:
         specifier: ^16.1.1
         version: 16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       supertest:
-        specifier: ^7.2.2
+        specifier: ^7.1.4
         version: 7.2.2
       ws:
-        specifier: ^8.19.0
+        specifier: ^8.18.3
         version: 8.19.0
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/shared:
@@ -768,7 +768,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.8.3)
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/solid-query:
@@ -790,7 +790,7 @@ importers:
         specifier: ^5.90.19
         version: 5.90.19(solid-js@1.9.10)
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/standard-server:
@@ -912,7 +912,7 @@ importers:
         specifier: ^6.0.14
         version: 6.0.14(svelte@5.46.1)
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/tanstack-query:
@@ -971,7 +971,7 @@ importers:
         specifier: ^11.8.1
         version: 11.8.1(typescript@5.8.3)
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/valibot:
@@ -993,7 +993,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.8.3)
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   packages/vue-colada:
@@ -1006,8 +1006,8 @@ importers:
         version: link:../shared
     devDependencies:
       '@pinia/colada':
-        specifier: ^0.21.0
-        version: 0.21.0(pinia@3.0.4(typescript@5.8.3)(vue@3.5.26(typescript@5.8.3)))(vue@3.5.26(typescript@5.8.3))
+        specifier: ^0.20.0
+        version: 0.20.0(pinia@3.0.4(typescript@5.8.3)(vue@3.5.26(typescript@5.8.3)))(vue@3.5.26(typescript@5.8.3))
       pinia:
         specifier: ^3.0.4
         version: 3.0.4(typescript@5.8.3)(vue@3.5.26(typescript@5.8.3))
@@ -1059,7 +1059,7 @@ importers:
         version: 5.1.4
     devDependencies:
       zod:
-        specifier: ^4.3.5
+        specifier: ^4.3.2
         version: 4.3.5
 
   playgrounds/astro:
@@ -5504,6 +5504,12 @@ packages:
   '@phosphor-icons/core@2.1.1':
     resolution: {integrity: sha512-v4ARvrip4qBCImOE5rmPUylOEK4iiED9ZyKjcvzuezqMaiRASCHKcRIuvvxL/twvLpkfnEODCOJp5dM4eZilxQ==}
 
+  '@pinia/colada@0.20.0':
+    resolution: {integrity: sha512-IY8ssG7xsVlIq5uvnkQtPMKJ4NHxGeeP04HFKR46DOe58UY07JQFKvbDOj3d+nX/Ki+VAb3TGeHIqQdBWf0eWQ==}
+    peerDependencies:
+      pinia: ^2.2.6 || ^3.0.0
+      vue: ^3.5.17
+
   '@pinia/colada@0.21.0':
     resolution: {integrity: sha512-Y7c4gRsZcZCOyxKFbvSadC55sHKJJqKjD3KC1wiOBFl9ubqBlzqOPZl7fj0LkoqbsZYGqAdA0FtNfe9cvgQOXA==}
     peerDependencies:
@@ -7235,6 +7241,9 @@ packages:
 
   '@vue/devtools-api@7.7.9':
     resolution: {integrity: sha512-kIE8wvwlcZ6TJTbNeU2HQNtaxLx3a84aotTITUuL/4bzfPxzajGBOoqjMhwZJ8L9qFYDU/lAYMEEm11dnZOD6g==}
+
+  '@vue/devtools-api@8.0.5':
+    resolution: {integrity: sha512-DgVcW8H/Nral7LgZEecYFFYXnAvGuN9C3L3DtWekAncFBedBczpNW8iHKExfaM559Zm8wQWrwtYZ9lXthEHtDw==}
 
   '@vue/devtools-core@8.0.5':
     resolution: {integrity: sha512-dpCw8nl0GDBuiL9SaY0mtDxoGIEmU38w+TQiYEPOLhW03VDC0lfNMYXS/qhl4I0YlysGp04NLY4UNn6xgD0VIQ==}
@@ -19161,6 +19170,12 @@ snapshots:
 
   '@phosphor-icons/core@2.1.1': {}
 
+  '@pinia/colada@0.20.0(pinia@3.0.4(typescript@5.8.3)(vue@3.5.26(typescript@5.8.3)))(vue@3.5.26(typescript@5.8.3))':
+    dependencies:
+      '@vue/devtools-api': 8.0.5
+      pinia: 3.0.4(typescript@5.8.3)(vue@3.5.26(typescript@5.8.3))
+      vue: 3.5.26(typescript@5.8.3)
+
   '@pinia/colada@0.21.0(pinia@3.0.4(typescript@5.8.3)(vue@3.5.26(typescript@5.8.3)))(vue@3.5.26(typescript@5.8.3))':
     dependencies:
       pinia: 3.0.4(typescript@5.8.3)(vue@3.5.26(typescript@5.8.3))
@@ -21547,6 +21562,10 @@ snapshots:
   '@vue/devtools-api@7.7.9':
     dependencies:
       '@vue/devtools-kit': 7.7.9
+
+  '@vue/devtools-api@8.0.5':
+    dependencies:
+      '@vue/devtools-kit': 8.0.5
 
   '@vue/devtools-core@8.0.5(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.26(typescript@5.8.3))':
     dependencies:
