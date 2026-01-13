@@ -84,7 +84,7 @@ I used tRPC extensively and really liked it. However, I needed OpenAPI support f
 
 Also, setting up tRPC sometimes felt too complicated, especially for smaller projects like Cloudflare Durable Objects where I just needed a simple API. Another point is that tRPC mostly supports React Query. That was okay for me, but less helpful if you want to use Vue, Solid, or Svelte.
 
-I did some **simple** benchmarks between oRPC and tRPC, and results show (full report [here](https://github.com/unnoq/orpc-benchmarks)):
+I did some **simple** benchmarks between oRPC and tRPC, and results show (full report [here](https://github.com/middleapi/orpc-benchmarks)):
 
 - oRPC is **1,6 times typecheck faster** (5.9s vs 9.3s)
 - oRPC is **2,8 times runtime faster** (295k reqs vs 104k reqs / 20 sec)
