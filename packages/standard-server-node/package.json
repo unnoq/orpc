@@ -6,7 +6,7 @@
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unnoq/orpc.git",
+    "url": "git+https://github.com/middleapi/orpc.git",
     "directory": "packages/standard-server-node"
   },
   "keywords": [
