@@ -189,7 +189,7 @@ queryClient.invalidateQueries({
 })
 
 // Update the planet find query with id 123
-queryClient.setQueryData(orpc.planet.find.queryKey({ input: { id: 123 } }), (old) => {
+queryClient.setQueryData(orpc.planet.find.queryOptions({ input: { id: 123 } }).queryKey, (old) => {
   return { ...old, id: 123, name: 'Earth' }
 })
 ```
