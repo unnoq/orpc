@@ -1,6 +1,6 @@
 {
   "name": "@orpc/electron-playground",
-  "version": "1.13.5",
+  "version": "1.35.6",
   "main": "./out/main/index.js",
   "scripts": {
     "setup": "electron-builder install-app-deps",
