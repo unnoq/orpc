@@ -157,4 +157,32 @@ describe('standardRPCJsonSerializer: custom serializers', () => {
       })
     }).toThrow('Custom serializer type must be unique.')
   })
+
+  it.each(['nonExist', '__proto__', 'constructor'])('should throw when accessing non-existent path during deserialization: %s', (segment) => {
+    const serializer = new StandardRPCJsonSerializer()
+
+    expect(
+      () => serializer.deserialize({ a: 1 }, [[1, segment]]),
+    ).toThrow(`Security error: accessing non-existent path during deserialization. Path segment: ${segment}`)
+
+    expect(
+      () => serializer.deserialize({ a: 1 }, [[1, 'a', segment]]),
+    ).toThrow(`Security error: accessing non-existent path during deserialization. Path segment: ${segment}`)
+
+    expect(
+      () => serializer.deserialize({ a: 1 }, [[1, segment, 'role']]),
+    ).toThrow(`Security error: accessing non-existent path during deserialization. Path segment: ${segment}`)
+
+    expect(
+      () => serializer.deserialize({ a: 1 }, [], [[segment]], () => new Blob([])),
+    ).toThrow(`Security error: accessing non-existent path during deserialization. Path segment: ${segment}`)
+
+    expect(
+      () => serializer.deserialize({ a: 1 }, [], [['a', segment]], () => new Blob([])),
+    ).toThrow(`Security error: accessing non-existent path during deserialization. Path segment: ${segment}`)
+
+    expect(
+      () => serializer.deserialize({ a: 1 }, [], [[segment, 'role']], () => new Blob([])),
+    ).toThrow(`Security error: accessing non-existent path during deserialization. Path segment: ${segment}`)
+  })
 })
