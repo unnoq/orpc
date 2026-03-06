@@ -13,7 +13,7 @@
           class="resizable-img"
           loading="lazy"
           src="https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg"
-          alt="Anthony Fu's sponsors"
+          alt="dinwwwh's sponsors"
         >
       </a>
     </div>
