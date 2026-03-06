@@ -201,8 +201,8 @@ This is a quick overview of how to use oRPC. For more details, please refer to t
 ## Sponsors
 
 <p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg'/>
+  <a href="https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg'/>
   </a>
 </p>
 

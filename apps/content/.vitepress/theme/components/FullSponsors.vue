@@ -5,14 +5,14 @@
     </h2>
 
     <div class="full-sponsors">
-      <a href="https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg" target="_blank" rel="noopener noreferrer">
+      <a href="https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg" target="_blank" rel="noopener noreferrer">
         <img
           crossorigin="anonymous"
           inline-block
           width="768" height="1464"
           class="resizable-img"
           loading="lazy"
-          src="https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg"
+          src="https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg"
           alt="Anthony Fu's sponsors"
         >
       </a>

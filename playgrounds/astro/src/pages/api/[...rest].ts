@@ -70,7 +70,7 @@ export const ALL: APIRoute = async ({ request }) => {
   const { response } = await handler.handle(request, {
     prefix: '/api',
     context: {
-      session: { user: { id: 'unique', name: 'unnoq', email: 'contact@unnoq.com' } },
+      session: { user: { id: 'unique', name: 'Example', email: 'example@example.com' } },
     },
   })
 

@@ -94,8 +94,8 @@ server.listen(3000, '127.0.0.1', () => console.log('Listening on 127.0.0.1:3000'
 ## Sponsors
 
 <p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg'/>
+  <a href="https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg'/>
   </a>
 </p>
 

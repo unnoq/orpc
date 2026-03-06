@@ -71,8 +71,8 @@ Event Publisher with multiple adapter support, resume support, and more.
 ## Sponsors
 
 <p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.svg'/>
+  <a href="https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.svg'/>
   </a>
 </p>
 
