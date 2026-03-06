@@ -27,7 +27,7 @@ export function useSponsors(visible?: Ref<boolean>): { sponsors: Ref<JSONSponsor
 
     status.value = 'updating'
 
-    fetch('https://cdn.jsdelivr.net/gh/unnoq/unnoq/sponsors.json')
+    fetch('https://cdn.jsdelivr.net/gh/dinwwwh/dinwwwh/sponsors.json')
       .then(res => res.json())
       .then((value) => {
         sponsors.value = value
