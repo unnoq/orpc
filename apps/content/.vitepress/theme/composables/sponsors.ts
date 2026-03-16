@@ -9,8 +9,8 @@ export interface JSONSponsor {
   amount: number
   link?: string
   org: boolean
-  rideSidebarSize: 'normal' | 'small' | 'none'
-  rideSidebarLink?: string
+  rightSidebarSize: 'normal' | 'small' | 'none'
+  rightSidebarLink?: string
   rightSidebarLogo: string
 }
 

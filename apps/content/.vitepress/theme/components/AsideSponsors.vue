@@ -8,8 +8,8 @@ const containerIsVisible = useElementVisibility(container)
 
 const { sponsors } = useSponsors(containerIsVisible)
 
-const normalSponsors = computed(() => sponsors.value.filter(s => s.rideSidebarSize === 'normal'))
-const smallSponsors = computed(() => sponsors.value.filter(s => s.rideSidebarSize === 'small'))
+const normalSponsors = computed(() => sponsors.value.filter(s => s.rightSidebarSize === 'normal'))
+const smallSponsors = computed(() => sponsors.value.filter(s => s.rightSidebarSize === 'small'))
 </script>
 
 <template>
@@ -17,7 +17,7 @@ const smallSponsors = computed(() => sponsors.value.filter(s => s.rideSidebarSiz
     <a class="aside-sponsors-title" href="https://github.com/sponsors/dinwwwh" target="_blank" rel="noopener">SPONSORS</a>
 
     <div class="aside-sponsors-list">
-      <a v-for="sponsor in normalSponsors" :key="sponsor.login" class="aside-sponsor" target="_blank" :href="sponsor.rideSidebarLink">
+      <a v-for="sponsor in normalSponsors" :key="sponsor.login" class="aside-sponsor" target="_blank" :href="sponsor.rightSidebarLink">
         <img :src="sponsor.rightSidebarLogo" :alt="sponsor.name">
       </a>
 
@@ -26,7 +26,7 @@ const smallSponsors = computed(() => sponsors.value.filter(s => s.rideSidebarSiz
       </a>
 
       <div class="aside-sponsors-small">
-        <a v-for="sponsor in smallSponsors" :key="sponsor.login" class="aside-sponsor" target="_blank" :href="sponsor.rideSidebarLink">
+        <a v-for="sponsor in smallSponsors" :key="sponsor.login" class="aside-sponsor" target="_blank" :href="sponsor.rightSidebarLink">
           <img :src="sponsor.rightSidebarLogo" :alt="sponsor.name">
         </a>
       </div>
