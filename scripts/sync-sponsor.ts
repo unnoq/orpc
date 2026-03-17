@@ -77,7 +77,7 @@ function getTierImageSize(tierLevel: number, tierLevels: number[]): number {
     return 100
   }
 
-  const sizesByRank = [130, 115, 100, 88, 76, 54]
+  const sizesByRank = [220, 170, 120, 88, 76, 54]
   return sizesByRank[Math.min(rank, sizesByRank.length - 1)] ?? 100
 }
 
@@ -154,7 +154,7 @@ function buildSponsorsSection(sponsors: Sponsor[]): string {
       const displayName = sponsor.name ?? sponsor.login
       const escapedName = escapeHtml(displayName)
 
-      lines.push(`  <a href="${escapeHtml(href)}" target="_blank" rel="sponsored noopener noreferrer" title="${escapedName}"><img src="${escapeHtml(sponsor.avatar)}" width="32" height="32" style="border-radius: 50%;" alt="${escapedName}" /></a>`)
+      lines.push(`  <a href="${escapeHtml(href)}" target="_blank" rel="sponsored noopener noreferrer" title="${escapedName}"><img src="${escapeHtml(sponsor.avatar)}" width="32" height="32" alt="${escapedName}" /></a>`)
     }
 
     lines.push('</p>')

@@ -27,6 +27,6 @@ jobs:
         with:
           author_name: GitHub Actions
           author_email: 41898282+github-actions[bot]@users.noreply.github.com
-          message: 'chore: sync sponsors [ci skip]'
+          message: 'chore: sync sponsors'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
