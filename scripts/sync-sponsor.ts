@@ -108,20 +108,31 @@ function buildSponsorsSection(sponsors: Sponsor[]): string {
 
     const tierTitle = tierSponsors[0]?.tierTitle ?? `Tier ${tierLevel}`
     const imageSize = getTierImageSize(tierLevel, tierLevels)
+    const columns = 6
 
     lines.push(`### ${tierTitle}`)
     lines.push('')
-    lines.push('<p>')
+    lines.push('<table>')
+    lines.push('  <tr>')
 
-    for (const sponsor of tierSponsors) {
+    for (const [index, sponsor] of tierSponsors.entries()) {
       const href = withTracking(sponsor.link)
       const displayName = sponsor.name ?? sponsor.login
       const escapedName = escapeHtml(displayName)
 
-      lines.push(`  <a href="${escapeHtml(href)}" target="_blank" rel="sponsored noopener noreferrer" title="${escapedName}" style="display: inline-block; margin: 0 16px 16px 0; text-align: center; text-decoration: none;"><img src="${escapeHtml(sponsor.avatar)}" width="${imageSize}" alt="${escapedName}"/><br />${escapedName}</a>`)
+      lines.push(`   <td align="center"><a href="${escapeHtml(href)}" target="_blank" rel="sponsored noopener noreferrer" title="${escapedName}"><img src="${escapeHtml(sponsor.avatar)}" width="${imageSize}" alt="${escapedName}"/><br />${escapedName}</a></td>`)
+
+      const isRowEnd = (index + 1) % columns === 0
+      const isLast = index === tierSponsors.length - 1
+
+      if (isRowEnd && !isLast) {
+        lines.push('  </tr>')
+        lines.push('  <tr>')
+      }
     }
 
-    lines.push('</p>')
+    lines.push('  </tr>')
+    lines.push('</table>')
     lines.push('')
   }
 
