@@ -48,7 +48,7 @@ const tierGroups = computed(() => {
     </h2>
     <p class="sponsor-cta">
       If you find oRPC valuable and would like to support its development:
-      <a href="https://github.com/sponsors/dinwwwh" target="_blank" rel="noopener noreferrer">GitHub Sponsors</a>
+      <a href="https://github.com/sponsors/dinwwwh" target="_blank" rel="noopener">GitHub Sponsors</a>
     </p>
 
     <div v-for="tier in tierGroups" :key="tier.level" class="tier-section">
@@ -65,7 +65,7 @@ const tierGroups = computed(() => {
             <a
               :href="sponsor.link"
               target="_blank"
-              rel="sponsored noopener noreferrer"
+              rel="noopener"
               :title="sponsor.name || sponsor.login"
               class="sponsor-link"
             >
@@ -93,7 +93,7 @@ const tierGroups = computed(() => {
           :key="sponsor.login"
           :href="sponsor.link"
           target="_blank"
-          rel="sponsored noopener noreferrer"
+          rel="noopener"
           :title="sponsor.name || sponsor.login"
         >
           <img
