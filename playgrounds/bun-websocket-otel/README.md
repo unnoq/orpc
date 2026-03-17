@@ -30,7 +30,7 @@ If you find oRPC valuable and would like to support its development, you can do 
 
 <table>
   <tr>
-   <td align="center"><a href="https://zuplo.com/?ref=orpc" target="_blank" rel="sponsored noopener noreferrer" title="Zuplo"><img src="https://avatars.githubusercontent.com/u/85497839?v=4" width="115" alt="Zuplo"/><br />Zuplo</a></td>
+   <td align="center"><a href="https://zuplo.link/orpc?ref=orpc" target="_blank" rel="sponsored noopener noreferrer" title="Zuplo"><img src="https://avatars.githubusercontent.com/u/85497839?v=4" width="115" alt="Zuplo"/><br />Zuplo</a></td>
   </tr>
 </table>
 

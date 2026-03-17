@@ -22,35 +22,43 @@ const ROOT_DIR = process.cwd()
 const README_FILE_NAME = 'README.md'
 const WEBSITE_SPONSORS_FILE = path.join(ROOT_DIR, 'apps/content/.vitepress/theme/sponsors.ts')
 
-async function findReadmes(dir: string, result: string[] = []): Promise<string[]> {
+const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', '.output', '.next', '.nuxt', '.turbo'])
+
+async function findReadmes(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
+  const result: string[] = []
+  const subdirPromises: Promise<string[]>[] = []
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name)
 
     if (entry.isDirectory()) {
-      if (entry.name === 'node_modules' || entry.name === '.git') {
+      if (SKIP_DIRS.has(entry.name)) {
         continue
       }
 
-      await findReadmes(fullPath, result)
-      continue
+      subdirPromises.push(findReadmes(fullPath))
     }
-
-    if (entry.isFile() && entry.name === README_FILE_NAME) {
+    else if (entry.isFile() && entry.name === README_FILE_NAME) {
       result.push(fullPath)
     }
   }
 
-  return result
+  const subResults = await Promise.all(subdirPromises)
+  return result.concat(...subResults)
 }
 
 function withTracking(url: string): string {
-  const tracked = new URL(url)
+  try {
+    const tracked = new URL(url)
 
-  tracked.searchParams.set('ref', 'orpc')
+    tracked.searchParams.set('ref', 'orpc')
 
-  return tracked.toString()
+    return tracked.toString()
+  }
+  catch {
+    return url
+  }
 }
 
 function escapeHtml(value: string): string {
@@ -97,7 +105,7 @@ function buildSponsorsSection(sponsors: Sponsor[]): string {
     '',
   ]
 
-  const tierLevels = [...groupedSponsors.keys()]
+  const tierLevels = [...groupedSponsors.keys()].sort((a, b) => b - a)
 
   for (const tierLevel of tierLevels) {
     const tierSponsors = groupedSponsors.get(tierLevel)
@@ -239,20 +247,25 @@ async function main(): Promise<void> {
   const sponsors = await response.json() as Sponsor[]
   await writeWebsiteSponsorsFile(sponsors)
   const readmeFiles = await findReadmes(ROOT_DIR)
+  const replacement = buildSponsorsSection(sponsors)
 
+  const readmeContents = await Promise.all(
+    readmeFiles.map(readmePath => readFile(readmePath, 'utf8')),
+  )
+
+  const writePromises: Promise<void>[] = []
   let updatedCount = 0
 
-  for (const readmePath of readmeFiles) {
-    const content = await readFile(readmePath, 'utf8')
-    const replacement = buildSponsorsSection(sponsors)
+  for (const [i, content] of readmeContents.entries()) {
     const nextContent = replaceSponsorsSection(content, replacement)
 
     if (nextContent !== content) {
-      await writeFile(readmePath, nextContent)
+      writePromises.push(writeFile(readmeFiles[i]!, nextContent))
       updatedCount += 1
     }
   }
 
+  await Promise.all(writePromises)
   console.log(`Updated sponsors section in ${updatedCount} README files.`)
 }
 

@@ -35,7 +35,7 @@ export const sponsors: JSONSponsor[] = [
     login: 'zuplo',
     avatar: 'https://avatars.githubusercontent.com/u/85497839?v=4',
     amount: 500,
-    link: 'https://zuplo.com',
+    link: 'https://zuplo.link/orpc',
     org: true,
     createdAt: '2025-04-02T05:15:32Z',
     tierTitle: '🥇 Gold Sponsor',
