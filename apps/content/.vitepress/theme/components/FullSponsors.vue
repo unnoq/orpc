@@ -28,14 +28,14 @@ const tierGroups = computed(() => {
   return tierLevels.map((level) => {
     const tierSponsors = grouped.get(level)!
     const rank = tierLevels.indexOf(level)
-    const sizes = [220, 170, 120, 88, 76, 54]
-    const imageSize = sizes[Math.min(rank, sizes.length - 1)] ?? 100
+    const columns = [3, 4, 6, 6, 8, 8]
+    const cols = columns[Math.min(rank, columns.length - 1)] ?? 6
 
     return {
       level,
       title: tierSponsors[0]?.tierTitle ?? `Tier ${level}`,
       sponsors: tierSponsors,
-      imageSize,
+      cols,
     }
   })
 })
@@ -55,39 +55,35 @@ const tierGroups = computed(() => {
       <h3 class="tier-title">
         {{ tier.title }}
       </h3>
-      <table class="tier-table">
-        <tr v-for="(row, rowIndex) in Math.ceil(tier.sponsors.length / 6)" :key="rowIndex">
-          <td
-            v-for="sponsor in tier.sponsors.slice(rowIndex * 6, rowIndex * 6 + 6)"
-            :key="sponsor.login"
-            align="center"
+      <div class="tier-grid" :style="{ '--cols': tier.cols }">
+        <div
+          v-for="sponsor in tier.sponsors"
+          :key="sponsor.login"
+          class="tier-grid-item"
+        >
+          <a
+            :href="sponsor.link"
+            target="_blank"
+            rel="noopener"
+            :title="sponsor.name || sponsor.login"
+            class="sponsor-link"
           >
-            <a
-              :href="sponsor.link"
-              target="_blank"
-              rel="noopener"
-              :title="sponsor.name || sponsor.login"
-              class="sponsor-link"
+            <img
+              :src="sponsor.avatar"
+              :alt="sponsor.name || sponsor.login"
+              loading="lazy"
             >
-              <img
-                :src="sponsor.avatar"
-                :alt="sponsor.name || sponsor.login"
-                :width="tier.imageSize"
-                loading="lazy"
-              >
-              <br>
-              <span class="sponsor-name">{{ sponsor.name || sponsor.login }}</span>
-            </a>
-          </td>
-        </tr>
-      </table>
+            <span class="sponsor-name">{{ sponsor.name || sponsor.login }}</span>
+          </a>
+        </div>
+      </div>
     </div>
 
     <div v-if="pastSponsors.length > 0" class="tier-section">
       <h3 class="tier-title">
         Past Sponsors
       </h3>
-      <p class="past-sponsors">
+      <div class="past-sponsors">
         <a
           v-for="sponsor in pastSponsors"
           :key="sponsor.login"
@@ -95,17 +91,16 @@ const tierGroups = computed(() => {
           target="_blank"
           rel="noopener"
           :title="sponsor.name || sponsor.login"
+          class="past-sponsor-link"
         >
           <img
             :src="sponsor.avatar"
             :alt="sponsor.name || sponsor.login"
-            width="32"
-            height="32"
             class="past-sponsor-avatar"
             loading="lazy"
           >
         </a>
-      </p>
+      </div>
     </div>
   </div>
 </template>
@@ -151,20 +146,41 @@ const tierGroups = computed(() => {
 .tier-title {
   font-size: 18px;
   font-weight: 600;
+  margin-top: 16px;
   margin-bottom: 8px;
   color: var(--vp-c-text-1);
 }
 
-.tier-table {
-  border-collapse: collapse;
-  margin-left: auto;
-  margin-right: auto;
+.tier-grid {
+  display: grid;
+  grid-template-columns: repeat(min(var(--cols, 6), 2), 1fr);
 }
 
-.tier-table td {
+.tier-grid-item {
+  display: flex;
+  justify-content: center;
+  align-items: start;
   padding: 12px;
-  vertical-align: top;
   text-align: center;
+  border: 1px solid var(--vp-c-divider);
+  margin: -1px 0 0 -1px;
+}
+
+.tier-grid-item img {
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 640px) {
+  .tier-grid {
+    grid-template-columns: repeat(min(var(--cols, 6), 3), 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .tier-grid {
+    grid-template-columns: repeat(var(--cols, 6), 1fr);
+  }
 }
 
 .sponsor-link {
@@ -184,17 +200,34 @@ const tierGroups = computed(() => {
 }
 
 .past-sponsors {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
   gap: 8px;
 }
 
-.past-sponsor-avatar {
+.past-sponsor-link {
   opacity: 0.7;
   transition: opacity 0.2s;
 }
 
-.past-sponsor-avatar:hover {
+.past-sponsor-link:hover {
   opacity: 1;
+}
+
+.past-sponsor-avatar {
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 640px) {
+  .past-sponsors {
+    grid-template-columns: repeat(12, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .past-sponsors {
+    grid-template-columns: repeat(18, 1fr);
+  }
 }
 </style>
