@@ -73,7 +73,7 @@ function escapeHtml(value: string): string {
 function getTierImageSizeAndColumns(tierLevel: number, tierLevels: number[]): [columns: number, imageSize: number] {
   const rank = tierLevels.findIndex(level => level === tierLevel)
 
-  const columnByRank = [3, 4, 5, 7, 9, 11]
+  const columnByRank = [3, 4, 5, 6, 7, 8]
   const column = columnByRank[Math.min(rank, columnByRank.length - 1)] ?? 3
   return [column, Math.floor(838 / column)]
 }
