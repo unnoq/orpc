@@ -124,7 +124,7 @@ function buildSponsorsSection(sponsors: Sponsor[]): string {
     lines.push('  <tr>')
 
     for (const [index, sponsor] of tierSponsors.entries()) {
-      const href = withTracking(sponsor.link)
+      const href = sponsor.link
       const displayName = sponsor.name ?? sponsor.login
       const escapedName = escapeHtml(displayName)
 
@@ -150,7 +150,7 @@ function buildSponsorsSection(sponsors: Sponsor[]): string {
     lines.push('<p>')
 
     for (const sponsor of pastSponsors) {
-      const href = withTracking(sponsor.link)
+      const href = sponsor.link
       const displayName = sponsor.name ?? sponsor.login
       const escapedName = escapeHtml(displayName)
 
@@ -244,7 +244,7 @@ async function main(): Promise<void> {
     throw new Error(`Failed to fetch sponsors data: ${response.status} ${response.statusText}`)
   }
 
-  const sponsors = await response.json() as Sponsor[]
+  const sponsors = (await response.json() as Sponsor[]).map(sponsor => ({ ...sponsor, link: withTracking(sponsor.link) }))
   await writeWebsiteSponsorsFile(sponsors)
   const readmeFiles = await findReadmes(ROOT_DIR)
   const replacement = buildSponsorsSection(sponsors)
