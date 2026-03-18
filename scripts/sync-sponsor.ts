@@ -70,15 +70,12 @@ function escapeHtml(value: string): string {
     .replaceAll('\'', '&#39;')
 }
 
-function getTierImageSize(tierLevel: number, tierLevels: number[]): number {
+function getTierImageSizeAndColumns(tierLevel: number, tierLevels: number[]): [columns: number, imageSize: number] {
   const rank = tierLevels.findIndex(level => level === tierLevel)
 
-  if (rank === -1) {
-    return 100
-  }
-
-  const sizesByRank = [220, 170, 120, 88, 76, 54]
-  return sizesByRank[Math.min(rank, sizesByRank.length - 1)] ?? 100
+  const columnByRank = [3, 4, 5, 6, 7, 8]
+  const column = columnByRank[Math.min(rank, columnByRank.length - 1)] ?? 3
+  return [column, Math.floor(838 / column)]
 }
 
 function buildSponsorsSection(sponsors: Sponsor[]): string {
@@ -115,8 +112,7 @@ function buildSponsorsSection(sponsors: Sponsor[]): string {
     }
 
     const tierTitle = tierSponsors[0]?.tierTitle ?? `Tier ${tierLevel}`
-    const imageSize = getTierImageSize(tierLevel, tierLevels)
-    const columns = 6
+    const [columns, imageSize] = getTierImageSizeAndColumns(tierLevel, tierLevels)
 
     lines.push(`### ${tierTitle}`)
     lines.push('')
