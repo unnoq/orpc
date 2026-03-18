@@ -28,7 +28,7 @@ const tierGroups = computed(() => {
   return tierLevels.map((level) => {
     const tierSponsors = grouped.get(level)!
     const rank = tierLevels.indexOf(level)
-    const columns = [3, 4, 6, 6, 8, 8]
+    const columns = [3, 4, 5, 6, 7, 8]
     const cols = columns[Math.min(rank, columns.length - 1)] ?? 6
 
     return {
