@@ -223,7 +223,6 @@ If you find oRPC valuable and would like to support its development, you can do 
 <table>
   <tr>
    <td align="center"><a href="https://misskey.io/?ref=orpc" target="_blank" rel="noopener" title="村上さん"><img src="https://avatars.githubusercontent.com/u/37681609?u=0dd4c7e4ba937cbb52b068c55914b1d8164dc0c7&amp;v=4" width="167" alt="村上さん"/><br />村上さん</a></td>
-   <td align="center"><a href="https://valerii15298.github.io/?ref=orpc" target="_blank" rel="noopener" title="Valerii Petryniak"><img src="https://avatars.githubusercontent.com/u/44531564?u=88ac74d9bacd20401518441907acad21063cd397&amp;v=4" width="167" alt="Valerii Petryniak"/><br />Valerii Petryniak</a></td>
    <td align="center"><a href="https://github.com/christ12938?ref=orpc" target="_blank" rel="noopener" title="christ12938"><img src="https://avatars.githubusercontent.com/u/25758598?v=4" width="167" alt="christ12938"/><br />christ12938</a></td>
   </tr>
 </table>
@@ -251,13 +250,14 @@ If you find oRPC valuable and would like to support its development, you can do 
   <tr>
    <td align="center"><a href="https://github.com/ryota-murakami?ref=orpc" target="_blank" rel="noopener" title="Ryota Murakami"><img src="https://avatars.githubusercontent.com/u/5501268?u=599389e03340734325726ca3f8f423c021d47d7f&amp;v=4" width="119" alt="Ryota Murakami"/><br />Ryota Murakami</a></td>
    <td align="center"><a href="https://github.com/dcramer?ref=orpc" target="_blank" rel="noopener" title="David Cramer"><img src="https://avatars.githubusercontent.com/u/23610?v=4" width="119" alt="David Cramer"/><br />David Cramer</a></td>
+   <td align="center"><a href="https://github.com/valerii15298?ref=orpc" target="_blank" rel="noopener" title="Valerii Petryniak"><img src="https://avatars.githubusercontent.com/u/44531564?u=88ac74d9bacd20401518441907acad21063cd397&amp;v=4" width="119" alt="Valerii Petryniak"/><br />Valerii Petryniak</a></td>
    <td align="center"><a href="https://github.com/happyboy2022?ref=orpc" target="_blank" rel="noopener" title="happyboy"><img src="https://avatars.githubusercontent.com/u/103669586?u=65b49c4b893ed3703909fbb3a7a22313f3f9c121&amp;v=4" width="119" alt="happyboy"/><br />happyboy</a></td>
    <td align="center"><a href="https://github.com/letstri?ref=orpc" target="_blank" rel="noopener" title="Valerii Strilets"><img src="https://avatars.githubusercontent.com/u/13253748?u=c7b10399ccc8f8081e24db94ec32cd9858e86ac3&amp;v=4" width="119" alt="Valerii Strilets"/><br />Valerii Strilets</a></td>
    <td align="center"><a href="https://github.com/K-Mistele?ref=orpc" target="_blank" rel="noopener" title="Kyle Mistele"><img src="https://avatars.githubusercontent.com/u/18430555?u=3afebeb81de666e35aaac3ed46f14159d7603ffb&amp;v=4" width="119" alt="Kyle Mistele"/><br />Kyle Mistele</a></td>
    <td align="center"><a href="https://github.com/andrewpeters9?ref=orpc" target="_blank" rel="noopener" title="Andrew Peters"><img src="https://avatars.githubusercontent.com/u/36251325?v=4" width="119" alt="Andrew Peters"/><br />Andrew Peters</a></td>
-   <td align="center"><a href="https://github.com/R44VC0RP?ref=orpc" target="_blank" rel="noopener" title="Ryan Vogel"><img src="https://avatars.githubusercontent.com/u/89211796?u=1857347b9787d8d8a7ea5bfc333f96be92d5a683&amp;v=4" width="119" alt="Ryan Vogel"/><br />Ryan Vogel</a></td>
   </tr>
   <tr>
+   <td align="center"><a href="https://github.com/R44VC0RP?ref=orpc" target="_blank" rel="noopener" title="Ryan Vogel"><img src="https://avatars.githubusercontent.com/u/89211796?u=1857347b9787d8d8a7ea5bfc333f96be92d5a683&amp;v=4" width="119" alt="Ryan Vogel"/><br />Ryan Vogel</a></td>
    <td align="center"><a href="https://github.com/peter-adam-dy?ref=orpc" target="_blank" rel="noopener" title="Peter Adam"><img src="https://avatars.githubusercontent.com/u/132129459?u=4f3dbbb3b443990b56acb7d6a5d11ed2c555f6db&amp;v=4" width="119" alt="Peter Adam"/><br />Peter Adam</a></td>
    <td align="center"><a href="https://github.com/yukimotochern?ref=orpc" target="_blank" rel="noopener" title="Chen, Zhi-Yuan"><img src="https://avatars.githubusercontent.com/u/20896173?u=945c33fc21725e4d566a0d02afc54b136ca1d67a&amp;v=4" width="119" alt="Chen, Zhi-Yuan"/><br />Chen, Zhi-Yuan</a></td>
    <td align="center"><a href="https://github.com/Ryanjso?ref=orpc" target="_blank" rel="noopener" title="Ryan Soderberg"><img src="https://avatars.githubusercontent.com/u/39172778?u=5ed913c31d57e7221b75784abcad48c7ebddde27&amp;v=4" width="119" alt="Ryan Soderberg"/><br />Ryan Soderberg</a></td>
