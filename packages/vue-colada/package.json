@@ -1,7 +1,7 @@
 {
   "name": "@orpc/vue-colada",
   "type": "module",
-  "version": "1.13.10",
+  "version": "1.13.11",
   "license": "MIT",
   "homepage": "https://orpc.dev",
   "repository": {
