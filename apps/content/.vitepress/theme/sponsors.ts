@@ -384,7 +384,7 @@ export const sponsors: JSONSponsor[] = [
   {
     name: 'Christopher Kapic',
     login: 'christopher-kapic',
-    avatar: 'https://avatars.githubusercontent.com/u/59740769?v=4',
+    avatar: 'https://avatars.githubusercontent.com/u/59740769?u=9c0fc693c24e088e75a4b05803fa499b865e7f38&v=4',
     amount: 5,
     link: 'https://github.com/christopher-kapic?ref=orpc',
     org: false,
@@ -392,7 +392,7 @@ export const sponsors: JSONSponsor[] = [
     tierTitle: 'Backers',
     tierLevel: 1,
     sidebarSize: 'none',
-    sidebarLogo: 'https://avatars.githubusercontent.com/u/59740769?v=4',
+    sidebarLogo: 'https://avatars.githubusercontent.com/u/59740769?u=9c0fc693c24e088e75a4b05803fa499b865e7f38&v=4',
   },
   {
     name: 'Tom Ballinger',
