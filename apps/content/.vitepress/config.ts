@@ -107,6 +107,7 @@ export default withMermaid(defineConfig({
             { text: 'Define Contract', link: '/docs/contract-first/define-contract' },
             { text: 'Implement Contract', link: '/docs/contract-first/implement-contract' },
             { text: 'Router to Contract', link: '/docs/contract-first/router-to-contract' },
+            { text: 'OpenAPI to Contract', link: '/docs/openapi/openapi-to-contract' },
           ],
         },
         {
@@ -190,7 +191,7 @@ export default withMermaid(defineConfig({
             { text: 'AI SDK', link: '/docs/integrations/ai-sdk' },
             { text: 'Better Auth', link: '/docs/integrations/better-auth' },
             { text: 'Durable Iterator', link: '/docs/integrations/durable-iterator' },
-            { text: 'Hey API', link: '/docs/integrations/hey-api' },
+            { text: 'Hey API', link: '/docs/openapi/integrations/hey-api' },
             { text: 'OpenTelemetry', link: '/docs/integrations/opentelemetry' },
             { text: 'Pinia Colada', link: '/docs/integrations/pinia-colada' },
             { text: 'Pino', link: '/docs/integrations/pino' },
@@ -261,6 +262,7 @@ export default withMermaid(defineConfig({
         { text: 'OpenAPI Handler', link: '/docs/openapi/openapi-handler' },
         { text: 'OpenAPI Specification', link: '/docs/openapi/openapi-specification' },
         { text: 'Scalar (Swagger)', link: '/docs/openapi/scalar' },
+        { text: 'OpenAPI to Contract', link: '/docs/openapi/openapi-to-contract' },
         {
           text: 'Plugins',
           collapsed: true,
@@ -281,6 +283,7 @@ export default withMermaid(defineConfig({
           text: 'Integrations',
           collapsed: true,
           items: [
+            { text: 'Hey API', link: '/docs/openapi/integrations/hey-api' },
             { text: 'Implement Contract in NestJS', link: '/docs/openapi/integrations/implement-contract-in-nest' },
             { text: 'tRPC', link: '/docs/openapi/integrations/trpc' },
           ],
