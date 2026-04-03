@@ -16,7 +16,7 @@ The [Hey API](https://heyapi.dev/) integration is still unstable. As Hey API con
 
 ## Convert OpenAPI to an oRPC Contract
 
-If you already have an OpenAPI specification, you can use Hey API to generate an oRPC contract. See [OpenAPI to Contract](/docs/contract-first/openapi-to-contract) for the complete setup and next steps.
+If you already have an OpenAPI specification, you can use Hey API to generate an oRPC contract. See [OpenAPI to Contract](/docs/openapi/openapi-to-contract) for the complete setup and next steps.
 
 Once generated, you can use the contract to:
 
