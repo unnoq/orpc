@@ -89,6 +89,7 @@ If you find oRPC valuable and would like to support its development, you can do 
    <td align="center"><a href="https://github.com/Titoine?ref=orpc" target="_blank" rel="noopener" title="Titoine"><img src="https://avatars.githubusercontent.com/u/3514286?u=1bb1e86b0c99c8a1121372e56d51a177eea12191&amp;v=4" width="119" alt="Titoine"/><br />Titoine</a></td>
    <td align="center"><a href="https://github.com/Mnigos?ref=orpc" target="_blank" rel="noopener" title="Igor Makowski"><img src="https://avatars.githubusercontent.com/u/56691628?u=ee8c879478f7c151b9156aef6c74243fa3e247a8&amp;v=4" width="119" alt="Igor Makowski"/><br />Igor Makowski</a></td>
    <td align="center"><a href="https://github.com/steelbrain?ref=orpc" target="_blank" rel="noopener" title="Anees Iqbal"><img src="https://avatars.githubusercontent.com/u/4278113?u=22b80b5399eed68ac76cd58b02961b0481f1db11&amp;v=4" width="119" alt="Anees Iqbal"/><br />Anees Iqbal</a></td>
+   <td align="center"><a href="https://github.com/hanayashiki?ref=orpc" target="_blank" rel="noopener" title="wang chenyu"><img src="https://avatars.githubusercontent.com/u/26056783?u=98c5ceda64b19874ed2a31515467332ea991e590&amp;v=4" width="119" alt="wang chenyu"/><br />wang chenyu</a></td>
    <td align="center"><a href="https://github.com/piscis?ref=orpc" target="_blank" rel="noopener" title="Alex"><img src="https://avatars.githubusercontent.com/u/326163?u=b245f368bd940cf51d08c0b6bf55f8257f359437&amp;v=4" width="119" alt="Alex"/><br />Alex</a></td>
   </tr>
 </table>
