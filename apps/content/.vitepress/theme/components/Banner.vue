@@ -35,11 +35,11 @@ function dismissBanner() {
     <div class="banner">
       <div class="banner-content">
         <div class="banner-text">
-          The screenshot API for developers -
+          The screenshot API <span class="banner-helper">for developers</span> -
         </div>
 
         <a class="banner-action" href="https://screenshotone.com/?ref=orpc" target="_blank" rel="noopener">
-          ScreenshotOne
+          Try ScreenshotOne
         </a>
       </div>
 
