@@ -1,7 +1,7 @@
 {
   "name": "@orpc/client",
   "type": "module",
-  "version": "1.13.13",
+  "version": "1.13.14",
   "license": "MIT",
   "homepage": "https://orpc.dev",
   "repository": {
