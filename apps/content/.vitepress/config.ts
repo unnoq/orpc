@@ -49,10 +49,6 @@ export default withMermaid(defineConfig({
         },
       },
     },
-    carbonAds: {
-      code: 'CW7IE53J',
-      placement: 'orpcunnoqcom',
-    },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/middleapi/orpc' },
       { icon: 'discord', link: 'https://discord.gg/TXEbwRBvQn' },
