@@ -225,14 +225,14 @@ function collectReferencedLocalDefNames(
 }
 
 /**
- * Walks a def's name family until it finds an equivalent existing component to reuse or a
- * free slot to fill. Equal schemas under unrelated names are never merged: a different name
- * signals a different purpose.
+ * Walks a def's name family until it finds an equivalent existing component to reuse or
+ * runs out of family members, then fills the first free mintable slot. Equal schemas under
+ * unrelated names are never merged: a different name signals a different purpose.
  *
- * The family is the bare name, then the direction-suffixed name when the conversion
- * direction is known, then plain numeric postfixes (`Planet`, `PlanetOutput`, `Planet2`, ...).
- * The numeric tail is shared by every direction, so later variants can reuse an equal
- * schema no matter which direction registered it first.
+ * The family is the bare name, the direction-suffixed names when the conversion direction
+ * is known, then plain numeric postfixes (`Planet`, `PlanetOutput`, `PlanetInput`,
+ * `Planet2`, ...). Every member is checked for reuse, including the opposite direction,
+ * but new components are only minted under the bare, own-direction, or numeric names.
  */
 function resolveComponentName(
   componentsSchemas: Record<string, any>,
@@ -242,17 +242,23 @@ function resolveComponentName(
   candidateSchemas: Record<string, JsonSchema>,
   direction: JsonSchemaConverterDirection | undefined,
 ): [componentName: string, reuseExisting: boolean] {
+  let mintName: string | undefined
+
   for (let i = 1; ; i++) {
-    const componentName = componentNameCandidate(defName, direction, i)
+    const [componentName, mintable, tail] = componentNameCandidate(defName, direction, i)
     const existingSchema = componentsSchemas[componentName]
 
     if (existingSchema === undefined) {
       // a sibling def can claim a slot before its schema is written, keep probing past it
-      if (claimedNames.has(componentName)) {
-        continue
+      if (mintable && !claimedNames.has(componentName)) {
+        mintName ??= componentName
+
+        if (tail) {
+          return [mintName, false]
+        }
       }
 
-      return [componentName, false]
+      continue
     }
 
     if (areSchemasEquivalentForReuse(
@@ -268,6 +274,31 @@ function resolveComponentName(
       return [componentName, true]
     }
   }
+}
+
+function componentNameCandidate(
+  defName: string,
+  direction: JsonSchemaConverterDirection | undefined,
+  attempt: number,
+): [componentName: string, mintable: boolean, tail: boolean] {
+  if (attempt === 1) {
+    return [defName, true, false]
+  }
+
+  if (direction !== undefined) {
+    if (attempt === 2) {
+      return [`${defName}${direction === 'input' ? 'Input' : 'Output'}`, true, false]
+    }
+
+    // the opposite direction is only ever reused, never minted
+    if (attempt === 3) {
+      return [`${defName}${direction === 'input' ? 'Output' : 'Input'}`, false, false]
+    }
+
+    return [`${defName}${attempt - 2}`, true, true]
+  }
+
+  return [`${defName}${attempt}`, true, true]
 }
 
 function definedKeysOf(object: Record<string, unknown>): string[] {
@@ -373,20 +404,6 @@ function areSchemasEquivalentForReuse(
       visited,
     )
   })
-}
-
-function componentNameCandidate(defName: string, direction: JsonSchemaConverterDirection | undefined, attempt: number): string {
-  if (attempt === 1) {
-    return defName
-  }
-
-  if (direction === undefined) {
-    return `${defName}${attempt}`
-  }
-
-  return attempt === 2
-    ? `${defName}${direction === 'input' ? 'Input' : 'Output'}`
-    : `${defName}${attempt - 1}`
 }
 
 function parseComponentRefName(ref: string): string | undefined {

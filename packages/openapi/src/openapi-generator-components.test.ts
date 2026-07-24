@@ -442,6 +442,32 @@ describe('openAPIComponentRegistry', () => {
       })
     })
 
+    it('reuses an equal component from the opposite direction instead of minting a duplicate', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          Planet: { type: 'string' },
+          PlanetInput: { type: 'number' },
+        },
+      })
+
+      // the response schema equals the existing input component, so it is reused
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'number' } } }, 'output'))
+        .toEqual({ $ref: '#/components/schemas/PlanetInput' })
+
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Planet', 'PlanetInput'])
+    })
+
+    it('prefers reusing a directed component over minting the free bare name', () => {
+      const { doc, registry } = createRegistry({
+        schemas: { PlanetInput: { type: 'number' } },
+      })
+
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'number' } } }, 'output'))
+        .toEqual({ $ref: '#/components/schemas/PlanetInput' })
+
+      expect(Object.keys(doc.components?.schemas ?? {})).toEqual(['PlanetInput'])
+    })
+
     it('falls back to shared numeric postfixes when the bare and directed names are taken', () => {
       const { doc, registry } = createRegistry({
         schemas: {
