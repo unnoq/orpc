@@ -442,7 +442,7 @@ describe('openAPIComponentRegistry', () => {
       })
     })
 
-    it('reuses and numbers within the directed name family', () => {
+    it('falls back to shared numeric postfixes when the bare and directed names are taken', () => {
       const { doc, registry } = createRegistry({
         schemas: {
           Planet: { type: 'string' },
@@ -454,11 +454,31 @@ describe('openAPIComponentRegistry', () => {
       expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'number' } } }, 'output'))
         .toEqual({ $ref: '#/components/schemas/PlanetOutput' })
 
-      // different, takes the next numbered slot in the directed family
+      // different, takes the next slot in the numeric tail shared by every direction
       expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'boolean' } } }, 'output'))
-        .toEqual({ $ref: '#/components/schemas/PlanetOutput2' })
+        .toEqual({ $ref: '#/components/schemas/Planet2' })
 
-      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Planet', 'PlanetOutput', 'PlanetOutput2'])
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Planet', 'Planet2', 'PlanetOutput'])
+    })
+
+    it('reuses numeric-tail slots across directions', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          Planet: { type: 'string' },
+          PlanetInput: { type: 'number' },
+          PlanetOutput: { type: 'integer' },
+        },
+      })
+
+      // an input variant fills the shared numeric tail
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'boolean' } } }, 'input'))
+        .toEqual({ $ref: '#/components/schemas/Planet2' })
+
+      // an equal output variant reuses it, no matter which direction registered it
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'boolean' } } }, 'output'))
+        .toEqual({ $ref: '#/components/schemas/Planet2' })
+
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Planet', 'Planet2', 'PlanetInput', 'PlanetOutput'])
     })
 
     it('increments the postfix until a free component name is found', () => {

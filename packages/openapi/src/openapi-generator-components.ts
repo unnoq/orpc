@@ -229,9 +229,10 @@ function collectReferencedLocalDefNames(
  * free slot to fill. Equal schemas under unrelated names are never merged: a different name
  * signals a different purpose.
  *
- * The family is the bare name followed by direction-suffixed names when the conversion
- * direction is known (`Planet`, `PlanetOutput`, `PlanetOutput2`, ...), or plain numeric
- * postfixes otherwise (`Planet`, `Planet2`, ...).
+ * The family is the bare name, then the direction-suffixed name when the conversion
+ * direction is known, then plain numeric postfixes (`Planet`, `PlanetOutput`, `Planet2`, ...).
+ * The numeric tail is shared by every direction, so later variants can reuse an equal
+ * schema no matter which direction registered it first.
  */
 function resolveComponentName(
   componentsSchemas: Record<string, any>,
@@ -383,9 +384,9 @@ function componentNameCandidate(defName: string, direction: JsonSchemaConverterD
     return `${defName}${attempt}`
   }
 
-  const directedName = `${defName}${direction === 'input' ? 'Input' : 'Output'}`
-
-  return attempt === 2 ? directedName : `${directedName}${attempt - 1}`
+  return attempt === 2
+    ? `${defName}${direction === 'input' ? 'Input' : 'Output'}`
+    : `${defName}${attempt - 1}`
 }
 
 function parseComponentRefName(ref: string): string | undefined {
