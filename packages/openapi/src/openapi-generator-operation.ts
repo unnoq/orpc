@@ -100,6 +100,7 @@ export function buildRequest(
         required: true,
         content: toAsyncIteratorObjectContent(
           ctx,
+          'input',
           ctx.convertSchemas(iteratorDetails[0], 'input'),
           ctx.convertSchemas(iteratorDetails[1], 'input'),
         ),
@@ -127,7 +128,7 @@ export function buildRequest(
   if (parts.bodySchema !== undefined) {
     operation.requestBody = {
       required: parts.bodyOptional ? undefined : true,
-      content: toBodyContent(ctx, parts.bodySchema),
+      content: toBodyContent(ctx, 'input', parts.bodySchema),
     }
   }
 }
@@ -232,7 +233,7 @@ function renderPathParameters(
       in: 'path',
       required: true,
       name,
-      schema: ctx.registry.toOpenAPISchema(entry[1]),
+      schema: ctx.registry.toOpenAPISchema(entry[1], 'input'),
     }
 
     if (style === 'comma-delimited-array' || style === 'comma-delimited-object') {
@@ -259,7 +260,7 @@ function renderQueryParameters(
     const parameter: Exclude<OpenAPIOperationObject['parameters'], undefined>[number] = {
       in: 'query',
       name,
-      schema: ctx.registry.toOpenAPISchema(schema),
+      schema: ctx.registry.toOpenAPISchema(schema, 'input'),
       allowEmptyValue: true,
       allowReserved: true,
     }
@@ -313,7 +314,7 @@ function renderHeaderParameters(
       in: 'header',
       name,
       required: optional ? undefined : true,
-      schema: ctx.registry.toOpenAPISchema(schema),
+      schema: ctx.registry.toOpenAPISchema(schema, 'input'),
     })
   }
 }
@@ -337,6 +338,7 @@ export function buildSuccessResponse(
         description,
         content: toAsyncIteratorObjectContent(
           ctx,
+          'output',
           ctx.convertSchemas(iteratorDetails[0], 'output'),
           ctx.convertSchemas(iteratorDetails[1], 'output'),
         ),
@@ -352,7 +354,7 @@ export function buildSuccessResponse(
     operation.responses ??= {}
     operation.responses[status] = {
       description,
-      content: toBodyContent(ctx, schema),
+      content: toBodyContent(ctx, 'output', schema),
     }
     return
   }
@@ -363,7 +365,7 @@ export function buildSuccessResponse(
     }
 
     if (parts.bodies.length) {
-      responseObject.content = toBodyContent(ctx, combineJsonSchemasWithComposition('anyOf', parts.bodies))
+      responseObject.content = toBodyContent(ctx, 'output', combineJsonSchemasWithComposition('anyOf', parts.bodies))
     }
 
     if (parts.headers.length) {
@@ -372,7 +374,7 @@ export function buildSuccessResponse(
         responseObject.headers ??= {}
         responseObject.headers[name] = {
           required: optional ? undefined : true,
-          schema: ctx.registry.toOpenAPISchema(schema),
+          schema: ctx.registry.toOpenAPISchema(schema, 'output'),
         }
       })
     }
@@ -484,7 +486,7 @@ export function buildErrorResponse(
     const descriptions = definitions.map(({ defaultMessage }) => defaultMessage).filter(m => m !== undefined)
     const customBodySchema = value(
       ctx.customErrorResponseBodySchema,
-      definitions.map(def => ({ ...def, dataJsonSchema: ctx.registry.hoistDefs(def.dataJsonSchema) })),
+      definitions.map(def => ({ ...def, dataJsonSchema: ctx.registry.hoistDefs(def.dataJsonSchema, 'output') })),
       status,
     )
     const responseSchema = customBodySchema ?? combineJsonSchemasWithComposition('oneOf', [
@@ -495,7 +497,7 @@ export function buildErrorResponse(
           ['code', { const: code }, false],
           ['status', { const: status }, false],
           ['message', { type: 'string', default: defaultMessage }, false],
-          ['data', ctx.registry.hoistDefs(dataJsonSchema), dataOptional],
+          ['data', ctx.registry.hoistDefs(dataJsonSchema, 'output'), dataOptional],
         ]))
       }),
       undefinedErrorSchema,
@@ -506,7 +508,7 @@ export function buildErrorResponse(
       description: descriptions.length ? descriptions.join(', ') : status.toString(),
       content: {
         'application/json': {
-          schema: ctx.registry.toOpenAPISchema(responseSchema),
+          schema: ctx.registry.toOpenAPISchema(responseSchema, 'output'),
         },
       },
     } satisfies OpenAPIV3_1.ResponseObject
@@ -554,6 +556,7 @@ function getAsyncIteratorObjectDetails(schemas: AnySchema[] | undefined): [yield
 
 function toAsyncIteratorObjectContent(
   ctx: OpenAPIOperationContext,
+  direction: JsonSchemaConverterDirection,
   [yieldSchema, yieldOptional]: [JsonSchema, optional: boolean],
   [returnSchema, returnOptional]: [JsonSchema, optional: boolean],
 ): Record<string, any> {
@@ -584,12 +587,12 @@ function toAsyncIteratorObjectContent(
 
   return {
     'text/event-stream': {
-      schema: ctx.registry.toOpenAPISchema(schema),
+      schema: ctx.registry.toOpenAPISchema(schema, direction),
     },
   }
 }
 
-function toBodyContent(ctx: OpenAPIOperationContext, schema: JsonSchema): Record<string, OpenAPIV3_1.MediaTypeObject> {
+function toBodyContent(ctx: OpenAPIOperationContext, direction: JsonSchemaConverterDirection, schema: JsonSchema): Record<string, OpenAPIV3_1.MediaTypeObject> {
   const fileSchemasByMediaType = new Map<string, JsonSchema[]>()
 
   const rest = flattenJsonUnionSchema(schema).filter((s) => {
@@ -623,13 +626,13 @@ function toBodyContent(ctx: OpenAPIOperationContext, schema: JsonSchema): Record
     fileSchemasByMediaType.delete(contentType)
 
     content[contentType] = {
-      schema: ctx.registry.toOpenAPISchema(combineJsonSchemasWithComposition('anyOf', [restSchema, ...fileSchemas ?? []])),
+      schema: ctx.registry.toOpenAPISchema(combineJsonSchemasWithComposition('anyOf', [restSchema, ...fileSchemas ?? []]), direction),
     }
   }
 
   for (const [contentType, schemas] of fileSchemasByMediaType.entries()) {
     content[contentType] = {
-      schema: ctx.registry.toOpenAPISchema(combineJsonSchemasWithComposition('anyOf', schemas)),
+      schema: ctx.registry.toOpenAPISchema(combineJsonSchemasWithComposition('anyOf', schemas), direction),
     }
   }
 

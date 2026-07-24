@@ -104,18 +104,18 @@ describe('openAPIGenerator e2e: reusable component schemas', () => {
         planet: { $ref: '#/components/schemas/Planet' },
       })
       expect((doc.paths?.[path]?.post?.responses?.[200] as any).content['application/json'].schema.properties).toEqual({
-        planet: { $ref: '#/components/schemas/Planet2' },
+        planet: { $ref: '#/components/schemas/PlanetOutput' },
       })
     }
 
-    expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Planet', 'Planet2'])
+    expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Planet', 'PlanetOutput'])
 
     expect(doc.components?.schemas?.Planet).toEqual({
       type: 'object',
       properties: { id: { type: 'string' } },
       required: ['id'],
     })
-    expect(doc.components?.schemas?.Planet2).toEqual({
+    expect(doc.components?.schemas?.PlanetOutput).toEqual({
       type: 'object',
       properties: { id: { type: 'string' } },
       required: ['id'],
@@ -150,7 +150,7 @@ describe('openAPIGenerator e2e: reusable component schemas', () => {
       expect.objectContaining({
         properties: {
           planet: { $ref: '#/components/schemas/Planet' },
-          moon: { $ref: '#/components/schemas/Moon2' },
+          moon: { $ref: '#/components/schemas/MoonInput' },
         },
       }),
     )
@@ -158,7 +158,7 @@ describe('openAPIGenerator e2e: reusable component schemas', () => {
     expect(doc.components?.schemas).toEqual({
       Planet: expect.objectContaining({ type: 'object' }),
       Moon: { type: 'string' },
-      Moon2: expect.objectContaining({
+      MoonInput: expect.objectContaining({
         properties: expect.objectContaining({
           radius: { type: 'number' },
         }),

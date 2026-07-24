@@ -427,6 +427,40 @@ describe('openAPIComponentRegistry', () => {
       })
     })
 
+    it('suffixes the conversion direction when the bare name is taken', () => {
+      const { doc, registry } = createRegistry({ schemas: { Planet: { type: 'string' } } })
+
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'number' } } }, 'input'))
+        .toEqual({ $ref: '#/components/schemas/PlanetInput' })
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'boolean' } } }, 'output'))
+        .toEqual({ $ref: '#/components/schemas/PlanetOutput' })
+
+      expect(doc.components?.schemas).toEqual({
+        Planet: { type: 'string' },
+        PlanetInput: { type: 'number' },
+        PlanetOutput: { type: 'boolean' },
+      })
+    })
+
+    it('reuses and numbers within the directed name family', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          Planet: { type: 'string' },
+          PlanetOutput: { type: 'number' },
+        },
+      })
+
+      // equal to the existing directed member, reused
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'number' } } }, 'output'))
+        .toEqual({ $ref: '#/components/schemas/PlanetOutput' })
+
+      // different, takes the next numbered slot in the directed family
+      expect(registry.hoistDefs({ $ref: '#/$defs/Planet', $defs: { Planet: { type: 'boolean' } } }, 'output'))
+        .toEqual({ $ref: '#/components/schemas/PlanetOutput2' })
+
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Planet', 'PlanetOutput', 'PlanetOutput2'])
+    })
+
     it('increments the postfix until a free component name is found', () => {
       const { doc, registry } = createRegistry({
         schemas: {

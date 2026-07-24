@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-restricted-imports
 import type { OpenAPIV3_1 } from '@hey-api/spec-types'
-import type { JsonSchema } from '@orpc/json-schema'
+import type { JsonSchema, JsonSchemaConverterDirection } from '@orpc/json-schema'
 import type { Value } from '@orpc/shared'
 import type { OpenAPIDocument } from './types'
 import {
@@ -15,8 +15,8 @@ import { isDeepEqual, value } from '@orpc/shared'
 /**
  * Collects reusable schemas into `doc.components.schemas`.
  *
- * Equivalent schemas (including recursive ones) reuse a single component,
- * and different schemas competing for the same name get numbered postfixes.
+ * Equivalent schemas (including recursive ones) reuse a single component, and different
+ * schemas competing for the same name get direction-suffixed or numbered postfixes.
  */
 export class OpenAPIComponentRegistry {
   constructor(
@@ -51,7 +51,7 @@ export class OpenAPIComponentRegistry {
    * its refs accordingly. Defs declined by `shouldHoistDef` stay local unless a
    * hoisted def references them.
    */
-  hoistDefs(schema: JsonSchema): JsonSchema {
+  hoistDefs(schema: JsonSchema, direction?: JsonSchemaConverterDirection): JsonSchema {
     if (typeof schema !== 'object' || !schema.$defs) {
       return schema
     }
@@ -115,6 +115,7 @@ export class OpenAPIComponentRegistry {
         defName,
         prelimSchema,
         candidateSchemas,
+        direction,
       )
 
       renameMap[defName] = componentName
@@ -134,8 +135,8 @@ export class OpenAPIComponentRegistry {
     return rewriteComponentSchemaRefs(withReferencedLocalDefs(rest, localDefs), renameMap)
   }
 
-  toOpenAPISchema(schema: JsonSchema): OpenAPIV3_1.SchemaObject {
-    return ensureJsonSchemaObject(this.hoistDefs(schema)) as OpenAPIV3_1.SchemaObject
+  toOpenAPISchema(schema: JsonSchema, direction?: JsonSchemaConverterDirection): OpenAPIV3_1.SchemaObject {
+    return ensureJsonSchemaObject(this.hoistDefs(schema, direction)) as OpenAPIV3_1.SchemaObject
   }
 }
 
@@ -224,9 +225,13 @@ function collectReferencedLocalDefNames(
 }
 
 /**
- * Walks the `name`, `name2`, `name3`, ... family until it finds an equivalent existing
- * component to reuse or a free slot to fill. Equal schemas under unrelated names are
- * never merged: a different name signals a different purpose.
+ * Walks a def's name family until it finds an equivalent existing component to reuse or a
+ * free slot to fill. Equal schemas under unrelated names are never merged: a different name
+ * signals a different purpose.
+ *
+ * The family is the bare name followed by direction-suffixed names when the conversion
+ * direction is known (`Planet`, `PlanetOutput`, `PlanetOutput2`, ...), or plain numeric
+ * postfixes otherwise (`Planet`, `Planet2`, ...).
  */
 function resolveComponentName(
   componentsSchemas: Record<string, any>,
@@ -234,9 +239,10 @@ function resolveComponentName(
   defName: string,
   schema: JsonSchema,
   candidateSchemas: Record<string, JsonSchema>,
+  direction: JsonSchemaConverterDirection | undefined,
 ): [componentName: string, reuseExisting: boolean] {
   for (let i = 1; ; i++) {
-    const componentName = i === 1 ? defName : `${defName}${i}`
+    const componentName = componentNameCandidate(defName, direction, i)
     const existingSchema = componentsSchemas[componentName]
 
     if (existingSchema === undefined) {
@@ -366,6 +372,20 @@ function areSchemasEquivalentForReuse(
       visited,
     )
   })
+}
+
+function componentNameCandidate(defName: string, direction: JsonSchemaConverterDirection | undefined, attempt: number): string {
+  if (attempt === 1) {
+    return defName
+  }
+
+  if (direction === undefined) {
+    return `${defName}${attempt}`
+  }
+
+  const directedName = `${defName}${direction === 'input' ? 'Input' : 'Output'}`
+
+  return attempt === 2 ? directedName : `${directedName}${attempt - 1}`
 }
 
 function parseComponentRefName(ref: string): string | undefined {
