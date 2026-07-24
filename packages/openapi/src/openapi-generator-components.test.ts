@@ -348,6 +348,29 @@ describe('openAPIComponentRegistry', () => {
       expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Post', 'Post2', 'User'])
     })
 
+    it('reuses sibling defs when a later sibling needs the family rename', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          Post: { type: 'object', properties: { author: { $ref: '#/components/schemas/User2' } } },
+          User: { type: 'string' },
+          User2: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post' } } },
+        },
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/User',
+        $defs: {
+          // resolved first: its sibling ref must anticipate the User -> User2 rename
+          // that only happens when the User def is resolved afterwards
+          Post: { type: 'object', properties: { author: { $ref: '#/$defs/User' } } },
+          User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/User2' })
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Post', 'User', 'User2'])
+    })
+
     it('handles shared subschema instances during traversal and comparison', () => {
       const sharedDefault = { unit: 'km' }
       const sharedRef = { $ref: '#/$defs/Leaf' }
