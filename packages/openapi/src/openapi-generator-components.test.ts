@@ -264,6 +264,90 @@ describe('openAPIComponentRegistry', () => {
       expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Data', 'Wrapper'])
     })
 
+    it('reuses an equal self-recursive component', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          Node: { type: 'object', properties: { next: { $ref: '#/components/schemas/Node' } } },
+        },
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/Node',
+        $defs: {
+          Node: { type: 'object', properties: { next: { $ref: '#/$defs/Node' } } },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/Node' })
+      expect(Object.keys(doc.components?.schemas ?? {})).toEqual(['Node'])
+    })
+
+    it('reuses an equal self-recursive component within the name family', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          Node: { type: 'string' },
+          Node2: { type: 'object', properties: { next: { $ref: '#/components/schemas/Node2' } } },
+        },
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/Node',
+        $defs: {
+          Node: { type: 'object', properties: { next: { $ref: '#/$defs/Node' } } },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/Node2' })
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Node', 'Node2'])
+    })
+
+    it('reuses mutually recursive components referenced by sibling defs', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post' } } },
+          Post: { type: 'object', properties: { author: { $ref: '#/components/schemas/User' } } },
+        },
+      })
+
+      const result = registry.hoistDefs({
+        type: 'object',
+        properties: { user: { $ref: '#/$defs/User' } },
+        $defs: {
+          User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
+          Post: { type: 'object', properties: { author: { $ref: '#/$defs/User' } } },
+        },
+      })
+
+      expect(result).toEqual({
+        type: 'object',
+        properties: { user: { $ref: '#/components/schemas/User' } },
+      })
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Post', 'User'])
+    })
+
+    it('reuses sibling defs through renamed refs when a family name is taken', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          Post: { type: 'string' },
+          Post2: { type: 'object', properties: { author: { $ref: '#/components/schemas/User' } } },
+          User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post2' } } },
+        },
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/User',
+        $defs: {
+          // resolved first, renamed to the equal Post2 family member
+          Post: { type: 'object', properties: { author: { $ref: '#/$defs/User' } } },
+          // its sibling ref then follows the rename and matches the existing User
+          User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/User' })
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Post', 'Post2', 'User'])
+    })
+
     it('handles shared subschema instances during traversal and comparison', () => {
       const sharedDefault = { unit: 'km' }
       const sharedRef = { $ref: '#/$defs/Leaf' }
