@@ -26,6 +26,7 @@ import {
   DEFAULT_OPENAPI_OUTPUT_STRUCTURE,
   DEFAULT_OPENAPI_SUCCESS_DESCRIPTION,
 } from './constants'
+import { isBodylessMethod } from './utils'
 
 export type DynamicPathParam = NonNullable<ReturnType<typeof getDynamicPathParams>>[number]
 
@@ -139,10 +140,10 @@ function extractCompactRequestParts(
 ): RequestParts {
   const entries = extractJsonObjectSchemaEntries(schema)
 
-  if (!entries && method === 'GET') {
+  if (!entries && isBodylessMethod(method)) {
     throw new OpenAPIGeneratorError(
-      `method is GET but the input schema is not an object.\n`
-      + `  GET sends every input field as a query parameter, so the input must be an object schema.\n`
+      `method is ${method} but the input schema is not an object.\n`
+      + `  ${method} sends every input field as a query parameter, so the input must be an object schema.\n`
       + `  Fix: make the input an object, or use a method with a request body (POST, PUT, PATCH, DELETE).`,
     )
   }
@@ -150,7 +151,7 @@ function extractCompactRequestParts(
   const paramsEntries = entries?.filter(([name]) => dynamicParams?.includes(name))
   const restEntries = entries?.filter(([name]) => !dynamicParams?.includes(name))
 
-  const hasBody = method !== 'GET' && method !== 'HEAD'
+  const hasBody = !isBodylessMethod(method)
   const bodySchema = !hasBody
     ? undefined
     : !dynamicParams?.length
@@ -161,7 +162,7 @@ function extractCompactRequestParts(
 
   return {
     paramsEntries,
-    queryEntries: method === 'GET' ? restEntries : undefined,
+    queryEntries: isBodylessMethod(method) ? restEntries : undefined,
     headersEntries: undefined,
     bodySchema,
     bodyOptional: !dynamicParams?.length ? optional : restEntries?.every(([,,optional]) => optional),

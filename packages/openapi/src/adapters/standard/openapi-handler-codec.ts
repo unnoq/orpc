@@ -15,6 +15,7 @@ import {
 } from '../../constants'
 import { getOpenAPIMeta } from '../../meta'
 import { OpenAPISerializer } from '../../openapi-serializer'
+import { isBodylessMethod } from '../../utils'
 import { OpenAPIMatcher } from './openapi-matcher'
 
 export interface OpenAPIHandlerCodecCoreOptions<_T extends Context> {
@@ -66,7 +67,7 @@ export class OpenAPIHandlerCodecCore<T extends Context> {
     const query = this.deserializeQuery(search, meta?.queryStyles)
 
     if (inputStructure === 'compact') {
-      const data = request.method === 'GET'
+      const data = isBodylessMethod(request.method)
         ? query
         : this.serializer.deserialize(await request.resolveBody(meta?.requestBodyHint))
 

@@ -87,6 +87,29 @@ describe('openAPIHandlerCodec', () => {
         expect(resolveBody).not.toHaveBeenCalled()
       })
 
+      it('treats HEAD like GET, merging path params and query without reading the body', async () => {
+        const procedure = os
+          .meta(openapi({ method: 'HEAD', path: '/{id}' }))
+          .handler(vi.fn())
+        const codec = new OpenAPIHandlerCodec(procedure)
+        const resolveBody = vi.fn()
+
+        const result = await codec.resolveProcedure(createRequest({
+          method: 'HEAD',
+          url: '/42?verbose=true',
+          resolveBody,
+        }), options as any)
+
+        expect(result).toBeDefined()
+
+        await expect(result!.decodeInput()).resolves.toEqual({
+          id: '42',
+          verbose: 'true',
+        })
+
+        expect(resolveBody).not.toHaveBeenCalled()
+      })
+
       it('returns query directly when there are no path params', async () => {
         const procedure = os
           .meta(openapi({ method: 'GET', path: '/status' }))

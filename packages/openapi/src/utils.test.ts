@@ -1,4 +1,13 @@
-import { getDynamicPathParams } from './utils'
+import { getDynamicPathParams, isBodylessMethod } from './utils'
+
+describe('isBodylessMethod', () => {
+  it('treats GET and HEAD as bodyless', () => {
+    expect(isBodylessMethod('GET')).toBe(true)
+    expect(isBodylessMethod('HEAD')).toBe(true)
+    expect(isBodylessMethod('POST')).toBe(false)
+    expect(isBodylessMethod('DELETE')).toBe(false)
+  })
+})
 
 describe('getDynamicPathParams', () => {
   it('simple', () => {

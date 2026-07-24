@@ -50,6 +50,24 @@ describe('openAPILinkCodec', () => {
         })
       })
 
+      it('builds a HEAD request with query parameters and no body', async () => {
+        const codec = new OpenAPILinkCodec({
+          check: oc.meta(openapi({ method: 'HEAD', path: '/items/{id}' })),
+        }, {
+          url: '/api',
+          serializer,
+        })
+
+        const request = await codec.encodeInput({ id: '42', verbose: true }, ['check'], { context: {} })
+
+        expect(request.method).toBe('HEAD')
+        expect(request.body).toBeUndefined()
+
+        const url = new URL(request.url, 'http://localhost')
+        expect(url.pathname).toBe('/api/items/42')
+        expect(url.searchParams.get('verbose')).toBe('true')
+      })
+
       it('builds a GET request with a prefixed path and mixed query styles', async () => {
         const codec = new OpenAPILinkCodec({
           item: oc.meta(openapi({

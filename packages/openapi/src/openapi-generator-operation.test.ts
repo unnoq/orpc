@@ -239,7 +239,7 @@ describe('openAPIGenerator operation builders', () => {
       expect(operation.requestBody).toBeUndefined()
     })
 
-    it('omits query parameters and the request body for HEAD procedures', () => {
+    it('maps HEAD inputs to query parameters like GET', () => {
       const { ctx, operation } = createContext()
       const path = '/planets/{id}' as const
 
@@ -253,6 +253,7 @@ describe('openAPIGenerator operation builders', () => {
 
       expect(operation.parameters).toEqual([
         { in: 'path', required: true, name: 'id', schema: { type: 'string' } },
+        { in: 'query', name: 'verbose', required: true, allowEmptyValue: true, allowReserved: true, schema: { type: 'boolean' } },
       ])
       expect(operation.requestBody).toBeUndefined()
     })
@@ -383,6 +384,13 @@ describe('openAPIGenerator operation builders', () => {
         meta: { method: 'GET' as const },
         path: undefined,
         message: 'method is GET but the input schema is not an object',
+      },
+      {
+        name: 'a HEAD input schema is not an object',
+        inputs: [testSchema({ type: 'string' })],
+        meta: { method: 'HEAD' as const },
+        path: undefined,
+        message: 'method is HEAD but the input schema is not an object',
       },
       {
         name: 'a detailed input schema is not an object',

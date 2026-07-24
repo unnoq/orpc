@@ -62,6 +62,9 @@ describe('openAPIGenerator e2e: crud api', () => {
         }))
         .input(z.object({ ids: z.array(z.string()) }))
         .output(z.array(Planet)),
+      exists: oc
+        .meta(openapi({ method: 'HEAD', prefix: '/api/v1', path: '/planets/{id}', tags: ['planets'] }))
+        .input(z.object({ id: z.string(), includeArchived: z.boolean().optional() })),
     },
   }
 
@@ -79,11 +82,30 @@ describe('openAPIGenerator e2e: crud api', () => {
       '/api/v1/planets/{id}': {
         get: expect.objectContaining({ operationId: 'planet.find' }),
         put: expect.objectContaining({ operationId: 'planet.update' }),
+        head: expect.objectContaining({ operationId: 'planet.exists' }),
       },
       '/api/v1/planets/{ids}/compare': {
         get: expect.objectContaining({ operationId: 'planet.compare' }),
       },
     })
+  })
+
+  it('maps HEAD inputs to query parameters like GET, without a request body', async () => {
+    const doc = await generator.generate(router)
+
+    expect(doc.paths?.['/api/v1/planets/{id}']?.head).toEqual(expect.objectContaining({
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+        {
+          name: 'includeArchived',
+          in: 'query',
+          allowEmptyValue: true,
+          allowReserved: true,
+          schema: { type: 'boolean' },
+        },
+      ],
+    }))
+    expect((doc.paths?.['/api/v1/planets/{id}']?.head as any).requestBody).toBeUndefined()
   })
 
   it('documents comma-delimited path params with the simple style', async () => {
