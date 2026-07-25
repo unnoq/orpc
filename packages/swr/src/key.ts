@@ -19,7 +19,7 @@ export type OperationKey<TInput>
 /**
  * Generate a **full matching** key for SWR operations.
  *
- * @see {@link https://orpc.dev/docs/integrations/react-swr#data-fetching React SWR Key Docs}
+ * @see {@link https://orpc.dev/docs/integrations/swr#data-fetching SWR Key Docs}
  */
 export function generateOperationKey<TInput>(
   path: string[],

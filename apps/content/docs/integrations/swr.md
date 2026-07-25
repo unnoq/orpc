@@ -1,4 +1,4 @@
-# React SWR Integration
+# SWR Integration
 
 [SWR](https://swr.vercel.app/) is a React Hooks library for data fetching that provides features like caching, revalidation, and more. oRPC SWR integration is very lightweight and straightforward. There is no extra overhead.
 
@@ -11,23 +11,23 @@ This guide assumes you are already familiar with [SWR](https://swr.vercel.app/).
 ::: code-group
 
 ```sh [npm]
-npm install @orpc/react-swr@beta
+npm install @orpc/swr@beta
 ```
 
 ```sh [yarn]
-yarn add @orpc/react-swr@beta
+yarn add @orpc/swr@beta
 ```
 
 ```sh [pnpm]
-pnpm add @orpc/react-swr@beta
+pnpm add @orpc/swr@beta
 ```
 
 ```sh [bun]
-bun add @orpc/react-swr@beta
+bun add @orpc/swr@beta
 ```
 
 ```sh [deno]
-deno add npm:@orpc/react-swr@beta
+deno add npm:@orpc/swr@beta
 ```
 
 :::
@@ -37,7 +37,7 @@ deno add npm:@orpc/react-swr@beta
 Before you begin, set up either a [server-side client](/docs/client/server-side) or a [client-side client](/docs/client/client-side).
 
 ```ts
-import { createSWRUtils } from '@orpc/react-swr'
+import { createSWRUtils } from '@orpc/swr'
 
 export const orpc = createSWRUtils(client)
 
@@ -159,7 +159,7 @@ When clients are invoked through the SWR integration, an **operation context** i
 import {
   SWR_OPERATION_CONTEXT_SYMBOL,
   SWROperationContext,
-} from '@orpc/react-swr'
+} from '@orpc/swr'
 
 interface ClientContext extends SWROperationContext {
 }

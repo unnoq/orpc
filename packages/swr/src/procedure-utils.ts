@@ -25,7 +25,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Calling corresponding procedure client
    *
-   * @see {@link https://orpc.dev/docs/integrations/react-swr#calling-clients React SWR Calling Procedure Client Docs}
+   * @see {@link https://orpc.dev/docs/integrations/swr#calling-clients SWR Calling Procedure Client Docs}
    */
   call: Client<TClientContext, TInput, TOutput, TError>
 
@@ -41,7 +41,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a **full matching** key for SWR operations.
    *
-   * @see {@link https://orpc.dev/docs/integrations/react-swr#data-fetching React SWR Key Docs}
+   * @see {@link https://orpc.dev/docs/integrations/swr#data-fetching SWR Key Docs}
    */
   key(
     ...rest: MaybeOptionalOptions<KeyOptions<TInput>>
@@ -54,7 +54,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a fetcher function for use with useSWR, useSWRInfinite, and other SWR hooks.
    *
-   * @see {@link https://orpc.dev/docs/integrations/react-swr#data-fetching React SWR Data Fetching Docs}
+   * @see {@link https://orpc.dev/docs/integrations/swr#data-fetching SWR Data Fetching Docs}
    */
   fetcher(
     ...rest: MaybeOptionalOptions<FetcherOptions<TClientContext>>
@@ -80,7 +80,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a subscriber function that subscribes to an [AsyncIteratorObject](https://orpc.dev/docs/async-iterator-object) for use with useSWRSubscription, etc.
    *
-   * @see {@link https://orpc.dev/docs/integrations/react-swr#subscriptions React SWR Subscriptions Docs}
+   * @see {@link https://orpc.dev/docs/integrations/swr#subscriptions SWR Subscriptions Docs}
    */
   subscriber(
     ...rest: MaybeOptionalOptions<SubscriberOptions<TClientContext>>
@@ -145,7 +145,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a live subscriber that subscribes to the latest events from an [AsyncIteratorObject](https://orpc.dev/docs/async-iterator-object) for use with useSWRSubscription, etc.
    *
-   * @see {@link https://orpc.dev/docs/integrations/react-swr#subscriptions React SWR Subscriptions Docs}
+   * @see {@link https://orpc.dev/docs/integrations/swr#subscriptions SWR Subscriptions Docs}
    */
   liveSubscriber(
     ...rest: MaybeOptionalOptions<FetcherOptions<TClientContext>>
@@ -198,7 +198,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a mutator function for use with useSWRMutation, etc.
    *
-   * @see {@link https://orpc.dev/docs/integrations/react-swr#mutations React SWR Mutations Docs}
+   * @see {@link https://orpc.dev/docs/integrations/swr#mutations SWR Mutations Docs}
    */
   mutator(
     ...rest: MaybeOptionalOptions<MutatorOptions<TClientContext>>

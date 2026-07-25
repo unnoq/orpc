@@ -52,7 +52,7 @@ You can read the documentation [here](https://orpc.dev).
 - [@orpc/ai-sdk](https://www.npmjs.com/package/@orpc/ai-sdk): Turn contracts and procedures into [AI SDK](https://ai-sdk.dev/) tools.
 - [@orpc/tanstack-query](https://www.npmjs.com/package/@orpc/tanstack-query): Integrate with [TanStack Query](https://tanstack.com/query/latest).
 - [@orpc/pinia-colada](https://www.npmjs.com/package/@orpc/pinia-colada): Integrate with [Pinia Colada](https://pinia-colada.esm.dev/).
-- [@orpc/react-swr](https://www.npmjs.com/package/@orpc/react-swr): Integrate with [SWR](https://swr.vercel.app/).
+- [@orpc/swr](https://www.npmjs.com/package/@orpc/swr): Integrate with [SWR](https://swr.vercel.app/).
 - [@orpc/experimental-effect](https://www.npmjs.com/package/@orpc/experimental-effect): Integrate with [Effect](https://effect.website/).
 - [@orpc/nest](https://www.npmjs.com/package/@orpc/nest): Implement your contract with [NestJS](https://nestjs.com/).
 - [@orpc/bun](https://www.npmjs.com/package/@orpc/bun): Adapters for [Bun's Redis](https://bun.sh/).

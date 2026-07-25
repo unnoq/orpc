@@ -1,5 +1,5 @@
 {
-  "name": "@orpc/react-swr",
+  "name": "@orpc/swr",
   "type": "module",
   "version": "2.0.0-beta.19",
   "license": "MIT",
@@ -7,7 +7,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/middleapi/orpc.git",
-    "directory": "packages/react-swr"
+    "directory": "packages/swr"
   },
   "keywords": [
     "orpc",

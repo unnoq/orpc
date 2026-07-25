@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => ({
             './packages/next/**/*.test.tsx',
             './packages/tanstack-query/**/*.test.tsx',
             './packages/pinia-colada/**/*.test.tsx',
-            './packages/react-swr/**/*.test.tsx',
+            './packages/swr/**/*.test.tsx',
           ],
           benchmark: {
             exclude: ['**/**'],
