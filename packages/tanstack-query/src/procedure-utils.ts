@@ -19,7 +19,7 @@ import type {
   StreamedOptionsIn,
   StreamedOptionsOut,
 } from './types'
-import { intercept, isAsyncIteratorObject, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
+import { intercept, isAsyncIteratorObject, isTypescriptObject, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
 import { skipToken } from '@tanstack/query-core'
 import { generateOperationKey } from './key'
 import { liveQuery } from './live-query'
@@ -170,6 +170,105 @@ export interface ProcedureUtilsOptions<TClientContext extends ClientContext, TIn
   mutationOptions?: ProcedureUtilsModifier<
     MutationOptionsIn<TClientContext, TInput, TOutput, TError, unknown>
   >
+}
+
+const PROCEDURE_UTILS_INTERCEPTOR_KEYS: string[] = [
+  'queryInterceptors',
+  'streamedInterceptors',
+  'liveInterceptors',
+  'infiniteInterceptors',
+  'mutationInterceptors',
+]
+
+const PROCEDURE_UTILS_MODIFIER_KEYS: string[] = [
+  'queryKey',
+  'queryOptions',
+  'streamedKey',
+  'streamedOptions',
+  'liveKey',
+  'liveOptions',
+  'infiniteKey',
+  'infiniteOptions',
+  'mutationKey',
+  'mutationOptions',
+]
+
+export function isProcedureUtilsOptions(value: unknown): value is ProcedureUtilsOptions<any, any, any, any> {
+  if (!isTypescriptObject(value)) {
+    return false
+  }
+
+  for (const key in value) {
+    if (value[key] === undefined) {
+      continue
+    }
+
+    if (key === 'prefix') {
+      if (typeof value[key] !== 'string') {
+        return false
+      }
+    }
+    else if (PROCEDURE_UTILS_INTERCEPTOR_KEYS.includes(key)) {
+      if (!Array.isArray(value[key]) || value[key].some(i => typeof i !== 'function')) {
+        return false
+      }
+    }
+    else if (PROCEDURE_UTILS_MODIFIER_KEYS.includes(key)) {
+      if (!isTypescriptObject(value[key])) {
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
+function mergeProcedureUtilsModifier<T extends object>(
+  base: ProcedureUtilsModifier<T>,
+  override: ProcedureUtilsModifier<T>,
+): ProcedureUtilsModifier<T> {
+  if (typeof base !== 'function' && typeof override !== 'function') {
+    return { ...base, ...override } as Partial<T>
+  }
+
+  const applyBase = typeof base === 'function' ? base : (options: T) => ({ ...base, ...options })
+  const applyOverride = typeof override === 'function' ? override : (options: T) => ({ ...override, ...options })
+
+  return options => applyOverride(applyBase(options))
+}
+
+/**
+ * Merge two procedure utils options where `override` takes priority.
+ * A key explicitly set to `undefined` in `override` resets the base value.
+ * When both sides define a key: interceptors are concatenated (base ones run first),
+ * modifiers are spread-merged when both are plain objects and composed (base applied
+ * first) otherwise, with plain objects applied as regular spread merges.
+ */
+export function mergeProcedureUtilsOptions<TClientContext extends ClientContext, TInput, TOutput, TError>(
+  base: ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError>,
+  override: ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError>,
+): ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError> {
+  const merged: Record<string, unknown> = { ...base, ...override }
+
+  for (const key of PROCEDURE_UTILS_INTERCEPTOR_KEYS) {
+    const baseValue = (base as Record<string, unknown>)[key] as ProcedureUtilsQueryInterceptor<any, any, any, any>[] | undefined
+    const overrideValue = (override as Record<string, unknown>)[key] as ProcedureUtilsQueryInterceptor<any, any, any, any>[] | undefined
+
+    if (baseValue && overrideValue) {
+      merged[key] = [...baseValue, ...overrideValue]
+    }
+  }
+
+  for (const key of PROCEDURE_UTILS_MODIFIER_KEYS) {
+    const baseValue = (base as Record<string, unknown>)[key] as ProcedureUtilsModifier<any> | undefined
+    const overrideValue = (override as Record<string, unknown>)[key] as ProcedureUtilsModifier<any> | undefined
+
+    if (baseValue && overrideValue) {
+      merged[key] = mergeProcedureUtilsModifier(baseValue, overrideValue)
+    }
+  }
+
+  return merged as ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError>
 }
 
 export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutput, TError> extends SharedUtils<TInput> {
