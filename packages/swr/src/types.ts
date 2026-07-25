@@ -8,7 +8,7 @@ export type InferLiveSubscriberOutput<TOutput> = TOutput extends AsyncIterable<i
 
 export type OperationType = 'fetcher' | 'mutator' | 'subscriber' | 'liveSubscriber'
 
-export const OPERATION_CONTEXT_SYMBOL: unique symbol = Symbol.for('ORPC_SWR_OPERATION_CONTEXT') as any
+export const OPERATION_CONTEXT_SYMBOL: unique symbol = Symbol.for('ORPC_SWR_OPERATION_CONTEXT')
 
 export interface OperationContext {
   [OPERATION_CONTEXT_SYMBOL]?: {

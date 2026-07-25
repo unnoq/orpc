@@ -35,7 +35,7 @@ export function createRouterUtils<T extends AnyNestedClient>(
   const path = toArray(options.path)
 
   const utils = typeof client === 'function'
-    ? bindMethods(new ProcedureUtils(path, client as any, { prefix: options.prefix }))
+    ? bindMethods(new ProcedureUtils(path, client, { prefix: options.prefix }))
     : bindMethods(new SharedUtils(path, { prefix: options.prefix }))
 
   const recursive = new Proxy(utils, {
