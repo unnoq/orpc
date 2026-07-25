@@ -38,10 +38,26 @@ describe('tanstackQuery', () => {
       queryKey: keyModifier,
       queryOptions: { staleTime: 1000, retry: 2 },
       queryInterceptors: [interceptor1],
-      streamedInterceptors: [],
-      liveInterceptors: [],
-      infiniteInterceptors: [],
       mutationInterceptors: [interceptor2],
+    })
+  })
+
+  it('resets keys explicitly set to undefined', () => {
+    const interceptor = vi.fn()
+
+    const contract = oc
+      .meta(tanstackQuery({
+        queryOptions: { staleTime: 1000 },
+        queryInterceptors: [interceptor],
+        mutationOptions: { retry: 2 },
+      }))
+      .meta(tanstackQuery({
+        queryOptions: undefined,
+        queryInterceptors: undefined,
+      }))
+
+    expect(getTanstackQueryMeta(contract)).toEqual({
+      mutationOptions: { retry: 2 },
     })
   })
 
@@ -87,11 +103,6 @@ describe('tanstackQuery', () => {
 
     expect(getTanstackQueryMeta(router.ping)).toEqual({
       queryOptions: { staleTime: 1000, retry: 2 },
-      queryInterceptors: [],
-      streamedInterceptors: [],
-      liveInterceptors: [],
-      infiniteInterceptors: [],
-      mutationInterceptors: [],
     })
 
     expect(getTanstackQueryMeta(router.pong)).toEqual({
@@ -133,10 +144,6 @@ describe('contractMetaPlugin', () => {
       prefix: '__prefix__',
       queryOptions: { staleTime: 1000, retry: 2 },
       queryInterceptors: [metaInterceptor, existingInterceptor],
-      streamedInterceptors: [],
-      liveInterceptors: [],
-      infiniteInterceptors: [],
-      mutationInterceptors: [],
     })
   })
 
