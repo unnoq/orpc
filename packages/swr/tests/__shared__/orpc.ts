@@ -12,17 +12,19 @@ const staticProcedure = os
   .output(z.object({ output: z.string() }))
   .handler(vi.fn(({ input }) => ({ output: input.input.toString() })))
 
+export const streamHandler = vi.fn(async function* ({ input }: { input?: { input: number } }) {
+  for (let i = 0; i < (input?.input ?? 0); i++) {
+    yield { output: i.toString() }
+  }
+})
+
 export const router = {
   static: staticProcedure,
   stream: os
     .errors({ STREAM_ERROR: { data: z.object({ stream: z.string() }) } })
     .input(z.object({ input: z.number() }).optional())
     .output(asyncIteratorObject(z.object({ output: z.string() })))
-    .handler(vi.fn(async function* ({ input }) {
-      for (let i = 0; i < (input?.input ?? 0); i++) {
-        yield { output: i.toString() }
-      }
-    })),
+    .handler(streamHandler),
   nested: {
     static: staticProcedure,
   },
