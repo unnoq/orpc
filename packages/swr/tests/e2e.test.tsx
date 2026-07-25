@@ -100,6 +100,34 @@ it('case: useSWRSubscription & .subscriber', async () => {
   })
 })
 
+it('case: useSWRSubscription & .subscriber refetchMode=replace', async () => {
+  const first = renderHook(() => useSWRSubscription(
+    orpc.stream.key({ input: { input: 3 } }),
+    orpc.stream.subscriber({ refetchMode: 'replace' }),
+  ))
+
+  await act(async () => {
+    await vi.waitFor(() => expect(first.result.current.data).toEqual([{ output: '0' }, { output: '1' }, { output: '2' }]))
+  })
+
+  first.unmount()
+
+  const second = renderHook(() => useSWRSubscription(
+    orpc.stream.key({ input: { input: 3 } }),
+    orpc.stream.subscriber({ refetchMode: 'replace' }),
+  ))
+
+  // previous data is preserved while the new stream is buffering
+  expect(second.result.current.data).toEqual([{ output: '0' }, { output: '1' }, { output: '2' }])
+
+  await act(async () => {
+    await new Promise(resolve => setTimeout(resolve, 50))
+  })
+
+  // append mode would end with 6 events here, replace keeps only the new stream's events
+  expect(second.result.current.data).toEqual([{ output: '0' }, { output: '1' }, { output: '2' }])
+})
+
 it('case: useSWRSubscription & .liveSubscriber', async () => {
   const { result } = renderHook(() => {
     const subscription = useSWRSubscription(

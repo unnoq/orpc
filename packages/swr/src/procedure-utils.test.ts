@@ -106,6 +106,61 @@ describe('procedureUtils', () => {
       expect(next.mock.calls[2]![1](['1', '2'])).toEqual(['2', '__event__3'])
     })
 
+    it('on success refetchMode=replace with previous data', async () => {
+      client.mockImplementationOnce(async function* () {
+        await new Promise(resolve => setTimeout(resolve, 10))
+        yield '__event__1'
+        yield '__event__2'
+        yield '__event__3'
+      })
+      const subscriber = utils.subscriber({ context: { batch: true }, maxChunks: 2, refetchMode: 'replace' })
+
+      // simulate SWR: updaters are invoked synchronously with the current data
+      let data: unknown = ['__previous__']
+      const next = vi.fn((error, update?) => {
+        if (error === undefined) {
+          data = typeof update === 'function' ? update(data) : update
+        }
+      })
+
+      subscriber(key, { next })
+
+      await new Promise(resolve => setTimeout(resolve, 20))
+
+      // one probe call + one final replace call, no updates during the stream
+      expect(next).toHaveBeenCalledTimes(2)
+      expect(next).toHaveBeenNthCalledWith(1, undefined, expect.any(Function))
+      // exceeds maxChunks, so it should only keep the last 2 events
+      expect(next).toHaveBeenNthCalledWith(2, undefined, ['__event__2', '__event__3'])
+      expect(data).toEqual(['__event__2', '__event__3'])
+    })
+
+    it('on success refetchMode=replace without previous data', async () => {
+      client.mockImplementationOnce(async function* () {
+        await new Promise(resolve => setTimeout(resolve, 10))
+        yield '__event__1'
+        yield '__event__2'
+        yield '__event__3'
+      })
+      const subscriber = utils.subscriber({ context: { batch: true }, refetchMode: 'replace' })
+
+      // simulate SWR: updaters are invoked synchronously with the current data
+      let data: unknown
+      const next = vi.fn((error, update?) => {
+        if (error === undefined) {
+          data = typeof update === 'function' ? update(data) : update
+        }
+      })
+
+      subscriber(key, { next })
+
+      await new Promise(resolve => setTimeout(resolve, 20))
+
+      // one probe call + one update per event, streamed live like append mode
+      expect(next).toHaveBeenCalledTimes(4)
+      expect(data).toEqual(['__event__1', '__event__2', '__event__3'])
+    })
+
     it('on unsubscribe', async () => {
       client.mockImplementationOnce(async function* () {
         await new Promise(resolve => setTimeout(resolve, 100))

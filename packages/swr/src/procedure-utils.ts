@@ -110,20 +110,48 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
             throw new TypeError('.subscriber requires an AsyncIteratorObject output')
           }
 
+          let hasPreviousData = false
+
           if (refetchMode === 'reset') {
             next(undefined, undefined)
           }
+          else if (refetchMode === 'replace') {
+            /**
+             * The updater is invoked synchronously with the current data,
+             * so we can use it to detect whether previous data exists.
+             */
+            next(undefined, (old) => {
+              hasPreviousData = old !== undefined
+              return old as InferSubscriberOutput<TOutput>
+            })
+          }
+
+          const shouldUpdateDataDuringStream = refetchMode !== 'replace' || !hasPreviousData
+          let buffer: unknown[] = []
 
           for await (const event of iterator) {
-            next(undefined, (old) => {
-              const newData = Array.isArray(old) ? [...old, event] : [event]
+            if (shouldUpdateDataDuringStream) {
+              next(undefined, (old) => {
+                const newData = Array.isArray(old) ? [...old, event] : [event]
 
-              if (typeof maxChunks === 'number' && newData.length > maxChunks) {
-                return newData.slice(newData.length - maxChunks) as InferSubscriberOutput<TOutput>
+                if (typeof maxChunks === 'number' && newData.length > maxChunks) {
+                  return newData.slice(newData.length - maxChunks) as InferSubscriberOutput<TOutput>
+                }
+
+                return newData as InferSubscriberOutput<TOutput>
+              })
+            }
+            else {
+              buffer = [...buffer, event]
+
+              if (typeof maxChunks === 'number' && buffer.length > maxChunks) {
+                buffer = buffer.slice(buffer.length - maxChunks)
               }
+            }
+          }
 
-              return newData as InferSubscriberOutput<TOutput>
-            })
+          if (!shouldUpdateDataDuringStream) {
+            next(undefined, buffer as InferSubscriberOutput<TOutput>)
           }
         }
         catch (error) {
