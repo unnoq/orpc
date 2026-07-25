@@ -1,0 +1,50 @@
+{
+  "name": "@orpc/react-swr",
+  "type": "module",
+  "version": "2.0.0-beta.19",
+  "license": "MIT",
+  "homepage": "https://orpc.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/middleapi/orpc.git",
+    "directory": "packages/react-swr"
+  },
+  "keywords": [
+    "orpc",
+    "react",
+    "swr"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
+        "types": "./dist/index.d.mts",
+        "import": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "type:check": "tsc -b"
+  },
+  "peerDependencies": {
+    "swr": ">=2.3.6"
+  },
+  "dependencies": {
+    "@orpc/client": "workspace:*",
+    "@orpc/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "swr": "^2.4.1",
+    "zod": "^4.4.3"
+  }
+}

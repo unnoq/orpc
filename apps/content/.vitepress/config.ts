@@ -196,6 +196,7 @@ export default withMermaid(defineConfig({
             { text: 'OpenTelemetry', link: '/docs/integrations/opentelemetry' },
             { text: 'Pinia Colada', link: '/docs/integrations/pinia-colada' },
             { text: 'Pino', link: '/docs/integrations/pino' },
+            { text: 'React SWR', link: '/docs/integrations/react-swr' },
             { text: 'Standard Schema', link: '/docs/integrations/standard-schema' },
             { text: 'Tanstack Query', link: '/docs/integrations/tanstack-query' },
             { text: 'tRPC', link: '/docs/integrations/trpc' },
