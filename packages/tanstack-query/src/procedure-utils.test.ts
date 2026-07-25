@@ -1,7 +1,7 @@
 import { QueryClient, skipToken } from '@tanstack/query-core'
 import * as KeyModule from './key'
 import * as LiveQuery from './live-query'
-import { isProcedureUtilsOptions, ProcedureUtils } from './procedure-utils'
+import { isProcedureUtilsOptions, mergeProcedureUtilsOptions, ProcedureUtils } from './procedure-utils'
 import * as streamQueryModule from './stream-query'
 import { OPERATION_CONTEXT_SYMBOL } from './types'
 
@@ -1136,5 +1136,74 @@ describe('isProcedureUtilsOptions', () => {
     expect(isProcedureUtilsOptions({ queryInterceptors: { invalid: true } })).toBe(false)
     expect(isProcedureUtilsOptions({ queryInterceptors: [{ invalid: true }] })).toBe(false)
     expect(isProcedureUtilsOptions({ queryOptions: 'invalid' })).toBe(false)
+  })
+})
+
+describe('mergeProcedureUtilsOptions', () => {
+  it('overrides by key presence, keeping absent keys from base', () => {
+    const merged = mergeProcedureUtilsOptions<any, any, any, any>(
+      { prefix: 'base', queryOptions: { staleTime: 1000 } },
+      { prefix: 'override' },
+    )
+
+    expect(merged).toEqual({
+      prefix: 'override',
+      queryOptions: { staleTime: 1000 },
+    })
+  })
+
+  it('resets keys explicitly set to undefined in override', () => {
+    const merged = mergeProcedureUtilsOptions<any, any, any, any>(
+      { queryOptions: { staleTime: 1000 }, queryInterceptors: [vi.fn()] },
+      { queryOptions: undefined, queryInterceptors: undefined },
+    )
+
+    expect(merged).toEqual({})
+  })
+
+  it('concatenates interceptors when both defined, base first', () => {
+    const interceptor1 = vi.fn()
+    const interceptor2 = vi.fn()
+
+    const merged = mergeProcedureUtilsOptions<any, any, any, any>(
+      { mutationInterceptors: [interceptor1] },
+      { mutationInterceptors: [interceptor2] },
+    )
+
+    expect(merged).toEqual({ mutationInterceptors: [interceptor1, interceptor2] })
+  })
+
+  it('spread-merges plain object modifiers', () => {
+    const merged = mergeProcedureUtilsOptions<any, any, any, any>(
+      { queryOptions: { staleTime: 1000, retry: 1 } },
+      { queryOptions: { retry: 2 } },
+    )
+
+    expect(merged).toEqual({ queryOptions: { staleTime: 1000, retry: 2 } })
+  })
+
+  it('composes function modifiers, base applied first', () => {
+    const merged = mergeProcedureUtilsOptions<any, any, any, any>(
+      { queryOptions: (options: any) => ({ ...options, staleTime: 1000, retry: 1 }) },
+      { queryOptions: (options: any) => ({ ...options, retry: 2 }) },
+    )
+
+    expect((merged.queryOptions as any)({ enabled: true })).toEqual({ enabled: true, staleTime: 1000, retry: 2 })
+  })
+
+  it('composes mixed object and function modifiers', () => {
+    const objectFirst = mergeProcedureUtilsOptions<any, any, any, any>(
+      { queryOptions: { staleTime: 1000, retry: 1 } },
+      { queryOptions: (options: any) => ({ ...options, retry: 2 }) },
+    )
+
+    expect((objectFirst.queryOptions as any)({ enabled: true })).toEqual({ enabled: true, staleTime: 1000, retry: 2 })
+
+    const functionFirst = mergeProcedureUtilsOptions<any, any, any, any>(
+      { queryOptions: (options: any) => ({ ...options, staleTime: 1000 }) },
+      { queryOptions: { retry: 2 } },
+    )
+
+    expect((functionFirst.queryOptions as any)({ enabled: true })).toEqual({ enabled: true, staleTime: 1000, retry: 2 })
   })
 })
