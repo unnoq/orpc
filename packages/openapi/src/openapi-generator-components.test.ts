@@ -325,6 +325,57 @@ describe('openAPIComponentRegistry', () => {
       expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Post', 'User'])
     })
 
+    it('reuses sibling defs when shouldHoistDef only allows one of them', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post' } } },
+          Post: { type: 'object', properties: { author: { $ref: '#/components/schemas/User' } } },
+        },
+        shouldHoistDef: name => name === 'User',
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/User',
+        $defs: {
+          User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
+          // declined, but force-hoisted because the hoisted User references it,
+          // and still reuses the equal existing component
+          Post: { type: 'object', properties: { author: { $ref: '#/$defs/User' } } },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/User' })
+      expect(doc.components?.schemas).toEqual({
+        User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post' } } },
+        Post: { type: 'object', properties: { author: { $ref: '#/components/schemas/User' } } },
+      })
+    })
+
+    it('resolves sibling name conflicts while shouldHoistDef declines one of them', () => {
+      const { doc, registry } = createRegistry({
+        schemas: {
+          User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post2' } } },
+          Post: { type: 'string' },
+          Post2: { type: 'object', properties: { author: { $ref: '#/components/schemas/User' } } },
+        },
+        shouldHoistDef: name => name === 'User',
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/User',
+        $defs: {
+          User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
+          // the force-hoisted sibling conflicts with the unrelated Post component
+          // and lands on the equal Post2 family member instead
+          Post: { type: 'object', properties: { author: { $ref: '#/$defs/User' } } },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/User' })
+      expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(['Post', 'Post2', 'User'])
+      expect(doc.components?.schemas?.Post).toEqual({ type: 'string' })
+    })
+
     it('reuses sibling defs through renamed refs when a family name is taken', () => {
       const { doc, registry } = createRegistry({
         schemas: {
@@ -605,6 +656,28 @@ describe('openAPIComponentRegistry', () => {
       expect(doc.components?.schemas?.NodeA2).toEqual({
         type: 'object',
         properties: { next: { $ref: '#/components/schemas/NodeA2' } },
+      })
+    })
+
+    it('mints a declined sibling under a numbered slot when its name conflicts', () => {
+      const { doc, registry } = createRegistry({
+        schemas: { Post: { type: 'string' } },
+        shouldHoistDef: name => name === 'User',
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/User',
+        $defs: {
+          User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
+          Post: { type: 'number' },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/User' })
+      expect(doc.components?.schemas).toEqual({
+        Post: { type: 'string' },
+        User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post2' } } },
+        Post2: { type: 'number' },
       })
     })
 
