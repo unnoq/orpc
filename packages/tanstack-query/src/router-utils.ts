@@ -98,11 +98,11 @@ function createRouterUtilsInternal<T extends AnyNestedClient>(
         plugin.initProcedureOptions(path, mergeProcedureUtilsOptions(
           {
             prefix: options.prefix,
-            queryInterceptors: toArray(options.queryInterceptors) as any,
-            streamedInterceptors: toArray(options.streamedInterceptors) as any,
-            liveInterceptors: toArray(options.liveInterceptors) as any,
-            infiniteInterceptors: toArray(options.infiniteInterceptors) as any,
-            mutationInterceptors: toArray(options.mutationInterceptors) as any,
+            queryInterceptors: options.queryInterceptors as any,
+            streamedInterceptors: options.streamedInterceptors as any,
+            liveInterceptors: options.liveInterceptors as any,
+            infiniteInterceptors: options.infiniteInterceptors as any,
+            mutationInterceptors: options.mutationInterceptors as any,
           },
           options.scoped ?? {},
         )),

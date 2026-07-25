@@ -23,14 +23,6 @@ vi.mock('./procedure-utils', async (importOriginal) => {
 
 const generateOperationKeySpy = vi.spyOn(KeyModule, 'generateOperationKey')
 
-const emptyInterceptors = {
-  queryInterceptors: [],
-  streamedInterceptors: [],
-  liveInterceptors: [],
-  infiniteInterceptors: [],
-  mutationInterceptors: [],
-}
-
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -46,7 +38,7 @@ describe('createRouterUtils', () => {
     }) as any
 
     expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith([], client, { ...emptyInterceptors, prefix: '__prefix__' })
+    expect(ProcedureUtils).toHaveBeenCalledWith([], client, { prefix: '__prefix__' })
     expect(utils.key({ type: 'infinite' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
     expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, [], { type: 'infinite', prefix: '__prefix__' })
     expect(utils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.queryOptions.mock.results[0]?.value)
@@ -55,7 +47,7 @@ describe('createRouterUtils', () => {
     const keyUtils = utils.key
 
     expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['key'], client.key, { ...emptyInterceptors, prefix: '__prefix__' })
+    expect(ProcedureUtils).toHaveBeenCalledWith(['key'], client.key, { prefix: '__prefix__' })
     expect(keyUtils.key({ type: 'live' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
     expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['key'], { type: 'live', prefix: '__prefix__' })
     expect(keyUtils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.queryOptions.mock.results[0]?.value)
@@ -64,7 +56,7 @@ describe('createRouterUtils', () => {
     const pongUtils = keyUtils.pong
 
     expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['key', 'pong'], client.key.pong, { ...emptyInterceptors, prefix: '__prefix__' })
+    expect(ProcedureUtils).toHaveBeenCalledWith(['key', 'pong'], client.key.pong, { prefix: '__prefix__' })
     expect(pongUtils.key({ type: 'query' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
     expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['key', 'pong'], { type: 'query', prefix: '__prefix__' })
     expect(pongUtils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.queryOptions.mock.results[0]?.value)
@@ -74,7 +66,7 @@ describe('createRouterUtils', () => {
     const utils = createRouterUtils(client, { path: ['__base__'] }) as any
 
     expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['__base__'], client, emptyInterceptors)
+    expect(ProcedureUtils).toHaveBeenCalledWith(['__base__'], client, {})
     expect(utils.key({ type: 'infinite' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
     expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['__base__'], { type: 'infinite', prefix: undefined })
 
@@ -82,7 +74,7 @@ describe('createRouterUtils', () => {
     const keyUtils = utils.key
 
     expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['__base__', 'key'], client.key, emptyInterceptors)
+    expect(ProcedureUtils).toHaveBeenCalledWith(['__base__', 'key'], client.key, {})
     expect(keyUtils.key({ type: 'live' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
     expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['__base__', 'key'], { type: 'live', prefix: undefined })
   })
@@ -111,12 +103,12 @@ describe('createRouterUtils', () => {
     vi.clearAllMocks()
     const keyUtils = utils.key
     expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['key'], client.key, { ...keyOptions, ...emptyInterceptors })
+    expect(ProcedureUtils).toHaveBeenCalledWith(['key'], client.key, { ...keyOptions })
 
     vi.clearAllMocks()
     const pongUtils = keyUtils.pong
     expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['key', 'pong'], client.key.pong, emptyInterceptors)
+    expect(ProcedureUtils).toHaveBeenCalledWith(['key', 'pong'], client.key.pong, {})
   })
 
   it('merges interceptors and applies plugin hooks before creating procedure utils', () => {
