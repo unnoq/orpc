@@ -81,6 +81,14 @@ describe('createRouterUtils', () => {
     expect(utils[Symbol.for('a')]).toBe(undefined)
   })
 
+  it('stops recursive on symbol and RECURSIVE_CLIENT_UNWRAP_KEYS of conflicting method proxies', () => {
+    const utils = createRouterUtils(client) as any
+    const keyUtils = utils.key // "key" is both a util method and a nested client
+
+    expect(keyUtils[Symbol.for('a')]).toBe(undefined)
+    expect(keyUtils.bind).toBeInstanceOf(Function) // resolved from the underlying method, not the nested utils
+  })
+
   it('stops recursive on RECURSIVE_CLIENT_UNWRAP_KEYS', () => {
     client.then = vi.fn()
 
