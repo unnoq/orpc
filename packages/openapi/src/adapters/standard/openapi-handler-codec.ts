@@ -15,6 +15,7 @@ import {
 } from '../../constants'
 import { getOpenAPIMeta } from '../../meta'
 import { OpenAPISerializer } from '../../openapi-serializer'
+import { isBodylessMethod } from '../../utils'
 import { OpenAPIMatcher } from './openapi-matcher'
 
 export interface OpenAPIHandlerCodecCoreOptions<_T extends Context> {
@@ -27,7 +28,7 @@ export interface OpenAPIHandlerCodecCoreOptions<_T extends Context> {
    * Mapping ORPCError Code -> HTTP Status Code
    * The status code should be in the `4xx` or `5xx` range (must be greater than or equal to `400`).
    *
-   * @default COMMON_ERROR_STATUS_MAP, DEFAULT_ERROR_STATUS
+   * @default COMMON_ERROR_STATUS_MAP
    */
   errorStatusMap?: Record<string, number> | undefined
 
@@ -66,7 +67,7 @@ export class OpenAPIHandlerCodecCore<T extends Context> {
     const query = this.deserializeQuery(search, meta?.queryStyles)
 
     if (inputStructure === 'compact') {
-      const data = request.method === 'GET'
+      const data = isBodylessMethod(request.method)
         ? query
         : this.serializer.deserialize(await request.resolveBody(meta?.requestBodyHint))
 

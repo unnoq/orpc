@@ -17,7 +17,7 @@ import {
 } from '../../constants'
 import { getOpenAPIMeta } from '../../meta'
 import { OpenAPISerializer } from '../../openapi-serializer'
-import { getDynamicPathParams } from '../../utils'
+import { getDynamicPathParams, isBodylessMethod } from '../../utils'
 
 export class OpenAPILinkCodecError extends TypeError {}
 
@@ -112,7 +112,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
 
       pathname = `${basePathname.replace(END_SLASH_REGEX, '')}${pathname}` as `/${string}`
 
-      if (method === 'GET') {
+      if (isBodylessMethod(method)) {
         const queryString = this.serializeQueryString(data, meta?.queryStyles)
         const search = combineSearch(baseSearch, queryString)
         const url = `${pathname}${search ?? ''}${baseHash ?? ''}` as StandardUrl
@@ -175,7 +175,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
     const search = combineSearch(baseSearch, queryString)
     const url = `${pathname}${search ?? ''}${baseHash ?? ''}` as StandardUrl
 
-    if (method === 'GET') {
+    if (isBodylessMethod(method)) {
       return {
         body: undefined,
         method,

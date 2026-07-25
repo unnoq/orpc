@@ -1,3 +1,11 @@
+/**
+ * GET and HEAD requests cannot carry a request body,
+ * so their compact input maps to query parameters instead.
+ */
+export function isBodylessMethod(method: string): boolean {
+  return method === 'GET' || method === 'HEAD'
+}
+
 const PARAMETER_NAME_REGEX = /^[\w-]+$/
 
 /**
