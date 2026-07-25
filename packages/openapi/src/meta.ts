@@ -47,7 +47,8 @@ export interface OpenAPIMeta {
   /**
    * Tags associated with this procedure.
    *
-   * **Note**: Tags are merged when defined multiple times.
+   * **Merging**: When defined multiple times, tags are concatenated in definition order.
+   * Explicitly setting `undefined` resets the tags instead of merging.
    */
   tags?: string[] | undefined
 
@@ -69,7 +70,9 @@ export interface OpenAPIMeta {
   /**
    * Controls how individual path parameters are decoded.
    *
-   * **Note**: Param styles are merged when defined multiple times.
+   * **Merging**: When defined multiple times, styles are merged per parameter.
+   * The most recent style defined for a parameter wins.
+   * Explicitly setting `undefined` resets the styles instead of merging.
    *
    * Each key maps a path parameter name to one of the following strategies:
    *
@@ -118,7 +121,9 @@ export interface OpenAPIMeta {
   /**
    * Controls how individual query parameters are encoding/decoding.
    *
-   * **Note**: Query styles are merged when defined multiple times.
+   * **Merging**: When defined multiple times, styles are merged per parameter.
+   * The most recent style defined for a parameter wins.
+   * Explicitly setting `undefined` resets the styles instead of merging.
    *
    * Each key maps a query parameter name to one of the following strategies:
    *
@@ -284,14 +289,21 @@ export interface OpenAPIMeta {
    * Pass a plain object to replace entire operation object, or a function that receives the current
    * operation object and returns the modified version.
    *
-   * **Note**: Spec is merged when defined multiple times.
+   * **Merging**: When defined multiple times:
+   *
+   * - Two functions are chained: the most recent function receives the result of the previous one.
+   * - A function combined with an object: the function is applied to that object.
+   * - Two objects: the most recent object wins.
+   *
+   * Explicitly setting `undefined` resets the spec instead of merging.
    */
   spec?: Value<OpenAPIOperationObject, [current: OpenAPIOperationObject]>
 
   /**
    * Prefix for the path. Useful when you want to apply a common path prefix across multiple procedures.
    *
-   * **Note**: Prefixes are merged when defined multiple times.
+   * **Merging**: When defined multiple times, prefixes are concatenated in definition order.
+   * Explicitly setting `undefined` resets the prefix instead of merging.
    */
   prefix?: `/${string}` | undefined
 }

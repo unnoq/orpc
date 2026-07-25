@@ -54,7 +54,13 @@ const getPlanet = oc
 
 ### Metadata Merging
 
-When `openapi` is applied multiple times, `tags`, `spec`, `prefix`, `paramsStyle`, and `queryStyles` are deep-merged, while `operationId`, `summary`, `description`, `successDescription`, `method`, `path`, `successStatus`, `inputStructure`, `outputStructure`, `responseBodyHint`, and `requestBodyHint` are overridden by the most recent call. For full merge behavior, see the [source code](https://github.com/orpc/orpc/blob/main/packages/openapi/src/meta.ts).
+When `openapi` is applied multiple times, most fields, such as `method`, `path`, `operationId`, `summary`, and `description`, are overridden by the most recent call. Only the following fields are merged:
+
+- `tags` and `prefix` values are concatenated in definition order.
+- `paramsStyles` and `queryStyles` are merged per parameter. The most recent style defined for a parameter wins.
+- `spec` values are combined: two functions are chained so the most recent one receives the result of the previous one, a function combined with an object is applied to that object, and between two objects the most recent one wins.
+
+For implementation details, see the [source code](https://github.com/orpc/orpc/blob/main/packages/openapi/src/meta.ts).
 
 ```ts
 const router = os
