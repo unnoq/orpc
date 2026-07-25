@@ -790,6 +790,22 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
 
+  packages/swr:
+    dependencies:
+      '@orpc/client':
+        specifier: workspace:*
+        version: link:../client
+      '@orpc/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      swr:
+        specifier: ^2.4.2
+        version: 2.4.2(react@19.2.7)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+
   packages/tanstack-query:
     dependencies:
       '@orpc/client':
@@ -9398,6 +9414,11 @@ packages:
 
   swagger-ui@5.32.9:
     resolution: {integrity: sha512-F+RBm5bswwJ3oxlYkcyH5EkM6hHZsJEiSPi8zWw66ncBpuue3sz9dmiXepWYv8BiHqnK82TAHyjoyYLHkEVm+w==}
+
+  swr@2.4.2:
+    resolution: {integrity: sha512-ej644Y2bvkIajfR32KGeSSdBXQW+ScjGjkybZgSE7kFpk9eGnV44XY9FJylXi+W75pavSX1PVNB57W5EbhGIYw==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   swrv@1.2.0:
     resolution: {integrity: sha512-lH/g4UcNyj+7lzK4eRGT4C68Q4EhQ6JtM9otPRIASfhhzfLWtbZPHcMuhuba7S9YVYuxkMUGImwMyGpfbkH07A==}
@@ -19677,6 +19698,12 @@ snapshots:
       - '@types/react'
       - debug
       - supports-color
+
+  swr@2.4.2(react@19.2.7):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.2.7
+      use-sync-external-store: 1.6.0(react@19.2.7)
 
   swrv@1.2.0(vue@3.5.40(typescript@6.0.3)):
     dependencies:
