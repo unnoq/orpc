@@ -20,7 +20,8 @@ export interface PiniaColadaMetaPlugin<
 /**
  * Define base Pinia Colada options and interceptors on a procedure contract.
  * Applied multiple times, later options are spread-merged with higher priority
- * while interceptors are concatenated.
+ * while interceptors are concatenated. A key explicitly set to `undefined`
+ * resets the value from earlier applications instead of merging.
  *
  * Apply them to router utils with {@link ContractOptionsUtilsPlugin}.
  *

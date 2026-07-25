@@ -3,7 +3,7 @@ import type { Interceptor, MaybeOptionalOptions, PromiseWithError } from '@orpc/
 import type { _EmptyObject, EntryKeyTagged, UseInfiniteQueryData, UseInfiniteQueryFnContext } from '@pinia/colada'
 import type { OperationKeyPrefixOptions } from './key'
 import type { InferLiveQueryOutput, InferStreamedQueryOutput, InfiniteKeyOptions, InfiniteOptionsIn, InfiniteOptionsOut, MutationKeyOptions, MutationOptionsIn, MutationOptionsOut, OperationContext, QueryKeyOptions, QueryOptionsIn, QueryOptionsOut, StreamedKeyOptions, StreamedOptionsIn, StreamedOptionsOut, UseMutationFnContext, UseQueryFnContext } from './types'
-import { intercept, isAsyncIteratorObject, isTypescriptObject, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
+import { intercept, isAsyncIteratorObject, isTypescriptObject, resolveMaybeOptionalOptions } from '@orpc/shared'
 import { generateOperationKey } from './key'
 import { liveQuery } from './live-query'
 import { SharedUtils } from './shared-utils'
@@ -212,13 +212,9 @@ export function isProcedureUtilsOptions(value: unknown): value is ProcedureUtils
 }
 
 function mergeProcedureUtilsModifier<T extends object>(
-  base: ProcedureUtilsModifier<T> | undefined,
-  override: ProcedureUtilsModifier<T> | undefined,
-): ProcedureUtilsModifier<T> | undefined {
-  if (!base || !override) {
-    return override ?? base
-  }
-
+  base: ProcedureUtilsModifier<T>,
+  override: ProcedureUtilsModifier<T>,
+): ProcedureUtilsModifier<T> {
   if (typeof base !== 'function' && typeof override !== 'function') {
     return { ...base, ...override } as Partial<T>
   }
@@ -230,34 +226,37 @@ function mergeProcedureUtilsModifier<T extends object>(
 }
 
 /**
- * Merge two procedure utils options where `override` takes priority:
- * interceptors are concatenated (base ones run first), modifiers are
- * spread-merged when both are plain objects and composed (base applied first)
- * otherwise, with plain objects applied as regular spread merges.
+ * Merge two procedure utils options where `override` takes priority.
+ * A key explicitly set to `undefined` in `override` resets the base value.
+ * When both sides define a key: interceptors are concatenated (base ones run first),
+ * modifiers are spread-merged when both are plain objects and composed (base applied
+ * first) otherwise, with plain objects applied as regular spread merges.
  */
 export function mergeProcedureUtilsOptions<TClientContext extends ClientContext, TInput, TOutput, TError>(
   base: ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError>,
   override: ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError>,
 ): ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError> {
-  return {
-    ...base,
-    ...override,
-    queryKey: mergeProcedureUtilsModifier(base.queryKey, override.queryKey),
-    queryInterceptors: [...toArray(base.queryInterceptors), ...toArray(override.queryInterceptors)],
-    queryOptions: mergeProcedureUtilsModifier(base.queryOptions, override.queryOptions),
-    streamedKey: mergeProcedureUtilsModifier(base.streamedKey, override.streamedKey),
-    streamedInterceptors: [...toArray(base.streamedInterceptors), ...toArray(override.streamedInterceptors)],
-    streamedOptions: mergeProcedureUtilsModifier(base.streamedOptions, override.streamedOptions),
-    liveKey: mergeProcedureUtilsModifier(base.liveKey, override.liveKey),
-    liveInterceptors: [...toArray(base.liveInterceptors), ...toArray(override.liveInterceptors)],
-    liveOptions: mergeProcedureUtilsModifier(base.liveOptions, override.liveOptions),
-    infiniteKey: mergeProcedureUtilsModifier(base.infiniteKey, override.infiniteKey),
-    infiniteInterceptors: [...toArray(base.infiniteInterceptors), ...toArray(override.infiniteInterceptors)],
-    infiniteOptions: mergeProcedureUtilsModifier(base.infiniteOptions, override.infiniteOptions),
-    mutationKey: mergeProcedureUtilsModifier(base.mutationKey, override.mutationKey),
-    mutationInterceptors: [...toArray(base.mutationInterceptors), ...toArray(override.mutationInterceptors)],
-    mutationOptions: mergeProcedureUtilsModifier(base.mutationOptions, override.mutationOptions),
+  const merged: Record<string, unknown> = { ...base, ...override }
+
+  for (const key of PROCEDURE_UTILS_INTERCEPTOR_KEYS) {
+    const baseValue = (base as Record<string, unknown>)[key] as ProcedureUtilsQueryInterceptor<any, any, any, any>[] | undefined
+    const overrideValue = (override as Record<string, unknown>)[key] as ProcedureUtilsQueryInterceptor<any, any, any, any>[] | undefined
+
+    if (baseValue && overrideValue) {
+      merged[key] = [...baseValue, ...overrideValue]
+    }
   }
+
+  for (const key of PROCEDURE_UTILS_MODIFIER_KEYS) {
+    const baseValue = (base as Record<string, unknown>)[key] as ProcedureUtilsModifier<any> | undefined
+    const overrideValue = (override as Record<string, unknown>)[key] as ProcedureUtilsModifier<any> | undefined
+
+    if (baseValue && overrideValue) {
+      merged[key] = mergeProcedureUtilsModifier(baseValue, overrideValue)
+    }
+  }
+
+  return merged as ProcedureUtilsOptions<TClientContext, TInput, TOutput, TError>
 }
 
 export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutput, TError> extends SharedUtils<TInput> {

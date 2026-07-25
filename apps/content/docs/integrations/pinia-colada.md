@@ -290,7 +290,7 @@ const orpc = createPiniaColadaUtils(client, {
 
 ### Contract Options Plugin
 
-Use `piniaColada` to define base options and interceptors directly on a [procedure contract](/docs/contract/procedure), then pass the contract to `ContractOptionsUtilsPlugin` to apply them automatically. Meta options act as the base layer: [default options](#default-options) and [interceptors](#interceptors) defined on the utils merge on top of them.
+Use `piniaColada` to define base options and interceptors directly on a [procedure contract](/docs/contract/procedure), then pass the contract to `ContractOptionsUtilsPlugin` to apply them automatically. Meta options act as the base layer: [default options](#default-options) and [interceptors](#interceptors) defined on the utils merge on top of them. Passing `undefined` explicitly for a key resets the value from lower layers instead of merging.
 
 ```ts
 import { ContractOptionsUtilsPlugin, piniaColada } from '@orpc/pinia-colada'

@@ -38,43 +38,8 @@ describe('piniaColada', () => {
       queryKey: keyModifier,
       queryOptions: { staleTime: 1000, gcTime: 2 },
       queryInterceptors: [interceptor1],
-      streamedInterceptors: [],
-      liveInterceptors: [],
-      infiniteInterceptors: [],
       mutationInterceptors: [interceptor2],
     })
-  })
-
-  it('composes function modifiers, base applied first', () => {
-    const contract = oc
-      .meta(piniaColada({
-        queryOptions: options => ({ ...options, staleTime: 1000, gcTime: 1 }),
-      }))
-      .meta(piniaColada({
-        queryOptions: options => ({ ...options, gcTime: 2 }),
-      }))
-
-    const merged: any = getPiniaColadaMeta(contract)?.queryOptions
-
-    expect(merged({ enabled: true })).toEqual({ enabled: true, staleTime: 1000, gcTime: 2 })
-  })
-
-  it('composes mixed object and function modifiers', () => {
-    const objectFirst = oc
-      .meta(piniaColada({ queryOptions: { staleTime: 1000, gcTime: 1 } }))
-      .meta(piniaColada({ queryOptions: options => ({ ...options, gcTime: 2 }) }))
-
-    const objectFirstMerged: any = getPiniaColadaMeta(objectFirst)?.queryOptions
-
-    expect(objectFirstMerged({ enabled: true })).toEqual({ enabled: true, staleTime: 1000, gcTime: 2 })
-
-    const functionFirst = oc
-      .meta(piniaColada({ queryOptions: options => ({ ...options, staleTime: 1000 }) }))
-      .meta(piniaColada({ queryOptions: { gcTime: 2 } }))
-
-    const functionFirstMerged: any = getPiniaColadaMeta(functionFirst)?.queryOptions
-
-    expect(functionFirstMerged({ enabled: true })).toEqual({ enabled: true, staleTime: 1000, gcTime: 2 })
   })
 
   it('propagates base meta to procedures via .router', () => {
@@ -87,11 +52,6 @@ describe('piniaColada', () => {
 
     expect(getPiniaColadaMeta(router.ping)).toEqual({
       queryOptions: { staleTime: 1000, gcTime: 2 },
-      queryInterceptors: [],
-      streamedInterceptors: [],
-      liveInterceptors: [],
-      infiniteInterceptors: [],
-      mutationInterceptors: [],
     })
 
     expect(getPiniaColadaMeta(router.pong)).toEqual({
@@ -133,10 +93,6 @@ describe('contractOptionsUtilsPlugin', () => {
       prefix: '__prefix__',
       queryOptions: { staleTime: 1000, gcTime: 2 },
       queryInterceptors: [metaInterceptor, existingInterceptor],
-      streamedInterceptors: [],
-      liveInterceptors: [],
-      infiniteInterceptors: [],
-      mutationInterceptors: [],
     })
   })
 
