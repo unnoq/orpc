@@ -166,23 +166,25 @@ describe('openAPIGenerator e2e: reusable component schemas', () => {
     })
   })
 
-  it('keeps schemas inline when shouldHoistDef declines them', async () => {
+  it('names components with customComponentName', async () => {
     const Planet = z.object({ id: z.string() }).meta({ id: 'Planet' })
 
     const doc = await generator.generate({
       planet: oc.input(z.object({ planet: Planet })),
     }, {
-      shouldHoistDef: () => false,
+      customComponentName: defName => `Api${defName}`,
     })
 
-    expect(doc.components).toBeUndefined()
     expect((doc.paths?.['/planet']?.post?.requestBody as any).content['application/json'].schema).toEqual(
       expect.objectContaining({
-        $defs: expect.objectContaining({
-          Planet: expect.any(Object),
-        }),
+        properties: {
+          planet: { $ref: '#/components/schemas/ApiPlanet' },
+        },
       }),
     )
+    expect(doc.components?.schemas).toEqual({
+      ApiPlanet: expect.objectContaining({ type: 'object' }),
+    })
   })
 
   it('references components from detailed request and response bodies', async () => {

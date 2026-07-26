@@ -73,7 +73,7 @@ describe('openAPIGenerator e2e: typed errors', () => {
     }))
   })
 
-  it('builds error components with code, status, default message, and data', async () => {
+  it('builds error components with code, status, message, and data', async () => {
     const doc = await generator.generate(router)
 
     expect(doc.components?.schemas?.Conflict).toEqual({
@@ -83,7 +83,7 @@ describe('openAPIGenerator e2e: typed errors', () => {
         inferable: { type: 'boolean' },
         code: { const: 'CONFLICT' },
         status: { const: 409 },
-        message: { type: 'string', default: 'Planet already exists' },
+        message: { type: 'string' },
         data: expect.objectContaining({
           type: 'object',
           properties: {
@@ -111,8 +111,8 @@ describe('openAPIGenerator e2e: typed errors', () => {
 
   it('shares error components between procedures and across regenerations from a base document', async () => {
     const sharedRouter = {
-      a: oc.meta(openapi({})).errors({ NOT_FOUND: {} }),
-      b: oc.meta(openapi({})).errors({ NOT_FOUND: {} }),
+      a: oc.meta(openapi({})).errors({ NOT_FOUND: { message: 'Planet not found' } }),
+      b: oc.meta(openapi({})).errors({ NOT_FOUND: { message: 'Moon not found' } }),
     }
 
     const first = await generator.generate(sharedRouter)

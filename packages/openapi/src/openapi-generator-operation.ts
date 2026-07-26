@@ -490,13 +490,14 @@ export function buildErrorResponse(
       status,
     )
     const responseSchema = customBodySchema ?? combineJsonSchemasWithComposition('oneOf', [
-      ...definitions.map(({ code, dataJsonSchema, dataOptional, defaultMessage }) => {
+      ...definitions.map(({ code, dataJsonSchema, dataOptional }) => {
         return ctx.registry.register(toErrorComponentName(code), combineJsonObjectSchemaEntries([
           ['defined', { const: true }, false],
           ['inferable', { type: 'boolean' }, false],
           ['code', { const: code }, false],
           ['status', { const: status }, false],
-          ['message', { type: 'string', default: defaultMessage }, false],
+          // avoid using the defaultMessage here to improve component reusability
+          ['message', { type: 'string' }, false],
           ['data', ctx.registry.hoistDefs(dataJsonSchema, 'output'), dataOptional],
         ]))
       }),
