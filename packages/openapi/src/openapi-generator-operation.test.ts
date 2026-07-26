@@ -710,6 +710,18 @@ describe('openAPIGenerator operation builders', () => {
         },
         required: ['defined', 'inferable', 'code', 'status', 'message', 'data'],
       })
+      expect(doc.components?.schemas?.BadRequest2).toEqual({
+        type: 'object',
+        properties: {
+          defined: { const: true },
+          inferable: { type: 'boolean' },
+          code: { const: 'BAD_REQUEST_2' },
+          status: { const: 400 },
+          message: { type: 'string', default: undefined },
+          data: { },
+        },
+        required: ['defined', 'inferable', 'code', 'status', 'message'],
+      })
       expect(doc.components?.schemas?.UndefinedError).toEqual({
         type: 'object',
         properties: {

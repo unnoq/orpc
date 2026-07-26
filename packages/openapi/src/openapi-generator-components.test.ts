@@ -5,7 +5,7 @@ import { OpenAPIComponentRegistry } from './openapi-generator-components'
 describe('openAPIComponentRegistry', () => {
   function createRegistry(options: {
     schemas?: Record<string, any>
-    shouldHoistDef?: (defName: string, defSchema: JsonSchema) => boolean
+    customComponentName?: (defName: string, defSchema: JsonSchema) => string | undefined
   } = {}) {
     const doc: OpenAPIDocument = {
       openapi: '3.1.2',
@@ -13,7 +13,7 @@ describe('openAPIComponentRegistry', () => {
       ...(options.schemas ? { components: { schemas: options.schemas } } : {}),
     }
 
-    return { doc, registry: new OpenAPIComponentRegistry(doc, options.shouldHoistDef) }
+    return { doc, registry: new OpenAPIComponentRegistry(doc, options.customComponentName) }
   }
 
   describe('hoistDefs', () => {
@@ -70,44 +70,111 @@ describe('openAPIComponentRegistry', () => {
       })
     })
 
-    it('keeps every def local when shouldHoistDef always returns false', () => {
-      const { doc, registry } = createRegistry({ shouldHoistDef: () => false })
+    it('returns the schema unchanged when every def is undefined', () => {
+      const { doc, registry } = createRegistry()
 
-      const schema = {
-        $ref: '#/$defs/Planet',
-        $defs: { Planet: { type: 'string' as const } },
-      }
+      const schema = { $ref: '#/$defs/Ghost', $defs: { Ghost: undefined } } as any
 
       expect(registry.hoistDefs(schema)).toBe(schema)
       expect(doc.components).toBeUndefined()
     })
 
-    it('force-hoists referenced local defs, attaches root-referenced ones, and drops the rest', () => {
-      const { doc, registry } = createRegistry({ shouldHoistDef: name => name === 'Root' })
+    it('hoists every def, including ones the root schema never references', () => {
+      const { doc, registry } = createRegistry()
 
       const result = registry.hoistDefs({
         $ref: '#/$defs/Alias',
         $defs: {
           Root: { type: 'object', properties: { child: { $ref: '#/$defs/Local' } } },
-          // force-hoisted because the hoisted Root references it
           Local: { type: 'string' },
-          // stays local, only the remaining root schema references it
           Alias: { $ref: '#/$defs/Root' },
-          // referenced by nothing, dropped
           Unreferenced: { type: 'number' },
         },
       })
 
-      expect(result).toEqual({
-        $ref: '#/$defs/Alias',
-        $defs: {
-          Alias: { $ref: '#/components/schemas/Root' },
-        },
-      })
+      expect(result).toEqual({ $ref: '#/components/schemas/Alias' })
       expect(doc.components?.schemas).toEqual({
         Root: { type: 'object', properties: { child: { $ref: '#/components/schemas/Local' } } },
         Local: { type: 'string' },
+        Alias: { $ref: '#/components/schemas/Root' },
+        Unreferenced: { type: 'number' },
       })
+    })
+
+    it('names hoisted defs with customComponentName and rewrites refs to the new names', () => {
+      const customComponentName = vi.fn((defName: string) => `Api${defName}`)
+      const { doc, registry } = createRegistry({ customComponentName })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/Planet',
+        $defs: {
+          Planet: { type: 'object', properties: { moon: { $ref: '#/$defs/Moon' } } },
+          Moon: true,
+        },
+      } as any)
+
+      expect(result).toEqual({ $ref: '#/components/schemas/ApiPlanet' })
+      expect(doc.components?.schemas).toEqual({
+        ApiPlanet: { type: 'object', properties: { moon: { $ref: '#/components/schemas/ApiMoon' } } },
+        ApiMoon: {},
+      })
+
+      // receives the normalized def schema
+      expect(customComponentName).toHaveBeenCalledTimes(2)
+      expect(customComponentName).toHaveBeenNthCalledWith(2, 'Moon', {})
+    })
+
+    it('keeps the def name when customComponentName returns undefined', () => {
+      const { doc, registry } = createRegistry({
+        customComponentName: defName => defName === 'Planet' ? 'World' : undefined,
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/Planet',
+        $defs: {
+          Planet: { type: 'object', properties: { moon: { $ref: '#/$defs/Moon' } } },
+          Moon: { type: 'string' },
+        },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/World' })
+      expect(doc.components?.schemas).toEqual({
+        World: { type: 'object', properties: { moon: { $ref: '#/components/schemas/Moon' } } },
+        Moon: { type: 'string' },
+      })
+    })
+
+    it('postfixes a customComponentName that conflicts with a different component', () => {
+      const { doc, registry } = createRegistry({
+        schemas: { World: { type: 'string' } },
+        customComponentName: () => 'World',
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/Planet',
+        $defs: { Planet: { type: 'number' } },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/World2' })
+      expect(doc.components?.schemas).toEqual({
+        World: { type: 'string' },
+        World2: { type: 'number' },
+      })
+    })
+
+    it('reuses an equal component under the name customComponentName asks for', () => {
+      const { doc, registry } = createRegistry({
+        schemas: { World: { type: 'number' } },
+        customComponentName: () => 'World',
+      })
+
+      const result = registry.hoistDefs({
+        $ref: '#/$defs/Planet',
+        $defs: { Planet: { type: 'number' } },
+      })
+
+      expect(result).toEqual({ $ref: '#/components/schemas/World' })
+      expect(doc.components?.schemas).toEqual({ World: { type: 'number' } })
     })
 
     it('leaves dangling local refs untouched', () => {
@@ -254,21 +321,18 @@ describe('openAPIComponentRegistry', () => {
       expect(Object.keys(doc.components?.schemas ?? {}).sort()).toEqual(Object.keys(schemas).sort())
     })
 
-    it('reuses mutually recursive sibling defs, even when shouldHoistDef only allows one of them', () => {
+    it('reuses mutually recursive sibling defs', () => {
       const { doc, registry } = createRegistry({
         schemas: {
           User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post' } } },
           Post: { type: 'object', properties: { author: { $ref: '#/components/schemas/User' } } },
         },
-        shouldHoistDef: name => name === 'User',
       })
 
       const result = registry.hoistDefs({
         $ref: '#/$defs/User',
         $defs: {
           User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
-          // declined, but force-hoisted because the hoisted User references it,
-          // and still reuses the equal existing component
           Post: { type: 'object', properties: { author: { $ref: '#/$defs/User' } } },
         },
       })
@@ -280,21 +344,20 @@ describe('openAPIComponentRegistry', () => {
       })
     })
 
-    it('resolves sibling name conflicts while shouldHoistDef declines one of them', () => {
+    it('resolves sibling name conflicts against unrelated components', () => {
       const { doc, registry } = createRegistry({
         schemas: {
           User: { type: 'object', properties: { posts: { $ref: '#/components/schemas/Post2' } } },
           Post: { type: 'string' },
           Post2: { type: 'object', properties: { author: { $ref: '#/components/schemas/User' } } },
         },
-        shouldHoistDef: name => name === 'User',
       })
 
       const result = registry.hoistDefs({
         $ref: '#/$defs/User',
         $defs: {
           User: { type: 'object', properties: { posts: { $ref: '#/$defs/Post' } } },
-          // the force-hoisted sibling conflicts with the unrelated Post component
+          // the sibling conflicts with the unrelated Post component
           // and lands on the equal Post2 family member instead
           Post: { type: 'object', properties: { author: { $ref: '#/$defs/User' } } },
         },
@@ -600,10 +663,9 @@ describe('openAPIComponentRegistry', () => {
       })
     })
 
-    it('mints a declined sibling under a numbered slot when its name conflicts', () => {
+    it('mints a sibling under a numbered slot when its name conflicts', () => {
       const { doc, registry } = createRegistry({
         schemas: { Post: { type: 'string' } },
-        shouldHoistDef: name => name === 'User',
       })
 
       const result = registry.hoistDefs({
@@ -688,16 +750,13 @@ describe('openAPIComponentRegistry', () => {
       })
     })
 
-    it('returns the local $defs form when hoisting is declined', () => {
-      const { doc, registry } = createRegistry({ shouldHoistDef: () => false })
+    it('applies customComponentName to registered schemas', () => {
+      const { doc, registry } = createRegistry({ customComponentName: defName => `Api${defName}` })
 
       const result = registry.register('Planet', { type: 'object' })
 
-      expect(result).toEqual({
-        $ref: '#/$defs/Planet',
-        $defs: { Planet: { type: 'object' } },
-      })
-      expect(doc.components).toBeUndefined()
+      expect(result).toEqual({ $ref: '#/components/schemas/ApiPlanet' })
+      expect(doc.components?.schemas).toEqual({ ApiPlanet: { type: 'object' } })
     })
   })
 

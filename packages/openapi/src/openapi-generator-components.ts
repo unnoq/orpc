@@ -1,16 +1,14 @@
 // eslint-disable-next-line no-restricted-imports
 import type { OpenAPIV3_1 } from '@hey-api/spec-types'
 import type { JsonSchema, JsonSchemaConverterDirection } from '@orpc/json-schema'
-import type { Value } from '@orpc/shared'
 import type { OpenAPIDocument } from './types'
 import {
   decodeJsonPointerSegment,
   encodeJsonPointerSegment,
   ensureJsonSchemaObject,
   mapJsonSchemaRefs,
-  visitJsonSchemaRefs,
 } from '@orpc/json-schema'
-import { isDeepEqual, value } from '@orpc/shared'
+import { isDeepEqual } from '@orpc/shared'
 
 /**
  * Collects reusable schemas into `doc.components.schemas`.
@@ -21,13 +19,12 @@ import { isDeepEqual, value } from '@orpc/shared'
 export class OpenAPIComponentRegistry {
   constructor(
     private readonly doc: OpenAPIDocument,
-    private readonly shouldHoistDef: Value<boolean, [defName: string, defSchema: JsonSchema]> | undefined,
+    private readonly customComponentName: ((defName: string, defSchema: JsonSchema) => string | undefined) | undefined,
   ) {}
 
   /**
    * Registers `schema` as a component under `preferredName` (or an equivalent/postfixed name)
-   * and returns a `$ref` to it. When hoisting is declined via `shouldHoistDef`, the schema is
-   * returned in its local `$defs` form instead.
+   * and returns a `$ref` to it.
    */
   register(preferredName: string, schema: Exclude<JsonSchema, boolean>): JsonSchema {
     const { $defs, ...body } = schema
@@ -48,8 +45,7 @@ export class OpenAPIComponentRegistry {
 
   /**
    * Moves a schema's root-level `$defs` into `doc.components.schemas` and rewrites
-   * its refs accordingly. Defs declined by `shouldHoistDef` stay local unless a
-   * hoisted def references them.
+   * its refs accordingly.
    */
   hoistDefs(schema: JsonSchema, direction?: JsonSchemaConverterDirection): JsonSchema {
     if (typeof schema !== 'object' || !schema.$defs) {
@@ -57,8 +53,8 @@ export class OpenAPIComponentRegistry {
     }
 
     const { $defs, ...rest } = schema
-    const localDefs: Record<string, Exclude<JsonSchema, boolean>> = {}
-    const hoistedDefs: Record<string, Exclude<JsonSchema, boolean>> = {}
+    const defs: Record<string, Exclude<JsonSchema, boolean>> = {}
+    const preferredNames: Record<string, string> = {}
 
     for (const defName of Object.keys($defs)) {
       const defSchema = $defs[defName]
@@ -69,17 +65,13 @@ export class OpenAPIComponentRegistry {
 
       const normalized = ensureJsonSchemaObject(defSchema)
 
-      if (value(this.shouldHoistDef, defName, normalized) !== false) {
-        hoistedDefs[defName] = normalized
-      }
-      else {
-        localDefs[defName] = normalized
-      }
+      defs[defName] = normalized
+      preferredNames[defName] = this.customComponentName?.(defName, normalized) ?? defName
     }
 
-    hoistReferencedLocalDefs(hoistedDefs, localDefs)
+    const defNames = Object.keys(defs)
 
-    if (Object.keys(hoistedDefs).length === 0) {
+    if (defNames.length === 0) {
       return schema
     }
 
@@ -88,31 +80,29 @@ export class OpenAPIComponentRegistry {
 
     const componentsSchemas = this.doc.components.schemas
     const identityRenameMap = Object.fromEntries(
-      Object.keys(hoistedDefs).map(defName => [defName, defName]),
+      defNames.map(defName => [defName, preferredNames[defName]!]),
     ) as Record<string, string>
     const renameMap: Record<string, string> = {}
     const pendingSchemas: { cleanSchema: Exclude<JsonSchema, boolean>, componentName: string }[] = []
 
-    for (const defName of Object.keys(hoistedDefs)) {
-      const cleanSchema = hoistedDefs[defName]!
+    for (const defName of defNames) {
+      const cleanSchema = defs[defName]!
       const candidateSchemas = Object.fromEntries(
-        Object.keys(hoistedDefs).map(currentDefName => [
-          currentDefName,
-          rewriteComponentSchemaRefs(
-            withReferencedLocalDefs(hoistedDefs[currentDefName]!, localDefs),
-            {
-              ...identityRenameMap,
-              ...renameMap,
-            },
-          ),
+        defNames.map(currentDefName => [
+          preferredNames[currentDefName]!,
+          rewriteComponentSchemaRefs(defs[currentDefName]!, {
+            ...identityRenameMap,
+            ...renameMap,
+          }),
         ]),
       ) as Record<string, JsonSchema>
-      const prelimSchema = candidateSchemas[defName]!
+      const preferredName = preferredNames[defName]!
+      const prelimSchema = candidateSchemas[preferredName]!
 
       const [componentName, reuseExisting] = resolveComponentName(
         componentsSchemas,
         new Set(Object.values(renameMap)),
-        defName,
+        preferredName,
         prelimSchema,
         candidateSchemas,
         direction,
@@ -127,101 +117,17 @@ export class OpenAPIComponentRegistry {
 
     for (const { cleanSchema, componentName } of pendingSchemas) {
       componentsSchemas[componentName] = rewriteComponentSchemaRefs(
-        withReferencedLocalDefs(cleanSchema, localDefs),
+        cleanSchema,
         renameMap,
       ) as OpenAPIV3_1.SchemaObject
     }
 
-    return rewriteComponentSchemaRefs(withReferencedLocalDefs(rest, localDefs), renameMap)
+    return rewriteComponentSchemaRefs(rest, renameMap)
   }
 
   toOpenAPISchema(schema: JsonSchema, direction?: JsonSchemaConverterDirection): OpenAPIV3_1.SchemaObject {
     return ensureJsonSchemaObject(this.hoistDefs(schema, direction)) as OpenAPIV3_1.SchemaObject
   }
-}
-
-function visitLocalDefRefs(schema: JsonSchema, onRef: (defName: string) => void): void {
-  visitJsonSchemaRefs(schema, (ref) => {
-    const refName = parseLocalDefRefName(ref)
-
-    if (refName !== undefined) {
-      onRef(refName)
-    }
-  })
-}
-
-function hoistReferencedLocalDefs(
-  hoistedDefs: Record<string, Exclude<JsonSchema, boolean>>,
-  localDefs: Record<string, Exclude<JsonSchema, boolean>>,
-): void {
-  const queue = Object.values(hoistedDefs)
-
-  while (queue.length > 0) {
-    const current = queue.shift()!
-
-    visitLocalDefRefs(current, (refName) => {
-      const referenced = localDefs[refName]
-
-      if (referenced === undefined) {
-        return
-      }
-
-      hoistedDefs[refName] = referenced
-      delete localDefs[refName]
-      queue.push(referenced)
-    })
-  }
-}
-
-function withReferencedLocalDefs(
-  schema: Exclude<JsonSchema, boolean>,
-  localDefs: Record<string, Exclude<JsonSchema, boolean>>,
-): Exclude<JsonSchema, boolean> {
-  const referencedLocalDefs = collectReferencedLocalDefNames(schema, localDefs)
-
-  if (referencedLocalDefs.length === 0) {
-    return schema
-  }
-
-  const mergedDefs: Record<string, Exclude<JsonSchema, boolean>> = {
-    ...(schema.$defs as Record<string, Exclude<JsonSchema, boolean>> | undefined),
-  }
-
-  for (const defName of referencedLocalDefs) {
-    mergedDefs[defName] = localDefs[defName]!
-  }
-
-  return {
-    ...schema,
-    $defs: mergedDefs,
-  }
-}
-
-function collectReferencedLocalDefNames(
-  schema: JsonSchema,
-  localDefs: Record<string, Exclude<JsonSchema, boolean>>,
-): string[] {
-  if (Object.keys(localDefs).length === 0) {
-    return []
-  }
-
-  const referenced = new Set<string>()
-  const queue: JsonSchema[] = [schema]
-
-  while (queue.length > 0) {
-    const current = queue.shift()!
-
-    visitLocalDefRefs(current, (refName) => {
-      if (localDefs[refName] === undefined || referenced.has(refName)) {
-        return
-      }
-
-      referenced.add(refName)
-      queue.push(localDefs[refName]!)
-    })
-  }
-
-  return [...referenced]
 }
 
 /**
@@ -237,7 +143,7 @@ function collectReferencedLocalDefNames(
 function resolveComponentName(
   componentsSchemas: Record<string, any>,
   claimedNames: Set<string>,
-  defName: string,
+  preferredName: string,
   schema: JsonSchema,
   candidateSchemas: Record<string, JsonSchema>,
   direction: JsonSchemaConverterDirection | undefined,
@@ -245,7 +151,7 @@ function resolveComponentName(
   let mintName: string | undefined
 
   for (let i = 1; ; i++) {
-    const [componentName, mintable, tail] = componentNameCandidate(defName, direction, i)
+    const [componentName, mintable, tail] = componentNameCandidate(preferredName, direction, i)
     const existingSchema = componentsSchemas[componentName]
 
     if (existingSchema === undefined) {
@@ -268,8 +174,8 @@ function resolveComponentName(
       existingSchema,
       candidateSchemas,
       componentsSchemas,
-      new Map([[defName, componentName]]),
-      new Map([[componentName, defName]]),
+      new Map([[preferredName, componentName]]),
+      new Map([[componentName, preferredName]]),
     )) {
       return [componentName, true]
     }
@@ -277,28 +183,28 @@ function resolveComponentName(
 }
 
 function componentNameCandidate(
-  defName: string,
+  preferredName: string,
   direction: JsonSchemaConverterDirection | undefined,
   attempt: number,
 ): [componentName: string, mintable: boolean, tail: boolean] {
   if (attempt === 1) {
-    return [defName, true, false]
+    return [preferredName, true, false]
   }
 
   if (direction !== undefined) {
     if (attempt === 2) {
-      return [`${defName}${direction === 'input' ? 'Input' : 'Output'}`, true, false]
+      return [`${preferredName}${direction === 'input' ? 'Input' : 'Output'}`, true, false]
     }
 
     // the opposite direction is only ever reused, never minted
     if (attempt === 3) {
-      return [`${defName}${direction === 'input' ? 'Output' : 'Input'}`, false, false]
+      return [`${preferredName}${direction === 'input' ? 'Output' : 'Input'}`, false, false]
     }
 
-    return [`${defName}${attempt - 2}`, true, true]
+    return [`${preferredName}${attempt - 2}`, true, true]
   }
 
-  return [`${defName}${attempt}`, true, true]
+  return [`${preferredName}${attempt}`, true, true]
 }
 
 function definedKeysOf(object: Record<string, unknown>): string[] {

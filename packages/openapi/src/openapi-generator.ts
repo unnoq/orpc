@@ -38,11 +38,16 @@ export interface OpenAPIGeneratorGenerateOptions {
   base?: Partial<OpenAPIDocument> | undefined
 
   /**
-   * Controls whether a generated json schema `$defs` at root-level should be moved into `components.schemas`.
+   * Root-level `$defs` are always moved into `components.schemas`.
+   * Use this to customize the component name of a hoisted def.
    *
-   * @default true
+   * @remarks
+   * - The returned name is a preference, conflicting names are still postfixed (`Planet`, `PlanetInput`, `Planet2`, ...).
+   * - Return `undefined` to keep the original def name.
+   *
+   * @default defName => defName
    */
-  shouldHoistDef?: Value<boolean, [defName: string, defSchema: JsonSchema]>
+  customComponentName?: (defName: string, defSchema: JsonSchema) => string | undefined
 
   /**
    * Filter procedures. Return `false` to exclude a procedure from the OpenAPI specification.
@@ -92,7 +97,7 @@ export class OpenAPIGenerator {
     }
 
     const ctx: OpenAPIOperationContext = {
-      registry: new OpenAPIComponentRegistry(doc, options.shouldHoistDef),
+      registry: new OpenAPIComponentRegistry(doc, options.customComponentName),
       convertSchemas: (schemas, direction) => this.convertSchemas(schemas, direction),
       errorStatusMap: options.errorStatusMap ?? COMMON_ERROR_STATUS_MAP,
       customErrorResponseBodySchema: options.customErrorResponseBodySchema,
