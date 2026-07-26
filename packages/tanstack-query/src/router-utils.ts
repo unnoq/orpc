@@ -112,7 +112,7 @@ function createRouterUtilsInternal<T extends AnyNestedClient>(
   const recursive = new Proxy(utils, {
     get(target, prop) {
       const value = getOrBind(target, prop)
-      const nextClient = get(client, [prop])
+      const nextClient = (client as Record<PropertyKey, AnyNestedClient>)[prop]
 
       if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop) || !isTypescriptObject(nextClient)) {
         return value

@@ -15,7 +15,7 @@ import { DEFAULT_OPENAPI_METHOD, getDynamicPathParams, getOpenAPIMeta } from '@o
 import { OpenAPIHandlerCodecCore } from '@orpc/openapi/standard'
 import { DEFAULT_SUCCESS_STATUS, getRouter, Procedure, unlazy } from '@orpc/server'
 import { StandardHandler } from '@orpc/server/standard'
-import { get, isAsyncIteratorObject, mergeHttpPath, stringifyJSON, value } from '@orpc/shared'
+import { isAsyncIteratorObject, mergeHttpPath, stringifyJSON, value } from '@orpc/shared'
 import { flattenStandardHeader, generateContentDisposition } from '@standardserver/core'
 import { toEventStream, toStandardLazyRequest } from '@standardserver/node'
 import { mergeMap } from 'rxjs'
@@ -85,7 +85,7 @@ export function Implement<T extends RouterContract>(
         Reflect.defineMetadata(p, Reflect.getOwnMetadata(p, target.constructor, propertyKey), target.constructor, methodName)
       }
 
-      Implement(get(contract, [key]) as any)(target, methodName, Object.getOwnPropertyDescriptor(target, methodName)!)
+      Implement(contract[key] as any)(target, methodName, Object.getOwnPropertyDescriptor(target, methodName)!)
     }
   }
 }

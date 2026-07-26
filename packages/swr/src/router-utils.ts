@@ -2,7 +2,7 @@ import type { AnyNestedClient, Client } from '@orpc/client'
 import type { Public } from '@orpc/shared'
 import type { OperationKeyPrefixOptions } from './key'
 import { RECURSIVE_CLIENT_UNWRAP_KEYS } from '@orpc/client'
-import { bindMethods, get, getOrBind, isTypescriptObject, toArray } from '@orpc/shared'
+import { bindMethods, getOrBind, isTypescriptObject, toArray } from '@orpc/shared'
 import { ProcedureUtils } from './procedure-utils'
 import { SharedUtils } from './shared-utils'
 
@@ -41,7 +41,7 @@ export function createRouterUtils<T extends AnyNestedClient>(
   const recursive = new Proxy(utils, {
     get(target, prop) {
       const value = getOrBind(target, prop)
-      const nextClient = get(client, [prop])
+      const nextClient = (client as Record<PropertyKey, AnyNestedClient>)[prop]
 
       if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop) || !isTypescriptObject(nextClient)) {
         return value

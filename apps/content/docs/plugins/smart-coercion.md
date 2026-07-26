@@ -77,9 +77,9 @@ This plugin relies on [JSON Schema Converters](/docs/openapi/specification#json-
 The plugin coerces values safely by following these rules:
 
 1. **Schema-driven:** Converts only when the schema defines the target type
-2. **Safe only:** Converts only values with an unambiguous representation, such as `'123'` to `123`
+2. **Safe only:** Converts only values with an unambiguous, lossless representation, such as `'123'` to `123`
 3. **Preserve original values:** Leaves the original value unchanged when conversion would be unsafe
-4. **Union-aware:** Picks the best match for union types
+4. **Union-aware:** Tries to determine the best union branch to use for conversion
 5. **Deep conversion:** Applies recursively inside nested objects and arrays
 
 ::: info
@@ -92,7 +92,7 @@ JSON Schema does not natively represent `BigInt`, `Date`, `RegExp`, `URL`, `Set`
 - `x-native-type: 'set'` for Set
 - `x-native-type: 'map'` for Map
 
-The built-in [Standard Json Schema](https://standardschema.dev/json-schema) converter handles these cases. Because this metadata is outside the official JSON Schema specification, custom converters may need to add the appropriate `x-native-type` values explicitly.
+Since this field is not part of the official JSON Schema specification, custom converters must set it themselves. The built-in [ZodToJsonSchemaConverter](/docs/integrations/zod#json-schema-converter), [ValibotToJsonSchemaConverter](/docs/integrations/valibot#json-schema-converter), and [ArkTypeToJsonSchemaConverter](/docs/integrations/arktype#json-schema-converter) already handle it for you.
 :::
 
 ## Conversion Rules
@@ -117,20 +117,21 @@ Supports valid numeric strings:
 
 ### String/Number → BigInt
 
-Supports valid numeric strings or numbers:
+Supports integer strings and whole numbers:
 
 - `'12345678901234567890'` → `12345678901234567890n`
-- `12345678901234567890` → `12345678901234567890n`
+- `123` → `123n`
 
 ### String → Date
 
-Supports ISO date and datetime strings:
+Supports ISO 8601 date and datetime strings:
 
 - `'2023-10-01'` → `new Date('2023-10-01')`
 - `'2020-01-01T06:15'` → `new Date('2020-01-01T06:15')`
 - `'2020-01-01T06:15Z'` → `new Date('2020-01-01T06:15Z')`
 - `'2020-01-01T06:15:00Z'` → `new Date('2020-01-01T06:15:00Z')`
 - `'2020-01-01T06:15:00.123Z'` → `new Date('2020-01-01T06:15:00.123Z')`
+- `'2020-01-01T06:15:00-07:00'` → `new Date('2020-01-01T06:15:00-07:00')`
 
 ### String → RegExp
 
@@ -173,4 +174,4 @@ You can also use this plugin in guides such as [Expanding Type Support for OpenA
 
 ## Learn More
 
-For implementation details, see the [SmartCoercionHandlerPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/json-schema/src/v2/smart-coercion-handler-plugin.ts) or the [SmartCoercionLinkPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/json-schema/src/v2/smart-coercion-link-plugin.ts).
+For implementation details, see the [SmartCoercionHandlerPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/json-schema/src/smart-coercion-handler-plugin.ts), the [SmartCoercionLinkPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/json-schema/src/smart-coercion-link-plugin.ts), or the [coercer source code](https://github.com/middleapi/orpc/blob/main/packages/json-schema/src/coercer.ts).
