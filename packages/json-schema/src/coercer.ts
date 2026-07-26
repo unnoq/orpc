@@ -3,7 +3,24 @@ import { get, isPlainObject, toArray, tryOrUndefined } from '@orpc/shared'
 import { decodeJsonPointerSegment } from './ref-utils'
 import { JsonSchemaXNativeType } from './types'
 
-const FLEXIBLE_DATE_FORMAT_REGEX = /^[^-]+-[^-]+-[^-]+$/
+/**
+ * How well a value matches a schema, used to pick the best union branch.
+ */
+const UNSATISFIED = 0
+/**
+ * Every keyword matches except some object keys or array items no schema describes.
+ * JSON Schema allows those, and validators usually strip or ignore them, but a branch
+ * that describes every key is still a better match.
+ */
+const LOOSELY_SATISFIED = 1
+/** Every keyword matches. */
+const SATISFIED = 2
+
+type Satisfaction = typeof UNSATISFIED | typeof LOOSELY_SATISFIED | typeof SATISFIED
+
+function minSatisfaction(a: Satisfaction, b: Satisfaction): Satisfaction {
+  return a < b ? a : b
+}
 
 export class JsonSchemaCoercer {
   coerce([schema, optional]: [schema: JsonSchema, optional: boolean], value: unknown): unknown {
@@ -15,9 +32,18 @@ export class JsonSchemaCoercer {
     return coerced
   }
 
-  private coerceInternal(rootSchema: JsonSchema, schema: JsonSchema, value: unknown): [satisfied: boolean, coerced: unknown] {
+  private coerceInternal(
+    rootSchema: JsonSchema,
+    schema: JsonSchema,
+    value: unknown,
+    /**
+     * Schemas already applied to this exact value, used to stop `$ref` cycles.
+     * Only shared between keywords that re-apply a schema to the same value, never with nested values.
+     */
+    appliedRefs?: Set<JsonSchema>,
+  ): [satisfied: Satisfaction, coerced: unknown] {
     if (typeof schema === 'boolean') {
-      return [schema, value]
+      return [schema ? SATISFIED : UNSATISFIED, value]
     }
 
     if (Array.isArray(schema.type)) {
@@ -25,11 +51,12 @@ export class JsonSchemaCoercer {
         rootSchema,
         { anyOf: schema.type.map(type => ({ ...schema, type })) },
         value,
+        appliedRefs,
       )
     }
 
     let coerced = value
-    let satisfied = true
+    let satisfied: Satisfaction = SATISFIED
 
     if (typeof schema.$ref === 'string') {
       const resolved
@@ -39,11 +66,16 @@ export class JsonSchemaCoercer {
             ? rootSchema
             : undefined
 
-      if (resolved !== undefined) {
-        const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, resolved, coerced)
+      if (resolved !== undefined && !appliedRefs?.has(resolved)) {
+        appliedRefs ??= new Set()
+        appliedRefs.add(resolved)
+
+        const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, resolved, coerced, appliedRefs)
+
+        appliedRefs.delete(resolved)
 
         coerced = subCoerced
-        satisfied = subSatisfied
+        satisfied = minSatisfaction(satisfied, subSatisfied)
       }
     }
 
@@ -62,12 +94,12 @@ export class JsonSchemaCoercer {
             coerced = booleanValue
           }
           else {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
         }
       }
       else {
-        satisfied = false
+        satisfied = UNSATISFIED
       }
     }
 
@@ -75,14 +107,14 @@ export class JsonSchemaCoercer {
       switch (schema.type) {
         case 'null': {
           if (coerced !== null) {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
         }
         case 'string': {
           if (typeof coerced !== 'string') {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -93,7 +125,7 @@ export class JsonSchemaCoercer {
           }
 
           if (typeof coerced !== 'number') {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -104,7 +136,7 @@ export class JsonSchemaCoercer {
           }
 
           if (typeof coerced !== 'number' || !Number.isInteger(coerced)) {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -115,7 +147,7 @@ export class JsonSchemaCoercer {
           }
 
           if (typeof coerced !== 'boolean') {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -137,15 +169,13 @@ export class JsonSchemaCoercer {
             const coercedItems = coerced.map((item, i) => {
               const subSchema = prefixItemSchemas[i] ?? itemSchema
               if (subSchema === undefined) {
-                satisfied = false
+                satisfied = minSatisfaction(satisfied, LOOSELY_SATISFIED)
                 return item
               }
 
               const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, subSchema, item)
 
-              if (!subSatisfied) {
-                satisfied = false
-              }
+              satisfied = minSatisfaction(satisfied, subSatisfied)
 
               if (subCoerced !== item) {
                 shouldUseCoercedItems = true
@@ -155,7 +185,7 @@ export class JsonSchemaCoercer {
             })
 
             if (coercedItems.length < prefixItemSchemas.length) {
-              satisfied = false
+              satisfied = UNSATISFIED
             }
 
             if (shouldUseCoercedItems) {
@@ -163,7 +193,7 @@ export class JsonSchemaCoercer {
             }
           }
           else {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
           break
         }
@@ -174,40 +204,45 @@ export class JsonSchemaCoercer {
 
           if (isPlainObject(coerced)) {
             let shouldUseCoercedItems = false
-            const coercedItems: Record<string, unknown> = {}
+            // copy here so special keys like `__proto__` are kept as own properties
+            const coercedItems = { ...coerced }
 
             const patternProperties = Object.entries(schema.patternProperties ?? {})
-              .map(([key, value]) => [new RegExp(key), value] as const)
+              .flatMap(([key, value]) => {
+                // an invalid pattern is a schema mistake, it should not break coercion of the other keys
+                const pattern = tryOrUndefined(() => new RegExp(key))
+                return pattern ? [[pattern, value] as const] : []
+              })
+
+            const propertySchemas = schema.properties
 
             for (const key in coerced) {
               const value = coerced[key]
-              const subSchema = schema.properties?.[key]
+
+              // `properties[key]` alone would resolve keys like `__proto__` to `Object.prototype`
+              const subSchema = (propertySchemas !== undefined && Object.hasOwn(propertySchemas, key) ? propertySchemas[key] : undefined)
                 ?? patternProperties.find(([pattern]) => pattern.test(key))?.[1]
                 ?? schema.additionalProperties
 
-              if (value === undefined && !schema.required?.includes(key)) {
-                coercedItems[key] = value
-              }
-              else if (subSchema === undefined) {
-                coercedItems[key] = value
-                satisfied = false
-              }
-              else {
-                const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, subSchema, value)
-                coercedItems[key] = subCoerced
-
-                if (!subSatisfied) {
-                  satisfied = false
+              if (value !== undefined || schema.required?.includes(key)) {
+                if (subSchema === undefined) {
+                  satisfied = minSatisfaction(satisfied, LOOSELY_SATISFIED)
                 }
+                else {
+                  const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, subSchema, value)
+                  coercedItems[key] = subCoerced
 
-                if (subCoerced !== value) {
-                  shouldUseCoercedItems = true
+                  satisfied = minSatisfaction(satisfied, subSatisfied)
+
+                  if (subCoerced !== value) {
+                    shouldUseCoercedItems = true
+                  }
                 }
               }
             }
 
             if (schema.required?.some(key => !Object.hasOwn(coercedItems, key))) {
-              satisfied = false
+              satisfied = UNSATISFIED
             }
 
             if (shouldUseCoercedItems) {
@@ -215,7 +250,7 @@ export class JsonSchemaCoercer {
             }
           }
           else {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -231,7 +266,7 @@ export class JsonSchemaCoercer {
           }
 
           if (!(coerced instanceof Date)) {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -247,7 +282,7 @@ export class JsonSchemaCoercer {
           }
 
           if (typeof coerced !== 'bigint') {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -258,7 +293,7 @@ export class JsonSchemaCoercer {
           }
 
           if (!(coerced instanceof RegExp)) {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -269,7 +304,7 @@ export class JsonSchemaCoercer {
           }
 
           if (!(coerced instanceof URL)) {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -280,7 +315,7 @@ export class JsonSchemaCoercer {
           }
 
           if (!(coerced instanceof Set)) {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -291,7 +326,7 @@ export class JsonSchemaCoercer {
           }
 
           if (!(coerced instanceof Map)) {
-            satisfied = false
+            satisfied = UNSATISFIED
           }
 
           break
@@ -301,44 +336,54 @@ export class JsonSchemaCoercer {
 
     if (schema.allOf) {
       for (const subSchema of schema.allOf) {
-        const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, subSchema, coerced)
+        const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, subSchema, coerced, appliedRefs)
 
         coerced = subCoerced
-
-        if (!subSatisfied) {
-          satisfied = false
-        }
+        satisfied = minSatisfaction(satisfied, subSatisfied)
       }
     }
 
     for (const key of ['anyOf', 'oneOf'] as const) {
       if (schema[key]) {
-        let bestOptions: { coerced: unknown, satisfied: boolean } | undefined
+        /**
+         * The best branch is the first one that accepts the value untouched,
+         * then the most satisfied branch that accepts it after a conversion.
+         */
+        let best: { satisfied: Satisfaction, value: unknown } | undefined
 
         for (const subSchema of schema[key]) {
-          const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, subSchema, coerced)
+          const [subSatisfied, subCoerced] = this.coerceInternal(rootSchema, subSchema, coerced, appliedRefs)
 
-          if (subSatisfied) {
-            if (!bestOptions || subCoerced === coerced) {
-              bestOptions = { coerced: subCoerced, satisfied: subSatisfied }
-            }
+          if (subSatisfied === UNSATISFIED) {
+            continue
+          }
 
-            if (subCoerced === coerced) {
-              break
-            }
+          if (subCoerced === coerced) {
+            best = { satisfied: subSatisfied, value: subCoerced }
+            break
+          }
+
+          if (!best || subSatisfied > best.satisfied) {
+            best = { satisfied: subSatisfied, value: subCoerced }
           }
         }
 
-        coerced = bestOptions ? bestOptions.coerced : coerced
-        satisfied = bestOptions ? bestOptions.satisfied : false
+        // a matching branch never repairs a sibling keyword that already failed, so satisfaction only decreases
+        if (best) {
+          coerced = best.value
+          satisfied = minSatisfaction(satisfied, best.satisfied)
+        }
+        else {
+          satisfied = UNSATISFIED
+        }
       }
     }
 
     if (typeof schema.not !== 'undefined') {
-      const [notSatisfied] = this.coerceInternal(rootSchema, schema.not, coerced)
+      const [notSatisfied] = this.coerceInternal(rootSchema, schema.not, coerced, appliedRefs)
 
-      if (notSatisfied) {
-        satisfied = false
+      if (notSatisfied !== UNSATISFIED) {
+        satisfied = UNSATISFIED
       }
     }
 
@@ -346,24 +391,51 @@ export class JsonSchemaCoercer {
   }
 }
 
+const NUMBER_PATTERN = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/
 function stringToNumber(value: string): number | string {
-  const num = Number.parseFloat(value)
+  if (!NUMBER_PATTERN.test(value)) {
+    return value
+  }
 
-  if (Number.isNaN(num) || num !== Number(value)) {
+  const num = Number(value)
+
+  // beyond the safe range digits get lost, `'12345678901234567890'` would become `12345678901234567168`
+  if (num < Number.MIN_SAFE_INTEGER || num > Number.MAX_SAFE_INTEGER) {
     return value
   }
 
   return num
 }
 
+const INTEGER_PATTERN = /^-?(?:0|[1-9]\d*)$/
 function stringToInteger(value: string): number | string {
-  const num = Number.parseInt(value)
+  if (!INTEGER_PATTERN.test(value)) {
+    return value
+  }
 
-  if (Number.isNaN(num) || num !== Number(value)) {
+  const num = Number(value)
+
+  if (!Number.isSafeInteger(num)) {
     return value
   }
 
   return num
+}
+
+function stringToBigInt(value: string): bigint | string {
+  if (!INTEGER_PATTERN.test(value)) {
+    return value
+  }
+
+  return BigInt(value)
+}
+
+function numberToBigInt(value: number): bigint | number {
+  if (!Number.isInteger(value)) {
+    return value
+  }
+
+  return BigInt(value)
 }
 
 function stringToBoolean(value: string): boolean | string {
@@ -380,26 +452,24 @@ function stringToBoolean(value: string): boolean | string {
   return value
 }
 
-function stringToBigInt(value: string): bigint | string {
-  return tryOrUndefined(() => BigInt(value)) ?? value
-}
-
-function numberToBigInt(value: number): bigint | number {
-  return tryOrUndefined(() => BigInt(value)) ?? value
-}
-
+const DATE_TIME_PATTERN = /^[+-]?\d{4,6}-\d{1,2}-\d{1,2}(?:[T ].*)?$/
 function stringToDate(value: string): Date | string {
+  if (!DATE_TIME_PATTERN.test(value)) {
+    return value
+  }
+
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime()) || !FLEXIBLE_DATE_FORMAT_REGEX.test(value)) {
+  if (Number.isNaN(date.getTime())) {
     return value
   }
 
   return date
 }
 
+const REGEXP_PATTERN = /^\/([\s\S]*)\/([a-z]*)$/
 function stringToRegExp(value: string): RegExp | string {
-  const match = value.match(/^\/(.*)\/([a-z]*)$/)
+  const match = value.match(REGEXP_PATTERN)
 
   if (match) {
     const [, pattern, flags] = match

@@ -279,7 +279,7 @@ import type { MaybeOptionalOptions } from '@orpc/shared'
 import type { Procedure } from './procedure'
 import type { CreateProcedureClientOptions, ProcedureClient } from './procedure-client'
 import type { AnyRouter, InferRouterInitialContexts } from './router'
-import { get, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
+import { resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
 import { isProcedure } from './procedure'
 import { createProcedureClient } from './procedure-client'
 
@@ -319,7 +319,7 @@ export function createRouterClient<T extends AnyRouter>(
         return Reflect.get(target, key)
       }
 
-      const next = get(router, [key]) as AnyRouter | undefined
+      const next = router[key] as AnyRouter | undefined
 
       if (!next) {
         return Reflect.get(target, key)

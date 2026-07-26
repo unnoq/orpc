@@ -59,7 +59,7 @@ export function get(object: unknown, path: readonly PropertyKey[]): unknown {
   let current: unknown = object
 
   for (const key of path) {
-    if (!isTypescriptObject(current)) {
+    if (!isTypescriptObject(current) || !Object.hasOwn(current, key)) {
       return undefined
     }
 

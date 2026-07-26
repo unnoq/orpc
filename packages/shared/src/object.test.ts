@@ -67,6 +67,10 @@ it('get', () => {
   expect(get({ a: { b: () => { } } }, ['a', 'b', 'name'])).toEqual('b')
   expect(get({ a: { b: () => { } } }, ['a', 'b', 'uuuu'])).toEqual(undefined)
   expect(get({ a: { b: () => { } } }, ['a', 'b', 'uuuu', 'zzzz'])).toEqual(undefined)
+  expect(get({}, ['__proto__'])).toEqual(undefined)
+  expect(get({}, ['constructor'])).toEqual(undefined)
+  expect(get({}, ['toString'])).toEqual(undefined)
+  expect(get({}, ['constructor', 'prototype'])).toEqual(undefined)
 })
 
 describe('set', () => {
