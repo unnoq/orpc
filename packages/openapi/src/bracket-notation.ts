@@ -176,8 +176,9 @@ export class BracketNotationSerializer {
   }
 }
 
+const INTEGER_PATTERN = /^0$|^[1-9]\d*$/
 function internalIsValidArrayIndex(value: string, maxIndex: number): boolean {
-  return /^0$|^[1-9]\d*$/.test(value) && Number(value) <= maxIndex
+  return INTEGER_PATTERN.test(value) && Number(value) <= maxIndex
 }
 
 function internalArrayToObject(array: readonly unknown[]): Record<string, unknown> {

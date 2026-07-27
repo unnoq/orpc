@@ -61,6 +61,69 @@ describe('rpcSerializer', () => {
     })
   })
 
+  describe('form data bodies', () => {
+    const serializer = new RPCSerializer()
+
+    it('uses FormData when the payload contains nested files, and restores them', () => {
+      const file = new File(['content'], 'doc.txt', { type: 'text/plain' })
+      const payload = {
+        title: 'upload',
+        createdAt: new Date('2023-01-01'),
+        attachments: [file],
+      }
+
+      const serialized = serializer.serialize(payload)
+      expect(serialized).toBeInstanceOf(FormData)
+
+      const deserialized = serializer.deserialize(serialized) as any
+      expect(deserialized.title).toBe('upload')
+      expect(deserialized.createdAt).toEqual(new Date('2023-01-01'))
+      expect(deserialized.attachments[0]).toBeInstanceOf(File)
+      expect(deserialized.attachments[0].name).toBe('doc.txt')
+    })
+
+    it('restores multiple blobs to their own positions', () => {
+      const a = new File(['a'], 'a.txt', { type: 'text/plain' })
+      const b = new File(['bb'], 'b.txt', { type: 'text/plain' })
+
+      const deserialized = serializer.deserialize(
+        serializer.serialize({ nested: { a }, list: [b] }),
+      ) as any
+
+      expect(deserialized.nested.a.name).toBe('a.txt')
+      expect(deserialized.nested.a.size).toBe(1)
+      expect(deserialized.list[0].name).toBe('b.txt')
+      expect(deserialized.list[0].size).toBe(2)
+    })
+
+    it('keeps a plain body when useFormDataForBlobFields is disabled in the constructor', () => {
+      const serializer = new RPCSerializer({
+        serialize: { useFormDataForBlobFields: false },
+      })
+
+      const serialized = serializer.serialize({ blob: new Blob(['test'], { type: 'text/plain' }) })
+      expect(serialized).not.toBeInstanceOf(FormData)
+    })
+
+    it('keeps a plain body when useFormDataForBlobFields is disabled per call', () => {
+      const serialized = serializer.serialize(
+        { blob: new Blob(['test'], { type: 'text/plain' }) },
+        { useFormDataForBlobFields: false },
+      )
+      expect(serialized).not.toBeInstanceOf(FormData)
+    })
+
+    it('prefers the per-call option over the constructor option', () => {
+      const serializer = new RPCSerializer({ serialize: { useFormDataForBlobFields: false } })
+
+      const serialized = serializer.serialize(
+        { blob: new Blob(['test'], { type: 'text/plain' }) },
+        { useFormDataForBlobFields: true },
+      )
+      expect(serialized).toBeInstanceOf(FormData)
+    })
+  })
+
   describe('asyncIteratorObject', async () => {
     const serializer = new RPCSerializer()
 
@@ -260,34 +323,48 @@ describe('rpcSerializer', () => {
     })
   })
 
-  describe('useFormDataForBlobFields option', () => {
-    it('should respect the useFormDataForBlobFields option in the constructor', () => {
-      const serializer = new RPCSerializer({
-        serialize: { useFormDataForBlobFields: false },
-      })
+  describe('malicious payloads', () => {
+    const serializer = new RPCSerializer()
 
-      const blob = new Blob(['test'], { type: 'text/plain' })
-      const serialized = serializer.serialize({ blob })
-
-      expect(serialized).not.toBeInstanceOf(FormData)
+    afterEach(() => {
+      expect(({} as any).polluted).toBeUndefined()
+      expect((Object.prototype as any).polluted).toBeUndefined()
     })
 
-    it('should respect the useFormDataForBlobFields option in the serialize method', () => {
-      const serializer = new RPCSerializer()
+    it('rejects meta paths escaping the payload in plain bodies', () => {
+      const body = JSON.parse(JSON.stringify({
+        json: { o: {} },
+        meta: [['date', '__proto__', 'polluted']],
+      }))
 
-      const blob = new Blob(['test'], { type: 'text/plain' })
-      const serialized = serializer.serialize({ blob }, { useFormDataForBlobFields: false })
-
-      expect(serialized).not.toBeInstanceOf(FormData)
+      expect(() => serializer.deserialize(body)).toThrow('Security error')
     })
 
-    it('should prefer serialize option over constructor option', () => {
-      const serializer = new RPCSerializer({ serialize: { useFormDataForBlobFields: false } })
+    it('rejects meta paths escaping the payload in form data bodies', () => {
+      const form = new FormData()
+      form.set('data', JSON.stringify({
+        json: { o: {} },
+        meta: [['date', '__proto__', 'polluted']],
+        maps: [],
+      }))
 
-      const blob = new Blob(['test'], { type: 'text/plain' })
-      const serialized = serializer.serialize({ blob }, { useFormDataForBlobFields: true })
+      expect(() => serializer.deserialize(form)).toThrow('Security error')
+    })
 
-      expect(serialized).toBeInstanceOf(FormData)
+    it('rejects blob maps escaping the payload in form data bodies', () => {
+      const form = new FormData()
+      form.set('data', JSON.stringify({
+        json: { o: {} },
+        maps: [['__proto__', 'polluted']],
+      }))
+      form.set('0', new Blob(['x']))
+
+      expect(() => serializer.deserialize(form)).toThrow('Security error')
+    })
+
+    it('rejects unknown meta types instead of resolving them on the prototype chain', () => {
+      expect(() => serializer.deserialize({ json: 1, meta: [['constructor']] })).toThrow()
+      expect(() => serializer.deserialize({ json: 1, meta: [['__proto__']] })).toThrow()
     })
   })
 })

@@ -48,21 +48,20 @@ export class RPCSerializer {
             return result
           }
 
-          return { done: result.done, value: this.serializeValue(result.value, options) }
+          return { done: result.done, value: this.serializeValue(result.value, false) }
         },
         mapError: e => new ErrorEvent(
-          this.serializeValue(toORPCError(e).toJSON(), { ...options, useFormDataForBlobFields: false }),
+          this.serializeValue(toORPCError(e).toJSON(), false),
           { cause: e },
         ),
       })
     }
 
-    return this.serializeValue(data, options)
+    const useFormDataForBlobs = options.useFormDataForBlobFields ?? this.defaultSerializeOptions?.useFormDataForBlobFields ?? true
+    return this.serializeValue(data, useFormDataForBlobs)
   }
 
-  private serializeValue(data: unknown, options: RPCSerializerSerializeOptions): unknown {
-    const useFormDataForBlobs = options.useFormDataForBlobFields ?? this.defaultSerializeOptions?.useFormDataForBlobFields ?? true
-
+  private serializeValue(data: unknown, useFormDataForBlobs: boolean): unknown {
     const { json, meta, maps, blobs } = this.jsonSerializer.serialize(data)
 
     if (!useFormDataForBlobs || !blobs?.length) {

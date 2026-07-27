@@ -82,6 +82,19 @@ describe('bracket notation serializer', () => {
         ['a[c][1][f]', 4],
       ])
     })
+
+    it('serializes empty nested containers to nothing', () => {
+      expect(serializer.serialize({ a: {}, b: [] })).toEqual([])
+    })
+
+    it('cannot represent keys containing bracket characters (documented limitation)', () => {
+      // there is no escaping, so such keys are ambiguous with nesting and may not round-trip
+      expect(serializer.serialize({ 'a[b]': 1 })).toEqual([['a[b]', 1]])
+      expect(serializer.deserialize([['a[b]', 1]])).toEqual({ a: { b: 1 } })
+
+      expect(serializer.serialize({ 'a[0]': 'red' })).toEqual([['a[0]', 'red']])
+      expect(serializer.deserialize([['a[0]', 'red']])).toEqual({ a: ['red'] })
+    })
   })
 
   describe('.deserialize', () => {
@@ -168,6 +181,13 @@ describe('bracket notation serializer', () => {
         ['[a]', 1],
         ['[b]', 3],
       ])).toEqual({ '': { a: 1, b: 3 } })
+    })
+
+    it('converts an explicitly indexed array to an object when a [] key follows', () => {
+      expect(serializer.deserialize([
+        ['a[0]', 1],
+        ['a[]', 2],
+      ])).toEqual({ a: { '0': 1, '': 2 } })
     })
 
     it('can deserialize objects when both number-key and empty-key appear', () => {
@@ -264,6 +284,29 @@ describe('bracket notation serializer', () => {
       ])).toEqual({ a: { b: 1, c: [2, { d: 3, f: 4 }] } })
     })
 
+    it('deserializes a realistic search form', () => {
+      const entries = Array.from(new URLSearchParams(
+        'q=shoes&filters[size][]=41&filters[size][]=42&filters[color]=red&page=2',
+      ).entries())
+
+      expect(serializer.deserialize(entries)).toEqual({
+        q: 'shoes',
+        filters: {
+          size: ['41', '42'],
+          color: 'red',
+        },
+        page: '2',
+      })
+    })
+
+    it('treats invalid array indices as object keys', () => {
+      expect(serializer.deserialize([['a[-1]', 1]])).toEqual({ a: { '-1': 1 } })
+      expect(serializer.deserialize([['a[01]', 1]])).toEqual({ a: { '01': 1 } })
+      expect(serializer.deserialize([['a[+1]', 1]])).toEqual({ a: { '+1': 1 } })
+      expect(serializer.deserialize([['a[1e3]', 1]])).toEqual({ a: { '1e3': 1 } })
+      expect(serializer.deserialize([['a[1.5]', 1]])).toEqual({ a: { 1.5: 1 } })
+    })
+
     it('fallback to object when explicit array index exceeds maxExplicitDeserializingArrayIndex (default 999)', () => {
       expect(serializer.deserialize([
         ['arr[1]', 1],
@@ -313,6 +356,13 @@ describe('bracket notation serializer', () => {
       })() })
     })
 
+    it('does not allocate huge arrays for memory exhaustion attacks', () => {
+      const result = serializer.deserialize([['arr[4294967295]', 'x']]) as any
+
+      expect(Array.isArray(result.arr)).toBe(false)
+      expect(result.arr).toEqual({ 4294967295: 'x' })
+    })
+
     it('can prevent prototype pollution attack', () => {
       /* eslint-disable no-proto, no-restricted-properties */
       const result = serializer.deserialize([
@@ -344,6 +394,21 @@ describe('bracket notation serializer', () => {
       expect(({} as any).constructor.polluted).toBeUndefined()
       expect(({} as any).polluted).toBeUndefined()
       /* eslint-enable no-proto, no-restricted-properties */
+    })
+
+    it('can prevent constructor.prototype pollution attack', () => {
+      const result = serializer.deserialize([
+        ['constructor[prototype][polluted]', 'x'],
+        ['a[constructor][prototype][polluted]', 'y'],
+      ]) as any
+
+      expect(({} as any).polluted).toBeUndefined()
+      expect((Object.prototype as any).polluted).toBeUndefined()
+      expect((Function.prototype as any).polluted).toBeUndefined()
+
+      // stored as plain data instead
+      expect(result.constructor.prototype.polluted).toBe('x')
+      expect(result.a.constructor.prototype.polluted).toBe('y')
     })
   })
 

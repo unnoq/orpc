@@ -315,4 +315,42 @@ describe('openAPISerializer', () => {
       expect(result.tags['1']).toBe('b')
     })
   })
+
+  describe('security', () => {
+    afterEach(() => {
+      expect(({} as any).polluted).toBeUndefined()
+      expect((Object.prototype as any).polluted).toBeUndefined()
+      expect((Function.prototype as any).polluted).toBeUndefined()
+    })
+
+    /* eslint-disable no-proto, no-restricted-properties */
+    it('deserializes __proto__ query parameters as plain data', () => {
+      const result = serializer.deserialize(
+        new URLSearchParams('__proto__[polluted]=yes&safe=1'),
+      ) as any
+
+      expect(Object.hasOwn(result, '__proto__')).toBe(true)
+      expect(result.__proto__).toEqual({ polluted: 'yes' })
+      expect(result.polluted).toBeUndefined()
+      expect(result.safe).toBe('1')
+    })
+    /* eslint-enable no-proto, no-restricted-properties */
+
+    it('deserializes constructor.prototype form fields as plain data', () => {
+      const form = new FormData()
+      form.append('constructor[prototype][polluted]', 'yes')
+
+      const result = serializer.deserialize(form) as any
+
+      expect(result.constructor.prototype.polluted).toBe('yes')
+      expect(({} as any).polluted).toBeUndefined()
+    })
+
+    it('does not allocate huge arrays for memory exhaustion attacks', () => {
+      const result = serializer.deserialize(new URLSearchParams('arr[4294967295]=x')) as any
+
+      expect(Array.isArray(result.arr)).toBe(false)
+      expect(result.arr).toEqual({ 4294967295: 'x' })
+    })
+  })
 })

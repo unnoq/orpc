@@ -23,7 +23,7 @@ export interface RPCJsonSerializerHandler {
 
 const REGEX_STRING_PATTERN = /^\/(.*)\/([a-z]*)$/
 
-const DEFAULT_RPC_JSON_SERIALIZER_HANDLERS: Record<string, RPCJsonSerializerHandler> = Object.assign(new NullProtoObj<Record<string, RPCJsonSerializerHandler>>(), {
+const DEFAULT_RPC_JSON_SERIALIZER_HANDLERS: Record<string, RPCJsonSerializerHandler> = {
   undefined: {
     condition(data: unknown): boolean {
       return data === undefined
@@ -123,9 +123,7 @@ const DEFAULT_RPC_JSON_SERIALIZER_HANDLERS: Record<string, RPCJsonSerializerHand
       return new Map(serialized)
     },
   },
-})
-
-const NO_CUSTOM_HANDLER_ENTRIES: [string, RPCJsonSerializerHandler][] = []
+}
 
 export interface RPCJsonSerializerOptions {
   /**
@@ -186,29 +184,23 @@ export class RPCJsonSerializer {
    * claim: primitives, null, and the built-in object types.
    */
   private readonly inlineBuiltInHandlers: boolean
-  private readonly handlerEntries: [string, RPCJsonSerializerHandler][]
+  private readonly handlerEntries: [string, RPCJsonSerializerHandler][] | undefined
   private readonly omitUndefinedProperties: boolean
 
   constructor(options: RPCJsonSerializerOptions = {}) {
     this.omitUndefinedProperties = options.omitUndefinedProperties !== false
-
+    this.handlers = Object.assign(new NullProtoObj(), DEFAULT_RPC_JSON_SERIALIZER_HANDLERS)
     const customHandlers = options.handlers
 
-    // handlers is never mutated after construction, so the default table can be shared
     if (customHandlers === undefined) {
-      this.handlers = DEFAULT_RPC_JSON_SERIALIZER_HANDLERS
       this.inlineBuiltInHandlers = true
-      this.handlerEntries = NO_CUSTOM_HANDLER_ENTRIES
       return
     }
-
-    // deserialize resolves built-in meta types via this.handlers, so defaults must be merged in
-    this.handlers = Object.assign(new NullProtoObj(), DEFAULT_RPC_JSON_SERIALIZER_HANDLERS)
 
     let inlineBuiltInHandlers = true
     let handlerEntries: [string, RPCJsonSerializerHandler][] = []
 
-    for (const key of Object.keys(customHandlers)) {
+    for (const key in customHandlers) {
       const handler = customHandlers[key]
       this.handlers[key] = handler
 
@@ -216,15 +208,14 @@ export class RPCJsonSerializer {
         inlineBuiltInHandlers = false
       }
 
-      if (handler !== undefined) {
+      if (inlineBuiltInHandlers && handler !== undefined) {
         handlerEntries.push([key, handler])
       }
     }
 
     if (!inlineBuiltInHandlers) {
-      // a built-in was overridden or disabled: scan every active handler in merge order
       handlerEntries = []
-      for (const key of Object.keys(this.handlers)) {
+      for (const key in this.handlers) {
         const handler = this.handlers[key]
         if (handler !== undefined) {
           handlerEntries.push([key, handler])
@@ -257,8 +248,6 @@ export class RPCJsonSerializer {
    * so it must be copied before being stored in `meta` or `maps`.
    */
   private serializeValue(data: unknown, segments: Segment[], meta: RPCJsonSerializationMeta[], maps: Segment[][], blobs: Blob[]): unknown {
-    const handlerEntries = this.handlerEntries
-
     /**
      * Inlined version of DEFAULT_RPC_JSON_SERIALIZER_HANDLERS: primitives are
      * dispatched on typeof and skip every handler condition check.
@@ -311,28 +300,30 @@ export class RPCJsonSerializer {
       }
     }
 
-    for (let i = 0; i < handlerEntries.length; i++) {
-      const entry = handlerEntries[i]!
-      const handler = entry[1]
+    const handlerEntries = this.handlerEntries
+    if (handlerEntries) {
+      for (let i = 0; i < handlerEntries.length; i++) {
+        const entry = handlerEntries[i]!
+        const handler = entry[1]
 
-      if (handler.condition(data)) {
-        const serialized = handler.serialize(data)
+        if (handler.condition(data)) {
+          const serialized = handler.serialize(data)
 
-        if (handler.isTerminal) {
-          meta.push([entry[0], ...segments])
+          if (handler.isTerminal) {
+            meta.push([entry[0], ...segments])
 
-          // terminal skips the recursive walk, so blobs must still be collected here
-          if (serialized instanceof Blob) {
-            maps.push(segments.slice())
-            blobs.push(serialized)
+            if (serialized instanceof Blob) {
+              maps.push(segments.slice())
+              blobs.push(serialized)
+            }
+
+            return serialized
           }
 
-          return serialized
+          const result = this.serializeValue(serialized, segments, meta, maps, blobs)
+          meta.push([entry[0], ...segments])
+          return result
         }
-
-        const result = this.serializeValue(serialized, segments, meta, maps, blobs)
-        meta.push([entry[0], ...segments])
-        return result
       }
     }
 

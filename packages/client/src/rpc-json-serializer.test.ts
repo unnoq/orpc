@@ -52,6 +52,16 @@ const customSupportedDataTypes: { name: string, value: unknown, expected: unknow
   },
 ]
 
+/**
+ * Simulates the real transport: json/meta/maps travel as JSON text,
+ * blobs travel as separate binary parts.
+ */
+function roundTripThroughWire(serializer: RPCJsonSerializer, value: unknown): unknown {
+  const { json, meta, maps, blobs } = serializer.serialize(value)
+  const wire = JSON.parse(JSON.stringify({ json, meta, maps }))
+  return serializer.deserialize({ ...wire, blobs })
+}
+
 describe.each([
   ...builtInRPCSupportDataTypes,
   ...customSupportedDataTypes,
@@ -72,12 +82,7 @@ describe.each([
   })
 
   function assert(value: unknown, expected: unknown) {
-    const { json, meta, maps, blobs } = serializer.serialize(value)
-
-    const result = JSON.parse(JSON.stringify({ json, meta, maps }))
-
-    const deserialized = serializer.deserialize({ ...result, blobs })
-    expect(deserialized).toEqual(expected)
+    expect(roundTripThroughWire(serializer, value)).toEqual(expected)
   }
 
   it('flat', () => {
@@ -129,8 +134,121 @@ describe.each([
   })
 })
 
-describe('rpcJsonSerializer', () => {
-  it('support override default handlers', () => {
+describe('rpcJsonSerializer: wire format', () => {
+  const serializer = new RPCJsonSerializer()
+
+  it('produces plain JSON values plus meta describing how to restore them', () => {
+    const { json, meta } = serializer.serialize({
+      id: 7n,
+      createdAt: new Date('2023-01-01T00:00:00.000Z'),
+      tags: new Set(['a']),
+      scores: new Map([['x', 1]]),
+      pattern: /^a$/i,
+      homepage: new URL('https://orpc.dev'),
+      missing: Number.NaN,
+    })
+
+    expect(json).toEqual({
+      id: '7',
+      createdAt: '2023-01-01T00:00:00.000Z',
+      tags: ['a'],
+      scores: [['x', 1]],
+      pattern: '/^a$/i',
+      homepage: 'https://orpc.dev/',
+      missing: null,
+    })
+
+    expect(meta).toEqual(expect.arrayContaining([
+      ['bigint', 'id'],
+      ['date', 'createdAt'],
+      ['set', 'tags'],
+      ['map', 'scores'],
+      ['regexp', 'pattern'],
+      ['url', 'homepage'],
+      ['nan', 'missing'],
+    ]))
+    expect(meta).toHaveLength(7)
+  })
+
+  it('omits meta entirely for pure JSON payloads', () => {
+    const serialized = serializer.serialize({ name: 'test', items: [1, 'two', true, null] })
+    expect(serialized.meta).toBeUndefined()
+    expect(serialized.maps).toBeUndefined()
+    expect(serialized.blobs).toBeUndefined()
+  })
+
+  it('collects nested files into maps and blobs', () => {
+    const file = new File(['hello'], 'hello.txt', { type: 'text/plain' })
+    const { maps, blobs } = serializer.serialize({ upload: { doc: file }, note: 'x' })
+
+    expect(maps).toEqual([['upload', 'doc']])
+    expect(blobs).toEqual([file])
+  })
+})
+
+describe('rpcJsonSerializer: edge cases', () => {
+  const serializer = new RPCJsonSerializer()
+
+  it('round-trips undefined inside arrays', () => {
+    expect(roundTripThroughWire(serializer, [undefined, 1, undefined])).toEqual([undefined, 1, undefined])
+  })
+
+  it('round-trips undefined inside sets and maps', () => {
+    expect(roundTripThroughWire(serializer, new Set([undefined, 1]))).toEqual(new Set([undefined, 1]))
+    expect(roundTripThroughWire(serializer, new Map([[undefined, undefined]]))).toEqual(new Map([[undefined, undefined]]))
+  })
+
+  it('omits undefined object properties by default', () => {
+    const serialized = serializer.serialize({ a: 1, b: undefined })
+    expect(serialized.json).toEqual({ a: 1 })
+    expect(serialized.meta).toBeUndefined()
+  })
+
+  it('preserves undefined object properties when omitUndefinedProperties is false', () => {
+    const custom = new RPCJsonSerializer({ omitUndefinedProperties: false })
+
+    const serialized = custom.serialize({ a: 1, b: undefined })
+    expect(serialized.json).toEqual({ a: 1, b: null })
+    expect(serialized.meta).toEqual([['undefined', 'b']])
+
+    expect(roundTripThroughWire(custom, { a: 1, b: undefined })).toEqual({ a: 1, b: undefined })
+  })
+
+  it('round-trips empty containers', () => {
+    expect(roundTripThroughWire(serializer, {})).toEqual({})
+    expect(roundTripThroughWire(serializer, [])).toEqual([])
+    expect(roundTripThroughWire(serializer, new Set())).toEqual(new Set())
+    expect(roundTripThroughWire(serializer, new Map())).toEqual(new Map())
+    expect(roundTripThroughWire(serializer, '')).toBe('')
+  })
+
+  it('round-trips empty and numeric-looking object keys', () => {
+    const value = { '': 'empty', '0': 'zero', '00': 'padded', 'ключ': 'unicode' }
+    expect(roundTripThroughWire(serializer, value)).toEqual(value)
+  })
+
+  it('round-trips deeply nested structures', () => {
+    let value: any = new Date('2023-01-01')
+    let expected: any = new Date('2023-01-01')
+    for (let i = 0; i < 100; i++) {
+      value = { nested: value, list: [i] }
+      expected = { nested: expected, list: [i] }
+    }
+
+    expect(roundTripThroughWire(serializer, value)).toEqual(expected)
+  })
+
+  it('passes through values no handler understands', () => {
+    const symbol = Symbol('sym')
+    expect(serializer.serialize(symbol).json).toBe(symbol)
+
+    const fn = () => 'x'
+    expect(serializer.serialize(fn).json).toBe(fn)
+  })
+})
+
+describe('rpcJsonSerializer: custom handlers', () => {
+  it('supports overriding default handlers', () => {
     const serializer = new RPCJsonSerializer({
       handlers: {
         date: {
@@ -145,9 +263,11 @@ describe('rpcJsonSerializer', () => {
     const serialized = serializer.serialize({ value: date })
     expect(serialized.json).toEqual({ value: `___TEST___${date.getTime()}` })
     expect(serialized.meta).toEqual([['date', 'value']])
+
+    expect(roundTripThroughWire(serializer, { value: date })).toEqual({ value: date })
   })
 
-  it('disable default handlers', () => {
+  it('supports disabling default handlers', () => {
     const serializer = new RPCJsonSerializer({
       handlers: {
         date: undefined,
@@ -155,9 +275,77 @@ describe('rpcJsonSerializer', () => {
     })
 
     const date = new Date('2023-01-01')
-    const serialized = serializer.serialize({ value: date })
-    expect(serialized.json).toEqual({ value: date })
-    expect(serialized.meta).toEqual(undefined)
+    const serialized = serializer.serialize({ value: date, list: [undefined] })
+    expect(serialized.json).toEqual({ value: date, list: [null] })
+    expect(serialized.meta).toEqual([['undefined', 'list', 0]])
+  })
+
+  it('keeps serializing non-terminal handler results, so nested values are restored too', () => {
+    const serializer = new RPCJsonSerializer({
+      handlers: {
+        person: {
+          condition: data => data instanceof Person,
+          serialize: (data: Person) => data.toJSON(),
+          deserialize: data => new Person(data.name, data.date),
+        },
+      },
+    })
+
+    const person = new Person('dinwwwh', new Date('2023-01-01'))
+    const restored = roundTripThroughWire(serializer, { person }) as any
+
+    expect(restored.person).toBeInstanceOf(Person)
+    expect(restored.person.date).toBeInstanceOf(Date)
+    expect(restored.person).toEqual(person)
+  })
+
+  it('treats terminal handler results as final, without further serialization', () => {
+    const serializer = new RPCJsonSerializer({
+      handlers: {
+        person: {
+          condition: data => data instanceof Person,
+          serialize: (data: Person) => data.toJSON(),
+          deserialize: data => data,
+          isTerminal: true,
+        },
+      },
+    })
+
+    const date = new Date('2023-01-01')
+    const serialized = serializer.serialize({ person: new Person('dinwwwh', date) })
+
+    // the nested Date stays untouched because the terminal result is not walked
+    expect((serialized.json as any).person.date).toBe(date)
+    expect(serialized.meta).toEqual([['person', 'person']])
+  })
+
+  it('keeps every built-in type working when any built-in handler is customized', () => {
+    // customizing a built-in key switches to the generic handler scan; every default handler must still work there
+    const serializer = new RPCJsonSerializer({
+      handlers: {
+        undefined: {
+          condition: data => data === undefined,
+          serialize: () => null,
+          deserialize: () => undefined,
+          isTerminal: true,
+        },
+      },
+    })
+
+    const value = {
+      date: new Date('2023-01-01'),
+      invalidDate: new Date('Invalid'),
+      nan: Number.NaN,
+      url: new URL('https://orpc.dev'),
+      regexp: /uic/gi,
+      set: new Set([1, 2]),
+      map: new Map([['a', 1]]),
+      bigint: 123n,
+      list: [undefined],
+      plain: 'text',
+    }
+
+    expect(roundTripThroughWire(serializer, value)).toEqual(value)
   })
 
   it('collects blobs returned by terminal custom handlers', () => {
@@ -187,63 +375,83 @@ describe('rpcJsonSerializer', () => {
     expect(deserialized.file).toBeInstanceOf(BlobContainer)
     expect(deserialized.file.blob).toBe(blob)
   })
+})
 
-  it('can disable omit undefined properties', () => {
-    const serializer = new RPCJsonSerializer({
-      omitUndefinedProperties: false,
-    })
+describe('rpcJsonSerializer: security', () => {
+  const serializer = new RPCJsonSerializer()
 
-    const serialized = serializer.serialize({ a: 1, b: undefined })
-    expect(serialized.json).toEqual({ a: 1, b: null })
-    expect(serialized.meta).toEqual([['undefined', 'b']])
+  afterEach(() => {
+    expect(({} as any).polluted).toBeUndefined()
+    expect((Object.prototype as any).polluted).toBeUndefined()
   })
 
-  it.each(['doesNotExist', '__proto__', 'constructor'])('should throw on deserialization if path does not exist to avoid prototype pollution', (segment) => {
-    const serializer = new RPCJsonSerializer()
+  it.each(['doesNotExist', '__proto__', 'constructor', 'prototype'])('throws when a meta or blob path references the non-own segment "%s"', (segment) => {
+    const error = `Security error: Invalid serialized data. Segment "${segment}" does not exist.`
 
     expect(
-      () => serializer.deserialize({
-        json: { o: {} },
-        meta: [['date', segment]],
-      }),
-    ).toThrow(`Security error: Invalid serialized data. Segment "${segment}" does not exist.`)
+      () => serializer.deserialize({ json: { o: {} }, meta: [['date', segment]] }),
+    ).toThrow(error)
 
     expect(
-      () => serializer.deserialize({
-        json: { o: {} },
-        meta: [['date', 'o', segment]],
-      }),
-    ).toThrow(`Security error: Invalid serialized data. Segment "${segment}" does not exist.`)
+      () => serializer.deserialize({ json: { o: {} }, meta: [['date', 'o', segment]] }),
+    ).toThrow(error)
 
     expect(
-      () => serializer.deserialize({
-        json: { o: {} },
-        meta: [['date', segment, 'o']],
-      }),
-    ).toThrow(`Security error: Invalid serialized data. Segment "${segment}" does not exist.`)
+      () => serializer.deserialize({ json: { o: {} }, meta: [['date', segment, 'o']] }),
+    ).toThrow(error)
 
     expect(
-      () => serializer.deserialize({
-        json: { o: {} },
-        blobs: [new Blob()],
-        maps: [[segment]],
-      }),
-    ).toThrow(`Security error: Invalid serialized data. Segment "${segment}" does not exist.`)
+      () => serializer.deserialize({ json: { o: {} }, blobs: [new Blob()], maps: [[segment]] }),
+    ).toThrow(error)
 
     expect(
-      () => serializer.deserialize({
-        json: { o: {} },
-        blobs: [new Blob()],
-        maps: [['o', segment]],
-      }),
-    ).toThrow(`Security error: Invalid serialized data. Segment "${segment}" does not exist.`)
+      () => serializer.deserialize({ json: { o: {} }, blobs: [new Blob()], maps: [['o', segment]] }),
+    ).toThrow(error)
 
     expect(
-      () => serializer.deserialize({
-        json: { o: {} },
-        blobs: [new Blob()],
-        maps: [[segment, 'o']],
-      }),
-    ).toThrow(`Security error: Invalid serialized data. Segment "${segment}" does not exist.`)
+      () => serializer.deserialize({ json: { o: {} }, blobs: [new Blob()], maps: [[segment, 'o']] }),
+    ).toThrow(error)
   })
+
+  it.each(['nonexistent', '__proto__', 'constructor', 'prototype', 'toString', 'hasOwnProperty', 'valueOf'])('never resolves the meta type "%s" through the prototype chain', (type) => {
+    expect(() => serializer.deserialize({ json: 1, meta: [[type]] })).toThrow()
+  })
+
+  it('throws instead of producing garbage for corrupted built-in payloads', () => {
+    expect(() => serializer.deserialize({ json: 'not-a-regexp', meta: [['regexp']] })).toThrow()
+    expect(() => serializer.deserialize({ json: 'not-a-bigint', meta: [['bigint']] })).toThrow()
+  })
+
+  /* eslint-disable no-proto, no-restricted-properties */
+  it('serializes own __proto__ keys as plain data', () => {
+    // JSON.parse creates own __proto__ properties, exactly like a real request body
+    const input = JSON.parse('{"__proto__": {"polluted": true}}')
+
+    const restored = roundTripThroughWire(serializer, input) as any
+
+    expect(Object.hasOwn(restored, '__proto__')).toBe(true)
+    expect(restored.__proto__).toEqual({ polluted: true })
+    expect(restored.polluted).toBeUndefined()
+  })
+
+  it('restores values behind own __proto__ keys without touching prototypes', () => {
+    const restored = serializer.deserialize({
+      json: JSON.parse('{"__proto__": {"when": "2023-01-01T00:00:00.000Z"}}'),
+      meta: [['date', '__proto__', 'when']],
+    }) as any
+
+    expect(Object.hasOwn(restored, '__proto__')).toBe(true)
+    expect(restored.__proto__.when).toBeInstanceOf(Date)
+  })
+
+  it('restores a value stored directly under an own __proto__ key', () => {
+    const restored = serializer.deserialize({
+      json: JSON.parse('{"__proto__": "2023-01-01T00:00:00.000Z"}'),
+      meta: [['date', '__proto__']],
+    }) as any
+
+    expect(Object.hasOwn(restored, '__proto__')).toBe(true)
+    expect(restored.__proto__).toBeInstanceOf(Date)
+  })
+  /* eslint-enable no-proto, no-restricted-properties */
 })
