@@ -21,7 +21,7 @@ export interface RPCJsonSerializerHandler {
   isTerminal?: boolean
 }
 
-const REGEX_STRING_PATTERN = /^\/(.*)\/([a-z]*)$/
+const REGEX_STRING_PATTERN = /^\/([\s\S]*)\/([a-z]*)$/
 
 const DEFAULT_RPC_JSON_SERIALIZER_HANDLERS: Record<string, RPCJsonSerializerHandler> = {
   undefined: {
@@ -175,14 +175,6 @@ export interface RPCJsonSerializerOptions {
 
 export class RPCJsonSerializer {
   private readonly handlers: Exclude<RPCJsonSerializerOptions['handlers'], undefined>
-  /**
-   * When true, built-in handlers are inlined in serializeValue and
-   * handlerEntries only holds custom handlers. Only valid while no custom
-   * handler overrides or disables a built-in key, otherwise handler order
-   * and behavior could diverge from the merged handlers.
-   * On this path, custom handlers are never called for values the built-ins
-   * claim: primitives, null, and the built-in object types.
-   */
   private readonly inlineBuiltInHandlers: boolean
   private readonly handlerEntries: [string, RPCJsonSerializerHandler][] | undefined
   private readonly omitUndefinedProperties: boolean

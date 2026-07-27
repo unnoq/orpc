@@ -19,7 +19,7 @@ export interface OpenAPIJsonSerializerHandler {
   isTerminal?: boolean
 }
 
-const DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS: Record<string, OpenAPIJsonSerializerHandler> = Object.assign(new NullProtoObj<Record<string, OpenAPIJsonSerializerHandler>>(), {
+const DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS: Record<string, OpenAPIJsonSerializerHandler> = {
   undefined: {
     condition(data: unknown): boolean {
       return data === undefined
@@ -94,9 +94,7 @@ const DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS: Record<string, OpenAPIJsonSeria
       return Array.from(data.entries())
     },
   },
-})
-
-const NO_CUSTOM_HANDLER_ENTRIES: OpenAPIJsonSerializerHandler[] = []
+}
 
 export interface OpenAPIJsonSerializerOptions {
   /**
@@ -145,16 +143,8 @@ export interface OpenAPIJsonSerializerOptions {
 }
 
 export class OpenAPIJsonSerializer {
-  /**
-   * When true, built-in handlers are inlined in serializeValue and
-   * handlerEntries only holds custom handlers. Only valid while no custom
-   * handler overrides or disables a built-in key, otherwise handler order
-   * and behavior could diverge from the merged handlers.
-   * On this path, custom handlers are never called for values the built-ins
-   * claim: primitives, null, and the built-in object types.
-   */
   private readonly inlineBuiltInHandlers: boolean
-  private readonly handlerEntries: OpenAPIJsonSerializerHandler[]
+  private readonly handlerEntries: OpenAPIJsonSerializerHandler[] | undefined
   private readonly omitUndefinedProperties: boolean
 
   constructor(options: OpenAPIJsonSerializerOptions = {}) {
@@ -164,7 +154,6 @@ export class OpenAPIJsonSerializer {
 
     if (customHandlers === undefined) {
       this.inlineBuiltInHandlers = true
-      this.handlerEntries = NO_CUSTOM_HANDLER_ENTRIES
       return
     }
 
@@ -176,6 +165,7 @@ export class OpenAPIJsonSerializer {
 
       if (inlineBuiltInHandlers && key in DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS) {
         inlineBuiltInHandlers = false
+        break
       }
 
       if (handler !== undefined) {
@@ -184,7 +174,6 @@ export class OpenAPIJsonSerializer {
     }
 
     if (!inlineBuiltInHandlers) {
-      // a built-in was overridden or disabled: scan every active handler in merge order
       handlerEntries = []
       for (const handler of Object.values({ ...DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS, ...customHandlers })) {
         if (handler !== undefined) {
@@ -211,8 +200,6 @@ export class OpenAPIJsonSerializer {
    * so it must be copied before being stored in `maps`.
    */
   private serializeValue(data: unknown, segments: Segment[], maps: Segment[][], blobs: Blob[]): unknown {
-    const handlerEntries = this.handlerEntries
-
     /**
      * Inlined version of DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS: primitives
      * are dispatched on typeof and skip every handler condition check.
@@ -252,23 +239,26 @@ export class OpenAPIJsonSerializer {
       }
     }
 
-    for (let i = 0; i < handlerEntries.length; i++) {
-      const handler = handlerEntries[i]!
+    const handlerEntries = this.handlerEntries
+    if (handlerEntries) {
+      for (let i = 0; i < handlerEntries.length; i++) {
+        const handler = handlerEntries[i]!
 
-      if (handler.condition(data)) {
-        const serialized = handler.serialize(data)
+        if (handler.condition(data)) {
+          const serialized = handler.serialize(data)
 
-        if (handler.isTerminal) {
+          if (handler.isTerminal) {
           // terminal skips the recursive walk, so blobs must still be collected here
-          if (serialized instanceof Blob) {
-            maps.push(segments.slice())
-            blobs.push(serialized)
+            if (serialized instanceof Blob) {
+              maps.push(segments.slice())
+              blobs.push(serialized)
+            }
+
+            return serialized
           }
 
-          return serialized
+          return this.serializeValue(serialized, segments, maps, blobs)
         }
-
-        return this.serializeValue(serialized, segments, maps, blobs)
       }
     }
 
