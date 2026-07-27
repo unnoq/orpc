@@ -25,6 +25,8 @@ interface TreeEntry {
 
 interface PendingLazyRouter extends WalkProcedureContractsLazyResult {
   matcher?: RegExp
+  /** in-flight load, shared so concurrent matches never load or re-index the same router twice */
+  loading?: Promise<void> | undefined
 }
 
 export class OpenAPIMatcher {
@@ -33,7 +35,12 @@ export class OpenAPIMatcher {
 
   private readonly tree = createRouter<TreeEntry>()
 
-  private pendingLazyRouters: PendingLazyRouter[] = []
+  /**
+   * Unresolved lazy routers. A Set rather than an array so an entry can be removed individually
+   * once it is indexed: rebuilding the whole collection after an `await` is a lost update that
+   * silently drops routers discovered by a concurrent match.
+   */
+  private readonly pendingLazyRouters: Set<PendingLazyRouter> = new Set()
 
   constructor(router: AnyRouter, options: OpenAPIMatcherOptions = {}) {
     this.filter = options.filter ?? true
@@ -60,14 +67,14 @@ export class OpenAPIMatcher {
       })
     }, path)
 
-    this.pendingLazyRouters.push(...lazyResults.map((result) => {
+    for (const result of lazyResults) {
       const prefix = getOpenAPIMeta(result.router)?.prefix
 
-      return {
+      this.pendingLazyRouters.add({
         ...result,
         matcher: prefix ? toRou3PrefixMatcher(prefix) : undefined,
-      }
-    }))
+      })
+    }
   }
 
   async match(
@@ -101,67 +108,96 @@ export class OpenAPIMatcher {
       }
     }
 
-    const result = await this.matchPathname(method, pathname)
+    // Everything below stays in this single async frame: a fully indexed router with an
+    // already resolved procedure settles `match` without a single internal await.
+    const loading = this.resolvePendingLazyRouters(pathname)
 
-    if (!result && pathname.includes('%')) {
+    if (loading !== undefined) {
+      await loading
+    }
+
+    let match = findRoute(this.tree, method, pathname)
+
+    if (match === undefined && pathname.includes('%')) {
       // Retry with a normalized path: users may percent-encode characters that
       // we store unencoded (e.g. "a%62c" vs "abc"), so normalization lets us
       // handle those requests without storing duplicate entries.
 
-      return this.matchPathname(method, normalizeHttpPath(pathname))
+      const normalizedPathname = normalizeHttpPath(pathname)
+      const normalizedLoading = this.resolvePendingLazyRouters(normalizedPathname)
+
+      if (normalizedLoading !== undefined) {
+        await normalizedLoading
+      }
+
+      match = findRoute(this.tree, method, normalizedPathname)
     }
 
-    return result
-  }
-
-  private async matchPathname(
-    method: string,
-    pathname: `/${string}`,
-  ): Promise<{ path: string[], procedure: AnyProcedure, params?: Record<string, string> | undefined } | undefined> {
-    await this.resolvePendingLazyRouters(pathname)
-
-    const match = findRoute(this.tree, method, pathname)
-
-    if (!match) {
+    if (match === undefined) {
       return undefined
     }
 
-    const procedure = await this.resolveProcedure(match.data)
+    const entry = match.data
 
     return {
-      path: match.data.path,
-      procedure,
+      path: entry.path,
+      procedure: entry.procedure ?? await this.resolveProcedure(entry),
       params: match.params ? decodeParams(match.params) : undefined,
     }
   }
 
-  private async resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> {
-    if (!this.pendingLazyRouters.length) {
-      return
-    }
-
-    const stillPending: typeof this.pendingLazyRouters = []
-
-    // We need to loop over this.pendingLazyRouters because this.index can still append new lazy routers
-    // that might need to be resolved
+  /**
+   * Stays synchronous - returning `undefined` - while no pending router is mounted on this
+   * pathname, which is the steady state once the unprefixed ones have been resolved.
+   */
+  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | undefined {
     for (const pending of this.pendingLazyRouters) {
-      if (!pending.matcher || pending.matcher.test(pathname)) {
-        const { default: router } = await unlazy(pending.router)
-        this.index(router, pending.path)
-      }
-      else {
-        stillPending.push(pending)
+      if (pending.matcher === undefined || pending.matcher.test(pathname)) {
+        return this.loadPendingLazyRouters(pathname)
       }
     }
 
-    this.pendingLazyRouters = stillPending
+    return undefined
+  }
+
+  private async loadPendingLazyRouters(pathname: `/${string}`): Promise<void> {
+    // Iterating the live Set on purpose: `index` can register deeper lazy routers while this loop
+    // runs, and a Set iterator still reaches entries appended after the current position.
+    for (const pending of this.pendingLazyRouters) {
+      if (pending.matcher === undefined || pending.matcher.test(pathname)) {
+        await this.loadPendingLazyRouter(pending)
+      }
+    }
+  }
+
+  private loadPendingLazyRouter(pending: PendingLazyRouter): Promise<void> {
+    if (pending.loading === undefined) {
+      const loading = this.indexPendingLazyRouter(pending)
+
+      pending.loading = loading
+
+      // Cleared from a rejection handler rather than a `catch` inside the loader: `unlazy` can
+      // throw synchronously, and a `catch` would then run before `loading` is even assigned,
+      // parking an already rejected promise on the entry and blocking every retry.
+      loading.catch(() => {
+        pending.loading = undefined
+      })
+    }
+
+    return pending.loading
+  }
+
+  private async indexPendingLazyRouter(pending: PendingLazyRouter): Promise<void> {
+    const { default: router } = await unlazy(pending.router)
+
+    this.index(router, pending.path)
+
+    // removed only once indexed, so a concurrent match never observes this router as
+    // neither pending nor indexed
+    this.pendingLazyRouters.delete(pending)
   }
 
   private async resolveProcedure(entry: TreeEntry): Promise<AnyProcedure> {
-    if (entry.procedure) {
-      return entry.procedure
-    }
-
     const { default: maybeProcedure } = await unlazy(getRouter(this.rootRouter, entry.path))
 
     if (!(maybeProcedure instanceof Procedure)) {
@@ -199,5 +235,22 @@ function toRou3PrefixMatcher(path: `/${string}`): RegExp {
 }
 
 function decodeParams(params: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(Object.entries(params).map(([key, val]) => [key, tryDecodeURIComponent(val)]))
+  const decoded: Record<string, string> = {}
+
+  for (const key in params) {
+    // rou3 stores `undefined` for an optional segment the request omitted
+    const val: string | undefined = params[key]
+    // decodeURIComponent only rewrites %XX sequences, so most params can skip it entirely
+    const next = val !== undefined && !val.includes('%') ? val : tryDecodeURIComponent(val!)
+
+    if (key === '__proto__') {
+      // a plain assignment would hit the Object.prototype setter and silently drop the param
+      Object.defineProperty(decoded, key, { value: next, writable: true, enumerable: true, configurable: true })
+    }
+    else {
+      decoded[key] = next
+    }
+  }
+
+  return decoded
 }

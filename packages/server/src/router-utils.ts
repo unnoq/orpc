@@ -242,34 +242,47 @@ export function walkProcedureContractsSync(
   callback: (contract: AnyProcedureContract | AnyProcedure, path: string[]) => void,
   path: string[] = [],
 ): WalkProcedureContractsLazyResult[] {
+  const lazyResults: WalkProcedureContractsLazyResult[] = []
+
+  walkProcedureContractsSyncInternal(router, callback, path.slice(), lazyResults)
+
+  return lazyResults
+}
+
+function walkProcedureContractsSyncInternal(
+  router: RouterContract | AnyRouter,
+  callback: (contract: AnyProcedureContract | AnyProcedure, path: string[]) => void,
+  path: string[],
+  lazyResults: WalkProcedureContractsLazyResult[],
+): void {
   const hiddenContract = getHiddenRouterContract(router)
   if (hiddenContract !== undefined) {
     router = hiddenContract
   }
 
   if (router instanceof ProcedureContract) {
-    callback(router, path)
-    return []
+    callback(router, path.slice())
+    return
   }
 
   if (!isTypescriptObject(router)) {
-    return []
+    return
   }
-
-  const lazyResults: WalkProcedureContractsLazyResult[] = []
 
   for (const key in router) {
     const value = (router as any)[key]
 
+    path.push(key)
+
     if (value instanceof Lazy) {
-      lazyResults.push({ router: value, path: [...path, key] })
+      lazyResults.push({ router: value, path: path.slice() })
     }
     else {
-      lazyResults.push(...walkProcedureContractsSync(value, callback, [...path, key]))
+      walkProcedureContractsSyncInternal(value, callback, path, lazyResults)
     }
-  }
 
-  return lazyResults
+    path.pop()
+  }
 }
 
 export async function walkProcedureContractsAsync(

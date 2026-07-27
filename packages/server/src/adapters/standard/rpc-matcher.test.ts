@@ -106,6 +106,208 @@ describe('rpcMatcher', () => {
     expect(lazyLazyLoader).toHaveBeenCalledTimes(1)
   })
 
+  it('resolves a lazy router that itself is a procedure', async () => {
+    const loader = vi.fn(async () => ({ default: procedure2 }))
+    const matcher = new RPCMatcher({ ping: new Lazy({ loader, meta: {} }) })
+
+    const result = await matcher.match('POST', '/ping', undefined)
+
+    expect(result).toBeDefined()
+    expect(result!.path).toEqual(['ping'])
+    expect(result!.procedure).toBe(procedure2)
+    expect(loader).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not confuse lazy routers whose keys share a prefix', async () => {
+    const lazyLoaderSpy = vi.fn(async () => ({ default: { info: procedure1 } }))
+    const lazyFooLoader = vi.fn(async () => ({ default: { bar: procedure2 } }))
+
+    const matcher = new RPCMatcher({
+      lazy: new Lazy({ loader: lazyLoaderSpy, meta: {} }),
+      lazyfoo: new Lazy({ loader: lazyFooLoader, meta: {} }),
+    })
+
+    const result = await matcher.match('POST', '/lazyfoo/bar', undefined)
+
+    expect(result).toBeDefined()
+    expect(result!.path).toEqual(['lazyfoo', 'bar'])
+    expect(result!.procedure).toBe(procedure2)
+    expect(lazyFooLoader).toHaveBeenCalledTimes(1)
+    // "/lazy" is not a path segment of "/lazyfoo/bar", so that router stays untouched
+    expect(lazyLoaderSpy).toHaveBeenCalledTimes(0)
+  })
+
+  it('retries a lazy router whose loader throws synchronously', async () => {
+    let attempts = 0
+    // deliberately not async: it throws synchronously out of `unlazy`
+    const loader = vi.fn(() => {
+      attempts++
+      if (attempts === 1) {
+        throw new Error('loader exploded')
+      }
+      return Promise.resolve({ default: { info: procedure3 } })
+    })
+
+    const matcher = new RPCMatcher({ lazy: new Lazy({ loader: loader as any, meta: {} }) })
+
+    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('loader exploded')
+
+    const result = await matcher.match('POST', '/lazy/info', undefined)
+
+    expect(result).toBeDefined()
+    expect(result!.path).toEqual(['lazy', 'info'])
+    expect(loader).toHaveBeenCalledTimes(2)
+  })
+
+  it('retries a lazy router whose first load fails', async () => {
+    let attempts = 0
+    const loader = vi.fn(async () => {
+      attempts++
+      if (attempts === 1) {
+        throw new Error('loader exploded')
+      }
+      return { default: { info: procedure3 } }
+    })
+
+    const matcher = new RPCMatcher({ lazy: new Lazy({ loader, meta: {} }) })
+
+    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('loader exploded')
+
+    // the failed router must stay pending so a later request can load it
+    const result = await matcher.match('POST', '/lazy/info', undefined)
+
+    expect(result).toBeDefined()
+    expect(result!.path).toEqual(['lazy', 'info'])
+    expect(result!.procedure).toBe(procedure3)
+    expect(loader).toHaveBeenCalledTimes(2)
+  })
+
+  it('resolves a deep lazy chain for concurrent matches without losing or reloading routers', async () => {
+    const leaf = os.handler(() => 'ok')
+    const loads = { l1: 0, l2: 0, l3: 0 }
+
+    /** settle after N microtask turns so the three levels interleave */
+    const settle = async (turns: number) => {
+      for (let i = 0; i < turns; i++) {
+        await Promise.resolve()
+      }
+    }
+
+    const deepRouter = {
+      l1: new Lazy({
+        meta: {},
+        loader: async () => {
+          loads.l1++
+          await settle(4)
+          return {
+            default: {
+              leaf,
+              l2: new Lazy({
+                meta: {},
+                loader: async () => {
+                  loads.l2++
+                  await settle(3)
+                  return {
+                    default: {
+                      leaf,
+                      l3: new Lazy({
+                        meta: {},
+                        loader: async () => {
+                          loads.l3++
+                          await settle(2)
+                          return { default: { leaf } }
+                        },
+                      }),
+                    },
+                  }
+                },
+              }),
+            },
+          }
+        },
+      }),
+    }
+
+    const matcher = new RPCMatcher(deepRouter)
+
+    const paths = ['/l1/leaf', '/l1/l2/leaf', '/l1/l2/l3/leaf'] as const
+    const results = await Promise.all(
+      paths.flatMap(path => [
+        matcher.match('POST', path, undefined),
+        matcher.match('POST', path, undefined),
+      ]),
+    )
+
+    expect(results.map(result => result?.path.join('/'))).toEqual([
+      'l1/leaf',
+      'l1/leaf',
+      'l1/l2/leaf',
+      'l1/l2/leaf',
+      'l1/l2/l3/leaf',
+      'l1/l2/l3/leaf',
+    ])
+
+    // every level is loaded exactly once even though six matches raced for it
+    expect(loads).toEqual({ l1: 1, l2: 1, l3: 1 })
+
+    // and the deepest route stays matchable afterwards
+    await expect(matcher.match('POST', '/l1/l2/l3/leaf', undefined)).resolves.toBeDefined()
+    expect(loads).toEqual({ l1: 1, l2: 1, l3: 1 })
+  })
+
+  it('resolves nested lazy routers for concurrent matches on the same path', async () => {
+    const matcher = new RPCMatcher(router)
+
+    const results = await Promise.all(
+      Array.from({ length: 8 }, () => matcher.match('POST', '/lazy/lazy/deep', undefined)),
+    )
+
+    for (const result of results) {
+      expect(result).toBeDefined()
+      expect(result!.path).toEqual(['lazy', 'lazy', 'deep'])
+      expect(result!.procedure).toBe(procedure1)
+    }
+  })
+
+  it('resolves concurrent matches on different depths of the same lazy tree', async () => {
+    const matcher = new RPCMatcher(router)
+
+    // both requests need "/lazy"; the deeper one additionally needs the nested "/lazy/lazy".
+    // Resolving them concurrently must not let either drop the other's pending router.
+    const [shallow, deep] = await Promise.all([
+      matcher.match('POST', '/lazy/info', undefined),
+      matcher.match('POST', '/lazy/lazy/deep', undefined),
+    ])
+
+    expect(shallow).toBeDefined()
+    expect(shallow!.path).toEqual(['lazy', 'info'])
+    expect(shallow!.procedure).toBe(procedure3)
+
+    expect(deep).toBeDefined()
+    expect(deep!.path).toEqual(['lazy', 'lazy', 'deep'])
+    expect(deep!.procedure).toBe(procedure1)
+
+    // and the tree is left in a consistent state for later requests
+    await expect(matcher.match('POST', '/lazy/lazy/deep', undefined)).resolves.toEqual(deep)
+    await expect(matcher.match('POST', '/lazy/info', undefined)).resolves.toEqual(shallow)
+  })
+
+  it('resolves a lazy router for concurrent matches on the same path', async () => {
+    const matcher = new RPCMatcher(router)
+
+    const results = await Promise.all([
+      matcher.match('POST', '/lazy/info', undefined),
+      matcher.match('POST', '/lazy/info', undefined),
+      matcher.match('POST', '/lazy/info', undefined),
+    ])
+
+    for (const result of results) {
+      expect(result).toBeDefined()
+      expect(result!.path).toEqual(['lazy', 'info'])
+      expect(result!.procedure).toBe(procedure3)
+    }
+  })
+
   it('support filter option', async () => {
     const filter = vi.fn((procedure: any) => procedure === procedure2)
     const matcher = new RPCMatcher(router, { filter })
@@ -233,6 +435,26 @@ describe('rpcMatcher', () => {
       expect(result).toBeDefined()
       expect(result!.path).toEqual(['nested', 'echo'])
       expect(result!.procedure).toBe(procedure2)
+    })
+
+    it('handles percent-encoded pathnames on a router without lazy routers', async () => {
+      const matcher = new RPCMatcher({ nested: { echo: procedure2 } })
+      const result = await matcher.match('POST', '/nested/%65cho', undefined)
+
+      expect(result).toBeDefined()
+      expect(result!.path).toEqual(['nested', 'echo'])
+      expect(result!.procedure).toBe(procedure2)
+    })
+
+    it('resolves lazy routers found only after normalizing a percent-encoded pathname', async () => {
+      const matcher = new RPCMatcher(router)
+      const result = await matcher.match('POST', '/%6Cazy/info', undefined) // %6C is 'l'
+
+      expect(result).toBeDefined()
+      expect(result!.path).toEqual(['lazy', 'info'])
+      expect(result!.procedure).toBe(procedure3)
+      expect(lazyLoader).toHaveBeenCalledTimes(1)
+      expect(lazyLazyLoader).toHaveBeenCalledTimes(0)
     })
   })
 })
