@@ -160,7 +160,7 @@ export class OpenAPIJsonSerializer {
     let inlineBuiltInHandlers = true
     let handlerEntries: OpenAPIJsonSerializerHandler[] = []
 
-    for (const key of Object.keys(customHandlers)) {
+    for (const key in customHandlers) {
       const handler = customHandlers[key]
 
       if (inlineBuiltInHandlers && key in DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS) {
