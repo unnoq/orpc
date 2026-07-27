@@ -248,7 +248,6 @@ export class OpenAPIJsonSerializer {
           const serialized = handler.serialize(data)
 
           if (handler.isTerminal) {
-          // terminal skips the recursive walk, so blobs must still be collected here
             if (serialized instanceof Blob) {
               maps.push(segments.slice())
               blobs.push(serialized)
