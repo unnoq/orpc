@@ -28,27 +28,27 @@ export class BracketNotationSerializer {
   }
 
   serialize(data: unknown): BracketNotationSerializeResult {
-    return this.internalSerialize(data, [], [])
+    const result: BracketNotationSerializeResult = []
+    this.internalSerialize(data, '', true, result)
+    return result
   }
 
-  private internalSerialize(data: unknown, segments: Segment[], result: BracketNotationSerializeResult): BracketNotationSerializeResult {
+  private internalSerialize(data: unknown, path: string, isRoot: boolean, result: BracketNotationSerializeResult): void {
     if (Array.isArray(data)) {
       data.forEach((item, i) => {
-        this.internalSerialize(item, [...segments, i], result)
+        this.internalSerialize(item, isRoot ? i.toString() : `${path}[${i}]`, false, result)
       })
     }
 
     else if (isPlainObject(data)) {
       for (const key in data) {
-        this.internalSerialize(data[key], [...segments, key], result)
+        this.internalSerialize(data[key], isRoot ? key : `${path}[${key}]`, false, result)
       }
     }
 
     else {
-      result.push([this.stringifyPath(segments), data])
+      result.push([path, data])
     }
-
-    return result
   }
 
   deserialize(serialized: BracketNotationSerializeResult): Record<string, unknown> {
@@ -65,7 +65,9 @@ export class BracketNotationSerializer {
       let currentRef: any = ref
       let nextSegment: string = 'value'
 
-      segments.forEach((segment, i) => {
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i]!
+
         if (!Array.isArray(currentRef[nextSegment]) && !isPlainObject(currentRef[nextSegment])) {
           currentRef[nextSegment] = []
         }
@@ -103,7 +105,7 @@ export class BracketNotationSerializer {
 
         currentRef = currentRef[nextSegment]
         nextSegment = segment
-      })
+      }
 
       if (Array.isArray(currentRef) && nextSegment === '') {
         arrayPushStyles.add(currentRef)
@@ -126,14 +128,17 @@ export class BracketNotationSerializer {
   }
 
   stringifyPath(segments: readonly Segment[]): string {
-    return segments
-      .reduce<string>((result, segment, i) => {
-        if (i === 0) {
-          return segment.toString()
-        }
+    if (segments.length === 0) {
+      return ''
+    }
 
-        return `${result}[${segment}]`
-      }, '')
+    let result = segments[0]!.toString()
+
+    for (let i = 1; i < segments.length; i++) {
+      result += `[${segments[i]}]`
+    }
+
+    return result
   }
 
   parsePath(path: string): string[] {

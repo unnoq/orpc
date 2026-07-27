@@ -164,6 +164,28 @@ describe('openAPIJsonSerializer', () => {
       })
     })
 
+    it('collects blobs returned by terminal custom handlers', () => {
+      class BlobContainer {
+        constructor(public blob: Blob) {}
+      }
+
+      const custom = new OpenAPIJsonSerializer({
+        handlers: {
+          blobContainer: {
+            condition: data => data instanceof BlobContainer,
+            serialize: (data: BlobContainer) => data.blob,
+            isTerminal: true,
+          },
+        },
+      })
+
+      const serialized = custom.serialize({ file: new BlobContainer(new Blob(['hello'], { type: 'text/plain' })) })
+
+      expect(serialized.json).toEqual({ file: expect.any(Blob) })
+      expect(serialized.maps).toEqual([['file']])
+      expect(serialized.blobs).toEqual([expect.any(Blob)])
+    })
+
     it('can disable omitting undefined properties', () => {
       const custom = new OpenAPIJsonSerializer({ omitUndefinedProperties: false })
       expect(custom.serialize({ a: 1, b: undefined }).json).toEqual({ a: 1, b: null })

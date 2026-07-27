@@ -160,6 +160,34 @@ describe('rpcJsonSerializer', () => {
     expect(serialized.meta).toEqual(undefined)
   })
 
+  it('collects blobs returned by terminal custom handlers', () => {
+    class BlobContainer {
+      constructor(public blob: Blob) {}
+    }
+
+    const serializer = new RPCJsonSerializer({
+      handlers: {
+        blobContainer: {
+          condition: data => data instanceof BlobContainer,
+          serialize: (data: BlobContainer) => data.blob,
+          deserialize: (blob: Blob) => new BlobContainer(blob),
+          isTerminal: true,
+        },
+      },
+    })
+
+    const blob = new Blob(['hello'], { type: 'text/plain' })
+    const serialized = serializer.serialize({ file: new BlobContainer(blob) })
+
+    expect(serialized.meta).toEqual([['blobContainer', 'file']])
+    expect(serialized.maps).toEqual([['file']])
+    expect(serialized.blobs).toEqual([blob])
+
+    const deserialized = serializer.deserialize(serialized) as any
+    expect(deserialized.file).toBeInstanceOf(BlobContainer)
+    expect(deserialized.file.blob).toBe(blob)
+  })
+
   it('can disable omit undefined properties', () => {
     const serializer = new RPCJsonSerializer({
       omitUndefinedProperties: false,
