@@ -89,7 +89,10 @@ export class RPCMatcher {
       }
     }
 
+    // guarded rather than awaited directly: `await undefined` still costs a microtask turn,
+    // and nothing is pending on most requests
     const loading = this.resolvePendingLazyRouters(pathname)
+
     if (loading !== undefined) {
       await loading
     }
@@ -104,6 +107,7 @@ export class RPCMatcher {
       const normalizedPathname = normalizeHttpPath(pathname)
 
       const normalizedLoading = this.resolvePendingLazyRouters(normalizedPathname)
+
       if (normalizedLoading !== undefined) {
         await normalizedLoading
       }
@@ -121,9 +125,9 @@ export class RPCMatcher {
     }
   }
 
-  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | void {
+  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | undefined {
     if (this.pendingLazyRouters.size === 0) {
-      return
+      return undefined
     }
 
     let slashIndex = 0
@@ -157,15 +161,9 @@ export class RPCMatcher {
 
   private loadPendingLazyRouter(httpPathPrefix: string, pending: PendingLazyRouter): Promise<void> {
     if (pending.loading === undefined) {
-      const loading = this.indexPendingLazyRouter(httpPathPrefix, pending)
-
-      pending.loading = loading
-
-      // Cleared from a rejection handler rather than a `catch` inside the loader: `unlazy` can
-      // throw synchronously, and a `catch` would then run before `loading` is even assigned,
-      // parking an already rejected promise on the entry and blocking every retry.
-      loading.catch(() => {
+      pending.loading = this.indexPendingLazyRouter(httpPathPrefix, pending).catch((error) => {
         pending.loading = undefined
+        throw error
       })
     }
 

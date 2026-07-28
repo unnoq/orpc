@@ -34,12 +34,6 @@ export class OpenAPIMatcher {
   private readonly rootRouter: AnyRouter
 
   private readonly tree = createRouter<TreeEntry>()
-
-  /**
-   * Unresolved lazy routers. A Set rather than an array so an entry can be removed individually
-   * once it is indexed: rebuilding the whole collection after an `await` is a lost update that
-   * silently drops routers discovered by a concurrent match.
-   */
   private readonly pendingLazyRouters: Set<PendingLazyRouter> = new Set()
 
   constructor(router: AnyRouter, options: OpenAPIMatcherOptions = {}) {
@@ -108,8 +102,8 @@ export class OpenAPIMatcher {
       }
     }
 
-    // Everything below stays in this single async frame: a fully indexed router with an
-    // already resolved procedure settles `match` without a single internal await.
+    // guarded rather than awaited directly: `await undefined` still costs a microtask turn,
+    // and nothing is pending on most requests
     const loading = this.resolvePendingLazyRouters(pathname)
 
     if (loading !== undefined) {
@@ -124,6 +118,7 @@ export class OpenAPIMatcher {
       // handle those requests without storing duplicate entries.
 
       const normalizedPathname = normalizeHttpPath(pathname)
+
       const normalizedLoading = this.resolvePendingLazyRouters(normalizedPathname)
 
       if (normalizedLoading !== undefined) {
@@ -146,10 +141,6 @@ export class OpenAPIMatcher {
     }
   }
 
-  /**
-   * Stays synchronous - returning `undefined` - while no pending router is mounted on this
-   * pathname, which is the steady state once the unprefixed ones have been resolved.
-   */
   private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | undefined {
     for (const pending of this.pendingLazyRouters) {
       if (pending.matcher === undefined || pending.matcher.test(pathname)) {
@@ -161,8 +152,6 @@ export class OpenAPIMatcher {
   }
 
   private async loadPendingLazyRouters(pathname: `/${string}`): Promise<void> {
-    // Iterating the live Set on purpose: `index` can register deeper lazy routers while this loop
-    // runs, and a Set iterator still reaches entries appended after the current position.
     for (const pending of this.pendingLazyRouters) {
       if (pending.matcher === undefined || pending.matcher.test(pathname)) {
         await this.loadPendingLazyRouter(pending)
@@ -172,15 +161,9 @@ export class OpenAPIMatcher {
 
   private loadPendingLazyRouter(pending: PendingLazyRouter): Promise<void> {
     if (pending.loading === undefined) {
-      const loading = this.indexPendingLazyRouter(pending)
-
-      pending.loading = loading
-
-      // Cleared from a rejection handler rather than a `catch` inside the loader: `unlazy` can
-      // throw synchronously, and a `catch` would then run before `loading` is even assigned,
-      // parking an already rejected promise on the entry and blocking every retry.
-      loading.catch(() => {
+      pending.loading = this.indexPendingLazyRouter(pending).catch((error) => {
         pending.loading = undefined
+        throw error
       })
     }
 
@@ -235,22 +218,5 @@ function toRou3PrefixMatcher(path: `/${string}`): RegExp {
 }
 
 function decodeParams(params: Record<string, string>): Record<string, string> {
-  const decoded: Record<string, string> = {}
-
-  for (const key in params) {
-    // rou3 stores `undefined` for an optional segment the request omitted
-    const val: string | undefined = params[key]
-    // decodeURIComponent only rewrites %XX sequences, so most params can skip it entirely
-    const next = val !== undefined && !val.includes('%') ? val : tryDecodeURIComponent(val!)
-
-    if (key === '__proto__') {
-      // a plain assignment would hit the Object.prototype setter and silently drop the param
-      Object.defineProperty(decoded, key, { value: next, writable: true, enumerable: true, configurable: true })
-    }
-    else {
-      decoded[key] = next
-    }
-  }
-
-  return decoded
+  return Object.fromEntries(Object.entries(params).map(([key, val]) => [key, tryDecodeURIComponent(val)]))
 }
