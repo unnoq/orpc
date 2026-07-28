@@ -88,11 +88,8 @@ export class RPCMatcher {
         return undefined
       }
     }
-
-    // guarded rather than awaited directly: `await undefined` still costs a microtask turn,
-    // and nothing is pending on most requests
+    // most requests `await undefined` so conditionally await it to save a microtask turn
     const loading = this.resolvePendingLazyRouters(pathname)
-
     if (loading !== undefined) {
       await loading
     }
@@ -106,8 +103,8 @@ export class RPCMatcher {
 
       const normalizedPathname = normalizeHttpPath(pathname)
 
+      // most requests `await undefined` so conditionally await it to save a microtask turn
       const normalizedLoading = this.resolvePendingLazyRouters(normalizedPathname)
-
       if (normalizedLoading !== undefined) {
         await normalizedLoading
       }
@@ -125,9 +122,9 @@ export class RPCMatcher {
     }
   }
 
-  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | undefined {
+  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | void {
     if (this.pendingLazyRouters.size === 0) {
-      return undefined
+      return
     }
 
     let slashIndex = 0

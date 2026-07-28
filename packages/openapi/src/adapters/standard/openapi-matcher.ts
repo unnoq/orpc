@@ -102,10 +102,8 @@ export class OpenAPIMatcher {
       }
     }
 
-    // guarded rather than awaited directly: `await undefined` still costs a microtask turn,
-    // and nothing is pending on most requests
+    // most requests `await undefined` so conditionally await it to save a microtask turn
     const loading = this.resolvePendingLazyRouters(pathname)
-
     if (loading !== undefined) {
       await loading
     }
@@ -119,8 +117,8 @@ export class OpenAPIMatcher {
 
       const normalizedPathname = normalizeHttpPath(pathname)
 
+      // most requests `await undefined` so conditionally await it to save a microtask turn
       const normalizedLoading = this.resolvePendingLazyRouters(normalizedPathname)
-
       if (normalizedLoading !== undefined) {
         await normalizedLoading
       }
@@ -141,14 +139,12 @@ export class OpenAPIMatcher {
     }
   }
 
-  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | undefined {
+  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | void {
     for (const pending of this.pendingLazyRouters) {
       if (pending.matcher === undefined || pending.matcher.test(pathname)) {
         return this.loadPendingLazyRouters(pathname)
       }
     }
-
-    return undefined
   }
 
   private async loadPendingLazyRouters(pathname: `/${string}`): Promise<void> {
