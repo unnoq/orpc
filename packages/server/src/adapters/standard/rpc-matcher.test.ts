@@ -106,6 +106,113 @@ describe('rpcMatcher', () => {
     expect(lazyLazyLoader).toHaveBeenCalledTimes(1)
   })
 
+  it('resolves a lazy router that itself is a procedure', async () => {
+    const loader = vi.fn(async () => ({ default: procedure2 }))
+    const matcher = new RPCMatcher({ ping: new Lazy({ loader, meta: {} }) })
+
+    const result = await matcher.match('POST', '/ping', undefined)
+
+    expect(result).toBeDefined()
+    expect(result!.path).toEqual(['ping'])
+    expect(result!.procedure).toBe(procedure2)
+    expect(loader).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not confuse lazy routers whose keys share a prefix', async () => {
+    const lazyLoaderSpy = vi.fn(async () => ({ default: { info: procedure1 } }))
+    const lazyFooLoader = vi.fn(async () => ({ default: { bar: procedure2 } }))
+
+    const matcher = new RPCMatcher({
+      lazy: new Lazy({ loader: lazyLoaderSpy, meta: {} }),
+      lazyfoo: new Lazy({ loader: lazyFooLoader, meta: {} }),
+    })
+
+    const result = await matcher.match('POST', '/lazyfoo/bar', undefined)
+
+    expect(result).toBeDefined()
+    expect(result!.path).toEqual(['lazyfoo', 'bar'])
+    expect(result!.procedure).toBe(procedure2)
+    expect(lazyFooLoader).toHaveBeenCalledTimes(1)
+    // "/lazy" is not a path segment of "/lazyfoo/bar", so that router stays untouched
+    expect(lazyLoaderSpy).toHaveBeenCalledTimes(0)
+  })
+
+  it('retries a lazy router whose load fails, synchronously or asynchronously', async () => {
+    let attempts = 0
+    const loader = vi.fn(() => {
+      attempts++
+      // the first attempt throws synchronously out of `unlazy`, the second rejects
+      if (attempts === 1) {
+        throw new Error('sync boom')
+      }
+      if (attempts === 2) {
+        return Promise.reject(new Error('async boom'))
+      }
+      return Promise.resolve({ default: { info: procedure3 } })
+    })
+
+    const matcher = new RPCMatcher({ lazy: new Lazy({ loader: loader as any, meta: {} }) })
+
+    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('sync boom')
+    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('async boom')
+
+    // a failed load must leave the router pending so a later match can still resolve it
+    const result = await matcher.match('POST', '/lazy/info', undefined)
+
+    expect(result).toBeDefined()
+    expect(result!.path).toEqual(['lazy', 'info'])
+    expect(result!.procedure).toBe(procedure3)
+    expect(loader).toHaveBeenCalledTimes(3)
+  })
+
+  it('resolves a deep lazy chain for concurrent matches without losing or reloading routers', async () => {
+    const leaf = os.handler(() => 'ok')
+    const loads: Record<string, number> = {}
+
+    /** `l1` -> `l2` -> `l3`, each lazy, each also exposing a `leaf` procedure beside the next level */
+    function lazyLevel(depth: number): Lazy<any> {
+      return new Lazy({
+        meta: {},
+        loader: async () => {
+          loads[`l${depth}`] = (loads[`l${depth}`] ?? 0) + 1
+
+          // settle after a different number of microtask turns per level, so they interleave
+          for (let i = 0; i < 5 - depth; i++) {
+            await Promise.resolve()
+          }
+
+          return { default: depth === 3 ? { leaf } : { leaf, [`l${depth + 1}`]: lazyLevel(depth + 1) } }
+        },
+      })
+    }
+
+    const matcher = new RPCMatcher({ l1: lazyLevel(1) })
+
+    const paths = ['/l1/leaf', '/l1/l2/leaf', '/l1/l2/l3/leaf'] as const
+    const results = await Promise.all(
+      paths.flatMap(path => [
+        matcher.match('POST', path, undefined),
+        matcher.match('POST', path, undefined),
+      ]),
+    )
+
+    expect(results.map(result => result?.path.join('/'))).toEqual([
+      'l1/leaf',
+      'l1/leaf',
+      'l1/l2/leaf',
+      'l1/l2/leaf',
+      'l1/l2/l3/leaf',
+      'l1/l2/l3/leaf',
+    ])
+
+    // every level is loaded exactly once even though six matches raced for it
+    expect(loads).toEqual({ l1: 1, l2: 1, l3: 1 })
+
+    // and the deepest route stays matchable afterwards
+    await expect(matcher.match('POST', '/l1/l2/l3/leaf', undefined)).resolves.toBeDefined()
+    expect(loads).toEqual({ l1: 1, l2: 1, l3: 1 })
+  })
+
   it('support filter option', async () => {
     const filter = vi.fn((procedure: any) => procedure === procedure2)
     const matcher = new RPCMatcher(router, { filter })
@@ -233,6 +340,26 @@ describe('rpcMatcher', () => {
       expect(result).toBeDefined()
       expect(result!.path).toEqual(['nested', 'echo'])
       expect(result!.procedure).toBe(procedure2)
+    })
+
+    it('handles percent-encoded pathnames on a router without lazy routers', async () => {
+      const matcher = new RPCMatcher({ nested: { echo: procedure2 } })
+      const result = await matcher.match('POST', '/nested/%65cho', undefined)
+
+      expect(result).toBeDefined()
+      expect(result!.path).toEqual(['nested', 'echo'])
+      expect(result!.procedure).toBe(procedure2)
+    })
+
+    it('resolves lazy routers found only after normalizing a percent-encoded pathname', async () => {
+      const matcher = new RPCMatcher(router)
+      const result = await matcher.match('POST', '/%6Cazy/info', undefined) // %6C is 'l'
+
+      expect(result).toBeDefined()
+      expect(result!.path).toEqual(['lazy', 'info'])
+      expect(result!.procedure).toBe(procedure3)
+      expect(lazyLoader).toHaveBeenCalledTimes(1)
+      expect(lazyLazyLoader).toHaveBeenCalledTimes(0)
     })
   })
 })

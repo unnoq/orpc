@@ -25,13 +25,17 @@ interface TreeEntry {
   procedure?: AnyProcedure | undefined
 }
 
+interface PendingLazyRouter extends WalkProcedureContractsLazyResult {
+  /** in-flight load, shared so concurrent matches never load or re-index the same router twice */
+  loading?: Promise<void> | undefined
+}
+
 export class RPCMatcher {
   private readonly filter: Exclude<RPCMatcherOptions['filter'], undefined>
   private readonly rootRouter: AnyRouter
 
   private readonly tree: Map<`/${string}`, TreeEntry> = new Map()
-
-  private pendingLazyRouters: (WalkProcedureContractsLazyResult & { httpPathPrefix: string })[] = []
+  private readonly pendingLazyRouters: Map<string, PendingLazyRouter> = new Map()
 
   constructor(router: AnyRouter, options: RPCMatcherOptions = {}) {
     this.filter = options.filter ?? true
@@ -45,30 +49,17 @@ export class RPCMatcher {
         return
       }
 
-      const httpPath = pathToHttpPath(procedurePath)
-
-      if (procedure instanceof Procedure) {
-        this.tree.set(httpPath, {
-          path: procedurePath,
-          contract: procedure,
-          procedure,
-        })
-      }
-      else {
-        // contract-first approach
-        this.tree.set(httpPath, {
-          path: procedurePath,
-          contract: procedure,
-        })
-      }
+      this.tree.set(pathToHttpPath(procedurePath), {
+        path: procedurePath,
+        contract: procedure,
+        // contract-first entries have no implementation yet, resolveProcedure fills it in on demand
+        procedure: procedure instanceof Procedure ? procedure : undefined,
+      })
     }, path)
 
-    this.pendingLazyRouters.push(
-      ...lazyResults.map(result => ({
-        ...result,
-        httpPathPrefix: pathToHttpPath(result.path),
-      })),
-    )
+    for (const result of lazyResults) {
+      this.pendingLazyRouters.set(pathToHttpPath(result.path), result)
+    }
   }
 
   async match(_method: StandardMethod, pathname: `/${string}`, prefix: `/${string}` | undefined): Promise<{ path: string[], procedure: AnyProcedure } | undefined> {
@@ -97,61 +88,96 @@ export class RPCMatcher {
         return undefined
       }
     }
+    // most requests `await undefined` so conditionally await it to save a microtask turn
+    const loading = this.resolvePendingLazyRouters(pathname)
+    if (loading !== undefined) {
+      await loading
+    }
 
-    const result = await this.matchPathname(pathname)
+    let entry = this.tree.get(pathname)
 
-    if (!result && pathname.includes('%')) {
+    if (entry === undefined && pathname.includes('%')) {
       // Retry with a normalized path: users may percent-encode characters that
       // we store unencoded (e.g. "a%62c" vs "abc"), so normalization lets us
       // handle those requests without storing duplicate entries.
 
-      return this.matchPathname(normalizeHttpPath(pathname))
+      const normalizedPathname = normalizeHttpPath(pathname)
+
+      // most requests `await undefined` so conditionally await it to save a microtask turn
+      const normalizedLoading = this.resolvePendingLazyRouters(normalizedPathname)
+      if (normalizedLoading !== undefined) {
+        await normalizedLoading
+      }
+
+      entry = this.tree.get(normalizedPathname)
     }
 
-    return result
-  }
-
-  private async matchPathname(pathname: `/${string}`): Promise<{ path: string[], procedure: AnyProcedure } | undefined> {
-    await this.resolvePendingLazyRouters(pathname)
-
-    const entry = this.tree.get(pathname)
-
-    if (!entry) {
+    if (entry === undefined) {
       return undefined
     }
 
-    const procedure = await this.resolveProcedure(entry)
-
-    return { path: entry.path, procedure }
+    return {
+      path: entry.path,
+      procedure: entry.procedure ?? await this.resolveProcedure(entry),
+    }
   }
 
-  private async resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> {
-    if (!this.pendingLazyRouters.length) {
+  private resolvePendingLazyRouters(pathname: `/${string}`): Promise<void> | void {
+    if (this.pendingLazyRouters.size === 0) {
       return
     }
 
-    const stillPending: typeof this.pendingLazyRouters = []
+    let slashIndex = 0
 
-    // We need to loop over this.pendingLazyRouters because this.index can still append new lazy routers
-    // that might need to be resolved
-    for (const pending of this.pendingLazyRouters) {
-      if (pathname.startsWith(pending.httpPathPrefix)) {
-        const { default: router } = await unlazy(pending.router)
-        this.index(router, pending.path)
+    while (slashIndex !== -1) {
+      const nextSlashIndex = pathname.indexOf('/', slashIndex + 1)
+      const httpPathPrefix = nextSlashIndex === -1 ? pathname : pathname.slice(0, nextSlashIndex)
+
+      if (this.pendingLazyRouters.has(httpPathPrefix)) {
+        return this.loadPendingLazyRouters(pathname, slashIndex)
       }
-      else {
-        stillPending.push(pending)
+
+      slashIndex = nextSlashIndex
+    }
+  }
+
+  private async loadPendingLazyRouters(pathname: `/${string}`, slashIndex: number): Promise<void> {
+    while (slashIndex !== -1) {
+      const nextSlashIndex = pathname.indexOf('/', slashIndex + 1)
+      const httpPathPrefix = nextSlashIndex === -1 ? pathname : pathname.slice(0, nextSlashIndex)
+
+      const pending = this.pendingLazyRouters.get(httpPathPrefix)
+
+      if (pending !== undefined) {
+        await this.loadPendingLazyRouter(httpPathPrefix, pending)
       }
+
+      slashIndex = nextSlashIndex
+    }
+  }
+
+  private loadPendingLazyRouter(httpPathPrefix: string, pending: PendingLazyRouter): Promise<void> {
+    if (pending.loading === undefined) {
+      pending.loading = this.indexPendingLazyRouter(httpPathPrefix, pending).catch((error) => {
+        pending.loading = undefined
+        throw error
+      })
     }
 
-    this.pendingLazyRouters = stillPending
+    return pending.loading
+  }
+
+  private async indexPendingLazyRouter(httpPathPrefix: string, pending: PendingLazyRouter): Promise<void> {
+    const { default: router } = await unlazy(pending.router)
+
+    this.index(router, pending.path)
+
+    // removed only once indexed, so a concurrent match never observes this router as
+    // neither pending nor indexed
+    this.pendingLazyRouters.delete(httpPathPrefix)
   }
 
   private async resolveProcedure(entry: TreeEntry): Promise<AnyProcedure> {
-    if (entry.procedure) {
-      return entry.procedure
-    }
-
     const { default: maybeProcedure } = await unlazy(getRouter(this.rootRouter, entry.path))
 
     if (!(maybeProcedure instanceof Procedure)) {
