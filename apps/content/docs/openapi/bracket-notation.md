@@ -50,6 +50,7 @@ Bracket notation is designed to express structured data in constrained environme
 - Cannot represent empty structures like empty objects `{}` or empty arrays `[]`.
 - Cannot represent an array at the root level. For example, `0=red&1=blue` becomes `{ 0: 'red', 1: 'blue' }`, not `['red', 'blue']`.
 - Cannot represent objects whose keys are all numbers, because they can be mistaken for array indexes.
+- Cannot reliably represent keys that contain `[` or `]`.
 
 ::: info
 If bracket notation is used in query strings or form data, it also inherits the limitations of those formats. For example, values are always strings or files, and `null` or `undefined` cannot be represented.

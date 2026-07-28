@@ -50,9 +50,6 @@ export class OpenAPISerializer {
   }
 
   serialize(data: unknown, options: OpenAPISerializerSerializeOptions = {}): StandardBody {
-    const useFormDataForBlobFields = options.useFormDataForBlobFields ?? this.defaultSerializeOptions?.useFormDataForBlobFields ?? true
-    const asFormData = options.asFormData ?? this.defaultSerializeOptions?.asFormData ?? false
-
     if (!options.asFormData) {
       // standard body already supports these types without additional serialization.
       if (data === undefined || data instanceof ReadableStream || data instanceof Blob) {
@@ -67,11 +64,11 @@ export class OpenAPISerializer {
               return result
             }
 
-            return { done: result.done, value: this.serializeValue(result.value, { asFormData: false, useFormDataForBlobFields: false }) }
+            return { done: result.done, value: this.serializeValue(result.value, false, false) }
           },
           mapError: (e) => {
             return new ErrorEvent({
-              data: this.serializeValue(toORPCError(e).toJSON(), { asFormData: false, useFormDataForBlobFields: false }),
+              data: this.serializeValue(toORPCError(e).toJSON(), false, false),
               cause: e,
             })
           },
@@ -79,13 +76,15 @@ export class OpenAPISerializer {
       }
     }
 
-    return this.serializeValue(data, { useFormDataForBlobFields, asFormData })
+    const useFormDataForBlobFields = options.useFormDataForBlobFields ?? this.defaultSerializeOptions?.useFormDataForBlobFields ?? true
+    const asFormData = options.asFormData ?? this.defaultSerializeOptions?.asFormData ?? false
+    return this.serializeValue(data, useFormDataForBlobFields, asFormData)
   }
 
-  private serializeValue(value: unknown, options: Required<OpenAPISerializerSerializeOptions>): unknown {
+  private serializeValue(value: unknown, useFormDataForBlobFields: boolean, asFormData: boolean): unknown {
     const { json, blobs } = this.jsonSerializer.serialize(value)
 
-    if (!options.asFormData && (json instanceof Blob || json === undefined || !blobs?.length || !options.useFormDataForBlobFields)) {
+    if (!asFormData && (json instanceof Blob || json === undefined || !blobs?.length || !useFormDataForBlobFields)) {
       return json
     }
 

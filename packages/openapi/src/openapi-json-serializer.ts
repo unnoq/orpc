@@ -1,5 +1,5 @@
 import type { Segment } from '@orpc/shared'
-import { isPlainObject } from '@orpc/shared'
+import { isPlainObject, NullProtoObj } from '@orpc/shared'
 
 export type OpenAPIJsonSerialization
   = | { json: unknown, maps?: undefined, blobs?: undefined }
@@ -143,56 +143,144 @@ export interface OpenAPIJsonSerializerOptions {
 }
 
 export class OpenAPIJsonSerializer {
-  private readonly handlers: Exclude<OpenAPIJsonSerializerOptions['handlers'], undefined>
+  private readonly inlineBuiltInHandlers: boolean
+  private readonly handlerEntries: OpenAPIJsonSerializerHandler[] | undefined
   private readonly omitUndefinedProperties: boolean
 
   constructor(options: OpenAPIJsonSerializerOptions = {}) {
-    this.handlers = {
-      ...DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS,
-      ...options.handlers,
+    this.omitUndefinedProperties = options.omitUndefinedProperties !== false
+
+    const customHandlers = options.handlers
+
+    if (customHandlers === undefined) {
+      this.inlineBuiltInHandlers = true
+      return
     }
 
-    this.omitUndefinedProperties = options.omitUndefinedProperties !== false
+    let inlineBuiltInHandlers = true
+    let handlerEntries: OpenAPIJsonSerializerHandler[] = []
+
+    for (const key in customHandlers) {
+      const handler = customHandlers[key]
+
+      if (inlineBuiltInHandlers && key in DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS) {
+        inlineBuiltInHandlers = false
+        break
+      }
+
+      if (handler !== undefined) {
+        handlerEntries.push(handler)
+      }
+    }
+
+    if (!inlineBuiltInHandlers) {
+      handlerEntries = []
+      for (const handler of Object.values({ ...DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS, ...customHandlers })) {
+        if (handler !== undefined) {
+          handlerEntries.push(handler)
+        }
+      }
+    }
+
+    this.inlineBuiltInHandlers = inlineBuiltInHandlers
+    this.handlerEntries = handlerEntries
   }
 
   serialize(data: unknown): OpenAPIJsonSerialization {
-    const [json, maps, blobs] = this.serializeValue(data, [], [], [])
+    const maps: Segment[][] = []
+    const blobs: Blob[] = []
+
+    const json = this.serializeValue(data, [], maps, blobs)
 
     return { json, maps, blobs }
   }
 
-  private serializeValue(data: unknown, segments: Segment[], maps: Segment[][], blobs: Blob[]): [unknown, Segment[][], Blob[]] {
-    for (const key in this.handlers) {
-      const handler = this.handlers[key]
-
-      if (handler && handler.condition(data)) {
-        const serialized = handler.serialize(data)
-
-        if (handler.isTerminal) {
-          return [serialized, maps, blobs]
+  /**
+   * `segments` is a shared mutable stack (push/pop while walking),
+   * so it must be copied before being stored in `maps`.
+   */
+  private serializeValue(data: unknown, segments: Segment[], maps: Segment[][], blobs: Blob[]): unknown {
+    /**
+     * Inlined version of DEFAULT_OPEN_API_JSON_SERIALIZER_HANDLERS: primitives
+     * are dispatched on typeof and skip every handler condition check.
+     * Must match the built-in handlers exactly.
+     */
+    if (this.inlineBuiltInHandlers) {
+      switch (typeof data) {
+        case 'string':
+        case 'boolean':
+          return data
+        case 'number':
+          return Number.isNaN(data) ? null : data
+        case 'undefined':
+          return null
+        case 'bigint':
+          return data.toString()
+        case 'object': {
+          if (data === null) {
+            return data
+          }
+          if (data instanceof Date) {
+            return Number.isNaN(data.getTime()) ? null : data.toISOString()
+          }
+          if (data instanceof URL) {
+            return data.toString()
+          }
+          if (data instanceof RegExp) {
+            return data.toString()
+          }
+          if (data instanceof Set) {
+            return this.serializeValue(Array.from(data), segments, maps, blobs)
+          }
+          if (data instanceof Map) {
+            return this.serializeValue(Array.from(data.entries()), segments, maps, blobs)
+          }
         }
+      }
+    }
 
-        const result = this.serializeValue(serialized, segments, maps, blobs)
-        return result
+    const handlerEntries = this.handlerEntries
+    if (handlerEntries) {
+      for (let i = 0; i < handlerEntries.length; i++) {
+        const handler = handlerEntries[i]!
+
+        if (handler.condition(data)) {
+          const serialized = handler.serialize(data)
+
+          if (handler.isTerminal) {
+            if (serialized instanceof Blob) {
+              maps.push(segments.slice())
+              blobs.push(serialized)
+            }
+
+            return serialized
+          }
+
+          return this.serializeValue(serialized, segments, maps, blobs)
+        }
       }
     }
 
     if (data instanceof Blob) {
-      maps.push(segments)
+      maps.push(segments.slice())
       blobs.push(data)
-      return [data, maps, blobs]
+      return data
     }
 
     if (Array.isArray(data)) {
-      const json = data.map((v, i) => {
-        return this.serializeValue(v, [...segments, i], maps, blobs)[0]
-      })
+      const json: unknown[] = []
 
-      return [json, maps, blobs]
+      for (let i = 0; i < data.length; i++) {
+        segments.push(i)
+        json.push(this.serializeValue(data[i], segments, maps, blobs))
+        segments.pop()
+      }
+
+      return json
     }
 
     if (isPlainObject(data)) {
-      const json: Record<string, unknown> = {}
+      const json: Record<string, unknown> = new NullProtoObj()
 
       for (const k in data) {
         const v = data[k]
@@ -209,34 +297,38 @@ export class OpenAPIJsonSerializer {
           continue
         }
 
-        json[k] = this.serializeValue(v, [...segments, k], maps, blobs)[0]
+        segments.push(k)
+        json[k] = this.serializeValue(v, segments, maps, blobs)
+        segments.pop()
       }
 
-      return [json, maps, blobs]
+      return json
     }
 
-    return [data, maps, blobs]
+    return data
   }
 
   deserialize(serialized: OpenAPIJsonSerialization): unknown {
     const ref = { data: serialized.json }
 
     if (serialized.blobs?.length) {
-      serialized.maps.forEach((segments, i) => {
+      for (let i = 0; i < serialized.maps.length; i++) {
+        const segments = serialized.maps[i]!
+
         let currentRef: any = ref
         let preSegment: string | number = 'data'
 
-        segments.forEach((segment) => {
+        for (let j = 0; j < segments.length; j++) {
           currentRef = currentRef[preSegment]
-          preSegment = segment
+          preSegment = segments[j]!
 
           if (!Object.hasOwn(currentRef, preSegment)) {
             throw new Error(`Security error: Invalid serialized data. Segment "${preSegment}" does not exist.`)
           }
-        })
+        }
 
         currentRef[preSegment] = serialized.blobs[i]
-      })
+      }
     }
 
     return ref.data
