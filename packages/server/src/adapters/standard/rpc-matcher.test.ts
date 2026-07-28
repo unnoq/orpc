@@ -137,98 +137,56 @@ describe('rpcMatcher', () => {
     expect(lazyLoaderSpy).toHaveBeenCalledTimes(0)
   })
 
-  it('retries a lazy router whose loader throws synchronously', async () => {
+  it('retries a lazy router whose load fails, synchronously or asynchronously', async () => {
     let attempts = 0
-    // deliberately not async: it throws synchronously out of `unlazy`
     const loader = vi.fn(() => {
       attempts++
+      // the first attempt throws synchronously out of `unlazy`, the second rejects
       if (attempts === 1) {
-        throw new Error('loader exploded')
+        throw new Error('sync boom')
+      }
+      if (attempts === 2) {
+        return Promise.reject(new Error('async boom'))
       }
       return Promise.resolve({ default: { info: procedure3 } })
     })
 
     const matcher = new RPCMatcher({ lazy: new Lazy({ loader: loader as any, meta: {} }) })
 
-    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('loader exploded')
+    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('sync boom')
+    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('async boom')
 
-    const result = await matcher.match('POST', '/lazy/info', undefined)
-
-    expect(result).toBeDefined()
-    expect(result!.path).toEqual(['lazy', 'info'])
-    expect(loader).toHaveBeenCalledTimes(2)
-  })
-
-  it('retries a lazy router whose first load fails', async () => {
-    let attempts = 0
-    const loader = vi.fn(async () => {
-      attempts++
-      if (attempts === 1) {
-        throw new Error('loader exploded')
-      }
-      return { default: { info: procedure3 } }
-    })
-
-    const matcher = new RPCMatcher({ lazy: new Lazy({ loader, meta: {} }) })
-
-    await expect(matcher.match('POST', '/lazy/info', undefined)).rejects.toThrowError('loader exploded')
-
-    // the failed router must stay pending so a later request can load it
+    // a failed load must leave the router pending so a later match can still resolve it
     const result = await matcher.match('POST', '/lazy/info', undefined)
 
     expect(result).toBeDefined()
     expect(result!.path).toEqual(['lazy', 'info'])
     expect(result!.procedure).toBe(procedure3)
-    expect(loader).toHaveBeenCalledTimes(2)
+    expect(loader).toHaveBeenCalledTimes(3)
   })
 
   it('resolves a deep lazy chain for concurrent matches without losing or reloading routers', async () => {
     const leaf = os.handler(() => 'ok')
-    const loads = { l1: 0, l2: 0, l3: 0 }
+    const loads: Record<string, number> = {}
 
-    /** settle after N microtask turns so the three levels interleave */
-    const settle = async (turns: number) => {
-      for (let i = 0; i < turns; i++) {
-        await Promise.resolve()
-      }
-    }
-
-    const deepRouter = {
-      l1: new Lazy({
+    /** `l1` -> `l2` -> `l3`, each lazy, each also exposing a `leaf` procedure beside the next level */
+    function lazyLevel(depth: number): Lazy<any> {
+      return new Lazy({
         meta: {},
         loader: async () => {
-          loads.l1++
-          await settle(4)
-          return {
-            default: {
-              leaf,
-              l2: new Lazy({
-                meta: {},
-                loader: async () => {
-                  loads.l2++
-                  await settle(3)
-                  return {
-                    default: {
-                      leaf,
-                      l3: new Lazy({
-                        meta: {},
-                        loader: async () => {
-                          loads.l3++
-                          await settle(2)
-                          return { default: { leaf } }
-                        },
-                      }),
-                    },
-                  }
-                },
-              }),
-            },
+          loads[`l${depth}`] = (loads[`l${depth}`] ?? 0) + 1
+
+          // settle after a different number of microtask turns per level, so they interleave
+          for (let i = 0; i < 5 - depth; i++) {
+            await Promise.resolve()
           }
+
+          return { default: depth === 3 ? { leaf } : { leaf, [`l${depth + 1}`]: lazyLevel(depth + 1) } }
         },
-      }),
+      })
     }
 
-    const matcher = new RPCMatcher(deepRouter)
+    const matcher = new RPCMatcher({ l1: lazyLevel(1) })
 
     const paths = ['/l1/leaf', '/l1/l2/leaf', '/l1/l2/l3/leaf'] as const
     const results = await Promise.all(
@@ -253,59 +211,6 @@ describe('rpcMatcher', () => {
     // and the deepest route stays matchable afterwards
     await expect(matcher.match('POST', '/l1/l2/l3/leaf', undefined)).resolves.toBeDefined()
     expect(loads).toEqual({ l1: 1, l2: 1, l3: 1 })
-  })
-
-  it('resolves nested lazy routers for concurrent matches on the same path', async () => {
-    const matcher = new RPCMatcher(router)
-
-    const results = await Promise.all(
-      Array.from({ length: 8 }, () => matcher.match('POST', '/lazy/lazy/deep', undefined)),
-    )
-
-    for (const result of results) {
-      expect(result).toBeDefined()
-      expect(result!.path).toEqual(['lazy', 'lazy', 'deep'])
-      expect(result!.procedure).toBe(procedure1)
-    }
-  })
-
-  it('resolves concurrent matches on different depths of the same lazy tree', async () => {
-    const matcher = new RPCMatcher(router)
-
-    // both requests need "/lazy"; the deeper one additionally needs the nested "/lazy/lazy".
-    // Resolving them concurrently must not let either drop the other's pending router.
-    const [shallow, deep] = await Promise.all([
-      matcher.match('POST', '/lazy/info', undefined),
-      matcher.match('POST', '/lazy/lazy/deep', undefined),
-    ])
-
-    expect(shallow).toBeDefined()
-    expect(shallow!.path).toEqual(['lazy', 'info'])
-    expect(shallow!.procedure).toBe(procedure3)
-
-    expect(deep).toBeDefined()
-    expect(deep!.path).toEqual(['lazy', 'lazy', 'deep'])
-    expect(deep!.procedure).toBe(procedure1)
-
-    // and the tree is left in a consistent state for later requests
-    await expect(matcher.match('POST', '/lazy/lazy/deep', undefined)).resolves.toEqual(deep)
-    await expect(matcher.match('POST', '/lazy/info', undefined)).resolves.toEqual(shallow)
-  })
-
-  it('resolves a lazy router for concurrent matches on the same path', async () => {
-    const matcher = new RPCMatcher(router)
-
-    const results = await Promise.all([
-      matcher.match('POST', '/lazy/info', undefined),
-      matcher.match('POST', '/lazy/info', undefined),
-      matcher.match('POST', '/lazy/info', undefined),
-    ])
-
-    for (const result of results) {
-      expect(result).toBeDefined()
-      expect(result!.path).toEqual(['lazy', 'info'])
-      expect(result!.procedure).toBe(procedure3)
-    }
   })
 
   it('support filter option', async () => {

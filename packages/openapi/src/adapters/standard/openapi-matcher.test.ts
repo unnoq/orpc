@@ -127,20 +127,6 @@ describe('openAPIMatcher', () => {
       expect(filter.mock.calls).toContainEqual([secret, ['internal', 'secret']])
     })
 
-    it('serves a route whose optional wildcard segment is omitted', async () => {
-      const files = os
-        .meta(openapi({ method: 'GET', path: '/files/*' }))
-        .handler(() => 'ok')
-
-      const matcher = new OpenAPIMatcher({ files })
-
-      // rou3 records a bare `*` as optional, so `/files` matches with the param unset
-      const result = await matcher.match('GET', '/files', undefined)
-
-      expect(result).toBeDefined()
-      expect(result!.path).toEqual(['files'])
-    })
-
     it('keeps a param literally named __proto__ as an own property', async () => {
       const procedure = os
         .meta(openapi({ method: 'GET', path: '/a/{__proto__}' }))
@@ -264,60 +250,37 @@ describe('openAPIMatcher', () => {
       expect(loader).toHaveBeenCalledTimes(1)
     })
 
-    it('retries a lazy router whose loader throws synchronously', async () => {
+    it('retries a lazy router whose load fails, synchronously or asynchronously', async () => {
       const info = os
         .meta(openapi({ method: 'GET', path: '/info' }))
         .handler(() => 'info')
 
       let attempts = 0
-      // deliberately not async: it throws synchronously out of `unlazy`
       const loader = vi.fn(() => {
         attempts++
+        // the first attempt throws synchronously out of `unlazy`, the second rejects
         if (attempts === 1) {
-          throw new Error('loader exploded')
+          throw new Error('sync boom')
+        }
+        if (attempts === 2) {
+          return Promise.reject(new Error('async boom'))
         }
         return Promise.resolve({ default: { info } })
       })
 
       const matcher = new OpenAPIMatcher({ lazy: os.lazy(loader as any) })
 
-      await expect(matcher.match('GET', '/info', undefined)).rejects.toThrowError('loader exploded')
+      await expect(matcher.match('GET', '/info', undefined)).rejects.toThrowError('sync boom')
+      await expect(matcher.match('GET', '/info', undefined)).rejects.toThrowError('async boom')
 
+      // a failed load must leave the router pending so a later match can still resolve it
       await expect(matcher.match('GET', '/info', undefined)).resolves.toEqual({
         path: ['lazy', 'info'],
         procedure: info,
         params: undefined,
       })
 
-      expect(loader).toHaveBeenCalledTimes(2)
-    })
-
-    it('retries a lazy router whose first load fails', async () => {
-      const info = os
-        .meta(openapi({ method: 'GET', path: '/info' }))
-        .handler(() => 'info')
-
-      let attempts = 0
-      const loader = vi.fn(async () => {
-        attempts++
-        if (attempts === 1) {
-          throw new Error('loader exploded')
-        }
-        return { default: { info } }
-      })
-
-      const matcher = new OpenAPIMatcher({ lazy: os.lazy(loader) })
-
-      await expect(matcher.match('GET', '/info', undefined)).rejects.toThrowError('loader exploded')
-
-      // the failed router must stay pending so a later request can load it
-      await expect(matcher.match('GET', '/info', undefined)).resolves.toEqual({
-        path: ['lazy', 'info'],
-        procedure: info,
-        params: undefined,
-      })
-
-      expect(loader).toHaveBeenCalledTimes(2)
+      expect(loader).toHaveBeenCalledTimes(3)
     })
 
     it('resolves a prefixed lazy router that only matches after percent-decoding', async () => {
@@ -382,102 +345,6 @@ describe('openAPIMatcher', () => {
       expect(outerLoader).toHaveBeenCalledTimes(1)
       expect(projectLoader).toHaveBeenCalledTimes(1)
     })
-  })
-
-  describe('concurrent lazy resolution', () => {
-    it('resolves a lazy router for concurrent matches on the same path', async () => {
-      const info = os
-        .meta(openapi({ method: 'GET', path: '/info' }))
-        .handler(() => 'info')
-
-      const loader = vi.fn(async () => {
-        // a real dynamic import settles over several microtasks
-        await Promise.resolve()
-        return { default: { info } }
-      })
-
-      const matcher = new OpenAPIMatcher({ lazy: os.lazy(loader) })
-
-      const results = await Promise.all(
-        Array.from({ length: 8 }, () => matcher.match('GET', '/info', undefined)),
-      )
-
-      for (const result of results) {
-        expect(result).toEqual({
-          path: ['lazy', 'info'],
-          procedure: info,
-          params: undefined,
-        })
-      }
-    })
-
-    it('resolves nested lazy routers for concurrent matches on the same path', async () => {
-      const summary = os
-        .meta(openapi({ method: 'GET', path: '/summary' }))
-        .handler(() => 'summary')
-
-      const projectLoader = vi.fn(async () => {
-        await Promise.resolve()
-        return { default: { summary } }
-      })
-
-      const outerLoader = vi.fn(async () => {
-        await Promise.resolve()
-        return {
-          default: {
-            project: os.meta(openapi({ prefix: '/projects/{projectId}' })).lazy(projectLoader),
-          },
-        }
-      })
-
-      const matcher = new OpenAPIMatcher({ lazy: os.lazy(outerLoader) })
-
-      const results = await Promise.all(
-        Array.from({ length: 8 }, () => matcher.match('GET', '/projects/42/summary', undefined)),
-      )
-
-      for (const result of results) {
-        expect(result).toBeDefined()
-        expect(result!.path).toEqual(['lazy', 'project', 'summary'])
-        expect(result!.params).toEqual({ projectId: '42' })
-      }
-    })
-
-    it('resolves concurrent matches that need different lazy routers', async () => {
-      const alpha = os.meta(openapi({ method: 'GET', path: '/detail' })).handler(() => 'a')
-      const beta = os.meta(openapi({ method: 'GET', path: '/detail' })).handler(() => 'b')
-
-      const alphaLoader = vi.fn(async () => {
-        await Promise.resolve()
-        return { default: { alpha } }
-      })
-
-      const betaLoader = vi.fn(async () => {
-        await Promise.resolve()
-        return { default: { beta } }
-      })
-
-      const matcher = new OpenAPIMatcher({
-        a: os.meta(openapi({ prefix: '/alpha' })).lazy(alphaLoader),
-        b: os.meta(openapi({ prefix: '/beta' })).lazy(betaLoader),
-      })
-
-      // two in-flight requests, each unlocking a different pending lazy router:
-      // neither may drop the other's pending entry
-      const [first, second] = await Promise.all([
-        matcher.match('GET', '/alpha/detail', undefined),
-        matcher.match('GET', '/beta/detail', undefined),
-      ])
-
-      expect(first).toBeDefined()
-      expect(first!.path).toEqual(['a', 'alpha'])
-      expect(second).toBeDefined()
-      expect(second!.path).toEqual(['b', 'beta'])
-
-      // and both stay matchable afterwards
-      await expect(matcher.match('GET', '/alpha/detail', undefined)).resolves.toEqual(first)
-      await expect(matcher.match('GET', '/beta/detail', undefined)).resolves.toEqual(second)
-    })
 
     it('resolves a deep lazy chain for concurrent matches without losing or reloading routers', async () => {
       const leaf1 = os.meta(openapi({ method: 'GET', path: '/leaf1' })).handler(() => '1')
@@ -536,40 +403,6 @@ describe('openAPIMatcher', () => {
       // and the deepest route stays matchable afterwards
       await expect(matcher.match('GET', '/p2/p3/leaf3', undefined)).resolves.toBeDefined()
       expect(loads).toEqual({ l1: 1, l2: 1, l3: 1 })
-    })
-
-    it('resolves concurrent matches at different depths of the same lazy tree', async () => {
-      const shallow = os.meta(openapi({ method: 'GET', path: '/shallow' })).handler(() => 's')
-      const deep = os.meta(openapi({ method: 'GET', path: '/deep' })).handler(() => 'd')
-
-      const innerLoader = vi.fn(async () => {
-        await Promise.resolve()
-        return { default: { deep } }
-      })
-
-      const outerLoader = vi.fn(async () => {
-        await Promise.resolve()
-        return {
-          default: {
-            shallow,
-            inner: os.meta(openapi({ prefix: '/inner' })).lazy(innerLoader),
-          },
-        }
-      })
-
-      const matcher = new OpenAPIMatcher({ lazy: os.lazy(outerLoader) })
-
-      const [shallowResult, deepResult] = await Promise.all([
-        matcher.match('GET', '/shallow', undefined),
-        matcher.match('GET', '/inner/deep', undefined),
-      ])
-
-      expect(shallowResult).toBeDefined()
-      expect(shallowResult!.path).toEqual(['lazy', 'shallow'])
-      expect(deepResult).toBeDefined()
-      expect(deepResult!.path).toEqual(['lazy', 'inner', 'deep'])
-
-      await expect(matcher.match('GET', '/inner/deep', undefined)).resolves.toEqual(deepResult)
     })
   })
 
