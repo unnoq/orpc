@@ -180,6 +180,38 @@ describe('openAPILinkCodec', () => {
         expect(request.headers).toEqual({ 'x-base': 'yes' })
       })
 
+      it('serializes non-string header values before merging', async () => {
+        const codec = new OpenAPILinkCodec({
+          ping: oc.meta(openapi({ inputStructure: 'detailed' })),
+        }, {
+          url: '/api',
+          headers: { 'x-multi': 'base' },
+          serializer,
+        })
+
+        const request = await codec.encodeInput({
+          headers: {
+            'x-number': 42,
+            'x-boolean': false,
+            'x-date': new Date('2020-01-02T03:04:05.000Z'),
+            'x-array': ['a', 1, null, undefined],
+            'x-multi': ['b', 'c'],
+            'x-null': null,
+            'x-undefined': undefined,
+          },
+        }, ['ping'], { context: {} })
+
+        expect(request.headers).toEqual({
+          'x-number': '42',
+          'x-boolean': 'false',
+          'x-date': '2020-01-02T03:04:05.000Z',
+          'x-array': ['a', '1'],
+          'x-multi': ['base', 'b', 'c'],
+        })
+        expect(Object.keys(request.headers)).not.toContain('x-null')
+        expect(Object.keys(request.headers)).not.toContain('x-undefined')
+      })
+
       it('omits the body for GET requests while still serializing the query', async () => {
         const codec = new OpenAPILinkCodec({
           search: oc.meta(openapi({

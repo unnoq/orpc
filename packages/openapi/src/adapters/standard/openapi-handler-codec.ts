@@ -2,13 +2,13 @@ import type { AnyORPCError } from '@orpc/client'
 import type { AnyProcedure, AnyRouter, Context } from '@orpc/server'
 import type { StandardHandlerCodec, StandardHandlerCodecResolvedProcedure, StandardHandlerHandleOptions } from '@orpc/server/standard'
 import type { Promisable } from '@orpc/shared'
-import type { StandardHeaders, StandardLazyRequest, StandardResponse } from '@standardserver/core'
+import type { StandardLazyRequest, StandardResponse } from '@standardserver/core'
 import type { OpenAPIMeta } from '../../meta'
 import type { OpenAPIMatcherOptions } from './openapi-matcher'
 import { COMMON_ERROR_STATUS_MAP } from '@orpc/client'
 import { DEFAULT_ERROR_STATUS, DEFAULT_SUCCESS_STATUS } from '@orpc/server'
 import { isPlainObject, isTypescriptObject, NullProtoObj, parseEmptyableJSON, stringifyJSON } from '@orpc/shared'
-import { isStandardHeaders, parseStandardUrl } from '@standardserver/core'
+import { parseStandardUrl } from '@standardserver/core'
 import {
   DEFAULT_OPENAPI_INPUT_STRUCTURE,
   DEFAULT_OPENAPI_OUTPUT_STRUCTURE,
@@ -17,6 +17,7 @@ import { getOpenAPIMeta } from '../../meta'
 import { OpenAPISerializer } from '../../openapi-serializer'
 import { isBodylessMethod } from '../../utils'
 import { OpenAPIMatcher } from './openapi-matcher'
+import { serializeHeaders } from './utils'
 
 export interface OpenAPIHandlerCodecCoreOptions<_T extends Context> {
   /**
@@ -118,8 +119,8 @@ export class OpenAPIHandlerCodecCore<T extends Context> {
       throw new TypeError(`
         Invalid "detailed" output structure returned by procedure (${path.join('.')}):
         • Expected an object with optional properties:
-          - status (number 200-399)
-          - headers (Record<string, string | string[] | undefined>)
+          - status (number <400)
+          - headers (object)
           - body (any)
         • No extra keys allowed.
 
@@ -130,7 +131,7 @@ export class OpenAPIHandlerCodecCore<T extends Context> {
 
     return {
       status: output.status ?? successStatus,
-      headers: output.headers ?? {},
+      headers: output.headers !== undefined ? serializeHeaders(output.headers, this.serializer) : {},
       body: this.serializer.serialize(output.body),
     }
   }
@@ -274,7 +275,7 @@ export class OpenAPIHandlerCodec<T extends Context> extends OpenAPIHandlerCodecC
   }
 }
 
-function isValidDetailedOutput(output: unknown): output is { status?: number, body?: unknown, headers?: StandardHeaders } {
+function isValidDetailedOutput(output: unknown): output is { status?: number, body?: unknown, headers?: object } {
   if (!isTypescriptObject(output)) {
     return false
   }
@@ -286,13 +287,12 @@ function isValidDetailedOutput(output: unknown): output is { status?: number, bo
   if (output.status !== undefined && (
     typeof output.status !== 'number'
     || !Number.isInteger(output.status)
-    || output.status < 200
     || output.status > 399
   )) {
     return false
   }
 
-  if (output.headers !== undefined && !isStandardHeaders(output.headers)) {
+  if (output.headers !== undefined && !isTypescriptObject(output.headers)) {
     return false
   }
 
