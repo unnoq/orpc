@@ -40,6 +40,24 @@ describe('serializeHeaders', () => {
     })
   })
 
+  it('merges values that serialize into arrays as a single comma-delimited line', () => {
+    expect(serializeHeaders({
+      'x-set': new Set(['a', 'b']),
+      'x-map': new Map([['k1', 'v1'], ['k2', 'v2']]),
+    }, serializer)).toEqual({
+      'x-set': 'a,b',
+      'x-map': 'k1,v1,k2,v2',
+    })
+  })
+
+  it('treats only actual arrays as multi-value headers, array items stay a single line each', () => {
+    expect(serializeHeaders({
+      'x-array': ['a', new Set(['b', 'c']), { k: 'v' }],
+    }, serializer)).toEqual({
+      'x-array': ['a', 'b,c', 'k,v'],
+    })
+  })
+
   it('drops undefined and null values, including array items', () => {
     const serialized = serializeHeaders({
       'x-null': null,

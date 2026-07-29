@@ -9,25 +9,59 @@ export function serializeHeaders(
   const result = new NullProtoObj<Record<string, string | string[]>>()
 
   for (const [key, value] of Object.entries(headers)) {
-    const serialized = serializer.serialize(value)
+    /**
+     * Only an actual array value represents a multi-value header (sent as multiple lines).
+     * Serialization can turn non-array values into arrays (e.g. Set, Map, custom handlers),
+     * and those must stay a single line, so the structure is checked before serializing.
+     */
+    if (Array.isArray(value)) {
+      const lines: string[] = []
 
-    if (Array.isArray(serialized)) {
-      result[key] = serialized
-        .filter(item => item !== undefined && item !== null)
-        .map(String)
+      for (const item of value) {
+        const line = serializeHeaderValue(item, serializer)
+
+        if (line !== undefined) {
+          lines.push(line)
+        }
+      }
+
+      result[key] = lines
+      continue
     }
 
-    else if (isTypescriptObject(serialized)) {
-      result[key] = Object.entries(serialized)
-        .filter(([, val]) => val !== undefined && val !== null)
-        .map(([key, val]) => `${String(key)},${String(val)}`)
-        .join(',')
-    }
+    const line = serializeHeaderValue(value, serializer)
 
-    else if (serialized !== undefined && serialized !== null) {
-      result[key] = String(serialized)
+    if (line !== undefined) {
+      result[key] = line
     }
   }
 
   return result
+}
+
+function serializeHeaderValue(
+  value: unknown,
+  serializer: Pick<OpenAPISerializer, 'serialize'>,
+): string | undefined {
+  const serialized = serializer.serialize(value)
+
+  if (Array.isArray(serialized)) {
+    return serialized
+      .filter(item => item !== undefined && item !== null)
+      .map(String)
+      .join(',')
+  }
+
+  if (isTypescriptObject(serialized)) {
+    return Object.entries(serialized)
+      .filter(([, val]) => val !== undefined && val !== null)
+      .map(([key, val]) => `${String(key)},${String(val)}`)
+      .join(',')
+  }
+
+  if (serialized !== undefined && serialized !== null) {
+    return String(serialized)
+  }
+
+  return undefined
 }
