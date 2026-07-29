@@ -3,7 +3,7 @@ import type { StandardHandlerInterceptor, StandardHandlerOptions, StandardHandle
 import type { StandardRequest } from '@standardserver/core'
 import type { RequestLogger } from 'evlog'
 import type { BaseEvlogOptions, FrameworkIntegrationHelpers, FrameworkIntegrationSpec } from 'evlog/toolkit'
-import { wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
+import { ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { isAbortError, isAsyncIteratorObject, ORPC_NAME, override, sleep, toArray, wrapReadableStream } from '@orpc/shared'
 import { flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
 import { defineFrameworkIntegration } from 'evlog/toolkit'
@@ -249,8 +249,15 @@ function toErrorOrString(error: unknown) {
 function logBusinessLogicError(logger: RequestLogger | undefined, error: unknown) {
   logger?.error(toErrorOrString(error))
 
-  // DO NOT treat aborted error as error if happen during business logic
+  // An abort means the client withdrew the request, not that something failed,
+  // so record it as normal operation.
   if (isAbortError(error)) {
     logger?.setLevel('info')
+  }
+  // A thrown ORPCError is a deliberate business rejection delivered to the client,
+  // so keep it reviewable without treating it as a failure.
+  // Anything else is unexpected and stays at error level.
+  else if (error instanceof ORPCError) {
+    logger?.setLevel('warn')
   }
 }
