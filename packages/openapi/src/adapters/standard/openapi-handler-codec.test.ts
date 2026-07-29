@@ -692,13 +692,8 @@ describe('openAPIHandlerCodec', () => {
       })
 
       it('uses explicit status and headers from output', () => {
-        const serializer = {
-          serialize: vi.fn().mockReturnValueOnce('__serialized_body__'),
-          deserialize: vi.fn(),
-        } as any
-
         const procedure = os.meta(openapi({ outputStructure: 'detailed' })).handler(vi.fn())
-        const codec = new OpenAPIHandlerCodec(procedure, { serializer })
+        const codec = new OpenAPIHandlerCodec(procedure)
 
         const response = codec.encodeOutput({
           status: 202,
@@ -709,15 +704,76 @@ describe('openAPIHandlerCodec', () => {
         expect(response).toEqual({
           status: 202,
           headers: { 'x-custom': 'value' },
-          body: '__serialized_body__',
+          body: { ok: true },
         })
+      })
+
+      it('accepts informational and redirect statuses since any status below 400 is success', () => {
+        const procedure = os.meta(openapi({ outputStructure: 'detailed' })).handler(vi.fn())
+        const codec = new OpenAPIHandlerCodec(procedure)
+
+        const response = codec.encodeOutput({
+          status: 302,
+          headers: { location: 'https://example.com' },
+        }, procedure, [])
+
+        expect(response).toEqual({
+          status: 302,
+          headers: { location: 'https://example.com' },
+          body: undefined,
+        })
+      })
+
+      it('serializes non-string header values', () => {
+        const procedure = os.meta(openapi({ outputStructure: 'detailed' })).handler(vi.fn())
+        const codec = new OpenAPIHandlerCodec(procedure)
+
+        const response = codec.encodeOutput({
+          headers: {
+            'x-string': 'value',
+            'x-number': 42,
+            'x-boolean': true,
+            'x-date': new Date('2020-01-02T03:04:05.000Z'),
+            'x-array': ['a', 1, null, undefined],
+            'x-null': null,
+            'x-undefined': undefined,
+          },
+          body: undefined,
+        }, procedure, []) as any
+
+        expect(response.headers).toEqual({
+          'x-string': 'value',
+          'x-number': '42',
+          'x-boolean': 'true',
+          'x-date': '2020-01-02T03:04:05.000Z',
+          'x-array': ['a', '1'],
+        })
+        expect(Object.keys(response.headers)).not.toContain('x-null')
+        expect(Object.keys(response.headers)).not.toContain('x-undefined')
+      })
+
+      it('prevents prototype injection via header keys', () => {
+        const procedure = os.meta(openapi({ outputStructure: 'detailed' })).handler(vi.fn())
+        const codec = new OpenAPIHandlerCodec(procedure)
+
+        const response = codec.encodeOutput({
+          headers: JSON.parse('{"__proto__": "injected", "constructor": "c", "x-safe": "ok"}'),
+        }, procedure, []) as any
+
+        expect(response.headers['x-safe']).toBe('ok')
+
+        // `__proto__` and `constructor` become plain own properties, not prototype-chain mutations
+        expect(Object.getOwnPropertyDescriptor(response.headers, '__proto__')?.value).toBe('injected')
+        expect(Object.getOwnPropertyDescriptor(response.headers, 'constructor')?.value).toBe('c')
       })
 
       it.each([
         ['non-object output', '__invalid__'],
-        ['status outside the allowed range', { status: 500 }],
+        ['status of 400 or above', { status: 400 }],
+        ['non-integer status', { status: 250.5 }],
+        ['non-number status', { status: '200' }],
         ['extra keys', { body: 'ok', extra: true }],
-        ['invalid headers', { headers: { 'x-invalid': 123 } }],
+        ['non-object headers', { headers: 'invalid' }],
       ])('throws for invalid output: %s', (_, output) => {
         const procedure = os.meta(openapi({ outputStructure: 'detailed' })).handler(vi.fn())
         const codec = new OpenAPIHandlerCodec(procedure)
