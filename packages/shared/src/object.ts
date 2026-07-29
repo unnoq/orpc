@@ -81,16 +81,28 @@ export function set(
 
   for (let i = 0; i < path.length - 1; i++) {
     const key = path[i]!
-    const next = (current as Record<PropertyKey, unknown>)[key]
+    const next = Object.hasOwn(current, key) ? (current as Record<PropertyKey, unknown>)[key] : undefined
 
     if (!isTypescriptObject(next)) {
-      ;(current as Record<PropertyKey, unknown>)[key] = {}
+      const child = {}
+      defineOwnProperty(current, key, child)
+      current = child
     }
-
-    current = (current as Record<PropertyKey, object>)[key]!
+    else {
+      current = next
+    }
   }
 
-  ;(current as Record<PropertyKey, unknown>)[path.at(-1)!] = value
+  defineOwnProperty(current, path.at(-1)!, value)
+}
+
+function defineOwnProperty(object: object, key: PropertyKey, value: unknown): void {
+  Object.defineProperty(object, key, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  })
 }
 
 export function omit<T extends object, K extends keyof T>(

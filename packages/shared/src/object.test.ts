@@ -144,6 +144,37 @@ describe('set', () => {
     expect(root.a).toBe(date)
     expect((root.a as Record<string, unknown>).b).toBe('value')
   })
+
+  it('does not pollute the prototype via __proto__', () => {
+    const root: Record<string, unknown> = {}
+    set(root, ['__proto__', 'polluted'], 'yes')
+
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+    expect(Object.getPrototypeOf(root)).toBe(Object.prototype)
+    expect(Object.hasOwn(root, '__proto__')).toBe(true)
+    // eslint-disable-next-line no-proto, no-restricted-properties
+    expect((root as any).__proto__).toEqual({ polluted: 'yes' })
+  })
+
+  it('does not pollute the prototype via constructor.prototype', () => {
+    const root: Record<string, unknown> = {}
+    set(root, ['constructor', 'prototype', 'polluted'], 'yes')
+
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+    expect((Object.prototype as any).polluted).toBeUndefined()
+    expect(Object.hasOwn(root, 'constructor')).toBe(true)
+    expect(root.constructor).toEqual({ prototype: { polluted: 'yes' } })
+  })
+
+  it('sets __proto__ as an own property instead of changing the prototype', () => {
+    const root: Record<string, unknown> = {}
+    set(root, ['__proto__'], 'value')
+
+    expect(Object.getPrototypeOf(root)).toBe(Object.prototype)
+    expect(Object.hasOwn(root, '__proto__')).toBe(true)
+    // eslint-disable-next-line no-proto, no-restricted-properties
+    expect((root as any).__proto__).toBe('value')
+  })
 })
 
 describe('omit', () => {
