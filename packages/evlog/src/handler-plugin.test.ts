@@ -1,3 +1,4 @@
+import { ORPCError } from '@orpc/client'
 import { AbortError, ORPC_NAME, sleep } from '@orpc/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LOGGER_CONTEXT_SYMBOL } from './context'
@@ -407,11 +408,11 @@ describe('evlogHandlerPlugin', () => {
     })
   })
 
-  it('logs business logic errors and downgrades abort errors to info level', async () => {
+  it('downgrades business errors (ORPCError) to warn level and abort errors to info level, keeps unexpected errors at error level', async () => {
     const logger = createLogger()
     const plugin = new EvlogHandlerPlugin()
     const { interceptor } = getPluginHooks(plugin)
-    const businessError = new Error('boom')
+    const businessError = new ORPCError('UNAUTHORIZED')
 
     await expect(interceptor({
       next: vi.fn().mockRejectedValue(businessError),
@@ -421,6 +422,21 @@ describe('evlogHandlerPlugin', () => {
     })).rejects.toThrow(businessError)
 
     expect(logger.error).toHaveBeenCalledWith(businessError)
+    expect(logger.setLevel).toHaveBeenCalledWith('warn')
+
+    logger.error.mockClear()
+    logger.setLevel.mockClear()
+
+    const unexpectedError = new Error('boom')
+
+    await expect(interceptor({
+      next: vi.fn().mockRejectedValue(unexpectedError),
+      context: { [LOGGER_CONTEXT_SYMBOL]: logger },
+      path: ['ping'],
+      request: createRequest('/ping'),
+    })).rejects.toThrow(unexpectedError)
+
+    expect(logger.error).toHaveBeenCalledWith(unexpectedError)
     expect(logger.setLevel).not.toHaveBeenCalled()
 
     logger.error.mockClear()

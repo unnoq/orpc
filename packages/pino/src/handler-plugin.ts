@@ -2,7 +2,7 @@ import type { Context, ErrorMap, ProcedureClientInterceptor, Schema } from '@orp
 import type { StandardHandlerInterceptor, StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor, StandardHandlerRoutingInterceptorOptions } from '@orpc/server/standard'
 import type { Logger } from 'pino'
 import type { LoggerContext } from './context'
-import { wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
+import { ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { isAbortError, isAsyncIteratorObject, ORPC_NAME, override, toArray, wrapReadableStream } from '@orpc/shared'
 import { flattenStandardHeader } from '@standardserver/core'
 import pino from 'pino'
@@ -207,10 +207,17 @@ export class PinoHandlerPlugin<T extends Context> implements StandardHandlerPlug
 }
 
 function logBusinessLogicError(logger: Logger | undefined, error: unknown) {
-  // DO NOT treat aborted error as error if happen during business logic
+  // An abort means the client withdrew the request, not that something failed,
+  // so record it as normal operation.
   if (isAbortError(error)) {
     logger?.info(error)
   }
+  // A thrown ORPCError is a deliberate business rejection delivered to the client,
+  // so keep it reviewable without treating it as a failure.
+  else if (error instanceof ORPCError) {
+    logger?.warn(error)
+  }
+  // Anything else is unexpected and stays at error level.
   else {
     logger?.error(error)
   }

@@ -1,5 +1,5 @@
 import type { StandardLazyRequest } from '@standardserver/core'
-import { os } from '@orpc/server'
+import { ORPCError, os } from '@orpc/server'
 import { StandardHandler } from '@orpc/server/standard'
 import { AbortError } from '@orpc/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +9,7 @@ import { PinoHandlerPlugin } from './handler-plugin'
 const globalSpies = {
   child: vi.fn(),
   info: vi.fn(),
+  warn: vi.fn(),
   error: vi.fn(),
   setBindings: vi.fn(),
 }
@@ -28,6 +29,11 @@ class FakeLogger {
   info(...args: any[]) {
     expect(this.childDepth).toBeGreaterThan(0)
     globalSpies.info(...args)
+  }
+
+  warn(...args: any[]) {
+    expect(this.childDepth).toBeGreaterThan(0)
+    globalSpies.warn(...args)
   }
 
   error(...args: any[]) {
@@ -142,9 +148,9 @@ describe('pinoHandlerPlugin', () => {
     expect(globalSpies.info).toHaveBeenCalledWith('request was aborted before handling (manual)')
   })
 
-  it('logs business errors as error and abort errors as info', async () => {
+  it('logs business errors (ORPCError) as warn, unexpected errors as error, and abort errors as info', async () => {
     const baseLogger = new FakeLogger({ rpc: {} })
-    const businessError = new Error('boom')
+    const businessError = new ORPCError('UNAUTHORIZED')
     const handler1 = new StandardHandler(createCodec(os.handler(() => {
       throw businessError
     })) as any, {
@@ -154,14 +160,14 @@ describe('pinoHandlerPlugin', () => {
     const result1 = await handler1.handle(createRequest('GET', '/ping'), { prefix: undefined, context: {} })
 
     expect(result1.matched).toBe(true)
-    expect(result1.response?.status).toBe(500)
-    expect(globalSpies.error).toHaveBeenCalledWith(businessError)
+    expect(globalSpies.warn).toHaveBeenCalledWith(businessError)
+    expect(globalSpies.error).not.toHaveBeenCalled()
 
     vi.clearAllMocks()
 
-    const abortError = new AbortError('reason')
+    const unexpectedError = new Error('boom')
     const handler2 = new StandardHandler(createCodec(os.handler(() => {
-      throw abortError
+      throw unexpectedError
     })) as any, {
       plugins: [new PinoHandlerPlugin({ logger: baseLogger as any })],
     })
@@ -169,7 +175,25 @@ describe('pinoHandlerPlugin', () => {
     const result2 = await handler2.handle(createRequest('GET', '/ping'), { prefix: undefined, context: {} })
 
     expect(result2.matched).toBe(true)
+    expect(result2.response?.status).toBe(500)
+    expect(globalSpies.error).toHaveBeenCalledWith(unexpectedError)
+    expect(globalSpies.warn).not.toHaveBeenCalled()
+
+    vi.clearAllMocks()
+
+    const abortError = new AbortError('reason')
+    const handler3 = new StandardHandler(createCodec(os.handler(() => {
+      throw abortError
+    })) as any, {
+      plugins: [new PinoHandlerPlugin({ logger: baseLogger as any })],
+    })
+
+    const result3 = await handler3.handle(createRequest('GET', '/ping'), { prefix: undefined, context: {} })
+
+    expect(result3.matched).toBe(true)
     expect(globalSpies.info).toHaveBeenCalledWith(abortError)
+    expect(globalSpies.warn).not.toHaveBeenCalled()
+    expect(globalSpies.error).not.toHaveBeenCalled()
   })
 
   it('logs internal errors', async () => {
