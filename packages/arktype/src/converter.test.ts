@@ -127,4 +127,38 @@ describe('arkTypeToJsonSchemaConverter', () => {
       false,
     ])
   })
+
+  describe('cache option', () => {
+    it('reuses conversion results per schema and direction when enabled', () => {
+      const converter = new ArkTypeToJsonSchemaConverter({ cache: true })
+      const schema = type('string')
+      // arktype interns types, so the same definition returns the same instance/spy across tests
+      const toJsonSchema = vi.spyOn(schema, 'toJsonSchema')
+      toJsonSchema.mockClear()
+
+      const input = converter.convert(schema, 'input')
+      expect(input).toEqual([{ type: 'string' }, false])
+      expect(converter.convert(schema, 'input')).toBe(input)
+      expect(toJsonSchema).toHaveBeenCalledTimes(1)
+
+      const output = converter.convert(schema, 'output')
+      expect(output).toEqual([{ type: 'string' }, false])
+      expect(output).not.toBe(input)
+      expect(converter.convert(schema, 'output')).toBe(output)
+      expect(toJsonSchema).toHaveBeenCalledTimes(2)
+    })
+
+    it('converts on every call when disabled', () => {
+      const schema = type('string')
+      const toJsonSchema = vi.spyOn(schema, 'toJsonSchema')
+      toJsonSchema.mockClear()
+
+      const first = converter.convert(schema, 'input')
+      const second = converter.convert(schema, 'input')
+
+      expect(second).toEqual(first)
+      expect(second).not.toBe(first)
+      expect(toJsonSchema).toHaveBeenCalledTimes(2)
+    })
+  })
 })

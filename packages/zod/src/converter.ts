@@ -4,10 +4,31 @@ import { encodeJsonPointerSegment, JsonSchemaFormat, JsonSchemaXNativeType } fro
 import { globalRegistry, toJSONSchema } from 'zod/v4/core'
 import { JSON_SCHEMA_INPUT_REGISTRY, JSON_SCHEMA_OUTPUT_REGISTRY, JSON_SCHEMA_REGISTRY } from './registries'
 
-export interface ZodToJsonSchemaConverterOptions extends Omit<ToJSONSchemaParams, 'target' | 'io'> {}
+export interface ZodToJsonSchemaConverterOptions extends Omit<ToJSONSchemaParams, 'target' | 'io'> {
+  /**
+   * Caches conversion results in a WeakMap keyed by the Zod schema instance,
+   * so converting the same schema again is free.
+   *
+   * When enabled, repeated conversions return the same JSON schema object,
+   * so treat returned schemas as immutable.
+   *
+   * @default false
+   */
+  cache?: boolean
+}
 
 export class ZodToJsonSchemaConverter implements JsonSchemaConverter {
-  constructor(private readonly options: ZodToJsonSchemaConverterOptions = {}) {
+  private readonly toJSONSchemaParams: ToJSONSchemaParams
+  private readonly cache: undefined | { [d in JsonSchemaConverterDirection]: WeakMap<$ZodType, [jsonSchema: JsonSchema, optional: boolean]> }
+
+  constructor(
+    { cache, ...toJSONSchemaParams }: ZodToJsonSchemaConverterOptions = {},
+  ) {
+    this.toJSONSchemaParams = toJSONSchemaParams
+
+    if (cache) {
+      this.cache = { input: new WeakMap(), output: new WeakMap() }
+    }
   }
 
   condition(schema: AnySchema | undefined, _direction: JsonSchemaConverterDirection): boolean {
@@ -16,6 +37,24 @@ export class ZodToJsonSchemaConverter implements JsonSchemaConverter {
 
   convert(schema: AnySchema | undefined, direction: JsonSchemaConverterDirection): [jsonSchema: JsonSchema, optional: boolean] {
     const zodSchema = schema as $ZodType
+
+    if (this.cache) {
+      const cached = this.cache[direction].get(zodSchema)
+      if (cached) {
+        return cached
+      }
+    }
+
+    const result = this.convertUncached(zodSchema, direction)
+
+    if (this.cache) {
+      this.cache[direction].set(zodSchema, result)
+    }
+
+    return result
+  }
+
+  private convertUncached(zodSchema: $ZodType, direction: JsonSchemaConverterDirection): [jsonSchema: JsonSchema, optional: boolean] {
     const jsonSchema = this.convertZod(zodSchema, direction)
 
     let optional = false
@@ -33,7 +72,7 @@ export class ZodToJsonSchemaConverter implements JsonSchemaConverter {
   private convertZod(schema: $ZodType, direction: JsonSchemaConverterDirection): ZodJsonSchema.JSONSchema {
     const jsonSchema = toJSONSchema(schema, {
       unrepresentable: 'any',
-      ...this.options,
+      ...this.toJSONSchemaParams,
       target: 'draft-2020-12',
       io: direction,
       override: (ctx) => {
@@ -75,7 +114,7 @@ export class ZodToJsonSchemaConverter implements JsonSchemaConverter {
           Object.assign(ctx.jsonSchema, customJsonSchema)
         }
 
-        this.options.override?.(ctx)
+        this.toJSONSchemaParams.override?.(ctx)
       },
     })
 
@@ -84,7 +123,7 @@ export class ZodToJsonSchemaConverter implements JsonSchemaConverter {
     const { $schema, ...rest } = jsonSchema
 
     // workaround until https://github.com/colinhacks/zod/issues/6026 is merged
-    const registry = this.options.metadata ?? globalRegistry
+    const registry = this.toJSONSchemaParams.metadata ?? globalRegistry
     const { id } = registry.get(schema) || {}
     if (typeof id === 'string' && rest.$ref === undefined) {
       const { $defs = {}, ...restWithoutDefs } = rest

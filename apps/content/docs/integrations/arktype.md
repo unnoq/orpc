@@ -41,6 +41,15 @@ const generator = new OpenAPIGenerator({
 })
 ```
 
+::: tip
+Enable the `cache` option to reuse conversion results when the same schema instance is converted repeatedly. When enabled, repeated conversions return the same JSON schema object, so treat the results as immutable.
+
+```ts
+const converter = new ArkTypeToJsonSchemaConverter({ cache: true })
+```
+
+:::
+
 ### Reusable Types
 
 A common pattern is defining reusable or recursive types using scopes. The converter preserves them in `$defs`, which `OpenAPIGenerator` can then [hoist](/docs/openapi/specification#hoisting-defs) into `components.schemas`.

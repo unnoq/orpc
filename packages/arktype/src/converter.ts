@@ -3,12 +3,28 @@ import type { AnySchema, JsonSchema, JsonSchemaConverter, JsonSchemaConverterDir
 import type { Type } from 'arktype'
 import { JsonSchemaFormat, JsonSchemaXNativeType } from '@orpc/json-schema'
 
-export interface ArkTypeToJsonSchemaConverterOptions extends Omit<ToJsonSchema.Options, 'dialect' | 'target'> {}
+export interface ArkTypeToJsonSchemaConverterOptions extends Omit<ToJsonSchema.Options, 'dialect' | 'target'> {
+  /**
+   * Caches conversion results in a WeakMap keyed by the ArkType schema instance,
+   * so converting the same schema again is free.
+   *
+   * When enabled, repeated conversions return the same JSON schema object,
+   * so treat returned schemas as immutable.
+   *
+   * @default false
+   */
+  cache?: boolean
+}
 
 export class ArkTypeToJsonSchemaConverter implements JsonSchemaConverter {
   private readonly toJsonSchemaOptions: ToJsonSchema.Options
+  private readonly cache: undefined | { [d in JsonSchemaConverterDirection]: WeakMap<Type, [jsonSchema: JsonSchema, optional: boolean]> }
 
-  constructor(options: ArkTypeToJsonSchemaConverterOptions = {}) {
+  constructor({ cache, ...options }: ArkTypeToJsonSchemaConverterOptions = {}) {
+    if (cache) {
+      this.cache = { input: new WeakMap(), output: new WeakMap() }
+    }
+
     this.toJsonSchemaOptions = {
       ...options,
       target: 'draft-2020-12',
@@ -49,6 +65,23 @@ export class ArkTypeToJsonSchemaConverter implements JsonSchemaConverter {
   convert(schema: AnySchema | undefined, direction: JsonSchemaConverterDirection): [jsonSchema: JsonSchema, optional: boolean] {
     const arkTypeSchema = schema as Type
 
+    if (this.cache) {
+      const cached = this.cache[direction].get(arkTypeSchema)
+      if (cached) {
+        return cached
+      }
+    }
+
+    const result = this.convertUncached(arkTypeSchema, direction)
+
+    if (this.cache) {
+      this.cache[direction].set(arkTypeSchema, result)
+    }
+
+    return result
+  }
+
+  private convertUncached(arkTypeSchema: Type, direction: JsonSchemaConverterDirection): [jsonSchema: JsonSchema, optional: boolean] {
     const jsonSchema = this.convertArkType(arkTypeSchema, direction)
 
     let optional = false

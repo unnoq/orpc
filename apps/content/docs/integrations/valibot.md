@@ -41,6 +41,15 @@ const generator = new OpenAPIGenerator({
 })
 ```
 
+::: tip
+Enable the `cache` option to reuse conversion results when the same schema instance is converted repeatedly. When enabled, repeated conversions return the same JSON schema object, so treat the results as immutable.
+
+```ts
+const converter = new ValibotToJsonSchemaConverter({ cache: true })
+```
+
+:::
+
 ### Reusable Schemas
 
 A common pattern is defining reusable or recursive schemas via definitions. The converter preserves them in `$defs`, which `OpenAPIGenerator` can then [hoist](/docs/openapi/specification#hoisting-defs) into `components.schemas`. For more on how definitions work in Valibot, see [Valibot JSON Schema Definitions](https://github.com/open-circle/valibot/blob/main/packages/to-json-schema/README.md#definitions).

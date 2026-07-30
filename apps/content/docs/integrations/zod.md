@@ -45,6 +45,15 @@ const generator = new OpenAPIGenerator({
 })
 ```
 
+::: tip
+Enable the `cache` option to reuse conversion results when the same schema instance is converted repeatedly. When enabled, repeated conversions return the same JSON schema object, so treat the results as immutable.
+
+```ts
+const converter = new ZodToJsonSchemaConverter({ cache: true })
+```
+
+:::
+
 ### Reusable Schemas
 
 A common pattern is defining reusable schemas with `id` metadata. The converter places them in `$defs`, which `OpenAPIGenerator` then [hoists](/docs/openapi/specification#hoisting-defs) into `components.schemas`. For more on `id` and `$ref` in Zod, see [Zod JSON Schema Registries](https://zod.dev/json-schema?id=registries#registries).
