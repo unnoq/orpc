@@ -33,12 +33,16 @@ The actual usage of `RPCHandler` depends on the adapter you use. For example, wh
 
 ```ts
 export async function fetch(request: Request) {
-  const { response } = await handler.fetch(request, {
+  const { matched, response } = await handler.handle(request, {
     prefix: '/rpc',
     context: {} // <- provide initial context if needed
   })
 
-  return response ?? new Response('Not Found', { status: 404 })
+  if (matched) {
+    return response
+  }
+
+  return new Response('Not Found', { status: 404 })
 }
 ```
 
