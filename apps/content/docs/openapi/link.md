@@ -43,7 +43,8 @@ After you create an `OpenAPILink`, pass it to `createORPCClient` to build a type
 
 ```ts
 import { createORPCClient } from '@orpc/client'
-import { JsonifiedClient, RouterContractClient } from '@orpc/contract'
+import { RouterContractClient } from '@orpc/contract'
+import { JsonifiedClient } from '@orpc/openapi'
 import { RouterClient } from '@orpc/server'
 
 // if you are following contract-first approach
