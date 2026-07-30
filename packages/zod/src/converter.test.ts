@@ -288,4 +288,37 @@ describe('zodToJsonSchemaConverter', () => {
       }, false])
     })
   })
+
+  describe('cache option', () => {
+    it('reuses conversion results per schema and direction when enabled', () => {
+      const converter = new ZodToJsonSchemaConverter({ cache: true })
+
+      vi.mocked(toJSONSchema).mockClear()
+
+      const input = converter.convert(codecSchema, 'input')
+      expect(input).toEqual([{ type: 'string' }, false])
+      expect(converter.convert(codecSchema, 'input')).toBe(input)
+      expect(toJSONSchema).toHaveBeenCalledTimes(1)
+
+      const output = converter.convert(codecSchema, 'output')
+      expect(output).toEqual([{ type: 'number' }, false])
+      expect(output).not.toBe(input)
+      expect(converter.convert(codecSchema, 'output')).toBe(output)
+      expect(toJSONSchema).toHaveBeenCalledTimes(2)
+
+      converter.convert(z.string(), 'input')
+      expect(toJSONSchema).toHaveBeenCalledTimes(3)
+    })
+
+    it('converts on every call when disabled', () => {
+      vi.mocked(toJSONSchema).mockClear()
+
+      const first = converter.convert(codecSchema, 'input')
+      const second = converter.convert(codecSchema, 'input')
+
+      expect(second).toEqual(first)
+      expect(second).not.toBe(first)
+      expect(toJSONSchema).toHaveBeenCalledTimes(2)
+    })
+  })
 })

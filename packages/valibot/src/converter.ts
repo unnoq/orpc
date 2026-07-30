@@ -4,10 +4,31 @@ import type { BaseSchema, MapSchema, SetSchema } from 'valibot'
 import { JsonSchemaFormat, JsonSchemaXNativeType } from '@orpc/json-schema'
 import { toJsonSchema } from '@valibot/to-json-schema'
 
-export interface ValibotToJsonSchemaConverterOptions extends Omit<ConversionConfig, 'target' | 'typeMode' | 'overrideRef'> {}
+export interface ValibotToJsonSchemaConverterOptions extends Omit<ConversionConfig, 'target' | 'typeMode' | 'overrideRef'> {
+  /**
+   * Caches conversion results in a WeakMap keyed by the Valibot schema instance,
+   * so converting the same schema again is free.
+   *
+   * When enabled, repeated conversions return the same JSON schema object,
+   * so treat returned schemas as immutable.
+   *
+   * @default false
+   */
+  cache?: boolean
+}
 
 export class ValibotToJsonSchemaConverter implements JsonSchemaConverter {
-  constructor(private readonly options: ValibotToJsonSchemaConverterOptions = {}) {
+  private readonly conversionConfig: ConversionConfig
+  private readonly cache: undefined | { [d in JsonSchemaConverterDirection]: WeakMap<BaseSchema<any, any, any>, [jsonSchema: JsonSchema, optional: boolean]> }
+
+  constructor(
+    { cache, ...conversionConfig }: ValibotToJsonSchemaConverterOptions = {},
+  ) {
+    this.conversionConfig = conversionConfig
+
+    if (cache) {
+      this.cache = { input: new WeakMap(), output: new WeakMap() }
+    }
   }
 
   condition(schema: AnySchema | undefined, _direction: JsonSchemaConverterDirection): boolean {
@@ -16,6 +37,24 @@ export class ValibotToJsonSchemaConverter implements JsonSchemaConverter {
 
   convert(schema: AnySchema | undefined, direction: JsonSchemaConverterDirection): [jsonSchema: JsonSchema, optional: boolean] {
     const valibotSchema = schema as BaseSchema<any, any, any>
+
+    if (this.cache) {
+      const cached = this.cache[direction].get(valibotSchema)
+      if (cached) {
+        return cached
+      }
+    }
+
+    const result = this.convertUncached(valibotSchema, direction)
+
+    if (this.cache) {
+      this.cache[direction].set(valibotSchema, result)
+    }
+
+    return result
+  }
+
+  private convertUncached(valibotSchema: BaseSchema<any, any, any>, direction: JsonSchemaConverterDirection): [jsonSchema: JsonSchema, optional: boolean] {
     const jsonSchema = this.convertValibot(valibotSchema, direction)
 
     let optional = false
@@ -33,7 +72,7 @@ export class ValibotToJsonSchemaConverter implements JsonSchemaConverter {
   private convertValibot(schema: BaseSchema<any, any, any>, direction: JsonSchemaConverterDirection): ValibotJsonSchema {
     const jsonSchema = toJsonSchema(schema, {
       errorMode: 'ignore',
-      ...this.options,
+      ...this.conversionConfig,
       target: 'draft-2020-12',
       typeMode: direction,
       overrideSchema: (context) => {
@@ -70,8 +109,8 @@ export class ValibotToJsonSchemaConverter implements JsonSchemaConverter {
           ;(context.jsonSchema as any)['x-native-type'] = JsonSchemaXNativeType.Map
         }
 
-        if (this.options.overrideSchema) {
-          return this.options.overrideSchema(context)
+        if (this.conversionConfig.overrideSchema) {
+          return this.conversionConfig.overrideSchema(context)
         }
       },
     })
