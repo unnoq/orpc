@@ -14,6 +14,12 @@ export * from './procedure-client'
 export * from './procedure-decorated'
 export * from './procedure-utils'
 export * from './router'
+export type {
+  /**
+   * @deprecated Use `InferRouterFinalContexts` instead.
+   */
+  InferRouterFinalContexts as InferRouterCurrentContexts,
+} from './router'
 export * from './router-client'
 export * from './router-hidden'
 export * from './router-utils'
