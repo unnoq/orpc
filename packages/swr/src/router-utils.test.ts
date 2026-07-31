@@ -56,6 +56,16 @@ describe('createRouterUtils', () => {
     expect(pongUtils.fetcher()).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.fetcher.mock.results[0]?.value)
   })
 
+  it('returns strictly equal utils on repeated access', () => {
+    const utils = createRouterUtils(client) as any
+
+    expect(utils.key).toBe(utils.key)
+    expect(utils.key.pong).toBe(utils.key.pong)
+    expect(utils.key.pong).not.toBe(utils.key)
+
+    expect(createRouterUtils(client)).not.toBe(utils)
+  })
+
   it('works with plain object routers', () => {
     const router = { nested: { ping: vi.fn() } } as any
     const utils = createRouterUtils(router) as any

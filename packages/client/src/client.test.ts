@@ -179,6 +179,17 @@ describe('createORPCClient', () => {
     )
   })
 
+  it('returns strictly equal client on repeated access', async () => {
+    const client = createORPCClient(mockedLink) as any
+
+    expect(client.ping).toBe(client.ping)
+    expect(client.nested).toBe(client.nested)
+    expect(client.nested.pong).toBe(client.nested.pong)
+    expect(client.nested.pong).not.toBe(client.ping)
+
+    expect(createORPCClient(mockedLink)).not.toBe(client)
+  })
+
   it('not recursive on symbol and unwrap keys', async () => {
     const client = createORPCClient(mockedLink) as any
     expect(client[Symbol('test')]).toBeUndefined()

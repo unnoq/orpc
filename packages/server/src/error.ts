@@ -2,7 +2,7 @@ import type { ORPCErrorCode, ORPCErrorOptions } from '@orpc/client'
 import type { ErrorMap, ErrorMapItem, InferSchemaInput } from '@orpc/contract'
 import type { MaybeOptionalOptions, Writable } from '@orpc/shared'
 import { ORPCError } from '@orpc/client'
-import { getOrBind, resolveMaybeOptionalOptions } from '@orpc/shared'
+import { resolveMaybeOptionalOptions } from '@orpc/shared'
 
 export type ORPCErrorConstructorMapItemOptions<TData> = Omit<ORPCErrorOptions<TData>, 'status'>
 
@@ -47,7 +47,7 @@ export function createORPCErrorConstructorMap<T extends ErrorMap>(errorMap: T): 
   const proxy = new Proxy(errorMap, {
     get(target, code) {
       if (typeof code !== 'string') {
-        return getOrBind(target, code)
+        return Reflect.get(target, code)
       }
 
       const item: ORPCErrorConstructorMapItem<string, unknown> = (...rest) => {

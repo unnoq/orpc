@@ -1,6 +1,6 @@
 import type { Interceptor, PromiseWithError } from '@orpc/shared'
 import type { AnyNestedClient, Client, ClientContext, ClientLink, ClientOptions, InferClientContext, InferClientError } from './types'
-import { getOrBind, intercept, toArray } from '@orpc/shared'
+import { intercept, toArray } from '@orpc/shared'
 import { RECURSIVE_CLIENT_UNWRAP_KEYS } from './consts'
 import { resolveClientRest } from './utils'
 
@@ -64,21 +64,27 @@ export function createORPCClient<T extends AnyNestedClient>(
     )
   }
 
+  const cache = new Map<string, AnyNestedClient>()
+
   const recursive = new Proxy(procedureClient, {
     get(target, key) {
       if (typeof key !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(key)) {
-        return getOrBind(target, key)
+        return Reflect.get(target, key)
       }
 
-      const scoped = options.scoped === undefined
-        ? undefined
-        : (options.scoped as Record<string, unknown>)[key] as ORPCClientOptions<T>['scoped']
+      let client = cache.get(key)
 
-      return createORPCClient(link, {
-        ...options,
-        path: [...path, key],
-        scoped,
-      })
+      if (client === undefined) {
+        client = createORPCClient(link, {
+          ...options,
+          path: [...path, key],
+          scoped: (options.scoped as undefined | Record<string, ORPCClientOptions<T>['scoped']>)?.[key],
+        })
+
+        cache.set(key, client)
+      }
+
+      return client
     },
   })
 

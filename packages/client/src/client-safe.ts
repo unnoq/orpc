@@ -1,6 +1,7 @@
 import type { AnyNestedClient, Client, ClientRest } from './types'
 import type { SafeResult } from './utils'
-import { getOrBind, isTypescriptObject } from '@orpc/shared'
+import { isTypescriptObject } from '@orpc/shared'
+import { RECURSIVE_CLIENT_UNWRAP_KEYS } from './consts'
 import { safe } from './utils'
 
 export type SafeClient<T extends AnyNestedClient>
@@ -23,15 +24,28 @@ export type SafeClient<T extends AnyNestedClient>
  * @see {@link https://orpc.dev/docs/client/error-handling#using-createsafeclient Safe Client Docs}
  */
 export function createSafeClient<T extends AnyNestedClient>(client: T): SafeClient<T> {
-  const proxy = new Proxy((...args: any[]) => safe((client as any)(...args)), {
-    get(_, prop) {
-      const value = getOrBind(client, prop)
+  const cache = new Map<string, SafeClient<AnyNestedClient>>()
 
-      if (!isTypescriptObject(value)) {
-        return value
+  const proxy = new Proxy((...args: any[]) => safe((client as any)(...args)), {
+    get(target, prop) {
+      if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop)) {
+        return Reflect.get(target, prop)
       }
 
-      return createSafeClient(value as AnyNestedClient)
+      let safeClient = cache.get(prop)
+
+      if (safeClient === undefined) {
+        const value = (client as Record<string, unknown>)[prop]
+
+        if (!isTypescriptObject(value)) {
+          return value
+        }
+
+        safeClient = createSafeClient(value as AnyNestedClient)
+        cache.set(prop, safeClient)
+      }
+
+      return safeClient
     },
   })
 

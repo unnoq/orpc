@@ -86,6 +86,21 @@ describe('createRouterClient', () => {
     expect((pengClient as any)()).toBe('__MOCK2__')
   })
 
+  it('returns strictly equal client on repeated access', () => {
+    const isolatedClient = createRouterClient(router, options)
+
+    expect(isolatedClient.ping).toBe(isolatedClient.ping)
+    expect(isolatedClient.nested).toBe(isolatedClient.nested)
+    expect(isolatedClient.nested.pong).toBe(isolatedClient.nested.pong)
+    expect(isolatedClient.lazy.peng).toBe(isolatedClient.lazy.peng)
+    expect(isolatedClient.nested.pong).not.toBe(isolatedClient.ping)
+
+    // ping, nested.pong, lazy, and lazy.peng — each created exactly once
+    expect(createProcedureClientSpy).toHaveBeenCalledTimes(4)
+
+    expect(createRouterClient(router, options).ping).not.toBe(isolatedClient.ping)
+  })
+
   it('not define on Symbol, undefined procedure, or unwrap lazy properties', () => {
     expect((client as any).invalid).toBeUndefined()
     expect((client as any)[Symbol.for('something')]).toBeUndefined()

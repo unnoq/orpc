@@ -7,7 +7,7 @@ import type { ProcedureConfig } from './procedure'
 import type { ContractedRouter } from './router'
 import type { AugmentedRouterWithMiddlewares } from './router-utils'
 import { ProcedureContract } from '@orpc/contract'
-import { bindMethods, getOrBind } from '@orpc/shared'
+import { bindMethods } from '@orpc/shared'
 import { ProcedureImplementer } from './implementer-procedure'
 import { Lazy } from './lazy'
 import { decorateMiddleware } from './middleware-decorated'
@@ -254,7 +254,7 @@ function createRouterImplementerInternal<
 
       implementer[key] = new Proxy(method, {
         get(_, p) {
-          return getOrBind(child, p)
+          return Reflect.get(child, p)
         },
       })
     }

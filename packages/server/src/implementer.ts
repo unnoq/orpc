@@ -4,7 +4,7 @@ import type { DefaultInitialContext } from './builder'
 import type { Context } from './context'
 import type { RouterImplementer } from './implementer-router'
 import type { ProcedureConfig } from './procedure'
-import { getOrBind, isTypescriptObject } from '@orpc/shared'
+import { isTypescriptObject } from '@orpc/shared'
 import { createRouterImplementer } from './implementer-router'
 
 export type Implementer<
@@ -36,7 +36,7 @@ export function implement<TContract extends RouterContract, TInitialContext exte
         method = (incoming: ProcedureConfig) => implement(contract, { ...config, ...incoming })
       }
 
-      const value = getOrBind(routerImplementer, p)
+      const value = Reflect.get(routerImplementer, p)
 
       if (method) {
         if (!isTypescriptObject(value)) {
@@ -45,7 +45,7 @@ export function implement<TContract extends RouterContract, TInitialContext exte
 
         return new Proxy(method, {
           get(_, p) {
-            return getOrBind(value, p)
+            return Reflect.get(value, p)
           },
         })
       }
