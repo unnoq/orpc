@@ -14,6 +14,12 @@ export * from './error-utils'
 export * from './rpc-json-serializer'
 export * from './rpc-serializer'
 export * from './types'
+export type {
+  /**
+   * @deprecated Use `InferClientError` instead.
+   */
+  InferClientError as InferClientErrorUnion,
+} from './types'
 export * from './utils'
 
 export type {
@@ -53,6 +59,13 @@ export {
    * @deprecated Use `streamToAsyncIteratorObject` instead.
    */
   streamToAsyncIteratorObject as streamToEventIterator,
+} from '@orpc/shared'
+
+export type {
+  /**
+   * @deprecated Use `PromiseWithError` instead.
+   */
+  PromiseWithError as ClientPromiseResult,
 } from '@orpc/shared'
 
 export type {

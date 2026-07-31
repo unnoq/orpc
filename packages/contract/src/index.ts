@@ -7,10 +7,44 @@ export * from './meta'
 export * from './meta-built-in'
 export * from './meta-utils'
 export * from './procedure'
+export type {
+  /**
+   * @deprecated Use `AnyProcedureContract` instead.
+   */
+  AnyProcedureContract as AnyContractProcedure,
+} from './procedure'
 export * from './procedure-client'
 export * from './router'
+export type {
+  /**
+   * @deprecated Use `RouterContract` instead.
+   */
+  RouterContract as AnyContractRouter,
+  /**
+   * @deprecated Use `InferRouterContractErrorMap` instead.
+   */
+  InferRouterContractErrorMap as InferContractRouterErrorMap,
+  /**
+   * @deprecated Use `InferRouterContractInputs` instead.
+   */
+  InferRouterContractInputs as InferContractRouterInputs,
+  /**
+   * @deprecated Use `InferRouterContractOutputs` instead.
+   */
+  InferRouterContractOutputs as InferContractRouterOutputs,
+} from './router'
 export * from './router-client'
 export * from './router-utils'
+export {
+  /**
+   * @deprecated Use `getRouterContract` instead.
+   */
+  getRouterContract as getContractRouter,
+  /**
+   * @deprecated Use `minifyRouterContract` instead.
+   */
+  minifyRouterContract as minifyContractRouter,
+} from './router-utils'
 export * from './schema'
 export * from './schema-built-in'
 export {

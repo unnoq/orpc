@@ -6,6 +6,12 @@ export * from './plugin'
 export * from './procedure-utils'
 export * from './router-utils'
 export {
+  /**
+   * @deprecated Use `createRouterUtils` instead.
+   */
+  createRouterUtils as createORPCVueColadaUtils,
+} from './router-utils'
+export {
   createRouterUtils as createPiniaColadaUtils,
 } from './router-utils'
 export * from './shared-utils'

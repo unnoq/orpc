@@ -1,5 +1,17 @@
 export * from './deferred-interceptors'
 export * from './server-form-function'
+export {
+  /**
+   * @deprecated Use `createServerFormFunction` instead.
+   */
+  createServerFormFunction as createFormAction,
+} from './server-form-function'
+export type {
+  /**
+   * @deprecated Use `ServerFormFunction` instead.
+   */
+  ServerFormFunction as FormAction,
+} from './server-form-function'
 export * from './server-form-functionable'
 export * from './server-function'
 export * from './server-functionable'

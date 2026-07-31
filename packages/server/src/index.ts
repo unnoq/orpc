@@ -2,6 +2,12 @@ export * from './builder'
 export * from './builder-variants'
 export * from './constants'
 export * from './context'
+export type {
+  /**
+   * @deprecated Use `MergedContext` instead.
+   */
+  MergedContext as MergedCurrentContext,
+} from './context'
 export * from './error'
 export * from './implementer'
 export * from './implementer-procedure'
@@ -14,6 +20,12 @@ export * from './procedure-client'
 export * from './procedure-decorated'
 export * from './procedure-utils'
 export * from './router'
+export type {
+  /**
+   * @deprecated Use `InferRouterFinalContexts` instead.
+   */
+  InferRouterFinalContexts as InferRouterCurrentContexts,
+} from './router'
 export * from './router-client'
 export * from './router-hidden'
 export * from './router-utils'
