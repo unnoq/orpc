@@ -411,4 +411,55 @@ describe('bindMethods', () => {
 
     expect(Reflect.ownKeys(methods)).toEqual([])
   })
+
+  it('leaves methods listed in `unbound` unbound', () => {
+    const obj = {
+      value: 123,
+      getValue() {
+        return this.value
+      },
+      getDouble() {
+        return this.value * 2
+      },
+      [syb1]() {
+        return this.value + 1
+      },
+      [syb2]() {
+        return this.value + 2
+      },
+    }
+
+    const methods = bindMethods(obj, { unbound: ['getValue', syb1] })
+
+    // listed methods are the raw functions
+    expect(methods.getValue).toBe(obj.getValue)
+    expect(methods[syb1]).toBe(obj[syb1])
+    expect(methods.getValue.call({ value: 999 })).toBe(999)
+    expect(methods[syb1].call({ value: 999 })).toBe(1000)
+
+    // the rest stay bound to the original object
+    expect(methods.getDouble).not.toBe(obj.getDouble)
+    expect(methods.getDouble.call({ value: 999 })).toBe(246)
+    expect(methods[syb2].call({ value: 999 })).toBe(125)
+  })
+
+  it('supports `unbound` for methods from the prototype chain', () => {
+    class Base {
+      value = 123
+      getValue() {
+        return this.value
+      }
+    }
+    class Child extends Base {
+      double() {
+        return this.value * 2
+      }
+    }
+
+    const methods = bindMethods(new Child(), { unbound: ['getValue'] })
+
+    expect(methods.getValue).toBe(Base.prototype.getValue)
+    expect(methods.getValue.call({ value: 5 })).toBe(5)
+    expect(methods.double()).toBe(246)
+  })
 })

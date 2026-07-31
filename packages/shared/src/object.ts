@@ -1,5 +1,5 @@
 import type { AnyFunction } from './function'
-import { isTypescriptObject } from '@standardserver/shared'
+import { getOrBind, isTypescriptObject } from '@standardserver/shared'
 
 export type Segment = string | number
 
@@ -159,7 +159,12 @@ export const NullProtoObj = /* @__PURE__ */ (() => {
  * Methods are collected from both the object itself and its prototype chain
  * (excluding `Object.prototype` and the `constructor` property).
  */
-export function bindMethods<T extends object>(obj: T): Pick<T, { [K in keyof T]: T[K] extends AnyFunction ? K : never; }[keyof T]> {
+export function bindMethods<T extends object>(
+  obj: T,
+  options: { unbound?: (keyof T)[] } = {},
+): Pick<T, { [K in keyof T]: T[K] extends AnyFunction ? K : never; }[keyof T]> {
+  const unbound = new Set<PropertyKey>(options.unbound)
+
   // Use NullProtoObj so special methods like toString and __proto__ are supported.
   const methods = new NullProtoObj()
 
@@ -170,9 +175,9 @@ export function bindMethods<T extends object>(obj: T): Pick<T, { [K in keyof T]:
         continue
       }
 
-      const val = (obj as Record<PropertyKey, unknown>)[key]
+      const val = getOrBind(obj, key, { bind: !unbound.has(key) })
       if (typeof val === 'function') {
-        methods[key] = val.bind(obj)
+        methods[key] = val
       }
     }
 
@@ -181,9 +186,9 @@ export function bindMethods<T extends object>(obj: T): Pick<T, { [K in keyof T]:
         continue
       }
 
-      const val = (obj as Record<PropertyKey, unknown>)[sym]
+      const val = getOrBind(obj, sym, { bind: !unbound.has(sym) })
       if (typeof val === 'function') {
-        methods[sym] = val.bind(obj)
+        methods[sym] = val
       }
     }
 

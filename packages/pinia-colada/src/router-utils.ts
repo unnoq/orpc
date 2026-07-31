@@ -107,7 +107,7 @@ function createRouterUtilsInternal<T extends AnyNestedClient>(
           },
           options.scoped ?? {},
         )),
-      ))
+      ), { unbound: ['call'] })
     : bindMethods(new SharedUtils(path, options))
 
   const cache = new Map<string, unknown>()
