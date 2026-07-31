@@ -114,6 +114,7 @@ Like what we build over at [middleapi](https://github.com/middleapi)? You can he
   </tr>
   <tr>
    <td align="center"><a href="https://github.com/itigoore01?ref=orpc" target="_blank" rel="noopener" title="shota"><img src="https://avatars.githubusercontent.com/u/11831107?u=c976a6dc7e055eb026304c46c99100ed22b0c8e0&amp;v=4" width="139" alt="shota"/><br />shota</a></td>
+   <td align="center"><a href="https://github.com/ellis-driscoll?ref=orpc" target="_blank" rel="noopener" title="Ellis Driscoll"><img src="https://avatars.githubusercontent.com/u/70685966?u=c5f95bc33b5991d9744abe00052542e4a2ed3cb9&amp;v=4" width="139" alt="Ellis Driscoll"/><br />Ellis Driscoll</a></td>
   </tr>
 </table>
 
