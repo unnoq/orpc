@@ -2,12 +2,6 @@ export * from './builder'
 export * from './builder-variants'
 export * from './constants'
 export * from './context'
-export type {
-  /**
-   * @deprecated Use `MergedContext` instead.
-   */
-  MergedContext as MergedCurrentContext,
-} from './context'
 export * from './error'
 export * from './implementer'
 export * from './implementer-procedure'
