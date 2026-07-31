@@ -2,7 +2,7 @@ import type { AnyNestedClient, Client } from '@orpc/client'
 import type { Public } from '@orpc/shared'
 import type { OperationKeyPrefixOptions } from './key'
 import { RECURSIVE_CLIENT_UNWRAP_KEYS } from '@orpc/client'
-import { bindMethods, getOrBind, isTypescriptObject, toArray } from '@orpc/shared'
+import { bindMethods, isTypescriptObject, toArray } from '@orpc/shared'
 import { ProcedureUtils } from './procedure-utils'
 import { SharedUtils } from './shared-utils'
 
@@ -38,30 +38,38 @@ export function createRouterUtils<T extends AnyNestedClient>(
     ? bindMethods(new ProcedureUtils(path, client, { prefix: options.prefix }))
     : bindMethods(new SharedUtils(path, { prefix: options.prefix }))
 
+  const cache = new Map<string, unknown>()
+
   const recursive = new Proxy(utils, {
     get(target, prop) {
-      const value = getOrBind(target, prop)
-      const nextClient = (client as Record<PropertyKey, AnyNestedClient>)[prop]
+      const value = Reflect.get(target, prop)
+      const nextClient = Reflect.get(client, prop)
 
       if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop) || !isTypescriptObject(nextClient)) {
         return value
       }
 
-      const nextUtils = createRouterUtils(nextClient as any, { ...options, path: [...path, prop] })
+      let result = cache.get(prop)
 
-      if (typeof value !== 'function') {
-        return nextUtils
+      if (result === undefined) {
+        const nextUtils = createRouterUtils(nextClient as any, { ...options, path: [...path, prop] })
+
+        result = typeof value !== 'function'
+          ? nextUtils
+          : new Proxy(value, {
+              get(target, prop) {
+                if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop)) {
+                  return Reflect.get(target, prop)
+                }
+
+                return Reflect.get(nextUtils, prop)
+              },
+            })
+
+        cache.set(prop, result)
       }
 
-      return new Proxy(value, {
-        get(target, prop) {
-          if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop)) {
-            return getOrBind(target, prop)
-          }
-
-          return getOrBind(nextUtils, prop)
-        },
-      })
+      return result
     },
   })
 

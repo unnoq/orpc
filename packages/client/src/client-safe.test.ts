@@ -49,6 +49,15 @@ describe('createSafeClient', () => {
     expect(client.ping).toHaveBeenCalledWith('input')
   })
 
+  it('returns strictly equal client on repeated access', () => {
+    expect(safeClient.ping).toBe(safeClient.ping)
+    expect(safeClient.nested).toBe(safeClient.nested)
+    expect(safeClient.nested.pong).toBe(safeClient.nested.pong)
+    expect(safeClient.nested.pong).not.toBe(safeClient.ping)
+
+    expect(createSafeClient(client)).not.toBe(safeClient)
+  })
+
   it('not proxy on non-object or symbol properties', () => {
     expect(safeClient.invalid).toBe('invalid')
     expect(safeClient[Symbol('test')]).toEqual(undefined)

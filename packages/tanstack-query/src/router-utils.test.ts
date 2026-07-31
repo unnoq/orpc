@@ -43,23 +43,31 @@ describe('createRouterUtils', () => {
     expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, [], { type: 'infinite', prefix: '__prefix__' })
     expect(utils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.queryOptions.mock.results[0]?.value)
 
-    vi.clearAllMocks()
     const keyUtils = utils.key
 
-    expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['key'], client.key, { prefix: '__prefix__' })
-    expect(keyUtils.key({ type: 'live' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
-    expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['key'], { type: 'live', prefix: '__prefix__' })
-    expect(keyUtils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.queryOptions.mock.results[0]?.value)
+    expect(ProcedureUtils).toHaveBeenCalledTimes(2)
+    expect(ProcedureUtils).toHaveBeenNthCalledWith(2, ['key'], client.key, { prefix: '__prefix__' })
+    expect(keyUtils.key({ type: 'live' })).toBe(generateOperationKeySpy.mock.results[1]?.value)
+    expect(generateOperationKeySpy).toHaveBeenNthCalledWith(2, ['key'], { type: 'live', prefix: '__prefix__' })
+    expect(keyUtils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[1]?.value.queryOptions.mock.results[0]?.value)
 
-    vi.clearAllMocks()
     const pongUtils = keyUtils.pong
 
-    expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['key', 'pong'], client.key.pong, { prefix: '__prefix__' })
-    expect(pongUtils.key({ type: 'query' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
-    expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['key', 'pong'], { type: 'query', prefix: '__prefix__' })
-    expect(pongUtils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.queryOptions.mock.results[0]?.value)
+    expect(ProcedureUtils).toHaveBeenCalledTimes(3)
+    expect(ProcedureUtils).toHaveBeenNthCalledWith(3, ['key', 'pong'], client.key.pong, { prefix: '__prefix__' })
+    expect(pongUtils.key({ type: 'query' })).toBe(generateOperationKeySpy.mock.results[2]?.value)
+    expect(generateOperationKeySpy).toHaveBeenNthCalledWith(3, ['key', 'pong'], { type: 'query', prefix: '__prefix__' })
+    expect(pongUtils.queryOptions()).toBe(vi.mocked(ProcedureUtils).mock.results[2]?.value.queryOptions.mock.results[0]?.value)
+  })
+
+  it('returns strictly equal utils on repeated access', () => {
+    const utils = createRouterUtils(client) as any
+
+    expect(utils.key).toBe(utils.key)
+    expect(utils.key.pong).toBe(utils.key.pong)
+    expect(utils.key.pong).not.toBe(utils.key)
+
+    expect(createRouterUtils(client)).not.toBe(utils)
   })
 
   it('roots utils at the given base path', () => {
@@ -70,13 +78,12 @@ describe('createRouterUtils', () => {
     expect(utils.key({ type: 'infinite' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
     expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['__base__'], { type: 'infinite', prefix: undefined })
 
-    vi.clearAllMocks()
     const keyUtils = utils.key
 
-    expect(ProcedureUtils).toHaveBeenCalledTimes(1)
-    expect(ProcedureUtils).toHaveBeenCalledWith(['__base__', 'key'], client.key, {})
-    expect(keyUtils.key({ type: 'live' })).toBe(generateOperationKeySpy.mock.results[0]?.value)
-    expect(generateOperationKeySpy).toHaveBeenNthCalledWith(1, ['__base__', 'key'], { type: 'live', prefix: undefined })
+    expect(ProcedureUtils).toHaveBeenCalledTimes(2)
+    expect(ProcedureUtils).toHaveBeenNthCalledWith(2, ['__base__', 'key'], client.key, {})
+    expect(keyUtils.key({ type: 'live' })).toBe(generateOperationKeySpy.mock.results[1]?.value)
+    expect(generateOperationKeySpy).toHaveBeenNthCalledWith(2, ['__base__', 'key'], { type: 'live', prefix: undefined })
   })
 
   it('stops recursive on symbol', async () => {

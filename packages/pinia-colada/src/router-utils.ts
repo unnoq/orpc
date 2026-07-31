@@ -4,7 +4,7 @@ import type { OperationKeyPrefixOptions } from './key'
 import type { RouterUtilsPlugin } from './plugin'
 import type { ProcedureUtilsInfiniteInterceptor, ProcedureUtilsLiveInterceptor, ProcedureUtilsMutationInterceptor, ProcedureUtilsOptions, ProcedureUtilsQueryInterceptor, ProcedureUtilsStreamedInterceptor } from './procedure-utils'
 import { RECURSIVE_CLIENT_UNWRAP_KEYS } from '@orpc/client'
-import { bindMethods, get, getOrBind, isTypescriptObject, toArray } from '@orpc/shared'
+import { bindMethods, isTypescriptObject, toArray } from '@orpc/shared'
 import { CompositeRouterUtilsPlugin } from './plugin'
 import { isProcedureUtilsOptions, mergeProcedureUtilsOptions, ProcedureUtils } from './procedure-utils'
 import { SharedUtils } from './shared-utils'
@@ -110,34 +110,42 @@ function createRouterUtilsInternal<T extends AnyNestedClient>(
       ))
     : bindMethods(new SharedUtils(path, options))
 
+  const cache = new Map<string, unknown>()
+
   const recursive = new Proxy(utils, {
     get(target, prop) {
-      const value = getOrBind(target, prop)
-      const nextClient = (client as Record<PropertyKey, AnyNestedClient>)[prop]
+      const value = Reflect.get(target, prop)
+      const nextClient = Reflect.get(client, prop)
 
       if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop) || !isTypescriptObject(nextClient)) {
         return value
       }
 
-      const nextUtils = createRouterUtilsInternal(nextClient as any, {
-        ...options,
-        path: [...path, prop],
-        scoped: get(options.scoped, [prop]) as any,
-      }, plugin)
+      let result = cache.get(prop)
 
-      if (typeof value !== 'function') {
-        return nextUtils
+      if (result === undefined) {
+        const nextUtils = createRouterUtilsInternal(nextClient as any, {
+          ...options,
+          path: [...path, prop],
+          scoped: (options.scoped as undefined | Record<string, RouterUtilsOptions<T>['scoped']>)?.[prop],
+        }, plugin)
+
+        result = typeof value !== 'function'
+          ? nextUtils
+          : new Proxy(value, {
+              get(target, prop) {
+                if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop)) {
+                  return Reflect.get(target, prop)
+                }
+
+                return Reflect.get(nextUtils, prop)
+              },
+            })
+
+        cache.set(prop, result)
       }
 
-      return new Proxy(value, {
-        get(target, prop) {
-          if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop)) {
-            return getOrBind(target, prop)
-          }
-
-          return getOrBind(nextUtils, prop)
-        },
-      })
+      return result
     },
   })
 
