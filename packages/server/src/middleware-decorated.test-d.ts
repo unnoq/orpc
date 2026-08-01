@@ -1,6 +1,5 @@
-import type { ErrorMap, MergedErrorMap } from '@orpc/contract'
+import type { ErrorMap, MergedErrorMap, ORPCErrorConstructorMap } from '@orpc/contract'
 import type { MergedContext, MergedInitialContext } from './context'
-import type { ORPCErrorConstructorMap } from './error'
 import type { Middleware, MiddlewareDone } from './middleware'
 import type { DecoratedMiddleware } from './middleware-decorated'
 

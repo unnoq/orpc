@@ -90,6 +90,23 @@ describe.each([
           data: { id: 'missing-item' },
         })
       }),
+    definedError: os
+      .input(z.any())
+      .errors({
+        FORBIDDEN: {
+          data: z.object({ reason: z.string() }),
+        },
+      })
+      .meta(openapi({
+        method: 'GET',
+        path: '/defined-errors',
+      }))
+      .handler(({ errors }) => {
+        throw errors.FORBIDDEN({
+          message: 'Access denied',
+          data: { reason: 'no-permission' },
+        })
+      }),
     customSerializer: os.input(z.any()).handler(({ input }) => ({ client: input, server: new Person('server', 12) })),
   }
 
@@ -302,6 +319,15 @@ describe.each([
       code: 'NOT_FOUND',
       message: 'Missing item',
       data: { id: 'missing-item' },
+    })
+  })
+
+  it('propagates typesafe errors with the defined flag', async () => {
+    await expect(client.definedError({})).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+      message: 'Access denied',
+      data: { reason: 'no-permission' },
+      defined: true,
     })
   })
 })

@@ -2,7 +2,7 @@ import type { AnyProcedureContract, AnySchema, ErrorMap } from '@orpc/contract'
 import type { OpenAPIOperationContext } from './openapi-generator-operation'
 import type { OpenAPIDocument, OpenAPIOperationObject } from './types'
 import { COMMON_ERROR_STATUS_MAP } from '@orpc/client'
-import { asyncIteratorObject } from '@orpc/contract'
+import { asyncIteratorObject, error } from '@orpc/contract'
 import { combineJsonSchemasWithComposition, DelegatingJsonSchemaConverter } from '@orpc/json-schema'
 import { testSchema, testSchemaConverter } from '../tests/__shared__/schema'
 import { OpenAPIComponentRegistry } from './openapi-generator-components'
@@ -784,6 +784,49 @@ describe('openAPIGenerator operation builders', () => {
           code: { const: 'CONFLICT' },
         }),
       }))
+    })
+
+    it('renders error factory items registered under their code', () => {
+      const { doc, ctx, operation } = createContext()
+
+      const ForbiddenError = error({
+        code: 'FORBIDDEN',
+        message: 'Access denied',
+        data: testSchema({ type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] }),
+      })
+
+      buildErrorResponse(ctx, operation, testDef({
+        errors: {
+          [ForbiddenError.code]: ForbiddenError,
+        },
+      }))
+
+      expect(operation.responses?.[403]).toEqual({
+        description: 'Access denied',
+        content: {
+          'application/json': {
+            schema: {
+              oneOf: [
+                { $ref: '#/components/schemas/Forbidden' },
+                { $ref: '#/components/schemas/UndefinedError' },
+              ],
+            },
+          },
+        },
+      })
+
+      expect(doc.components?.schemas?.Forbidden).toEqual({
+        type: 'object',
+        properties: {
+          defined: { const: true },
+          inferable: { type: 'boolean' },
+          code: { const: 'FORBIDDEN' },
+          status: { const: 403 },
+          message: { type: 'string', default: undefined },
+          data: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] },
+        },
+        required: ['defined', 'inferable', 'code', 'status', 'message', 'data'],
+      })
     })
 
     it('allows overriding the error body schema per status', () => {

@@ -1,7 +1,6 @@
 import type { ORPCError } from '@orpc/client'
-import type { MergedErrorMap, MetaPlugin, Schema } from '@orpc/contract'
+import type { MergedErrorMap, MetaPlugin, ORPCErrorConstructorMap, Schema } from '@orpc/contract'
 import type { MergedInitialContext } from './context'
-import type { ORPCErrorConstructorMap } from './error'
 import type { Middleware, MiddlewareDone } from './middleware'
 import type { DecoratedProcedure } from './procedure-decorated'
 import { expectTypeOf } from 'vitest'

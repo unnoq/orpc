@@ -1,5 +1,4 @@
-import type { ErrorMap } from '@orpc/contract'
-import type { ORPCErrorConstructorMap } from './error'
+import type { ErrorMap, ORPCErrorConstructorMap } from '@orpc/contract'
 import type { Middleware } from './middleware'
 import z from 'zod'
 

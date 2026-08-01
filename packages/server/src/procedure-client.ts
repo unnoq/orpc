@@ -1,15 +1,13 @@
 import type { AnyORPCError, Client, ClientContext } from '@orpc/client'
-import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, ORPCErrorFromErrorMap } from '@orpc/contract'
+import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, ORPCErrorConstructorMap, ORPCErrorFromErrorMap } from '@orpc/contract'
 import type { Interceptor, MaybeOptionalOptions, Promisable, PromiseWithError, ThrowableError, Value, Writable } from '@orpc/shared'
 import type { Context } from './context'
-import type { ORPCErrorConstructorMap } from './error'
 import type { Lazyable } from './lazy'
 import type { MiddlewareDone } from './middleware'
 import type { AnyProcedure, Procedure, ProcedureHandlerOptions } from './procedure'
 import { cloneORPCError, ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
-import { reconcileORPCError, ValidationError } from '@orpc/contract'
+import { createORPCErrorConstructorMap, reconcileORPCError, ValidationError } from '@orpc/contract'
 import { intercept, isAsyncIteratorObject, override, resolveMaybeOptionalOptions, runWithSpan, toArray, traceAsyncIterator, traceReadableStream, value } from '@orpc/shared'
-import { createORPCErrorConstructorMap } from './error'
 import { unlazy } from './lazy'
 
 export type ProcedureClient<

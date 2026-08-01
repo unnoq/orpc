@@ -2,7 +2,6 @@ export * from './builder'
 export * from './builder-variants'
 export * from './constants'
 export * from './context'
-export * from './error'
 export * from './implementer'
 export * from './implementer-procedure'
 export * from './implementer-router'
@@ -69,6 +68,11 @@ export type {
   Meta,
   MetaPlugin,
   MetaPluginDefinition,
+  ORPCErrorConstructorMap,
+  ORPCErrorConstructorMapItem,
+  ORPCErrorConstructorMapItemOptions,
+  ORPCErrorFactory,
+  ORPCErrorFactoryOptions,
   ORPCErrorFromErrorMap,
   ProcedureContract,
   ProcedureContractDefinition,
@@ -79,6 +83,7 @@ export type {
 export {
   asyncIteratorObject,
   defineMeta,
+  error,
   eventIterator,
   reconcileORPCError,
   type,
