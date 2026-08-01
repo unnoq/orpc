@@ -436,7 +436,7 @@ export const sponsors: JSONSponsor[] = [
   {
     name: 'Andrey Gubanov',
     login: 'finom',
-    avatar: 'https://avatars.githubusercontent.com/u/1082083?u=29e91400dbd4a9c217048a8f59562c4f740498e6&v=4',
+    avatar: 'https://avatars.githubusercontent.com/u/1082083?u=c5f2daf7ebece498e85c83367bb37b4e10e2649d&v=4',
     amount: 1,
     link: 'https://github.com/finom?ref=orpc',
     org: false,
@@ -444,7 +444,7 @@ export const sponsors: JSONSponsor[] = [
     tierTitle: 'Backers',
     tierLevel: 1,
     sidebarSize: 'none',
-    sidebarLogo: 'https://avatars.githubusercontent.com/u/1082083?u=29e91400dbd4a9c217048a8f59562c4f740498e6&v=4',
+    sidebarLogo: 'https://avatars.githubusercontent.com/u/1082083?u=c5f2daf7ebece498e85c83367bb37b4e10e2649d&v=4',
   },
   {
     name: 'Maxie',

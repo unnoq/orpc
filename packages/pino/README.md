@@ -141,7 +141,7 @@ Like what we build over at [middleapi](https://github.com/middleapi)? You can he
   </tr>
   <tr>
    <td align="center"><a href="https://github.com/piscis?ref=orpc" target="_blank" rel="noopener" title="Alex"><img src="https://avatars.githubusercontent.com/u/326163?u=b245f368bd940cf51d08c0b6bf55f8257f359437&amp;v=4" width="119" alt="Alex"/><br />Alex</a></td>
-   <td align="center"><a href="https://github.com/finom?ref=orpc" target="_blank" rel="noopener" title="Andrey Gubanov"><img src="https://avatars.githubusercontent.com/u/1082083?u=29e91400dbd4a9c217048a8f59562c4f740498e6&amp;v=4" width="119" alt="Andrey Gubanov"/><br />Andrey Gubanov</a></td>
+   <td align="center"><a href="https://github.com/finom?ref=orpc" target="_blank" rel="noopener" title="Andrey Gubanov"><img src="https://avatars.githubusercontent.com/u/1082083?u=c5f2daf7ebece498e85c83367bb37b4e10e2649d&amp;v=4" width="119" alt="Andrey Gubanov"/><br />Andrey Gubanov</a></td>
   </tr>
 </table>
 
