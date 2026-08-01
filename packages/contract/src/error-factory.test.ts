@@ -6,15 +6,12 @@ import { createORPCErrorConstructorMap, error } from './error-factory'
 describe('error factory', () => {
   const dataSchema = z.object({ value: z.number() })
 
-  const TestError = error({
-    code: 'TEST',
+  const TestError = error('TEST', {
     message: 'default message',
     data: dataSchema,
   })
 
-  const SimpleError = error({
-    code: 'SIMPLE',
-  })
+  const SimpleError = error('SIMPLE')
 
   it('constructs an ORPCError with the defined code, message, and data', () => {
     const e = new TestError({ data: { value: 1 } })
@@ -67,7 +64,7 @@ describe('error factory', () => {
     })
 
     it('matches instances of another factory class with the same code and valid data', () => {
-      const OtherTestError = error({ code: 'TEST', data: dataSchema })
+      const OtherTestError = error('TEST', { data: dataSchema })
 
       expect(new OtherTestError({ data: { value: 1 } })).toBeInstanceOf(TestError)
       expect(new TestError({ data: { value: 1 } })).toBeInstanceOf(OtherTestError)
@@ -94,8 +91,7 @@ describe('error factory', () => {
     })
 
     it('throws when data schema is async', () => {
-      const AsyncError = error({
-        code: 'ASYNC',
+      const AsyncError = error('ASYNC', {
         data: {
           '~standard': {
             version: 1,
@@ -119,8 +115,7 @@ describe('createORPCErrorConstructorMap', () => {
       data: z.object({ output: z.number() }),
     },
 
-    WITH_ERROR_FACTORY: error({
-      code: 'WITH_ERROR_FACTORY',
+    WITH_ERROR_FACTORY: error('WITH_ERROR_FACTORY', {
       message: 'factory message',
       data: z.object({ output: z.number() }),
     }),

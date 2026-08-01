@@ -789,8 +789,7 @@ describe('openAPIGenerator operation builders', () => {
     it('renders error factory items registered under their code', () => {
       const { doc, ctx, operation } = createContext()
 
-      const ForbiddenError = error({
-        code: 'FORBIDDEN',
+      const ForbiddenError = error('FORBIDDEN', {
         message: 'Access denied',
         data: testSchema({ type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] }),
       })

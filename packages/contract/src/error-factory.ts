@@ -7,12 +7,7 @@ import { ORPCError } from '@orpc/client'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
 import { type } from './schema-utils'
 
-export interface ORPCErrorFactoryOptions<TCode extends ORPCErrorCode, TData> {
-  /**
-   * The error code carried by every error the factory creates.
-   */
-  code: TCode
-
+export interface ORPCErrorFactoryOptions<TData> {
   /**
    * Optional schema used to type and validate the error data.
    */
@@ -42,8 +37,7 @@ export interface ORPCErrorFactory<TCode extends ORPCErrorCode, TData> extends Er
  *
  * @example
  * ```ts
- * const RateLimitedError = error({
- *   code: 'RATE_LIMITED',
+ * const RateLimitedError = error('RATE_LIMITED', {
  *   message: 'You are being rate limited',
  *   data: z.object({ retryAfter: z.number() }),
  * })
@@ -64,9 +58,15 @@ export interface ORPCErrorFactory<TCode extends ORPCErrorCode, TData> extends Er
  * ```
  *
  * @see {@link https://orpc.dev/docs/error-handling#error-factory Error Factory Docs}
+ *
+ * @param code - The error code carried by every error the factory creates.
+ * @param options - Optional data schema and default message for the created errors.
+ * @param options.data - Schema used to type and validate the error data.
+ * @param options.message - Default message, can be overridden when constructing an error.
  */
 export function error<TCode extends ORPCErrorCode, TData = unknown>(
-  { code, data, message }: ORPCErrorFactoryOptions<TCode, TData>,
+  code: TCode,
+  { data, message }: ORPCErrorFactoryOptions<TData> = {},
 ): ORPCErrorFactory<TCode, TData> {
   return class extends ORPCError<TCode, TData> {
     static code: TCode = code

@@ -6,18 +6,14 @@ import z from 'zod'
 import { error } from './error-factory'
 
 describe('error factory', () => {
-  const TestError = error({
-    code: 'TEST',
+  const TestError = error('TEST', {
     message: 'default message',
     data: z.object({ value: z.number() }),
   })
 
-  const SimpleError = error({
-    code: 'SIMPLE',
-  })
+  const SimpleError = error('SIMPLE')
 
-  const OptionalError = error({
-    code: 'OPTIONAL',
+  const OptionalError = error('OPTIONAL', {
     data: z.object({ value: z.number() }).optional(),
   })
 
@@ -108,8 +104,7 @@ describe('ORPCErrorConstructorMap', () => {
   })
 
   it('uses the map key as the error code for error factory items', () => {
-    const FactoryError = error({
-      code: 'FACTORY',
+    const FactoryError = error('FACTORY', {
       data: z.object({ output: z.number() }),
     })
 

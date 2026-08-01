@@ -137,11 +137,7 @@ An error factory lets you define an error once and reuse it anywhere, keeping er
 ```ts
 import { error } from '@orpc/server'
 
-const RateLimitedError = error({
-  /**
-   * The error code carried by every error the factory creates.
-   */
-  code: 'RATE_LIMITED',
+const RateLimitedError = error('RATE_LIMITED', {
   /**
    * Optional default message, can be overridden when constructing an error.
    */
