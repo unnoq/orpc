@@ -194,6 +194,27 @@ if (isInferableError(error)) {
 }
 ```
 
+### Catching ORPCErrors
+
+Use `catchORPCError` to recover from every `ORPCError` failure in the error channel of an effect, or `catchORPCErrorByCode` to recover from a specific code only. Recovered errors are excluded from the resulting effect, and other failures re-fail with their original cause:
+
+```ts
+import { catchORPCError, catchORPCErrorByCode } from '@orpc/experimental-effect'
+import { Effect } from 'effect'
+
+const recovered = program.pipe(
+  catchORPCError(error => Effect.succeed(`caught ${error.code}`)),
+)
+
+const fallback = program.pipe(
+  catchORPCErrorByCode('NOT_FOUND', error => Effect.succeed(error.data.id)),
+)
+```
+
+::: info
+Both utilities support data-first `catchORPCError(program, handler)` and data-last `program.pipe(catchORPCError(handler))` styles.
+:::
+
 ## Effect Schema
 
 oRPC natively supports [Standard Schema](https://standardschema.dev/schema#what-schema-libraries-implement-the-spec), and [Effect Schema](https://effect.website/docs/schema/introduction/) implements that spec through [Schema.toStandardSchemaV1](https://effect.website/docs/schema/standard-schema/):
