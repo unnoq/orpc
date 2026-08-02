@@ -1,6 +1,7 @@
 import type { Schema } from './schema'
 import { ORPCError } from '@orpc/client'
 import z from 'zod'
+import { ValidationError } from './error'
 import { createORPCErrorConstructorMap, error } from './error-factory'
 
 describe('error factory', () => {
@@ -35,6 +36,43 @@ describe('error factory', () => {
     expect(e).toBeInstanceOf(ORPCError)
     expect(e.code).toBe('SIMPLE')
     expect(e.message).toBe('Simple')
+  })
+
+  it('validates data in the constructor and stores the validated value', () => {
+    // zod strips unknown keys, proving the stored data is the schema output
+    const e = new TestError({ data: { value: 1, extra: 'stripped' } as any })
+
+    expect(e.data).toEqual({ value: 1 })
+  })
+
+  it('throws a ValidationError when constructed with invalid data', () => {
+    expect(() => new TestError({ data: { value: 'invalid' } as any })).toThrowError(
+      expect.objectContaining({
+        constructor: ValidationError,
+        message: 'Error factory "TEST" data validation failed',
+        issues: expect.any(Array),
+        invalidData: { value: 'invalid' },
+      }),
+    )
+
+    // @ts-expect-error - data is required
+    expect(() => new TestError()).toThrow(ValidationError)
+  })
+
+  it('throws in the constructor when data schema is async', () => {
+    const AsyncError = error('ASYNC', {
+      data: {
+        '~standard': {
+          version: 1,
+          vendor: 'test',
+          validate: async value => ({ value }),
+        },
+      } satisfies Schema<unknown>,
+    })
+
+    expect(() => new AsyncError({ data: 'anything' })).toThrow(
+      'Error factory "ASYNC" does not support async data schemas.',
+    )
   })
 
   it('exposes static code, message, and data so it can be used as an error map item', () => {
@@ -102,7 +140,7 @@ describe('error factory', () => {
       })
 
       expect(() => new ORPCError('ASYNC') instanceof AsyncError).toThrow(
-        'Cannot use `instanceof` with error factory "ASYNC": its data schema validates asynchronously is not supported.',
+        'Error factory "ASYNC" does not support async data schemas.',
       )
     })
   })
