@@ -5,11 +5,13 @@ import type { AnySchema, InferSchemaInput, Schema } from './schema'
 
 import { ORPCError } from '@orpc/client'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
+import { ValidationError } from './error'
 import { type } from './schema-utils'
 
 export interface ORPCErrorFactoryOptions<TData> {
   /**
    * Optional schema used to type and validate the error data.
+   * Must be a synchronous schema.
    */
   data?: Schema<TData>
 
@@ -28,12 +30,6 @@ export interface ORPCErrorFactory<TCode extends ORPCErrorCode, TData> extends Er
 /**
  * Creates a reusable error class ({@link ORPCErrorFactory}) for the given code,
  * default message, and data schema.
- *
- * The returned class extends {@link ORPCError}, so it can be thrown anywhere
- * and used directly as an error map item. Its `instanceof` matches any
- * `ORPCError` with the same code whose data passes the schema, even instances
- * not created by the class - but throws a `TypeError` when the data schema
- * validates asynchronously.
  *
  * @example
  * ```ts
@@ -58,24 +54,48 @@ export interface ORPCErrorFactory<TCode extends ORPCErrorCode, TData> extends Er
  * ```
  *
  * @see {@link https://orpc.dev/docs/error-handling#error-factory Error Factory Docs}
- *
- * @param code - The error code carried by every error the factory creates.
- * @param options - Optional data schema and default message for the created errors.
- * @param options.data - Schema used to type and validate the error data.
- * @param options.message - Default message, can be overridden when constructing an error.
  */
 export function error<TCode extends ORPCErrorCode, TData = unknown>(
   code: TCode,
-  { data, message }: ORPCErrorFactoryOptions<TData> = {},
+  { data: dataSchema, message }: ORPCErrorFactoryOptions<TData> = {},
 ): ORPCErrorFactory<TCode, TData> {
+  const validateData = (schema: Schema<TData>, value: unknown) => {
+    const result = schema['~standard'].validate(value)
+
+    if (result instanceof Promise) {
+      throw new TypeError(
+        `Error factory "${code}" does not support async data schemas.`,
+      )
+    }
+
+    return result
+  }
+
   return class extends ORPCError<TCode, TData> {
     static code: TCode = code
-    static data: Schema<TData> = data ?? type<any>()
+    static data: Schema<TData> = dataSchema ?? type<any>()
     static message: string | undefined = message
 
     constructor(...rest: MaybeOptionalOptions<ORPCErrorOptions<TData>>) {
       const options = resolveMaybeOptionalOptions(rest)
-      super(code, { message, ...options })
+
+      let data = options.data
+
+      if (dataSchema) {
+        const result = validateData(dataSchema, options.data)
+
+        if (result.issues) {
+          throw new ValidationError({
+            message: `Error factory "${code}" data validation failed`,
+            issues: result.issues,
+            invalidData: options.data,
+          })
+        }
+
+        data = result.value
+      }
+
+      super(code, { message, ...options, data })
     }
 
     static override[Symbol.hasInstance](instance: unknown): boolean {
@@ -87,18 +107,8 @@ export function error<TCode extends ORPCErrorCode, TData = unknown>(
         return false
       }
 
-      if (data) {
-        const result = data['~standard'].validate(instance.data)
-
-        if (result instanceof Promise) {
-          throw new TypeError(
-            `Cannot use \`instanceof\` with error factory "${code}": its data schema validates asynchronously is not supported.`,
-          )
-        }
-
-        if (result.issues) {
-          return false
-        }
+      if (dataSchema && validateData(dataSchema, instance.data).issues) {
+        return false
       }
 
       return true
