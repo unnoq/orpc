@@ -118,6 +118,7 @@ describe('batchHandlerPlugin', () => {
 
       expect(response!.status).toBe(207)
       expect(response!.headers.get('standard-server')).toEqual('file')
+      expect(response!.headers.get('content-type')).toEqual('application/vnd.orpc.batch')
 
       const buffer = new Uint8Array(await response!.arrayBuffer())
       expect(buffer.length).toBeGreaterThan(4)
@@ -212,6 +213,7 @@ describe('batchHandlerPlugin', () => {
       expect(matched).toBe(true)
       expect(response!.status).toBe(207)
       expect(response!.headers.get('standard-server')).toEqual('octet-stream')
+      expect(response!.headers.get('content-type')).toEqual('application/vnd.orpc.batch')
 
       expect(handlerFn).toHaveBeenCalledTimes(0)
 
