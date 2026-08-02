@@ -1,7 +1,6 @@
 import type { ORPCError } from '@orpc/client'
-import type { InferRouterContractErrorMap, ProcedureContract, Schema } from '@orpc/contract'
+import type { InferRouterContractErrorMap, ORPCErrorConstructorMap, ProcedureContract, Schema } from '@orpc/contract'
 import type { MergedContext, MergedInitialContext } from './context'
-import type { ORPCErrorConstructorMap } from './error'
 import type { ProcedureImplementer } from './implementer-procedure'
 import type { RouterImplementer, RouterImplementerWithMiddlewares, SharedRouterImplementer, SharedRouterImplementerWithMiddlewares } from './implementer-router'
 import type { Middleware, MiddlewareDone } from './middleware'

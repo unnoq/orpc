@@ -5,12 +5,11 @@ import * as ContractModule from '@orpc/contract'
 import * as SharedV2Module from '@orpc/shared'
 import z from 'zod'
 import { os } from './builder'
-import * as ErrorModule from './error'
 import { createProcedureClient } from './procedure-client'
 
 const isAsyncIteratorObject = SharedV2Module.isAsyncIteratorObject
 const ValidationError = ContractModule.ValidationError
-const createORPCErrorConstructorMapSpy = vi.spyOn(ErrorModule, 'createORPCErrorConstructorMap')
+const createORPCErrorConstructorMapSpy = vi.spyOn(ContractModule, 'createORPCErrorConstructorMap')
 const reconcileErrorSpy = vi.spyOn(ContractModule, 'reconcileORPCError')
 const cloneORPCErrorSpy = vi.spyOn(ClientModule, 'cloneORPCError')
 const overrideSpy = vi.spyOn(SharedV2Module, 'override')

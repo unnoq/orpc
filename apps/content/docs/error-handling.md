@@ -130,6 +130,58 @@ const exampleProcedure = os
 `message` and `data` are sent to the client. Do not include sensitive information in either field.
 :::
 
+## Error Factory
+
+An error factory lets you define an error once and reuse it anywhere, keeping error handling consistent across your project.
+
+```ts
+import { error } from '@orpc/server'
+
+const RateLimitedError = error('RATE_LIMITED', {
+  /**
+   * Optional default message, can be overridden when constructing an error.
+   */
+  message: 'You are being rate limited',
+  /**
+   * Optional schema used to type and validate the error data.
+   */
+  data: z.object({
+    retryAfter: z.number(),
+  }),
+})
+
+const procedure = os
+  .handler(async () => {
+    throw new RateLimitedError({ data: { retryAfter: 60 } })
+  })
+```
+
+::: tip
+You can also register error factories in `.errors`. This makes them part of the [typesafe errors](#typesafe-errors) flow and visible in generated specifications.
+
+```ts
+const procedure = os
+  .errors({
+    [RateLimitedError.code]: RateLimitedError,
+  })
+```
+
+:::
+
+### `instanceof` Support
+
+An error factory class supports `instanceof` checks with full type narrowing. It matches any `ORPCError` with the same `code` whose `data` passes the schema.
+
+```ts
+if (err instanceof RateLimitedError) {
+  console.log(err.data.retryAfter)
+}
+```
+
+::: warning
+`instanceof` validates `data` synchronously. An error factory with an async data schema throws a `TypeError` when used in an `instanceof` check.
+:::
+
 ## ORPC Error Codes
 
 By default, oRPC allows any string as an error code and suggests common HTTP codes like `NOT_FOUND` and `UNAUTHORIZED`. You can override this with your own set of allowed error codes for better type safety and consistency.

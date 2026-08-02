@@ -1,6 +1,5 @@
-import type { Schema } from '@orpc/contract'
+import type { ORPCErrorConstructorMap, Schema } from '@orpc/contract'
 import type { MergedContext, MergedInitialContext } from './context'
-import type { ORPCErrorConstructorMap } from './error'
 import type { ImplementedProcedure, ProcedureImplementer } from './implementer-procedure'
 import type { Middleware, MiddlewareDone } from './middleware'
 import { ORPCError } from '@orpc/client'
