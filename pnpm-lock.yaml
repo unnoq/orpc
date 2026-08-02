@@ -473,6 +473,24 @@ importers:
         specifier: ^2.22.3
         version: 2.22.4(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@orpc/server@packages+server)(ai@7.0.40(zod@4.4.3))(express@5.2.1(supports-color@10.2.2))(fastify@5.10.0)(hono@4.12.32)(next@16.2.12(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ofetch@1.5.1)(react@19.2.8)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0))
 
+  packages/hibernation:
+    dependencies:
+      '@orpc/client':
+        specifier: workspace:*
+        version: link:../client
+      '@orpc/server':
+        specifier: workspace:*
+        version: link:../server
+      '@orpc/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@standardserver/core':
+        specifier: ^0.6.0
+        version: 0.6.0
+      '@standardserver/peer':
+        specifier: ^0.6.0
+        version: 0.6.0
+
   packages/json-schema:
     dependencies:
       '@orpc/client':

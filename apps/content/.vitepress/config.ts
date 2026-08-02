@@ -155,6 +155,7 @@ export default withMermaid(defineConfig({
             { text: 'CORS', link: '/docs/plugins/cors' },
             { text: 'CSRF Guard', link: '/docs/plugins/csrf-guard' },
             { text: 'Dedupe', link: '/docs/plugins/dedupe' },
+            { text: 'Hibernation', link: '/docs/plugins/hibernation' },
             { text: 'OpenAPI Reference', link: '/docs/plugins/openapi-reference' },
             { text: 'Request Compression', link: '/docs/plugins/request-compression' },
             { text: 'Request Headers', link: '/docs/plugins/request-headers' },
