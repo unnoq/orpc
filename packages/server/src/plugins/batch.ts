@@ -8,6 +8,15 @@ import { toArray, value } from '@orpc/shared'
 import { flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
 import { encodePeerMessage, isClientPeerSendMessage, ServerPeer } from '@standardserver/peer'
 
+/**
+ * Content type for batch responses that use the length-prefixed binary framing
+ * (streaming mode, and buffered mode when any sub-response contains binary).
+ *
+ * Decoding is driven by the `standard-server` body hint, not this header,
+ * so it only serves to describe the payload to logs, proxies, and dev tools.
+ */
+export const BATCH_CONTENT_TYPE = 'application/vnd.orpc.batch'
+
 export interface BatchHandlerPluginOptions<T extends Context> {
   /**
    * The max size of the batch allowed.
@@ -216,7 +225,7 @@ export class BatchHandlerPlugin<T extends Context> implements StandardHandlerPlu
             response: {
               status,
               headers,
-              body: new Blob(chunks, { type: 'application/octet-stream' }),
+              body: new Blob(chunks, { type: BATCH_CONTENT_TYPE }),
             },
           }
         }
@@ -294,7 +303,11 @@ export class BatchHandlerPlugin<T extends Context> implements StandardHandlerPlu
 
       return {
         matched: true,
-        response: { status, headers, body: stream },
+        response: {
+          status,
+          headers: { ...headers, 'content-type': BATCH_CONTENT_TYPE },
+          body: stream,
+        },
       }
     }
 
