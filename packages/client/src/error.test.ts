@@ -92,6 +92,8 @@ describe('oRPCError', () => {
     expect(new Error('message') instanceof ORPCError).toBe(false)
     expect(new CrossContextORPCError() instanceof ORPCError).toBe(false)
     expect(new ExtendedCrossContextORPCError() instanceof ORPCError).toBe(false)
+    expect(new ORPCError('test') instanceof CrossContextORPCError).toBe(false)
+    expect(new ORPCError('test') instanceof ExtendedCrossContextORPCError).toBe(false)
 
     const constructors: WeakSet<object> = (globalThis as any)[Symbol.for('ORPC_ERROR_CONSTRUCTORS')]
     constructors.add(CrossContextORPCError)
@@ -102,5 +104,14 @@ describe('oRPCError', () => {
     expect(new Error('message') instanceof ORPCError).toBe(false)
     expect(new CrossContextORPCError() instanceof ORPCError).toBe(true)
     expect(new ExtendedCrossContextORPCError() instanceof ORPCError).toBe(true)
+    expect(new ORPCError('test') instanceof CrossContextORPCError).toBe(false)
+    expect(new ORPCError('test') instanceof ExtendedCrossContextORPCError).toBe(false)
+
+    // same-graph instances still match while multiple graphs exist
+    class ExtendedORPCError extends ORPCError<any, any> {}
+    expect(new ORPCError('test') instanceof ORPCError).toBe(true)
+    expect(new ExtendedORPCError('test') instanceof ORPCError).toBe(true)
+    expect(new ExtendedORPCError('test') instanceof ExtendedORPCError).toBe(true)
+    expect(new ORPCError('test') instanceof ExtendedORPCError).toBe(false)
   })
 })
