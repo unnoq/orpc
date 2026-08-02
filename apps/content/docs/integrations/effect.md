@@ -196,10 +196,10 @@ if (isInferableError(error)) {
 
 ### Catching ORPCErrors
 
-Use `catchORPCError` to recover from every `ORPCError` failure in the error channel of an effect, or `catchORPCErrorByCode` to recover from a specific code only. Recovered errors are excluded from the resulting effect, and other failures re-fail with their original cause:
+Use `catchORPCError` to recover from every `ORPCError` failure in the error channel of an effect, or `catchORPCErrorCode` and `catchORPCErrorCodes` to recover from specific codes only. Recovered errors are excluded from the resulting effect, and other failures re-fail with their original cause:
 
 ```ts
-import { catchORPCError, catchORPCErrorByCode } from '@orpc/experimental-effect'
+import { catchORPCError, catchORPCErrorCode, catchORPCErrorCodes } from '@orpc/experimental-effect'
 import { Effect } from 'effect'
 
 const recovered = program.pipe(
@@ -207,12 +207,19 @@ const recovered = program.pipe(
 )
 
 const fallback = program.pipe(
-  catchORPCErrorByCode('NOT_FOUND', error => Effect.succeed(error.data.id)),
+  catchORPCErrorCode('NOT_FOUND', error => Effect.succeed(error.data.id)),
+)
+
+const handled = program.pipe(
+  catchORPCErrorCodes({
+    NOT_FOUND: error => Effect.succeed(error.data.id),
+    CONFLICT: error => Effect.succeed(error.message),
+  }),
 )
 ```
 
 ::: info
-Both utilities support data-first `catchORPCError(program, handler)` and data-last `program.pipe(catchORPCError(handler))` styles.
+All utilities support data-first `catchORPCError(program, handler)` and data-last `program.pipe(catchORPCError(handler))` styles.
 :::
 
 ## Effect Schema

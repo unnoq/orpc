@@ -1,6 +1,6 @@
 import type { ORPCError } from '@orpc/server'
 import { Effect } from 'effect'
-import { catchORPCError, catchORPCErrorByCode } from './error'
+import { catchORPCError, catchORPCErrorCode, catchORPCErrorCodes } from './error'
 
 class Service1 {
   declare id: 'Service1'
@@ -53,9 +53,9 @@ describe('catchORPCError', () => {
   })
 })
 
-describe('catchORPCErrorByCode', () => {
+describe('catchORPCErrorCode', () => {
   it('catches ORPCErrors with a matching code and excludes them from the error channel (data-last)', () => {
-    const recovered = effect.pipe(catchORPCErrorByCode('NOT_FOUND', (error) => {
+    const recovered = effect.pipe(catchORPCErrorCode('NOT_FOUND', (error) => {
       expectTypeOf(error).toEqualTypeOf<ORPCError<'NOT_FOUND', { id: string }>>()
       return Effect.succeed('recovered' as const)
     }))
@@ -64,7 +64,7 @@ describe('catchORPCErrorByCode', () => {
   })
 
   it('catches ORPCErrors with a matching code and excludes them from the error channel (data-first)', () => {
-    const recovered = catchORPCErrorByCode(effect, 'CONFLICT', (error) => {
+    const recovered = catchORPCErrorCode(effect, 'CONFLICT', (error) => {
       expectTypeOf(error).toEqualTypeOf<ORPCError<'CONFLICT', number>>()
       return Effect.succeed('recovered' as const)
     })
@@ -74,7 +74,7 @@ describe('catchORPCErrorByCode', () => {
 
   it('merges handler error and requirement channels into the result', () => {
     const recovered = effect.pipe(
-      catchORPCErrorByCode('NOT_FOUND', () => ({} as Effect.Effect<'recovered', RangeError, Service2>)),
+      catchORPCErrorCode('NOT_FOUND', () => ({} as Effect.Effect<'recovered', RangeError, Service2>)),
     )
 
     expectTypeOf(recovered).toEqualTypeOf<
@@ -85,7 +85,7 @@ describe('catchORPCErrorByCode', () => {
   it('supports custom error codes', () => {
     const custom = {} as Effect.Effect<'output', ORPCError<'__CUSTOM__', undefined> | TypeError>
 
-    const recovered = custom.pipe(catchORPCErrorByCode('__CUSTOM__', (error) => {
+    const recovered = custom.pipe(catchORPCErrorCode('__CUSTOM__', (error) => {
       expectTypeOf(error).toEqualTypeOf<ORPCError<'__CUSTOM__', undefined>>()
       return Effect.succeed('recovered' as const)
     }))
@@ -95,12 +95,48 @@ describe('catchORPCErrorByCode', () => {
 
   it('suggests and restricts the code to those present in the error channel', () => {
     // @ts-expect-error - BAD_GATEWAY is not present in the error channel (data-last)
-    void effect.pipe(catchORPCErrorByCode('BAD_GATEWAY', () => Effect.succeed('recovered')))
+    void effect.pipe(catchORPCErrorCode('BAD_GATEWAY', () => Effect.succeed('recovered')))
 
     // @ts-expect-error - BAD_GATEWAY is not present in the error channel (data-first)
-    void catchORPCErrorByCode(effect, 'BAD_GATEWAY', () => Effect.succeed('recovered'))
+    void catchORPCErrorCode(effect, 'BAD_GATEWAY', () => Effect.succeed('recovered'))
 
     // @ts-expect-error - code must be a string
-    void effect.pipe(catchORPCErrorByCode(123, () => Effect.succeed('recovered')))
+    void effect.pipe(catchORPCErrorCode(123, () => Effect.succeed('recovered')))
+  })
+})
+
+describe('catchORPCErrorCodes', () => {
+  it('narrows each handler and excludes handled codes from the error channel (data-last)', () => {
+    const recovered = effect.pipe(catchORPCErrorCodes({
+      NOT_FOUND: (error) => {
+        expectTypeOf(error).toEqualTypeOf<ORPCError<'NOT_FOUND', { id: string }>>()
+        return Effect.succeed('nf' as const)
+      },
+      CONFLICT: (error) => {
+        expectTypeOf(error).toEqualTypeOf<ORPCError<'CONFLICT', number>>()
+        return {} as Effect.Effect<'cf', RangeError, Service2>
+      },
+    }))
+
+    expectTypeOf(recovered).toEqualTypeOf<Effect.Effect<'output' | 'nf' | 'cf', RangeError | TypeError, Service1 | Service2>>()
+  })
+
+  it('keeps unhandled codes in the error channel (data-first)', () => {
+    const recovered = catchORPCErrorCodes(effect, {
+      NOT_FOUND: (error) => {
+        expectTypeOf(error).toEqualTypeOf<ORPCError<'NOT_FOUND', { id: string }>>()
+        return Effect.succeed('nf' as const)
+      },
+    })
+
+    expectTypeOf(recovered).toEqualTypeOf<Effect.Effect<'output' | 'nf', ORPCError<'CONFLICT', number> | TypeError, Service1>>()
+  })
+
+  it('suggests and restricts keys to the codes present in the error channel', () => {
+    // @ts-expect-error - BAD_GATEWAY is not present in the error channel (data-last)
+    void effect.pipe(catchORPCErrorCodes({ BAD_GATEWAY: () => Effect.succeed('recovered') }))
+
+    // @ts-expect-error - BAD_GATEWAY is not present in the error channel (data-first)
+    void catchORPCErrorCodes(effect, { BAD_GATEWAY: () => Effect.succeed('recovered') })
   })
 })
