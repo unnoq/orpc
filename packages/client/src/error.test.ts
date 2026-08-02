@@ -80,4 +80,27 @@ describe('oRPCError', () => {
     expect(notRelated instanceof NotRelated).toBe(true)
     expect(nullProtoObj instanceof NotRelated).toBe(false)
   })
+
+  it('instanceof matches cross-context ORPCError instances', ({ onTestFinished }) => {
+    /**
+     * Stands in for an ORPCError constructor from a separate dependency graph:
+     * unrelated prototype chain, but registered in the shared global WeakSet.
+     */
+    class CrossContextORPCError extends Error {}
+    class ExtendedCrossContextORPCError extends CrossContextORPCError {}
+
+    expect(new Error('message') instanceof ORPCError).toBe(false)
+    expect(new CrossContextORPCError() instanceof ORPCError).toBe(false)
+    expect(new ExtendedCrossContextORPCError() instanceof ORPCError).toBe(false)
+
+    const constructors: WeakSet<object> = (globalThis as any)[Symbol.for('ORPC_ERROR_CONSTRUCTORS')]
+    constructors.add(CrossContextORPCError)
+    onTestFinished(() => {
+      constructors.delete(CrossContextORPCError)
+    })
+
+    expect(new Error('message') instanceof ORPCError).toBe(false)
+    expect(new CrossContextORPCError() instanceof ORPCError).toBe(true)
+    expect(new ExtendedCrossContextORPCError() instanceof ORPCError).toBe(true)
+  })
 })

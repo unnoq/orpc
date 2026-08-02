@@ -41,6 +41,20 @@ export function getConstructor(value: unknown): Function | null | undefined { //
   return Object.getPrototypeOf(value)?.constructor
 }
 
+export function* getConstructors(value: unknown): Generator<Function> { // eslint-disable-line ts/no-unsafe-function-type
+  if (!isTypescriptObject(value)) {
+    return
+  }
+
+  let proto = Object.getPrototypeOf(value)
+  while (proto != null) {
+    if (proto.constructor) {
+      yield proto.constructor
+    }
+    proto = Object.getPrototypeOf(proto)
+  }
+}
+
 /**
  * Checks whether a value is a plain object, including objects created with
  * `Object.create(null)`.

@@ -1,7 +1,7 @@
 import * as a from 'arktype'
 import * as v from 'valibot'
 import z from 'zod'
-import { bindMethods, clone, findDeepMatches, get, getConstructor, isPlainObject, isPropertyKey, NullProtoObj, omit, set } from './object'
+import { bindMethods, clone, findDeepMatches, get, getConstructor, getConstructors, isPlainObject, isPropertyKey, NullProtoObj, omit, set } from './object'
 
 it('findDeepMatches', () => {
   const { maps, values } = findDeepMatches(v => typeof v === 'string', {
@@ -41,6 +41,61 @@ it('getConstructor', () => {
   expect(getConstructor({})).toBe(Object)
   expect(getConstructor(new Error('hi'))).toBe(Error)
   expect(getConstructor(() => { })).toBe(Function)
+})
+
+describe('getConstructors', () => {
+  it('returns nothing for primitives', () => {
+    expect([...getConstructors(null)]).toEqual([])
+    expect([...getConstructors(undefined)]).toEqual([])
+    expect([...getConstructors(123)]).toEqual([])
+    expect([...getConstructors('string')]).toEqual([])
+    expect([...getConstructors(true)]).toEqual([])
+    expect([...getConstructors(Symbol('s'))]).toEqual([])
+  })
+
+  it('works with plain objects and built-ins', () => {
+    expect([...getConstructors({})]).toEqual([Object])
+    expect([...getConstructors([])]).toEqual([Array, Object])
+    expect([...getConstructors(new Map())]).toEqual([Map, Object])
+    expect([...getConstructors(new Error('hi'))]).toEqual([Error, Object])
+  })
+
+  it('returns the full chain for class inheritance', () => {
+    class GrandParent {}
+    class Parent extends GrandParent {}
+    class Child extends Parent {}
+
+    expect([...getConstructors(new Child())]).toEqual([Child, Parent, GrandParent, Object])
+    expect([...getConstructors(new Parent())]).toEqual([Parent, GrandParent, Object])
+    expect([...getConstructors(new GrandParent())]).toEqual([GrandParent, Object])
+  })
+
+  it('works with classes extending built-ins', () => {
+    class MyError extends Error {}
+    class SubError extends MyError {}
+
+    expect([...getConstructors(new SubError())]).toEqual([SubError, MyError, Error, Object])
+  })
+
+  it('returns nothing for null-prototype objects', () => {
+    expect([...getConstructors(Object.create(null))]).toEqual([])
+  })
+
+  it('skips levels without a constructor', () => {
+    const proto = Object.create(null) // no constructor
+    const instance = Object.create(proto)
+
+    expect([...getConstructors(instance)]).toEqual([])
+  })
+
+  it('is lazy', () => {
+    class Parent {}
+    class Child extends Parent {}
+
+    const generator = getConstructors(new Child())
+    expect(generator.next().value).toBe(Child)
+    expect(generator.next().value).toBe(Parent)
+  })
 })
 
 it('isPlainObject', () => {
