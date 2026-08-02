@@ -1,5 +1,5 @@
 import type { MaybeOptionalOptions, Registry } from '@orpc/shared'
-import { getConstructor, resolveMaybeOptionalOptions } from '@orpc/shared'
+import { getConstructors, resolveMaybeOptionalOptions } from '@orpc/shared'
 
 export const COMMON_ERROR_STATUS_MAP = {
   BAD_REQUEST: 400,
@@ -125,9 +125,10 @@ export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
       return super[Symbol.hasInstance](instance)
     }
 
-    const constructor = getConstructor(instance)
-    if (constructor && ORPCErrorConstructors.has(constructor)) {
-      return true
+    for (const constructor of getConstructors(instance)) {
+      if (ORPCErrorConstructors.has(constructor)) {
+        return true
+      }
     }
 
     // fallback to default instanceof check
