@@ -32,7 +32,7 @@ export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlu
    * - Logging interceptors should run after batch interceptors
    *   so they log each individual request instead of the batch request.
    */
-  before = ['~opentelemetry', '~batch']
+  before = ['~opentelemetry', '~batch', '~hibernation']
 
   private readonly logAbort: Exclude<EvlogHandlerPluginOptions<T>['logAbort'], undefined>
   private readonly integration: FrameworkIntegrationHelpers<{ request: StandardRequest }>

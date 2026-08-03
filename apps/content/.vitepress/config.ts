@@ -191,6 +191,7 @@ export default withMermaid(defineConfig({
             { text: 'ArkType', link: '/docs/integrations/arktype' },
             { text: 'Effect', link: '/docs/integrations/effect' },
             { text: 'Evlog', link: '/docs/integrations/evlog' },
+            { text: 'Hibernation', link: '/docs/integrations/hibernation' },
             { text: 'NestJS', link: '/docs/integrations/nest' },
             { text: 'Next.js', link: '/docs/integrations/next' },
             { text: 'OpenTelemetry', link: '/docs/integrations/opentelemetry' },

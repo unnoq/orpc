@@ -4,8 +4,8 @@
   <a href="https://codecov.io/gh/middleapi/orpc">
     <img alt="codecov" src="https://codecov.io/gh/middleapi/orpc/branch/main/graph/badge.svg">
   </a>
-  <a href="https://www.npmjs.com/package/@orpc/openapi">
-    <img alt="weekly downloads" src="https://img.shields.io/npm/dw/%40orpc%2Fopenapi?logo=npm" />
+  <a href="https://www.npmjs.com/package/@orpc/hibernation">
+    <img alt="weekly downloads" src="https://img.shields.io/npm/dw/%40orpc%2Fhibernation?logo=npm" />
   </a>
   <a href="https://app.codspeed.io/middleapi/orpc?utm_source=badge">
     <img alt="CodSpeed" src="https://img.shields.io/endpoint?url=https://codspeed.io/badge.json" />
@@ -141,9 +141,8 @@ Like what we build over at [middleapi](https://github.com/middleapi)? You can he
    <td align="center"><a href="https://github.com/mr-kelly?ref=orpc" target="_blank" rel="noopener" title="Kelly Peilin Chan"><img src="https://avatars.githubusercontent.com/u/520852?u=6b0f7105f694e7b5cacf410a3f04c7044b469dc8&amp;v=4" width="119" alt="Kelly Peilin Chan"/><br />Kelly Peilin Chan</a></td>
   </tr>
   <tr>
-   <td align="center"><a href="https://github.com/guyariely?ref=orpc" target="_blank" rel="noopener" title="Guy Ariely"><img src="https://avatars.githubusercontent.com/u/42813496?u=edb6b7f563bf28e160a290832e7da57c0506f8ca&amp;v=4" width="119" alt="Guy Ariely"/><br />Guy Ariely</a></td>
    <td align="center"><a href="https://github.com/piscis?ref=orpc" target="_blank" rel="noopener" title="Alex"><img src="https://avatars.githubusercontent.com/u/326163?u=b245f368bd940cf51d08c0b6bf55f8257f359437&amp;v=4" width="119" alt="Alex"/><br />Alex</a></td>
-   <td align="center"><a href="https://github.com/finom?ref=orpc" target="_blank" rel="noopener" title="Andrey Gubanov"><img src="https://avatars.githubusercontent.com/u/1082083?u=c5f2daf7ebece498e85c83367bb37b4e10e2649d&amp;v=4" width="119" alt="Andrey Gubanov"/><br />Andrey Gubanov</a></td>
+   <td align="center"><a href="https://github.com/finom?ref=orpc" target="_blank" rel="noopener" title="Andrey Gubanov"><img src="https://avatars.githubusercontent.com/u/1082083?u=29e91400dbd4a9c217048a8f59562c4f740498e6&amp;v=4" width="119" alt="Andrey Gubanov"/><br />Andrey Gubanov</a></td>
   </tr>
 </table>
 
