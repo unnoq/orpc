@@ -28,7 +28,7 @@ export interface NodeHttpHandlerPlugin<T extends Context> extends StandardHandle
 }
 
 export class CompositeNodeHttpHandlerPlugin<T extends Context> implements NodeHttpHandlerPlugin<T> {
-  readonly name = '~composite/node-http-handler'
+  readonly name = '~composite/node-http'
 
   protected readonly plugins: NodeHttpHandlerPlugin<T>[]
 
