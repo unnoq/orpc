@@ -1,6 +1,6 @@
-# Hibernation Plugin
+# Hibernation Integration
 
-`HibernationHandlerPlugin` helps you fully leverage Hibernation APIs, making it especially useful for adapters like [Cloudflare WebSocket Hibernation](https://developers.cloudflare.com/durable-objects/examples/websocket-hibernation-server/).
+Hibernation integration lets oRPC leverage Hibernation APIs like [Cloudflare's Hibernation WebSocket](https://developers.cloudflare.com/durable-objects/best-practices/websockets/#durable-objects-hibernation-websocket-api), so your server can sleep between events without dropping active connections.
 
 ## Installation
 

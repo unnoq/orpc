@@ -30,7 +30,7 @@ export interface EncodeHibernationRPCEventOptions {
 /**
  * Encodes a Hibernation RPC Event
  *
- * @see {@link https://orpc.dev/docs/plugins/hibernation Hibernation Plugin}
+ * @see {@link https://orpc.dev/docs/integrations/hibernation Hibernation Integration}
  */
 export async function encodeHibernationRPCEvent(
   id: string,

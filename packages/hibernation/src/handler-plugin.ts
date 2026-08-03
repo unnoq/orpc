@@ -6,7 +6,7 @@ import { HibernationAsyncIteratorClass } from '@standardserver/peer'
 /**
  * Enable Hibernation APIs
  *
- * @see {@link https://orpc.dev/docs/plugins/hibernation Hibernation Plugin}
+ * @see {@link https://orpc.dev/docs/integrations/hibernation Hibernation Integration}
  */
 export class HibernationHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~hibernation'

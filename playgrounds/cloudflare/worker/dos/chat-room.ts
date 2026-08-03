@@ -5,24 +5,6 @@ import { RPCHandler } from '@orpc/server/websocket'
 import { DurableObject } from 'cloudflare:workers'
 import { z } from 'zod'
 
-/**
- * `@microlabs/otel-cf-workers` cannot instrument hibernatable WebSocket handlers,
- * and its tracer throws when used outside an instrumented trigger. In dev the
- * Durable Object shares the isolate with the instrumented worker, so oRPC
- * tracing must be suspended while handling WebSocket messages.
- */
-async function withoutOpenTelemetry<T>(fn: () => Promise<T>): Promise<T> {
-  const instrumentation = new ORPCInstrumentation()
-
-  try {
-    instrumentation.disable()
-    return await fn()
-  }
-  finally {
-    instrumentation.enable()
-  }
-}
-
 const base = os.$context<{
   ws: WebSocket
   getWebSockets: () => WebSocket[]
@@ -75,15 +57,31 @@ export class ChatRoomDO extends DurableObject {
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
-    await withoutOpenTelemetry(() => handler.message(ws, message, {
+    /**
+     * `@microlabs/otel-cf-workers` cannot instrument hibernatable WebSocket handlers,
+     * and its tracer throws when used outside an instrumented trigger. In dev the
+     * Durable Object shares the isolate with the instrumented worker, so oRPC
+     * tracing must be suspended while handling WebSocket messages.
+     */
+    new ORPCInstrumentation().disable()
+
+    await handler.message(ws, message, {
       context: {
         ws,
         getWebSockets: () => this.ctx.getWebSockets(),
       },
-    }))
+    })
   }
 
   async webSocketClose(ws: WebSocket): Promise<void> {
-    await withoutOpenTelemetry(() => handler.close(ws))
+    /**
+     * `@microlabs/otel-cf-workers` cannot instrument hibernatable WebSocket handlers,
+     * and its tracer throws when used outside an instrumented trigger. In dev the
+     * Durable Object shares the isolate with the instrumented worker, so oRPC
+     * tracing must be suspended while handling WebSocket messages.
+     */
+    new ORPCInstrumentation().disable()
+
+    await handler.close(ws)
   }
 }
