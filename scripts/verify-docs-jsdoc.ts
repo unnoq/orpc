@@ -40,8 +40,12 @@ interface Issue {
   severity: 'error' | 'warning'
   code: string
   message: string
-  mention: Mention
+  /** Display group, e.g. the mention's specifier or `packages/<dir>` for scanned links. */
+  group: string
+  /** Display label, e.g. the mentioned symbol name or `link` for scanned links. */
+  label: string
   location?: string
+  note?: string
 }
 
 async function findFiles(dir: string, extension: string): Promise<string[]> {
@@ -336,7 +340,15 @@ function checkMention(
   const jsDocText = declarations.map(getJsDocText).filter(Boolean).join('\n')
 
   const report = (severity: 'error' | 'warning', code: string, message: string): void => {
-    issues.push({ severity, code, message, mention, location })
+    issues.push({
+      severity,
+      code,
+      message,
+      group: mention.specifier,
+      label: mention.name,
+      location,
+      note: `mentioned in: ${[...mention.pages].sort().slice(0, 3).join(', ')}`,
+    })
   }
 
   if (!jsDocText.trim()) {
@@ -393,6 +405,74 @@ function checkMention(
       report('warning', 'W2', description)
     }
   }
+}
+
+const ORPC_DOCS_URL_RE = /https:\/\/orpc\.dev\/docs\/[^\s)}\]|'"`]+/g
+
+/**
+ * Validates that every `https://orpc.dev/docs/...` URL appearing anywhere in package
+ * sources (inline markdown links, member-level docs, ...) points to an existing
+ * content page and heading. Existence only — titles are enforced on `@see` tags.
+ */
+async function scanSourceLinks(context: CheckContext, filterDirs: Set<string> | undefined): Promise<number> {
+  let scanned = 0
+  const entries = await readdir(PACKAGES_DIR, { withFileTypes: true })
+
+  for (const entry of entries) {
+    if (!entry.isDirectory() || (filterDirs && !filterDirs.has(entry.name))) {
+      continue
+    }
+
+    const srcDir = path.join(PACKAGES_DIR, entry.name, 'src')
+    let files: string[]
+
+    try {
+      files = [...await findFiles(srcDir, '.ts'), ...await findFiles(srcDir, '.tsx')]
+    }
+    catch {
+      continue
+    }
+
+    for (const file of files) {
+      if (/\.(?:test|test-d|bench)\./.test(file) || file.includes('__tests__') || file.includes('__mocks__')) {
+        continue
+      }
+
+      const lines = (await readFile(file, 'utf8')).split('\n')
+
+      for (const [index, line] of lines.entries()) {
+        for (const match of line.matchAll(ORPC_DOCS_URL_RE)) {
+          const url = match[0].replace(/[.,;:]+$/, '')
+          scanned += 1
+
+          const report = (code: string, message: string): void => {
+            context.issues.push({
+              severity: 'error',
+              code,
+              message,
+              group: `packages/${entry.name}`,
+              label: 'link',
+              location: `${path.relative(ROOT_DIR, file)}:${index + 1}`,
+            })
+          }
+
+          const [pagePath = '', anchor] = url.slice(DOCS_URL_PREFIX.length).split('#')
+          const page = context.pages.get(pagePath)
+
+          if (!page) {
+            report('E4', `link page "${pagePath}" has no apps/content/docs/${pagePath}.md`)
+            continue
+          }
+
+          if (anchor !== undefined && !page.slugs.has(anchor)) {
+            report('E5', `anchor "#${anchor}" not found in apps/content/docs/${pagePath}.md`)
+          }
+        }
+      }
+    }
+  }
+
+  return scanned
 }
 
 async function main(): Promise<void> {
@@ -490,7 +570,8 @@ async function main(): Promise<void> {
         severity: 'error',
         code: 'E1',
         message: `docs import from unknown entrypoint "${mention.specifier}"`,
-        mention,
+        group: mention.specifier,
+        label: mention.name,
       })
       continue
     }
@@ -504,7 +585,8 @@ async function main(): Promise<void> {
         severity: 'error',
         code: 'E1',
         message: `"${mention.name}" is not exported from ${mention.specifier}`,
-        mention,
+        group: mention.specifier,
+        label: mention.name,
       })
       continue
     }
@@ -521,30 +603,30 @@ async function main(): Promise<void> {
     checkMention(context, mention, declarations)
   }
 
+  const scannedLinks = await scanSourceLinks(context, filterDirs)
+
   const errors = context.issues.filter(issue => issue.severity === 'error')
   const warnings = context.issues.filter(issue => issue.severity === 'warning')
-  const bySpecifier = new Map<string, Issue[]>()
+  const byGroup = new Map<string, Issue[]>()
 
   for (const issue of context.issues) {
-    const group = bySpecifier.get(issue.mention.specifier) ?? []
+    const group = byGroup.get(issue.group) ?? []
     group.push(issue)
-    bySpecifier.set(issue.mention.specifier, group)
+    byGroup.set(issue.group, group)
   }
 
-  for (const [specifier, issues] of [...bySpecifier.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-    console.log(`\n${specifier}`)
+  for (const [group, issues] of [...byGroup.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    console.log(`\n${group}`)
 
     for (const issue of issues) {
-      const label = issue.severity === 'error' ? 'error' : 'warn '
-      const location = issue.location ?? '(unresolved)'
-      const pagesNote = [...issue.mention.pages].sort().slice(0, 3).join(', ')
-      console.log(`  ${label} [${issue.code}] ${issue.mention.name}  ${location}`)
-      console.log(`        ${issue.message} (mentioned in: ${pagesNote})`)
+      const severityLabel = issue.severity === 'error' ? 'error' : 'warn '
+      console.log(`  ${severityLabel} [${issue.code}] ${issue.label}  ${issue.location ?? '(unresolved)'}`)
+      console.log(`        ${issue.message}${issue.note ? ` (${issue.note})` : ''}`)
     }
   }
 
   const allowlistNote = allowlisted > 0 ? `, ${allowlisted} allowlisted` : ''
-  console.log(`\n${errors.length} errors, ${warnings.length} warnings across ${selected.length} docs-mentioned symbols${allowlistNote}`)
+  console.log(`\n${errors.length} errors, ${warnings.length} warnings across ${selected.length} docs-mentioned symbols and ${scannedLinks} orpc.dev links${allowlistNote}`)
 
   if (errors.length > 0) {
     process.exitCode = 1
