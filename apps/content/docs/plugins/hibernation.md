@@ -53,7 +53,9 @@ The plugin provides `HibernationAsyncIteratorClass` and `encodeHibernationRPCEve
    ```ts
    import { HibernationAsyncIteratorClass } from '@orpc/hibernation'
 
-   export const onMessage = os.handler(async ({ context }) => {
+   const base = os.$context<{ ws: WebSocket }>()
+
+   export const onMessage = base.handler(async ({ context }) => {
      return new HibernationAsyncIteratorClass<{ message: string }>((id) => {
        // Save the ID. You'll need it to send events later.
        context.ws.serializeAttachment({ id })
@@ -65,24 +67,29 @@ The plugin provides `HibernationAsyncIteratorClass` and `encodeHibernationRPCEve
 
    ```ts
    import { encodeHibernationRPCEvent } from '@orpc/hibernation'
+   import * as z from 'zod'
 
-   export const sendMessage = os.handler(async ({ input, context }) => {
-     const websockets = context.getWebSockets()
+   const base = os.$context<{ getWebSockets: () => WebSocket[] }>()
 
-     for (const ws of websockets) {
-       const { id } = ws.deserializeAttachment()
+   export const sendMessage = base
+     .input(z.object({ message: z.string() }))
+     .handler(async ({ input, context }) => {
+       const websockets = context.getWebSockets()
 
-       // yield an event to all clients
-       ws.send(await encodeHibernationRPCEvent(id, { message: input.message }, {
-         // override the default RPC serializer if needed
-         serializer: new RPCSerializer(),
-       }))
-       // return an event and stop the iterator
-       ws.send(await encodeHibernationRPCEvent(id, { message: input.message }, { event: 'close' }))
-       // throw an error and stop the iterator
-       ws.send(await encodeHibernationRPCEvent(id, new ORPCError('INTERNAL_SERVER_ERROR'), { event: 'error' }))
-     }
-   })
+       for (const ws of websockets) {
+         const { id } = ws.deserializeAttachment()
+
+         // yield an event to all clients
+         ws.send(await encodeHibernationRPCEvent(id, { message: input.message }, {
+           // override the default RPC serializer if needed
+           serializer: new RPCSerializer(),
+         }))
+         // return an event and stop the iterator
+         ws.send(await encodeHibernationRPCEvent(id, { message: input.message }, { event: 'close' }))
+         // throw an error and stop the iterator
+         ws.send(await encodeHibernationRPCEvent(id, new ORPCError('INTERNAL_SERVER_ERROR'), { event: 'error' }))
+       }
+     })
    ```
 
 ::: details Cloudflare Durable Object Chat Room Example?

@@ -60,6 +60,11 @@ const rpcHandler = new RPCHandler(router, {
 
 export default instrument({
   async fetch(request, env, _ctx) {
+    if (new URL(request.url).pathname === '/chat-room' && request.headers.get('upgrade') === 'websocket') {
+      const id = env.CHAT_ROOM_DON.idFromName('default')
+      return env.CHAT_ROOM_DON.get(id).fetch(request)
+    }
+
     const messagePublisher = new DurablePublisher<Record<string, { message: string }>>(env.PUBLISHER_DON)
 
     const openapiResult = await openapiHandler.handle(request, {
@@ -81,6 +86,8 @@ export default instrument({
     return new Response(null, { status: 404 })
   },
 } satisfies ExportedHandler<Env>, INSTRUMENTATION_CONFIG)
+
+export { ChatRoomDO } from './dos/chat-room'
 
 export class PublisherDO extends DurablePublisherObject {
   constructor(state: DurableObjectState, env: Env) {

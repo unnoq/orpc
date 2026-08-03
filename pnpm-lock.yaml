@@ -1010,6 +1010,9 @@ importers:
       '@orpc/evlog':
         specifier: beta
         version: link:../../packages/evlog
+      '@orpc/hibernation':
+        specifier: beta
+        version: link:../../packages/hibernation
       '@orpc/json-schema':
         specifier: beta
         version: link:../../packages/json-schema

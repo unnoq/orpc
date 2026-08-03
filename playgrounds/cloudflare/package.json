@@ -17,6 +17,7 @@
     "@orpc/client": "beta",
     "@orpc/cloudflare": "beta",
     "@orpc/evlog": "beta",
+    "@orpc/hibernation": "beta",
     "@orpc/json-schema": "beta",
     "@orpc/openapi": "beta",
     "@orpc/opentelemetry": "beta",

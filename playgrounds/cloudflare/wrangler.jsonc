@@ -13,6 +13,10 @@
       {
         "name": "PUBLISHER_DON",
         "class_name": "PublisherDO"
+      },
+      {
+        "name": "CHAT_ROOM_DON",
+        "class_name": "ChatRoomDO"
       }
     ]
   },
@@ -20,6 +24,10 @@
     {
       "tag": "add-PublisherDO",
       "new_sqlite_classes": ["PublisherDO"]
+    },
+    {
+      "tag": "add-ChatRoomDO",
+      "new_sqlite_classes": ["ChatRoomDO"]
     }
   ]
 }
