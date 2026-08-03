@@ -24,7 +24,7 @@ export interface SetCookieOptions extends Omit<SetCookie, 'name' | 'value'>, Str
  * expect(headers.get('Set-Cookie')).toBe('sessionId=abc123; Max-Age=3600; Path=/; HttpOnly')
  * ```
  *
- * @see {@link https://orpc.dev/docs/helpers/cookie | Cookie}
+ * @see {@link https://orpc.dev/docs/helpers/cookie | Cookie Helpers}
  */
 export function setCookie(
   headers: Headers | undefined,
@@ -65,7 +65,7 @@ export interface GetCookieOptions extends ParseOptions {}
  * expect(sessionId).toEqual('abc123')
  * ```
  *
- * @see {@link https://orpc.dev/docs/helpers/cookie | Cookie}
+ * @see {@link https://orpc.dev/docs/helpers/cookie | Cookie Helpers}
  */
 export function getCookie(
   headers: Headers | undefined,
@@ -88,7 +88,7 @@ export function getCookie(
 /**
  * Deletes a cookie by marking it expired.
  *
- * @see {@link https://orpc.dev/docs/helpers/cookie | Cookie}
+ * @see {@link https://orpc.dev/docs/helpers/cookie | Cookie Helpers}
  */
 export function deleteCookie(
   headers: Headers | undefined,

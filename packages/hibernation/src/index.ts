@@ -12,7 +12,7 @@ export {
    * events directly, it invokes a callback with an ID you can save and later
    * use to send events via `encodeHibernationRPCEvent`.
    *
-   * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation}
+   * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation Integration}
    */
   HibernationAsyncIteratorClass,
 } from '@standardserver/peer'

@@ -93,7 +93,7 @@ export interface OpenAPIReferenceHandlerPluginOptions<T extends Context, TProvid
  * @remarks
  * **Note**: By default, the API reference UI is served from `/` and the OpenAPI specification from `/spec.json`.
  *
- * @see {@link https://orpc.dev/docs/plugins/openapi-reference | OpenAPI Reference}
+ * @see {@link https://orpc.dev/docs/plugins/openapi-reference | OpenAPI Reference Plugin (Swagger/Scalar)}
  */
 export class OpenAPIReferenceHandlerPlugin<
   T extends Context,

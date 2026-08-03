@@ -35,7 +35,7 @@ export interface DedupeLinkPluginOptions<T extends ClientContext> {
  * Prevents redundant requests by deduplicating similar in-flight requests,
  * reducing the number of requests sent to the server.
  *
- * @see {@link https://orpc.dev/docs/plugins/dedupe | Dedupe}
+ * @see {@link https://orpc.dev/docs/plugins/dedupe | Dedupe Plugin}
  */
 export class DedupeLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~dedupe'

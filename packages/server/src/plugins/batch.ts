@@ -78,7 +78,7 @@ export interface BatchHandlerPluginOptions<T extends Context> {
  * @remarks
  * **Note**: HTTP/2 and later already multiplex requests over a single connection, which often makes this plugin unnecessary.
  *
- * @see {@link https://orpc.dev/docs/plugins/batch | Batch}
+ * @see {@link https://orpc.dev/docs/plugins/batch | Batch Plugin}
  */
 export class BatchHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~batch'

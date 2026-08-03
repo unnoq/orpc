@@ -18,7 +18,7 @@ export interface RequestLimitHandlerPluginOptions {
  * When used with the request compression plugin, the limit applies to the
  * decompressed payload rather than the compressed wire size.
  *
- * @see {@link https://orpc.dev/docs/plugins/request-limit | Request Limit}
+ * @see {@link https://orpc.dev/docs/plugins/request-limit | Request Limit Plugin}
  */
 export class RequestLimitHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~request-limit'

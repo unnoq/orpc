@@ -36,7 +36,7 @@ export interface MemoryRateLimiterOptions {
  * Rate limiter adapter backed by in-memory storage. Enforces a fixed-window
  * limit, with optional blocking mode.
  *
- * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Ratelimit}
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Rate Limit Helpers - Adapters}
  */
 export class MemoryRateLimiter implements RateLimiter {
   private readonly maxRequests: number

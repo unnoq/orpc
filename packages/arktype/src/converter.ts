@@ -20,7 +20,7 @@ export interface ArkTypeToJsonSchemaConverterOptions extends Omit<ToJsonSchema.O
  * Converts ArkType schemas into JSON Schema using ArkType's built-in `toJsonSchema`,
  * with additional support for types such as `bigint` and `Date`.
  *
- * @see {@link https://orpc.dev/docs/integrations/arktype | ArkType}
+ * @see {@link https://orpc.dev/docs/integrations/arktype | ArkType Integration}
  */
 export class ArkTypeToJsonSchemaConverter implements JsonSchemaConverter {
   private readonly toJsonSchemaOptions: ToJsonSchema.Options

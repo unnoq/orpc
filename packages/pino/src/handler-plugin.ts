@@ -43,7 +43,7 @@ export interface PinoHandlerPluginOptions<T extends Context> {
  * Instruments an oRPC handler with Pino structured logging, request tracking,
  * and error monitoring.
  *
- * @see {@link https://orpc.dev/docs/integrations/pino | Pino}
+ * @see {@link https://orpc.dev/docs/integrations/pino | Pino Integration}
  */
 export class PinoHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~pino'

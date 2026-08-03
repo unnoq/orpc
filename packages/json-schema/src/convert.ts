@@ -4,7 +4,7 @@ import type { JsonSchema } from './types'
 /**
  * The conversion direction: `input` targets the schema's input type, `output` targets its output type.
  *
- * @see {@link https://orpc.dev/docs/integrations/standard-schema | Standard Schema}
+ * @see {@link https://orpc.dev/docs/integrations/standard-schema | Standard Schema Integration}
  */
 export type JsonSchemaConverterDirection = 'input' | 'output'
 
@@ -12,7 +12,7 @@ export type JsonSchemaConverterDirection = 'input' | 'output'
  * Interface for converting validation schemas into JSON Schema representations,
  * used by tools such as the OpenAPI Generator and Smart Coercion plugins.
  *
- * @see {@link https://orpc.dev/docs/integrations/standard-schema | Standard Schema}
+ * @see {@link https://orpc.dev/docs/integrations/standard-schema | Standard Schema Integration}
  */
 export interface JsonSchemaConverter {
   /**

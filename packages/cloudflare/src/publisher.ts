@@ -32,7 +32,7 @@ export interface DurablePublisherOptions extends PublisherOptions {
  * Publisher adapter for Cloudflare Durable Objects. Routes publishes and
  * subscriptions to a `DurablePublisherObject` per event, delivering events over WebSockets.
  *
- * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher}
+ * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher Helpers - Adapters}
  */
 export class DurablePublisher<T extends Record<string, object>> extends Publisher<T> {
   private readonly prefix: string

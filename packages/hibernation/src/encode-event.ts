@@ -31,7 +31,7 @@ export interface EncodeHibernationRPCEventOptions {
  * Encodes a Hibernation RPC event for sending to clients subscribed
  * through a `HibernationAsyncIteratorClass`.
  *
- * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation}
+ * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation Integration}
  */
 export async function encodeHibernationRPCEvent(
   id: string,

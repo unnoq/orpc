@@ -14,7 +14,7 @@ export interface TimeoutLinkPluginOptions<T extends ClientContext> {
 /**
  * The Timeout Link Plugin aborts requests that exceed a configured timeout with an `AbortError`.
  *
- * @see {@link https://orpc.dev/docs/plugins/timeout | Timeout}
+ * @see {@link https://orpc.dev/docs/plugins/timeout | Timeout Plugin}
  */
 export class TimeoutLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   private readonly timeout: TimeoutLinkPluginOptions<T>['timeout']

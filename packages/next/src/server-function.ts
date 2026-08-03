@@ -44,7 +44,7 @@ export type ProcedureServerFunction<
  * **Note**: Instead of throwing, the returned function resolves an `[error, data]` tuple
  * with errors serialized as plain JSON (`ORPCErrorJSON`).
  *
- * @see {@link https://orpc.dev/docs/integrations/next#server-functions | Next.js}
+ * @see {@link https://orpc.dev/docs/integrations/next#server-functions | Next.js Integration - Server Functions}
  */
 export function createServerFunction<
   TInitialContext extends Context,

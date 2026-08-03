@@ -8,7 +8,7 @@ import { Schema as EffectSchema } from 'effect'
  * [Effect Schema to JSON Schema](https://effect.website/docs/schema/json-schema/).
  * Useful with tools such as the OpenAPI Generator.
  *
- * @see {@link https://orpc.dev/docs/integrations/effect#json-schema-converter | Effect}
+ * @see {@link https://orpc.dev/docs/integrations/effect#json-schema-converter | Effect Integration - JSON Schema Converter}
  */
 export class EffectSchemaToJsonSchemaConverter implements JsonSchemaConverter {
   private readonly converter = new StandardJsonSchemaConverter()

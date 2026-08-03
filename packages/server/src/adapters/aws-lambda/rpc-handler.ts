@@ -30,7 +30,7 @@ export interface RPCHandlerOptions<T extends Context>
  * @remarks
  * **Warning**: Requires the Lambda Node.js runtime with response streaming enabled, so handlers must be wrapped with `awslambda.streamifyResponse`.
  *
- * @see {@link https://orpc.dev/docs/adapters/aws-lambda | AWS Lambda}
+ * @see {@link https://orpc.dev/docs/adapters/aws-lambda | AWS Lambda Adapter}
  */
 export class RPCHandler<T extends Context> extends AwsLambdaHandler<T> {
   constructor(

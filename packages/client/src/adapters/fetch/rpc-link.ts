@@ -11,7 +11,7 @@ export interface RPCLinkOptions<T extends ClientContext>
 /**
  * Client link that communicates with an RPC Handler over the Fetch API (HTTP).
  *
- * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API}
+ * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API Adapter}
  */
 export class RPCLink<T extends ClientContext> extends StandardLink<T> {
   constructor(options: RPCLinkOptions<T>) {

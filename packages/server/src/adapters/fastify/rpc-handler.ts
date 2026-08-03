@@ -26,7 +26,7 @@ export interface RPCHandlerOptions<T extends Context>
 /**
  * Serves an oRPC router over the RPC protocol inside a Fastify server.
  *
- * @see {@link https://orpc.dev/docs/adapters/fastify | Fastify}
+ * @see {@link https://orpc.dev/docs/adapters/fastify | Fastify Adapter}
  */
 export class RPCHandler<T extends Context> extends FastifyHandler<T> {
   constructor(

@@ -28,7 +28,7 @@ import { resolveMetaPlugins } from '@orpc/contract'
  *   .mutation(() => 'Hello, World!')
  * ```
  *
- * @see {@link https://orpc.dev/docs/integrations/trpc | tRPC}
+ * @see {@link https://orpc.dev/docs/integrations/trpc | tRPC Integration}
  */
 export function toTRPCMeta(...plugins: AnyMetaPlugin[]): Record<string, any> {
   const [meta] = resolveMetaPlugins({}, undefined, plugins)

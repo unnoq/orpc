@@ -38,7 +38,7 @@ export type SafeResult<TOutput, TError>
  * }
  * ```
  *
- * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isinferableerror | Error Handling}
+ * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isinferableerror | Client Error Handling - Using safe and isInferableError}
  */
 export async function safe<TOutput, TError = ThrowableError>(promise: PromiseWithError<TOutput, TError>): Promise<SafeResult<TOutput, TError>> {
   try {

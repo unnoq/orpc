@@ -8,7 +8,7 @@ import { toFetchHeaders, toStandardBody } from '@standardserver/fetch'
  * Decompresses incoming request bodies based on the Content-Encoding header,
  * supporting gzip, deflate, and deflate-raw.
  *
- * @see {@link https://orpc.dev/docs/plugins/request-compression | Request Compression}
+ * @see {@link https://orpc.dev/docs/plugins/request-compression | Request Compression Plugin}
  */
 export class RequestCompressionHandlerPlugin<T extends Context> implements StandardHandlerPlugin <T> {
   name = '~request-compression'

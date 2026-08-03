@@ -15,7 +15,7 @@ const ALGORITHM = { name: 'HMAC', hash: 'SHA-256' }
  * expect(signedValue).toEqual("user123.oneQsU0r5dvwQFHFEjjV1uOI_IR3gZfkYHij3TRauVA")
  * ```
  *
- * @see {@link https://orpc.dev/docs/helpers/signing | Signing}
+ * @see {@link https://orpc.dev/docs/helpers/signing | Signing Helpers}
  */
 export async function sign(value: string, secret: string): Promise<string> {
   const encoder = new TextEncoder()
@@ -51,7 +51,7 @@ export async function sign(value: string, secret: string): Promise<string> {
  * expect(originalValue).toEqual("user123")
  * ```
  *
- * @see {@link https://orpc.dev/docs/helpers/signing | Signing}
+ * @see {@link https://orpc.dev/docs/helpers/signing | Signing Helpers}
  */
 export async function unsign(signedValue: string | undefined | null, secret: string): Promise<string | undefined> {
   if (typeof signedValue !== 'string') {
@@ -105,7 +105,7 @@ export async function unsign(signedValue: string | undefined | null, secret: str
  * expect(value).toEqual("user123")
  * ```
  *
- * @see {@link https://orpc.dev/docs/helpers/signing | Signing}
+ * @see {@link https://orpc.dev/docs/helpers/signing | Signing Helpers}
  */
 export function getSignedValue(signedValue: string | undefined | null): string | undefined {
   if (typeof signedValue !== 'string') {

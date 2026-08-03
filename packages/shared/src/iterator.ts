@@ -190,7 +190,7 @@ export interface ConsumeAsyncIteratorOptions<T, TReturn, TError> {
  * **Warning**: If no `onError` or `onFinish` is provided, errors are thrown into the unhandled rejection channel.
  *
  * @returns An unsubscribe callback that stops consuming and cleans up the iterator.
- * @see {@link https://orpc.dev/docs/client/async-iterator-object#using-consumeasynciterator | AsyncIteratorObject (SSE)}
+ * @see {@link https://orpc.dev/docs/client/async-iterator-object#using-consumeasynciterator | AsyncIteratorObject in Client - Using consumeAsyncIterator}
  */
 export function consumeAsyncIterator<T, TReturn, TError = ThrowableError>(
   iterator: AsyncIterator<T, TReturn> | PromiseWithError<AsyncIterator<T, TReturn>, TError>,

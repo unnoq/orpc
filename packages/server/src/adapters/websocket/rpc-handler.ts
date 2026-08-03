@@ -12,7 +12,7 @@ export interface RPCHandlerOptions<T extends Context>
  * Serves an oRPC router over the RPC protocol on a standard WebSocket
  * connection (Deno, Bun, Cloudflare Durable Objects, and more).
  *
- * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket}
+ * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket Adapters}
  */
 export class RPCHandler<T extends Context> extends WebSocketHandler<T> {
   constructor(

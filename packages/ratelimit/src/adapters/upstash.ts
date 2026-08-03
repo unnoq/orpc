@@ -34,7 +34,7 @@ export interface UpstashRateLimiterOptions {
  * Rate limiter adapter for Upstash Rate Limit. Delegates limit checks to a
  * configured `Ratelimit` instance, with optional blocking mode.
  *
- * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Ratelimit}
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Rate Limit Helpers - Adapters}
  */
 export class UpstashRateLimiter implements RateLimiter {
   private blockingUntilReady: UpstashRateLimiterOptions['blockingUntilReady']

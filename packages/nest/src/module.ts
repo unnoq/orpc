@@ -14,7 +14,7 @@ export const ORPC_MODULE_CONFIG_SYMBOL = Symbol.for('ORPC_NEST_MODULE_CONFIG')
  * A standard lazy request extended with NestJS route parameters,
  * used as the request representation inside the `@orpc/nest` integration.
  *
- * @see {@link https://orpc.dev/docs/integrations/nest#toneststandardlazyrequest-option | NestJS}
+ * @see {@link https://orpc.dev/docs/integrations/nest#toneststandardlazyrequest-option | Implement oRPC contract with NestJS - toNestStandardLazyRequest option}
  */
 export interface NestStandardLazyRequest extends StandardLazyRequest {
   /**
@@ -52,7 +52,7 @@ export type ORPCModuleConfig
  * or `forRootAsync`, providing options such as initial context, plugins,
  * and interceptors to `@Implement` handlers.
  *
- * @see {@link https://orpc.dev/docs/integrations/nest#configuration | NestJS}
+ * @see {@link https://orpc.dev/docs/integrations/nest#configuration | Implement oRPC contract with NestJS - Configuration}
  */
 @Module({})
 export class ORPCModule {

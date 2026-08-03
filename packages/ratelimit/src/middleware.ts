@@ -54,7 +54,7 @@ export interface RateLimitMiddlewareOptions<
  * Creates a middleware that enforces rate limits in oRPC procedures.
  * Supports per-request deduplication and integrates with the ratelimit handler plugin.
  *
- * @see {@link https://orpc.dev/docs/helpers/ratelimit#ratelimit-middleware | Ratelimit}
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#ratelimit-middleware | Rate Limit Helpers - Ratelimit Middleware}
  */
 export function ratelimit<
   TInContext extends Context,

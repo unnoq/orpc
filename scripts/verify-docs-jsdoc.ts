@@ -30,7 +30,10 @@ interface Mention {
 interface DocPage {
   file: string
   raw: string
-  slugs: Set<string>
+  /** Cleaned text of the page's first heading. */
+  title: string
+  /** Heading slug -> cleaned heading text. */
+  slugs: Map<string, string>
 }
 
 interface Issue {
@@ -124,22 +127,35 @@ function collectImportedNames(code: string): Map<string, Set<string>> {
 }
 
 /**
- * Mirrors VitePress' default heading slugification (lowercase, strip punctuation,
- * spaces to dashes) closely enough to validate anchors.
+ * Mirrors VitePress' default heading slugification (the @mdit-vue/shared `slugify`):
+ * special characters become dashes, dashes collapse, leading digits get a `_` prefix.
  */
 function slugify(text: string): string {
   return text
     .normalize('NFKD')
     .replace(/[\u0300-\u036F]/g, '')
-    .replace(/[!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001F]/g, '')
+    .replace(/[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'\u201C\u201D\u2018\u2019<>,.?/]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/^(\d)/, '_$1')
     .toLowerCase()
 }
 
-function extractHeadingSlugs(outsideFenceLines: string[]): Set<string> {
-  const slugs = new Set<string>()
+function cleanHeadingText(text: string): string {
+  return text
+    .replace(/\{#[\w-]+\}\s*$/, '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[`*]/g, '')
+    .replace(/\\(.)/g, '$1')
+    .trim()
+}
+
+function extractHeadings(outsideFenceLines: string[]): { title: string, slugs: Map<string, string> } {
+  const slugs = new Map<string, string>()
   const counts = new Map<string, number>()
+  let title = ''
 
   for (const line of outsideFenceLines) {
     const heading = line.match(/^#{1,6}\s(.*)$/)
@@ -148,25 +164,23 @@ function extractHeadingSlugs(outsideFenceLines: string[]): Set<string> {
       continue
     }
 
-    let text = heading[1]!.trim()
-    const custom = text.match(/\{#([\w-]+)\}\s*$/)
+    const rawText = heading[1]!.trim()
+    const text = cleanHeadingText(rawText)
+    title ||= text
+    const custom = rawText.match(/\{#([\w-]+)\}\s*$/)
 
     if (custom) {
-      slugs.add(custom[1]!)
+      slugs.set(custom[1]!, text)
       continue
     }
-
-    text = text
-      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-      .replace(/[`*]/g, '')
 
     const slug = slugify(text)
     const count = counts.get(slug) ?? 0
     counts.set(slug, count + 1)
-    slugs.add(count === 0 ? slug : `${slug}-${count}`)
+    slugs.set(count === 0 ? slug : `${slug}-${count}`, text)
   }
 
-  return slugs
+  return { title, slugs }
 }
 
 async function collectDocs(): Promise<{ mentions: Map<string, Mention>, pages: Map<string, DocPage> }> {
@@ -181,7 +195,7 @@ async function collectDocs(): Promise<{ mentions: Map<string, Mention>, pages: M
     pages.set(relPage.replace(/\/index$/, '') || 'index', {
       file,
       raw,
-      slugs: extractHeadingSlugs(outside),
+      ...extractHeadings(outside),
     })
 
     for (const fence of code) {
@@ -292,7 +306,7 @@ function formatLocation(declaration: ts.Declaration): string {
   return `${path.relative(ROOT_DIR, sourceFile.fileName)}:${line + 1}`
 }
 
-const SEE_LINK_RE = /@see\s+\{@link\s+(https:\/\/orpc\.dev\/[^\s}|]+)/g
+const SEE_LINK_RE = /@see\s+\{@link\s+(https:\/\/orpc\.dev\/[^\s}|]+)(?:\s*\|([^}]*))?\}/g
 const LEGACY_TAG_RES: [RegExp, string][] = [
   [/@info\b/, 'non-standard @info tag (use @remarks with **Note**:)'],
   [/@warning\b/, 'non-standard @warning tag (use @remarks with **Warning**:)'],
@@ -330,20 +344,21 @@ function checkMention(
     return
   }
 
-  const links = [...jsDocText.matchAll(SEE_LINK_RE)].map(match => match[1]!)
+  const links = [...jsDocText.matchAll(SEE_LINK_RE)]
+    .map(match => ({ url: match[1]!, title: match[2]?.trim() }))
 
   if (links.length === 0) {
     report('error', 'E3', 'JSDoc has no @see {@link https://orpc.dev/docs/...} backlink')
     return
   }
 
-  for (const link of links) {
-    if (!link.startsWith(DOCS_URL_PREFIX)) {
-      report('error', 'E4', `backlink ${link} does not point under ${DOCS_URL_PREFIX}`)
+  for (const { url, title } of links) {
+    if (!url.startsWith(DOCS_URL_PREFIX)) {
+      report('error', 'E4', `backlink ${url} does not point under ${DOCS_URL_PREFIX}`)
       continue
     }
 
-    const [pagePath = '', anchor] = link.slice(DOCS_URL_PREFIX.length).split('#')
+    const [pagePath = '', anchor] = url.slice(DOCS_URL_PREFIX.length).split('#')
     const page = pages.get(pagePath)
 
     if (!page) {
@@ -353,6 +368,16 @@ function checkMention(
 
     if (anchor !== undefined && !page.slugs.has(anchor)) {
       report('error', 'E5', `anchor "#${anchor}" not found in apps/content/docs/${pagePath}.md`)
+      continue
+    }
+
+    const anchorHeading = anchor !== undefined ? page.slugs.get(anchor) : undefined
+    const expectedTitle = anchorHeading && anchorHeading !== page.title
+      ? `${page.title} - ${anchorHeading}`
+      : page.title
+
+    if (title !== expectedTitle) {
+      report('error', 'E6', `link title should be "| ${expectedTitle}"${title ? ` (found "| ${title}")` : ' (title missing)'}`)
       continue
     }
 

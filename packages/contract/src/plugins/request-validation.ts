@@ -23,7 +23,7 @@ export interface RequestValidationLinkPluginOptions<_T extends ClientContext> {
  * Validates client request input against contract schemas before the request is encoded.
  * This is useful when your application relies on server-side validation.
  *
- * @see {@link https://orpc.dev/docs/plugins/request-validation | Request Validation}
+ * @see {@link https://orpc.dev/docs/plugins/request-validation | Request Validation Plugin}
  */
 export class RequestValidationLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~request-validation'

@@ -20,7 +20,7 @@ export interface ORPCInstrumentationConfig extends InstrumentationConfig {
  * OpenTelemetry instrumentation for oRPC. Automatically instruments both
  * client and server for distributed tracing.
  *
- * @see {@link https://orpc.dev/docs/integrations/opentelemetry | OpenTelemetry}
+ * @see {@link https://orpc.dev/docs/integrations/opentelemetry | OpenTelemetry Integration}
  */
 export class ORPCInstrumentation extends InstrumentationBase<ORPCInstrumentationConfig> {
   constructor(config: ORPCInstrumentationConfig = {}) {

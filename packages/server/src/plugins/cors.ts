@@ -63,7 +63,7 @@ export interface CORSHandlerPluginOptions<T extends Context> {
  * Configures the [CORS Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
  * for your API, including preflight requests.
  *
- * @see {@link https://orpc.dev/docs/plugins/cors | CORS}
+ * @see {@link https://orpc.dev/docs/plugins/cors | CORS Handler Plugin}
  */
 export class CORSHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   private readonly options: CORSHandlerPluginOptions<T>

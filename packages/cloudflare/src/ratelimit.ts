@@ -15,7 +15,7 @@ export interface CloudflareRateLimiterOptions {
  * @remarks
  * **Note**: Blocking mode is not supported by this adapter.
  *
- * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Ratelimit}
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Rate Limit Helpers - Adapters}
  */
 export class CloudflareRateLimiter implements RateLimiter {
   private readonly prefix: string

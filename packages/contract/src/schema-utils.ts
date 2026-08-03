@@ -16,7 +16,7 @@ export type TypeRest<TInput, TOutput>
  * const withMap = type<number, string>(input => input.toString())
  *```
  *
- * @see {@link https://orpc.dev/docs/procedure#type-utility | Procedure}
+ * @see {@link https://orpc.dev/docs/procedure#type-utility | Procedure - type Utility}
  */
 export function type<TInput, TOutput = TInput>(
   ...[map]: TypeRest<TInput, TOutput>

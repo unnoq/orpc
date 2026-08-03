@@ -133,14 +133,14 @@ export {
   /**
    * Retrieves metadata attached to a single iterator event value.
    *
-   * @see {@link https://orpc.dev/docs/helpers/publisher | Publisher}
+   * @see {@link https://orpc.dev/docs/helpers/publisher | Publisher Helpers}
    */
   getEventMeta,
   unwrapEvent,
   /**
    * Returns a new iterator event value with attached, validated metadata.
    *
-   * @see {@link https://orpc.dev/docs/async-iterator-object#last-event-id-event-metadata | AsyncIteratorObject (SSE)}
+   * @see {@link https://orpc.dev/docs/async-iterator-object#last-event-id-event-metadata | AsyncIteratorObject (SSE) - Last Event ID & Event Metadata}
    */
   withEventMeta,
 } from '@standardserver/core'

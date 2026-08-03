@@ -12,7 +12,7 @@ export interface OpenAPIHandlerOptions<T extends Context>
 /**
  * Serves oRPC procedures over the OpenAPI (RESTful) protocol as part of a Fastify server.
  *
- * @see {@link https://orpc.dev/docs/adapters/fastify | Fastify}
+ * @see {@link https://orpc.dev/docs/adapters/fastify | Fastify Adapter}
  */
 export class OpenAPIHandler<T extends Context> extends FastifyHandler<T> {
   constructor(

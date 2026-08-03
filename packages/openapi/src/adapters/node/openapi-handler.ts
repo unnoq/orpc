@@ -12,7 +12,7 @@ export interface OpenAPIHandlerOptions<T extends Context>
 /**
  * Serves oRPC procedures over the OpenAPI (RESTful) protocol using Node.js built-in HTTP request/response.
  *
- * @see {@link https://orpc.dev/docs/adapters/node-http | Node HTTP}
+ * @see {@link https://orpc.dev/docs/adapters/node-http | Node HTTP Adapter}
  */
 export class OpenAPIHandler<T extends Context> extends NodeHttpHandler<T> {
   constructor(

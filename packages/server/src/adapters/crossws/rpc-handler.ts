@@ -12,7 +12,7 @@ export interface experimental_RPCHandlerOptions<T extends Context>
  * Serves an oRPC router over the RPC protocol on a WebSocket connection
  * managed by [crossws](https://github.com/h3js/crossws).
  *
- * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket}
+ * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket Adapters}
  */
 export class experimental_RPCHandler<T extends Context> extends CrosswsHandler<T> {
   constructor(

@@ -71,4 +71,4 @@ JSDoc blocks follow this template:
 - `@remarks` is optional (max 1-3 bold lines) and uses `**Warning**:`/`**Note**:` — not `@warning`/`@info` tags.
 - `@param`/`@returns` only when they add information beyond the type signature.
 - No `@example` blocks — examples live on the linked docs page.
-- `@see` is always the last tag. The URL must map to an existing `apps/content/docs/<path>.md` page (plus optional `#anchor` matching a real heading), and the title after `|` is the page's sidebar label from `apps/content/.vitepress/config.ts`.
+- `@see` is always the last tag. The URL must map to an existing `apps/content/docs/<path>.md` page (plus optional `#anchor` matching a real heading). The title after `|` is the page's title (its first heading), or `Page Title - Heading` when the link targets an anchor.

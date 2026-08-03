@@ -11,7 +11,7 @@ export interface RPCLinkOptions<T extends ClientContext>
 /**
  * Client link that communicates with an RPC Handler over a WebSocket connection.
  *
- * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket}
+ * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket Adapters}
  */
 export class RPCLink<T extends ClientContext> extends StandardLink<T> {
   constructor(options: RPCLinkOptions<T>) {

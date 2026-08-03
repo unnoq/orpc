@@ -19,7 +19,7 @@ export interface RateLimitHandlerPluginContext {
  * Automatically adds HTTP rate limiting headers (`RateLimit-*` and `Retry-After`)
  * to responses when used with the `ratelimit` middleware.
  *
- * @see {@link https://orpc.dev/docs/helpers/ratelimit#handler-plugin | Ratelimit}
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#handler-plugin | Rate Limit Helpers - Handler Plugin}
  */
 export class RateLimitHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~ratelimit'

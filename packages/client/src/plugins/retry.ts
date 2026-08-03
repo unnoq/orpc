@@ -25,7 +25,7 @@ export interface RetryLinkPluginAttemptOptions<T extends RetryLinkPluginContext>
  * Client context options that control retry behavior per call
  * when the `RetryLinkPlugin` is enabled.
  *
- * @see {@link https://orpc.dev/docs/plugins/retry | Retry}
+ * @see {@link https://orpc.dev/docs/plugins/retry | Retry Plugin}
  */
 export interface RetryLinkPluginContext {
   /**
@@ -73,7 +73,7 @@ export interface RetryLinkPluginOptions<_T extends RetryLinkPluginContext> {
  * @remarks
  * **Note**: Retry behavior is configured through the client context on each call.
  *
- * @see {@link https://orpc.dev/docs/plugins/retry | Retry}
+ * @see {@link https://orpc.dev/docs/plugins/retry | Retry Plugin}
  */
 export class RetryLinkPlugin<T extends RetryLinkPluginContext & ClientContext> implements StandardLinkPlugin<T> {
   private readonly defaultRetry: Exclude<RetryLinkPluginContext['retry'], undefined>

@@ -23,7 +23,7 @@ export interface ServerFunctionable<TInitialContext extends Context> {
  * server functions. The helper takes a procedure and returns a value that works
  * as both a server function and the original procedure.
  *
- * @see {@link https://orpc.dev/docs/integrations/next#createserverfunctionable | Next.js}
+ * @see {@link https://orpc.dev/docs/integrations/next#createserverfunctionable | Next.js Integration - createServerFunctionable}
  */
 export function createServerFunctionable<TInitialContext extends Context = object>(
   ...rest: MaybeOptionalOptions<

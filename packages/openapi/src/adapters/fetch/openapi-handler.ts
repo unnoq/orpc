@@ -12,7 +12,7 @@ export interface OpenAPIHandlerOptions<T extends Context>
 /**
  * Serves oRPC procedures over the OpenAPI (RESTful) protocol using the Fetch API `Request`/`Response`.
  *
- * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API}
+ * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API Adapter}
  */
 export class OpenAPIHandler<T extends Context> extends FetchHandler<T> {
   constructor(

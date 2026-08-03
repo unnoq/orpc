@@ -7,7 +7,7 @@ import type { RouterContract } from './router'
  * Client type inferred from a router contract, preserving its shape.
  * Useful for typing a client without importing the server router.
  *
- * @see {@link https://orpc.dev/docs/client/client-side | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side | Client-Side Clients}
  */
 export type RouterContractClient<TRouter extends RouterContract, TClientContext extends ClientContext = object>
   = TRouter extends ProcedureContract<infer UInputSchema, infer UOutputSchema, infer UErrorMap>

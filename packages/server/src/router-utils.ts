@@ -328,7 +328,7 @@ export type UnlaziedRouter<T extends AnyRouter>
  * Fully resolves all lazy routers inside a router, returning a plain router.
  * Useful for making a router with lazy parts contract-compatible.
  *
- * @see {@link https://orpc.dev/docs/contract/router#router-to-contract | Router Contract}
+ * @see {@link https://orpc.dev/docs/contract/router#router-to-contract | Router Contract - Router to Contract}
  */
 export async function unlazyRouter<T extends AnyRouter>(router: T): Promise<UnlaziedRouter<T>> {
   if (router instanceof Procedure) {

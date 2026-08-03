@@ -30,7 +30,7 @@ export interface RequestCompressionLinkPluginOptions<_T extends ClientContext> {
  * Compresses request bodies before sending them to the server,
  * reducing bandwidth usage for large payloads.
  *
- * @see {@link https://orpc.dev/docs/plugins/request-compression | Request Compression}
+ * @see {@link https://orpc.dev/docs/plugins/request-compression | Request Compression Plugin}
  */
 export class RequestCompressionLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~request-compression'

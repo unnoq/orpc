@@ -12,7 +12,7 @@ import { flattenStandardHeader } from '@standardserver/core'
  * @remarks
  * **Note**: This plugin is enabled by default for `RPCHandler` over HTTP.
  *
- * @see {@link https://orpc.dev/docs/plugins/csrf-guard | CSRF Guard}
+ * @see {@link https://orpc.dev/docs/plugins/csrf-guard | CSRF Guard Plugin}
  */
 export class CSRFGuardHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~csrf-guard'

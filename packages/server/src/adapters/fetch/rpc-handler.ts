@@ -27,7 +27,7 @@ export interface RPCHandlerOptions<T extends Context>
  * (Request/Response), supported by modern runtimes like Deno, Bun,
  * Cloudflare Workers, and browsers.
  *
- * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API}
+ * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API Adapter}
  */
 export class RPCHandler<T extends Context> extends FetchHandler<T> {
   constructor(

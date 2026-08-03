@@ -5,7 +5,7 @@ import { toFetchHeaders } from '@standardserver/fetch'
 /**
  * The context shape into which the Request Headers Plugin injects `reqHeaders`.
  *
- * @see {@link https://orpc.dev/docs/plugins/request-headers | Request Headers}
+ * @see {@link https://orpc.dev/docs/plugins/request-headers | Request Headers Plugin}
  */
 export interface RequestHeadersHandlerPluginContext {
   /**
@@ -18,7 +18,7 @@ export interface RequestHeadersHandlerPluginContext {
  * The Request Headers Plugin injects a `reqHeaders` instance into the context,
  * allowing access to request headers in oRPC.
  *
- * @see {@link https://orpc.dev/docs/plugins/request-headers | Request Headers}
+ * @see {@link https://orpc.dev/docs/plugins/request-headers | Request Headers Plugin}
  */
 export class RequestHeadersHandlerPlugin<T extends RequestHeadersHandlerPluginContext> implements StandardHandlerPlugin<T> {
   name = '~request-headers'

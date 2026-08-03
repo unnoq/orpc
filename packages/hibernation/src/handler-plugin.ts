@@ -8,7 +8,7 @@ import { HibernationAsyncIteratorClass } from '@standardserver/peer'
  * to return a `HibernationAsyncIteratorClass` for hibernation-friendly
  * event streaming.
  *
- * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation}
+ * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation Integration}
  */
 export class HibernationHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~hibernation'

@@ -6,7 +6,7 @@ import { toStandardHeaders } from '@standardserver/fetch'
 /**
  * The context shape into which the Response Headers Plugin injects `resHeaders`.
  *
- * @see {@link https://orpc.dev/docs/plugins/response-headers | Response Headers}
+ * @see {@link https://orpc.dev/docs/plugins/response-headers | Response Headers Plugin}
  */
 export interface ResponseHeadersHandlerPluginContext {
   /**
@@ -20,7 +20,7 @@ export interface ResponseHeadersHandlerPluginContext {
  * The Response Headers Plugin allows you to set response headers in oRPC.
  * It injects a resHeaders instance into the context, enabling you to modify response headers easily.
  *
- * @see {@link https://orpc.dev/docs/plugins/response-headers | Response Headers}
+ * @see {@link https://orpc.dev/docs/plugins/response-headers | Response Headers Plugin}
  */
 export class ResponseHeadersHandlerPlugin<T extends ResponseHeadersHandlerPluginContext> implements StandardHandlerPlugin<T> {
   name = '~response-headers'

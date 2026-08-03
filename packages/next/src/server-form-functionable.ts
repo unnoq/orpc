@@ -23,7 +23,7 @@ export interface ServerFormFunctionable<TInitialContext extends Context> {
  * server form functions. The helper takes a procedure and returns a value that
  * works as both a server form function and the original procedure.
  *
- * @see {@link https://orpc.dev/docs/integrations/next#createserverformfunctionable | Next.js}
+ * @see {@link https://orpc.dev/docs/integrations/next#createserverformfunctionable | Next.js Integration - createServerFormFunctionable}
  */
 export function createServerFormFunctionable<TInitialContext extends Context = object>(
   ...rest: MaybeOptionalOptions<

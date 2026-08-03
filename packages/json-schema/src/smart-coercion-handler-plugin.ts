@@ -16,7 +16,7 @@ export interface SmartCoercionHandlerPluginOptions {
  * Coerces incoming request data to match the expected `.input` schema types before validation,
  * based on JSON schemas produced by the configured converters.
  *
- * @see {@link https://orpc.dev/docs/plugins/smart-coercion | Smart Coercion}
+ * @see {@link https://orpc.dev/docs/plugins/smart-coercion | Smart Coercion Plugin}
  */
 export class SmartCoercionHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~smart-coercion'

@@ -18,7 +18,7 @@ export interface SmartCoercionLinkPluginOptions {
  * Coerces server responses to match the expected `.output` or `.errors` schema types before validation,
  * based on JSON schemas produced by the configured converters.
  *
- * @see {@link https://orpc.dev/docs/plugins/smart-coercion | Smart Coercion}
+ * @see {@link https://orpc.dev/docs/plugins/smart-coercion | Smart Coercion Plugin}
  */
 export class SmartCoercionLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~smart-coercion'

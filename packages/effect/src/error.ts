@@ -18,7 +18,7 @@ import { Effect, Function } from 'effect'
  * )
  * ```
  *
- * @see {@link https://orpc.dev/docs/integrations/effect#catching-orpcerrors | Effect}
+ * @see {@link https://orpc.dev/docs/integrations/effect#catching-orpcerrors | Effect Integration - Catching ORPCErrors}
  */
 export const catchORPCError: {
   <E, A2, E2, R2>(
@@ -58,7 +58,7 @@ export const catchORPCError: {
  * )
  * ```
  *
- * @see {@link https://orpc.dev/docs/integrations/effect#catching-orpcerrors | Effect}
+ * @see {@link https://orpc.dev/docs/integrations/effect#catching-orpcerrors | Effect Integration - Catching ORPCErrors}
  */
 export const catchORPCErrorCode: {
   <const TCode extends E extends ORPCError<infer TCode, any> ? TCode : never, E, A2, E2, R2>(
@@ -105,7 +105,7 @@ export const catchORPCErrorCode: {
  * )
  * ```
  *
- * @see {@link https://orpc.dev/docs/integrations/effect#catching-orpcerrors | Effect}
+ * @see {@link https://orpc.dev/docs/integrations/effect#catching-orpcerrors | Effect Integration - Catching ORPCErrors}
  */
 export const catchORPCErrorCodes: {
   <

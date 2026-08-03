@@ -34,7 +34,7 @@ const succeedOnORPCError = Effect.catch(error => error instanceof ORPCError ? Ef
  * Inside the generator you can yield Effect operations, and `handlerGen`
  * handles the execution and error handling for you.
  *
- * @see {@link https://orpc.dev/docs/integrations/effect#effectful-handlers | Effect}
+ * @see {@link https://orpc.dev/docs/integrations/effect#effectful-handlers | Effect Integration - Effectful Handlers}
  */
 export function handlerGen<
   TCurrentContext extends Context,

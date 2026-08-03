@@ -9,7 +9,7 @@ export type Schema<TInput, TOutput = TInput> = StandardSchemaV1<TInput, TOutput>
 /**
  * Any Standard Schema compatible schema, regardless of its input and output types.
  *
- * @see {@link https://orpc.dev/docs/integrations/standard-schema | Standard Schema}
+ * @see {@link https://orpc.dev/docs/integrations/standard-schema | Standard Schema Integration}
  */
 export type AnySchema = Schema<any>
 

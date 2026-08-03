@@ -31,7 +31,7 @@ export interface RateLimitOptions {
  * Standard interface for checking and enforcing rate limits.
  * Implement it for custom strategies, or use one of the provided adapters.
  *
- * @see {@link https://orpc.dev/docs/helpers/ratelimit | Ratelimit}
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit | Rate Limit Helpers}
  */
 export interface RateLimiter {
   limit(key: string, options?: RateLimitOptions): Promise<RateLimitResult>

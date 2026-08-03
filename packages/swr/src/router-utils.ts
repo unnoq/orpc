@@ -29,7 +29,7 @@ export interface RouterUtilsOptions extends OperationKeyPrefixOptions {
  * @remarks
  * **Note**: Both client-side and server-side clients are supported.
  *
- * @see {@link https://orpc.dev/docs/integrations/swr | SWR}
+ * @see {@link https://orpc.dev/docs/integrations/swr | SWR Integration}
  */
 export function createRouterUtils<T extends AnyNestedClient>(
   client: T,

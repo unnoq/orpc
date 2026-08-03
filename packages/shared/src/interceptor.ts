@@ -48,7 +48,7 @@ export function onSuccess<T, TOptions extends { next: () => any }, TRest extends
  * Creates an interceptor or middleware that invokes a callback whenever an error
  * is thrown. The error is rethrown after the callback completes.
  *
- * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API}
+ * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API Adapter}
  */
 export function onError<T, TOptions extends { next: () => any }, TRest extends any[]>(
   callback: NoInfer<(

@@ -103,7 +103,7 @@ export interface BatchLinkPluginOptions<T extends ClientContext> {
  * @remarks
  * **Note**: HTTP/2 and later already multiplex requests over a single connection, so this plugin is often less useful than it once was.
  *
- * @see {@link https://orpc.dev/docs/plugins/batch | Batch}
+ * @see {@link https://orpc.dev/docs/plugins/batch | Batch Plugin}
  */
 export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~batch'

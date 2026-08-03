@@ -33,7 +33,7 @@ export type AnyNestedClient = NestedClient<any>
 /**
  * Infers the **client context type** required by a client.
  *
- * @see {@link https://orpc.dev/docs/client/client-side#infer-client-context | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side#infer-client-context | Client-Side Clients - Infer Client Context}
  */
 export type InferClientContext<T extends AnyNestedClient> = T extends NestedClient<infer U> ? U : never
 
@@ -46,7 +46,7 @@ export interface ClientLink<TClientContext extends ClientContext> {
  *
  * Produces a nested map where each endpoint's input type is preserved.
  *
- * @see {@link https://orpc.dev/docs/client/client-side#infer-client-inputs | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side#infer-client-inputs | Client-Side Clients - Infer Client Inputs}
  */
 export type InferClientInputs<T extends AnyNestedClient>
   = T extends Client<any, infer U, any, any>
@@ -61,7 +61,7 @@ export type InferClientInputs<T extends AnyNestedClient>
  * If an endpoint's input includes `{ body: ... }`, only the `body` portion is extracted.
  * Produces a nested map of body input types.
  *
- * @see {@link https://orpc.dev/docs/client/client-side#infer-client-body-inputs | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side#infer-client-body-inputs | Client-Side Clients - Infer Client Body Inputs}
  */
 export type InferClientBodyInputs<T extends AnyNestedClient>
   = T extends Client<any, infer U, any, any>
@@ -75,7 +75,7 @@ export type InferClientBodyInputs<T extends AnyNestedClient>
  *
  * Produces a nested map where each endpoint's output type is preserved.
  *
- * @see {@link https://orpc.dev/docs/client/client-side#infer-client-outputs | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side#infer-client-outputs | Client-Side Clients - Infer Client Outputs}
  */
 export type InferClientOutputs<T extends AnyNestedClient>
   = T extends Client<any, any, infer U, any>
@@ -90,7 +90,7 @@ export type InferClientOutputs<T extends AnyNestedClient>
  * If an endpoint's output includes `{ body: ... }`, only the `body` portion is extracted.
  * Produces a nested map of body output types.
  *
- * @see {@link https://orpc.dev/docs/client/client-side#infer-client-body-outputs | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side#infer-client-body-outputs | Client-Side Clients - Infer Client Body Outputs}
  */
 export type InferClientBodyOutputs<T extends AnyNestedClient>
   = T extends Client<any, any, infer U, any>
@@ -104,7 +104,7 @@ export type InferClientBodyOutputs<T extends AnyNestedClient>
  *
  * Produces a nested map where each endpoint's error type is preserved.
  *
- * @see {@link https://orpc.dev/docs/client/client-side#infer-client-errors | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side#infer-client-errors | Client-Side Clients - Infer Client Errors}
  */
 export type InferClientErrors<T extends AnyNestedClient>
   = T extends Client<any, any, any, infer U>
@@ -118,7 +118,7 @@ export type InferClientErrors<T extends AnyNestedClient>
  *
  * Useful when you want to handle all possible errors from any endpoint at once.
  *
- * @see {@link https://orpc.dev/docs/client/client-side#infer-client-error | Client-Side}
+ * @see {@link https://orpc.dev/docs/client/client-side#infer-client-error | Client-Side Clients - Infer Client Error}
  */
 export type InferClientError<T extends AnyNestedClient>
   = T extends Client<any, any, any, infer U>

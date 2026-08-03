@@ -7,7 +7,7 @@ import { createLoggerStorage as baseCreateLoggerStorage } from 'evlog/toolkit'
  * Creates an AsyncLocalStorage-backed logger store. Pass `storage` to
  * `EvlogHandlerPlugin` and call `useLogger` inside procedures to access the request logger.
  *
- * @see {@link https://orpc.dev/docs/integrations/evlog#using-the-logger-in-your-code | Evlog}
+ * @see {@link https://orpc.dev/docs/integrations/evlog#using-the-logger-in-your-code | Evlog Integration - Using the Logger in Your Code}
  */
 export function createLoggerStorage(): {
   storage: FrameworkIntegrationSpec<{ request: StandardRequest }>['storage']

@@ -15,7 +15,7 @@ export interface OpenAPIHandlerOptions<T extends Context>
  * @remarks
  * **Warning**: Requires the AWS Lambda Node.js runtime with response streaming enabled — handlers should be wrapped with `awslambda.streamifyResponse`.
  *
- * @see {@link https://orpc.dev/docs/adapters/aws-lambda | AWS Lambda}
+ * @see {@link https://orpc.dev/docs/adapters/aws-lambda | AWS Lambda Adapter}
  */
 export class OpenAPIHandler<T extends Context> extends AwsLambdaHandler<T> {
   constructor(

@@ -21,7 +21,7 @@ export type Implementer<
  * Turns a contract into an implementer, used to implement the contract's
  * procedures, routers, and middleware with full type safety.
  *
- * @see {@link https://orpc.dev/docs/contract/implementation#implementer | Contract Implementation}
+ * @see {@link https://orpc.dev/docs/contract/implementation#implementer | Contract Implementation - Implementer}
  */
 export function implement<TContract extends RouterContract, TInitialContext extends Context = DefaultInitialContext>(
   contract: TContract,

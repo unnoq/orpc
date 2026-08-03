@@ -27,7 +27,7 @@ export interface EvlogHandlerPluginOptions<_T extends Context> extends BaseEvlog
  * Instruments an oRPC handler with Evlog structured logging, request tracking,
  * and error monitoring.
  *
- * @see {@link https://orpc.dev/docs/integrations/evlog | Evlog}
+ * @see {@link https://orpc.dev/docs/integrations/evlog | Evlog Integration}
  */
 export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~evlog'

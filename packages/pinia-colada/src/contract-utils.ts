@@ -23,7 +23,7 @@ export interface ContractUtilsFactoryOptions<
  * @remarks
  * **Note**: The contract must define a `path` meta matching its position in the root router contract.
  *
- * @see {@link https://orpc.dev/docs/advanced/scaling-large-projects#pinia-colada-integration | Scaling Large Projects}
+ * @see {@link https://orpc.dev/docs/advanced/scaling-large-projects#pinia-colada-integration | Scaling Large Projects - Pinia Colada Integration}
  */
 export function createContractUtilsFactory<
   TClientContext extends ClientContext,
