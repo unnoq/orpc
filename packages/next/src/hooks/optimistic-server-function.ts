@@ -15,6 +15,12 @@ export type UseOptimisticServerFunctionResult<TInput, TOutput, TError, TOptimist
   optimisticState: TOptimisticState
 }
 
+/**
+ * Like `useServerFunction`, but additionally applies optimistic state updates
+ * while the server function executes.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/next#hooks | Next.js Integration - Hooks}
+ */
 export function useOptimisticServerFunction<TInput, TOutput, TError extends AnyORPCErrorJSON, TOptimisticState>(
   fn: ServerFunction<TInput, TOutput, TError>,
   options: UseOptimisticServerFunctionOptions<TInput, TOutput, ServerFunctionError<TError>, TOptimisticState>,

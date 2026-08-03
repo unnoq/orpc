@@ -119,7 +119,7 @@ function combineOutputSchemas(outputSchemas: AnySchema[]): FlexibleSchema | unde
  * each yielded event as a [preliminary result](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preliminary-tool-results)
  * and the last event becomes the final result, so the tool output is the yield type.
  *
- * @see {@link https://orpc.dev/docs/integrations/ai-sdk#streaming-tool-outputs AI SDK Streaming Tool Outputs Docs}
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk#streaming-tool-outputs | AI SDK Integration - Streaming Tool Outputs}
  */
 export type ToolOutput<T> = T extends AsyncIteratorObject<infer TYield, any, any>
   ? TYield
@@ -144,8 +144,8 @@ export interface ToolImplementer {
  * The factory accepts oRPC related options, and the resulting builder
  * accepts a contract alongside AI SDK tool options.
  *
- * @info [procedures](https://orpc.dev/docs/procedure) are also compatible with [procedure contracts](https://orpc.dev/docs/contract/procedure).
- * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer AI SDK Tool Implementer Docs}
+ * @remarks
+ * **Note**: [Procedures](https://orpc.dev/docs/procedure) are also compatible with [procedure contracts](https://orpc.dev/docs/contract/procedure).
  *
  * @example
  * ```ts
@@ -177,6 +177,8 @@ export interface ToolImplementer {
  *   }),
  * })
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer | AI SDK Integration - Tool Implementer}
  */
 export function implementToolFactory(_options: ImplementToolFactoryOptions = {}): ToolImplementer {
   const factory: ToolImplementer = (contract, ...rest) => {
@@ -217,8 +219,6 @@ export interface ToolFactory<TInitialContext extends Context> {
  * The factory accepts oRPC related options, and the resulting builder
  * accepts a procedure alongside AI SDK tool options.
  *
- * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-factory AI SDK Tool Factory Docs}
- *
  * @example
  * ```ts
  * import { aiSdkTool, createToolFactory } from '@orpc/ai-sdk'
@@ -248,6 +248,8 @@ export interface ToolFactory<TInitialContext extends Context> {
  *   // ...AI SDK tool options/overrides here if needed
  * })
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-factory | AI SDK Integration - Tool Factory}
  */
 export function createToolFactory<TInitialContext extends Context = object>(
   ...rest: MaybeOptionalOptions<CreateToolFactoryOptions<TInitialContext>>

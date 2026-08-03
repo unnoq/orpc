@@ -55,6 +55,12 @@ export interface DurablePublisherObjectOptions {
   resume?: DurablePublisherObjectResumeOptions
 }
 
+/**
+ * Durable Object base class that backs `DurablePublisher`. Fans published events
+ * out to WebSocket subscribers, with optional event storage for resume support.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher Helpers - Adapters}
+ */
 export class DurablePublisherObject<Env = Cloudflare.Env, Props = unknown> extends DurableObject<Env, Props> {
   private readonly resumeStorage: ResumeStorage
 

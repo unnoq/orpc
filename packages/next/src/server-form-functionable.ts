@@ -18,6 +18,13 @@ export interface ServerFormFunctionable<TInitialContext extends Context> {
     & Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
 }
 
+/**
+ * Creates a preconfigured helper for reusing the same options across multiple
+ * server form functions. The helper takes a procedure and returns a value that
+ * works as both a server form function and the original procedure.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/next#createserverformfunctionable | Next.js Integration - createServerFormFunctionable}
+ */
 export function createServerFormFunctionable<TInitialContext extends Context = object>(
   ...rest: MaybeOptionalOptions<
     ProcedureClientOptions<

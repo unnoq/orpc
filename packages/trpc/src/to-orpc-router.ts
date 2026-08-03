@@ -29,7 +29,12 @@ export type ToORPCRouterResult<TContext extends ORPC.Context, TRecord extends Re
   }
 
 /**
- * Convert a tRPC router to an oRPC router.
+ * Converts a tRPC router into an oRPC router that works with any oRPC feature.
+ *
+ * @remarks
+ * **Note**: tRPC Error Formatting is not supported — errors thrown by tRPC are wrapped in `ORPCError`.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/trpc | tRPC Integration}
  */
 export function toORPCRouter<T extends AnyRouter>(
   router: T,

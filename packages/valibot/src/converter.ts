@@ -17,6 +17,12 @@ export interface ValibotToJsonSchemaConverterOptions extends Omit<ConversionConf
   cache?: boolean
 }
 
+/**
+ * Converts Valibot schemas into JSON Schema using Valibot's built-in `toJsonSchema`,
+ * with additional support for types such as `v.bigint()`, `v.date()`, `v.set()`, and `v.map()`.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/valibot | Valibot Integration}
+ */
 export class ValibotToJsonSchemaConverter implements JsonSchemaConverter {
   private readonly conversionConfig: ConversionConfig
   private readonly cache: undefined | { [d in JsonSchemaConverterDirection]: WeakMap<BaseSchema<any, any, any>, [jsonSchema: JsonSchema, optional: boolean]> }

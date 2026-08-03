@@ -13,6 +13,12 @@ export interface ErrorMapItem {
   data?: undefined | AnySchema
 }
 
+/**
+ * Map of error codes to their definitions, as passed to `.errors(...)`.
+ * Errors defined here remain properly typed on the client.
+ *
+ * @see {@link https://orpc.dev/docs/metadata | Metadata}
+ */
 export type ErrorMap = {
   [key in ORPCErrorCode]?: ErrorMapItem
 }
@@ -32,6 +38,13 @@ export interface ValidationErrorOptions extends ErrorOptions {
   invalidData: unknown
 }
 
+/**
+ * Error thrown when input, output, or error data fails schema validation,
+ * carrying the standard-schema `issues` and the invalid data.
+ * Usually found as the `cause` of an `ORPCError`.
+ *
+ * @see {@link https://orpc.dev/docs/advanced/validation-customization | Validation Customization}
+ */
 export class ValidationError extends Error {
   /**
    * This array is readonly because the upstream Standard Schema returns readonly issues.

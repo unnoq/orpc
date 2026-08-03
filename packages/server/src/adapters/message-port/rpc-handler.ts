@@ -8,6 +8,12 @@ import { MessagePortHandler } from './handler'
 export interface RPCHandlerOptions<T extends Context>
   extends StandardHandlerOptions<T>, RPCHandlerCodecOptions<T>, MessagePortHandlerOptions<T> {}
 
+/**
+ * Serves an oRPC router over the RPC protocol on a message port,
+ * such as browser extensions, Electron, or worker threads.
+ *
+ * @see {@link https://orpc.dev/docs/adapters/message-port | Message Port Adapter}
+ */
 export class RPCHandler<T extends Context> extends MessagePortHandler<T> {
   constructor(
     router: Router<T>,

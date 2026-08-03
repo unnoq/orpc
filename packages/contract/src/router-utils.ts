@@ -92,6 +92,15 @@ export function getProcedureContractOrThrow(router: RouterContract, path: readon
   return procedure
 }
 
+/**
+ * Minifies a router contract so it can be safely exported to the client
+ * without exposing internal logic.
+ *
+ * @remarks
+ * **Note**: Only the metadata needed by the client is preserved; all other data is stripped out.
+ *
+ * @see {@link https://orpc.dev/docs/contract/router | Router Contract}
+ */
 export function minifyRouterContract(router: RouterContract): RouterContract {
   if (router instanceof ProcedureContract) {
     const procedure: AnyProcedureContract = {

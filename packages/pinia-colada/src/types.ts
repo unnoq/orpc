@@ -13,10 +13,22 @@ export type UseQueryFnContext = Parameters<UseQueryOptions<any>['query']>[0]
  */
 export type UseMutationFnContext = Parameters<NonNullable<UseMutationOptionsGlobal['onSuccess']>>[2]
 
+/**
+ * The symbol under which Pinia Colada utils attach operation details
+ * (key and operation type) to the client context.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/pinia-colada#client-context | Pinia Colada Integration - Client Context}
+ */
 export const OPERATION_CONTEXT_SYMBOL: unique symbol = Symbol.for('ORPC_PINIA_COLADA_OPERATION_CONTEXT') as any
 
 export type OperationType = 'query' | 'streamed' | 'live' | 'infinite' | 'mutation'
 
+/**
+ * A client context automatically populated by Pinia Colada utils,
+ * exposing the operation key and type of the calling operation.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/pinia-colada#client-context | Pinia Colada Integration - Client Context}
+ */
 export interface OperationContext {
   [OPERATION_CONTEXT_SYMBOL]?: {
     key: EntryKey

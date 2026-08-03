@@ -36,6 +36,12 @@ export interface OpenAPISerializerOptions extends OpenAPIJsonSerializerOptions {
   serialize?: OpenAPISerializerSerializeOptions | undefined
 }
 
+/**
+ * Handles one-way serialization of oRPC payloads into JSON-friendly formats,
+ * partially supporting complex data types beyond plain JSON such as `Date`, `BigInt`, and `Set`.
+ *
+ * @see {@link https://orpc.dev/docs/openapi/serializer | OpenAPI Serializer}
+ */
 export class OpenAPISerializer {
   private readonly jsonSerializer: OpenAPIJsonSerializer
   private readonly bracketNotation: BracketNotationSerializer

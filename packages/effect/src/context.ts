@@ -1,6 +1,12 @@
 import type { AnyProcedure } from '@orpc/server'
 import type { Effect, Context as EffectContext } from 'effect'
 
+/**
+ * A context shape that provides Effect services to effectful handlers
+ * through the oRPC context in a typesafe way.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/effect#effect-services | Effect Integration - Effect Services}
+ */
 export interface WithEffectContext<Services> {
   /**
    * A pre-built Effect context providing the services available within this oRPC context.

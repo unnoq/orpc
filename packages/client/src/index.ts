@@ -74,6 +74,12 @@ export type {
 
 export {
   ErrorEvent,
+  /**
+   * Retrieves event metadata (such as the event id and retry interval)
+   * attached to a single iterator event value.
+   *
+   * @see {@link https://orpc.dev/docs/client/async-iterator-object#event-metadata | AsyncIteratorObject in Client - Event Metadata}
+   */
   getEventMeta,
   unwrapEvent,
   withEventMeta,

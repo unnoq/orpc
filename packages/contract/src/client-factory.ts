@@ -23,6 +23,15 @@ export interface ContractClientFactoryOptions<
   contractRef?: undefined | RouterContract
 }
 
+/**
+ * Creates a client factory that builds a client from any procedure or router contract,
+ * so large projects can import individual contracts instead of a single root client.
+ *
+ * @remarks
+ * **Warning**: Every procedure contract passed to the factory must define `meta.path` matching its location in the root contract.
+ *
+ * @see {@link https://orpc.dev/docs/advanced/scaling-large-projects#contract-client-factory | Scaling Large Projects - Contract Client Factory}
+ */
 export function createContractClientFactory<
   TClientContext extends ClientContext,
 >(

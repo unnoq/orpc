@@ -7,8 +7,20 @@ export type InferLiveQueryOutput<TOutput> = TOutput extends AsyncIterable<infer 
 
 export type OperationType = 'query' | 'streamed' | 'live' | 'infinite' | 'mutation'
 
+/**
+ * The symbol under which TanStack Query utils attach operation details
+ * (key and operation type) to the client context.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/tanstack-query#client-context | TanStack Query Integration - Client Context}
+ */
 export const OPERATION_CONTEXT_SYMBOL: unique symbol = Symbol.for('ORPC_TANSTACK_QUERY_OPERATION_CONTEXT') as any
 
+/**
+ * A client context automatically populated by TanStack Query utils,
+ * exposing the operation key and type of the calling operation.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/tanstack-query#client-context | TanStack Query Integration - Client Context}
+ */
 export interface OperationContext {
   [OPERATION_CONTEXT_SYMBOL]?: {
     key: QueryKey

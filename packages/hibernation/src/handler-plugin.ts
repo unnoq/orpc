@@ -4,9 +4,11 @@ import { toArray } from '@orpc/shared'
 import { HibernationAsyncIteratorClass } from '@standardserver/peer'
 
 /**
- * Enable Hibernation APIs
+ * A handler plugin that enables the Hibernation APIs, allowing procedures
+ * to return a `HibernationAsyncIteratorClass` for hibernation-friendly
+ * event streaming.
  *
- * @see {@link https://orpc.dev/docs/integrations/hibernation Hibernation Integration}
+ * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation Integration}
  */
 export class HibernationHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~hibernation'

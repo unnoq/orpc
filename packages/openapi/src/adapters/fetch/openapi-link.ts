@@ -11,6 +11,11 @@ export interface OpenAPILinkOptions<T extends ClientContext>
   extends Omit<StandardLinkOptions<T>, 'plugins'>, FetchLinkTransportOptions<T>, OpenAPILinkCodecOptions<T> {
 }
 
+/**
+ * Client link that calls an OpenAPI (RESTful) oRPC server over HTTP using the Fetch API.
+ *
+ * @see {@link https://orpc.dev/docs/openapi/link | OpenAPI Link}
+ */
 export class OpenAPILink<T extends ClientContext> extends StandardLink<T> {
   constructor(
     router: RouterContract,

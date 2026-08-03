@@ -35,6 +35,17 @@ export type ProcedureServerFunction<
   ServerFunctionORPCErrorJSON<ORPCErrorFromErrorMap<TErrorMap> | TReturnedORPCError | ThrowableError>
 >
 
+/**
+ * Creates a Next.js [server function](https://nextjs.org/docs/app/api-reference/directives/use-server)
+ * from a [procedure](https://orpc.dev/docs/procedure). It accepts the same options as server-side
+ * clients, and the returned function accepts the same input as the original procedure.
+ *
+ * @remarks
+ * **Note**: Instead of throwing, the returned function resolves an `[error, data]` tuple
+ * with errors serialized as plain JSON (`ORPCErrorJSON`).
+ *
+ * @see {@link https://orpc.dev/docs/integrations/next#server-functions | Next.js Integration - Server Functions}
+ */
 export function createServerFunction<
   TInitialContext extends Context,
   TInputSchema extends AnySchema,

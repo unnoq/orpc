@@ -107,4 +107,10 @@ export class ContractBuilder<
   }
 }
 
+/**
+ * The contract builder — the entry point for defining procedure and router contracts
+ * (input/output schemas, errors, and metadata) without any business logic.
+ *
+ * @see {@link https://orpc.dev/docs/contract/procedure | Procedure Contract}
+ */
 export const oc = ContractBuilder.create()

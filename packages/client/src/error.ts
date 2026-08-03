@@ -1,6 +1,13 @@
 import type { MaybeOptionalOptions, Registry } from '@orpc/shared'
 import { getConstructors, resolveMaybeOptionalOptions } from '@orpc/shared'
 
+/**
+ * Default mapping between common oRPC error codes and HTTP status codes.
+ * Handlers use it to determine response status codes; spread it to build a custom `errorStatusMap`.
+ *
+ * @see {@link https://orpc.dev/docs/rpc/handler#custom-error-response | RPC Handler - Custom Error Response}
+ * @see {@link https://orpc.dev/docs/openapi/handler#custom-error-response | OpenAPI Handler - Custom Error Response}
+ */
 export const COMMON_ERROR_STATUS_MAP = {
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
@@ -38,6 +45,12 @@ export type ORPCErrorOptions<TData>
 
 let ORPCErrorConstructors: WeakSet<object>
 
+/**
+ * Typed error carrying a `code`, a `message`, and optional `data`.
+ * Throw it from handlers or middleware to produce typed error responses on the client.
+ *
+ * @see {@link https://orpc.dev/docs/error-handling#orpcerror-class | Error Handling - ORPCError Class}
+ */
 export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
   /**
    * Placed inside a static block (rather than at module level) to ensure this
@@ -67,8 +80,8 @@ export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
   }
 
   /**
-   * @info
-   * The `__branch` property is used for type branding, helping TypeScript distinguish
+   * @remarks
+   * **Note**: The `__branch` property is used for type branding, helping TypeScript distinguish
    * an `ORPCError` instance from plain objects with a similar structure.
    */
   override readonly name = 'ORPCError' as 'ORPCError' & { __branch: 'ORPCError' }

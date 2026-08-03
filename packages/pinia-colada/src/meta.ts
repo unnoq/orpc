@@ -25,7 +25,7 @@ export interface PiniaColadaMetaPlugin<
  *
  * Apply them to router utils with {@link ContractOptionsUtilsPlugin}.
  *
- * @see {@link https://orpc.dev/docs/integrations/pinia-colada#contract-options-plugin Pinia Colada Contract Options Plugin Docs}
+ * @see {@link https://orpc.dev/docs/integrations/pinia-colada#contract-options-plugin | Pinia Colada Integration - Contract Options Plugin}
  */
 export function piniaColada<
   TInputSchema extends AnySchema,
@@ -66,7 +66,7 @@ export function getPiniaColadaMeta(
  * The contract shape must match the client the utils are created from,
  * so pass the root router contract when utils paths start from the root.
  *
- * @see {@link https://orpc.dev/docs/integrations/pinia-colada#contract-options-plugin Pinia Colada Contract Options Plugin Docs}
+ * @see {@link https://orpc.dev/docs/integrations/pinia-colada#contract-options-plugin | Pinia Colada Integration - Contract Options Plugin}
  */
 export class ContractOptionsUtilsPlugin<T extends AnyNestedClient = AnyNestedClient> implements RouterUtilsPlugin<T> {
   readonly name = '~contract-options'

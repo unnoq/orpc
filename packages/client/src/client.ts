@@ -46,6 +46,13 @@ export interface ORPCClientOptions<T extends AnyNestedClient> {
   scoped?: ORPCClientScoped<T>
 }
 
+/**
+ * Creates a fully typed oRPC client from a link.
+ * The returned client mirrors the shape of your router or contract,
+ * so calling a procedure is as simple as calling a function.
+ *
+ * @see {@link https://orpc.dev/docs/client/client-side | Client-Side Clients}
+ */
 export function createORPCClient<T extends AnyNestedClient>(
   link: ClientLink<InferClientContext<T>>,
   { path = [], ...options }: NoInfer<ORPCClientOptions<T>> = {},

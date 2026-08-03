@@ -8,8 +8,20 @@ export type InferLiveSubscriberOutput<TOutput> = TOutput extends AsyncIterable<i
 
 export type OperationType = 'fetcher' | 'mutator' | 'subscriber' | 'liveSubscriber'
 
+/**
+ * The symbol under which SWR utils attach operation details
+ * (key and operation type) to the client context.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/swr#operation-context | SWR Integration - Operation Context}
+ */
 export const OPERATION_CONTEXT_SYMBOL: unique symbol = Symbol.for('ORPC_SWR_OPERATION_CONTEXT')
 
+/**
+ * A client context automatically populated by SWR utils,
+ * exposing the operation key and type of the calling operation.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/swr#operation-context | SWR Integration - Operation Context}
+ */
 export interface OperationContext {
   [OPERATION_CONTEXT_SYMBOL]?: {
     key: unknown

@@ -356,6 +356,13 @@ export interface OpenAPIFunction {
   prefix(method: OpenAPIMeta['prefix']): OpenAPIPrefixMetaPlugin<any, any, any>
 }
 
+/**
+ * Creates OpenAPI meta plugins that control how a procedure is exposed over HTTP,
+ * such as its method, path, prefix, and OpenAPI operation spec.
+ *
+ * @see {@link https://orpc.dev/docs/openapi/routing | OpenAPI Routing}
+ * @see {@link https://orpc.dev/docs/openapi/specification | OpenAPI Specification}
+ */
 export const openapi: OpenAPIFunction = incoming => ({
   name: '~openapi',
   init(meta) {

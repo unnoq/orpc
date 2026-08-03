@@ -6,7 +6,16 @@ export {
    */
   HibernationHandlerPlugin as HibernationPlugin,
 } from './handler-plugin'
-export { HibernationAsyncIteratorClass } from '@standardserver/peer'
+export {
+  /**
+   * An async iterator designed for the Hibernation APIs. Instead of streaming
+   * events directly, it invokes a callback with an ID you can save and later
+   * use to send events via `encodeHibernationRPCEvent`.
+   *
+   * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation Integration}
+   */
+  HibernationAsyncIteratorClass,
+} from '@standardserver/peer'
 export {
   /**
    * @deprecated Use `HibernationAsyncIteratorClass` instead.

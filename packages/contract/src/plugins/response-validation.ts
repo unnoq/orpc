@@ -7,6 +7,12 @@ import { ValidationError } from '../error'
 import { reconcileORPCError } from '../error-utils'
 import { getProcedureContractOrThrow } from '../router-utils'
 
+/**
+ * Validates server responses against contract schemas before your application uses them.
+ * This helps ensure the data returned by the server matches the types defined in your contract.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/response-validation | Response Validation Plugin}
+ */
 export class ResponseValidationLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~response-validation'
 

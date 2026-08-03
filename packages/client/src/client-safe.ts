@@ -21,7 +21,7 @@ export type SafeClient<T extends AnyNestedClient>
  * // or const [error, data, inferrableError, isSuccess] = await safeClient.doSomething({ id: '123' })
  * ```
  *
- * @see {@link https://orpc.dev/docs/client/error-handling#using-createsafeclient Safe Client Docs}
+ * @see {@link https://orpc.dev/docs/client/error-handling#safe-client | Client Error Handling - Safe Client}
  */
 export function createSafeClient<T extends AnyNestedClient>(client: T): SafeClient<T> {
   const cache = new Map<string, SafeClient<AnyNestedClient>>()

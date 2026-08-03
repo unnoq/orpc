@@ -53,6 +53,12 @@ export interface UpstashPublisherOptions extends PublisherOptions {
   }
 }
 
+/**
+ * Publisher adapter for Upstash Redis. Distributes events across processes via
+ * Upstash Pub/Sub, with optional resume support backed by Redis Streams.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher Helpers - Adapters}
+ */
 export class UpstashPublisher<T extends Record<string, object>> extends Publisher<T> {
   private readonly prefix: string
   private readonly serializer: Pick<RPCSerializer, keyof RPCSerializer>

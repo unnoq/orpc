@@ -55,7 +55,8 @@ export interface ProcedureConfig {
    * When enabled, input schemas are not validated at runtime.
    * Schemas are still used for type inference and OpenAPI generation.
    *
-   * @warning Do not disable validation for schemas that transform values.
+   * @remarks
+   * **Warning**: Do not disable validation for schemas that transform values.
    *
    * @default false
    */
@@ -67,7 +68,8 @@ export interface ProcedureConfig {
    *
    * Useful when output schemas exist only for specification generation.
    *
-   * @warning Do not disable validation for schemas that transform values.
+   * @remarks
+   * **Warning**: Do not disable validation for schemas that transform values.
    *
    * @default false
    */
@@ -116,7 +118,7 @@ export class Procedure<
   }
 
   /**
-   * Checks if the given instance satisfies the {@see Procedure} class/interface.
+   * Checks if the given instance satisfies the {@link Procedure} class/interface.
    */
   static [Symbol.hasInstance](instance: unknown): boolean {
     if (this !== Procedure) {

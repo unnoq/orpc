@@ -114,7 +114,7 @@ import { RedisPublisher } from '@orpc/publisher/redis'
 
 const client = createClient({ url: 'redis://localhost:6379' })
 
-// RedisRateLimiter lazily connects to Redis when needed.
+// RedisPublisher lazily connects to Redis when needed.
 // You can still call `client.connect()` manually, but it is optional.
 await client.connect()
 
@@ -124,9 +124,9 @@ const publisher = new RedisPublisher<Events>(client, {
    * Pub/Sub takes over the connection, so a client with subscriptions
    * cannot execute commands and must use a dedicated connection.
    *
-   * @default redis.duplicate()
+   * @default client.duplicate()
    */
-  subscriber: redis.duplicate(),
+  subscriber: client.duplicate(),
 
   /**
    * The prefix to use for Redis keys.

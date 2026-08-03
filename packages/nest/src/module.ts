@@ -10,6 +10,12 @@ import { ImplementInterceptor } from './implement'
 
 export const ORPC_MODULE_CONFIG_SYMBOL = Symbol.for('ORPC_NEST_MODULE_CONFIG')
 
+/**
+ * A standard lazy request extended with NestJS route parameters,
+ * used as the request representation inside the `@orpc/nest` integration.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/nest#toneststandardlazyrequest-option | Implement oRPC contract with NestJS - toNestStandardLazyRequest option}
+ */
 export interface NestStandardLazyRequest extends StandardLazyRequest {
   /**
    * Route parameters extracted from the request path.
@@ -41,6 +47,13 @@ export type ORPCModuleConfig
       }
     }
 
+/**
+ * NestJS module that configures the `@orpc/nest` integration via `forRoot`
+ * or `forRootAsync`, providing options such as initial context, plugins,
+ * and interceptors to `@Implement` handlers.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/nest#configuration | Implement oRPC contract with NestJS - Configuration}
+ */
 @Module({})
 export class ORPCModule {
   static forRoot(config: ORPCModuleConfig): DynamicModule {

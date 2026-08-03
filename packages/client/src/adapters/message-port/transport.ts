@@ -21,9 +21,8 @@ export interface MessagePortLinkTransportOptions<_T extends ClientContext> {
    * such as transferring ownership of objects to the other side or support unserializable objects like `OffscreenCanvas`.
    *
    * @remarks
-   * - return null | undefined to disable this feature
-   *
-   * @warning Make sure your message port supports `transfer` before using this feature.
+   * **Note**: Returning `null` or `undefined` disables this feature.
+   * **Warning**: Make sure your message port supports `transfer` before using this feature.
    */
   experimental_transfer?: Value<Promisable<object[] | null | undefined>, [message: DecodedRequestMessage, port: SupportedMessagePort]>
 

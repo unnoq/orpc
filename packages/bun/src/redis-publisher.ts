@@ -62,6 +62,12 @@ export interface BunRedisPublisherOptions extends PublisherOptions {
   }
 }
 
+/**
+ * Publisher adapter for Bun's built-in Redis client. Distributes events across
+ * processes via Redis Pub/Sub, with optional resume support backed by Redis Streams.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher Helpers - Adapters}
+ */
 export class BunRedisPublisher<T extends Record<string, object>> extends Publisher<T> {
   private subscriber: BunRedisPublisherOptions['subscriber']
   private readonly prefix: Exclude<BunRedisPublisherOptions['prefix'], undefined>

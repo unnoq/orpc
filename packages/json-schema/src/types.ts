@@ -1,6 +1,11 @@
 // eslint-disable-next-line no-restricted-imports
 import type * as Draft2020 from 'json-schema-typed/draft-2020-12'
 
+/**
+ * A JSON Schema (draft 2020-12) representation used across oRPC's JSON schema tooling.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/standard-schema | Standard Schema Integration}
+ */
 export type JsonSchema<Value = any> = Draft2020.JSONSchema<Value>
 export type JsonSchemaKeywords = typeof Draft2020.keywords[number]
 

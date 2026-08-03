@@ -77,6 +77,12 @@ export interface OpenAPIGeneratorGenerateOptions {
   errorStatusMap?: Record<string, number> | undefined
 }
 
+/**
+ * Generates an OpenAPI 3.1 document from a contract or a router.
+ * Relies on JSON schema converters to translate input, output, and error schemas into JSON Schemas.
+ *
+ * @see {@link https://orpc.dev/docs/openapi/specification#openapi-generator | OpenAPI Specification - OpenAPI Generator}
+ */
 export class OpenAPIGenerator {
   private readonly serializer: Pick<OpenAPISerializer, keyof OpenAPISerializer>
   private readonly converter: Pick<JsonSchemaConverter, 'convert'>

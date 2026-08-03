@@ -96,6 +96,15 @@ export interface BatchLinkPluginOptions<T extends ClientContext> {
   mapSubresponse?: (subResponse: StandardLazyResponse, batchResponse: StandardLazyResponse, subOptions: StandardLinkTransportInterceptorOptions<T>) => StandardLazyResponse
 }
 
+/**
+ * Combines multiple client requests into a single batch request
+ * and splits the batch response back into individual responses.
+ *
+ * @remarks
+ * **Note**: HTTP/2 and later already multiplex requests over a single connection, so this plugin is often less useful than it once was.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/batch | Batch Plugin}
+ */
 export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~batch'
 

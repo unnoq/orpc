@@ -45,6 +45,12 @@ export interface BunRedisRateLimiterOptions {
   }
 }
 
+/**
+ * Rate limiter adapter for Bun's built-in Redis client. Enforces a fixed-window
+ * limit using a Redis Lua script, with optional blocking mode.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Rate Limit Helpers - Adapters}
+ */
 export class BunRedisRateLimiter implements RateLimiter {
   private readonly redis: RedisClient
   private readonly prefix: string

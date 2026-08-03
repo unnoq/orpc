@@ -170,22 +170,27 @@ export interface ConsumeAsyncIteratorOptions<T, TReturn, TError> {
   /**
    * Called once AsyncIteratorObject is done
    *
-   * @info If iterator is canceled, `undefined` can be passed on success
+   * @remarks
+   * **Note**: If iterator is canceled, `undefined` can be passed on success
    */
   onSuccess?: (value: TReturn | undefined) => void
   /**
    * Called once after onError or onSuccess
    *
-   * @info If iterator is canceled, `undefined` can be passed on success
+   * @remarks
+   * **Note**: If iterator is canceled, `undefined` can be passed on success
    */
   onFinish?: (state: [error: TError, data: undefined, isSuccess: false] | [error: null, data: TReturn | undefined, isSuccess: true]) => void
 }
 
 /**
- * Consumes an AsyncIteratorObject with lifecycle callbacks
+ * Consumes an AsyncIteratorObject with lifecycle callbacks.
  *
- * @warning If no `onError` or `onFinish` is provided, error will be thrown into unhandled rejection channel.
- * @return unsubscribe callback
+ * @remarks
+ * **Warning**: If no `onError` or `onFinish` is provided, errors are thrown into the unhandled rejection channel.
+ *
+ * @returns An unsubscribe callback that stops consuming and cleans up the iterator.
+ * @see {@link https://orpc.dev/docs/client/async-iterator-object#using-consumeasynciterator | AsyncIteratorObject in Client - Using consumeAsyncIterator}
  */
 export function consumeAsyncIterator<T, TReturn, TError = ThrowableError>(
   iterator: AsyncIterator<T, TReturn> | PromiseWithError<AsyncIterator<T, TReturn>, TError>,

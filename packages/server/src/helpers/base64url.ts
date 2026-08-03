@@ -9,6 +9,8 @@
  * const decoded = decodeBase64url(encoded)
  * expect(new TextDecoder().decode(decoded)).toEqual(text)
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/helpers/base64url | Base64Url Helpers}
  */
 export function encodeBase64url(data: Uint8Array): string {
   const chunkSize = 8192 // 8KB chunks to stay well below call stack limits
@@ -37,6 +39,8 @@ export function encodeBase64url(data: Uint8Array): string {
  * const decoded = decodeBase64url(encoded)
  * expect(new TextDecoder().decode(decoded)).toEqual(text)
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/helpers/base64url | Base64Url Helpers}
  */
 export function decodeBase64url(base64url: string | undefined | null): Uint8Array<ArrayBuffer> | undefined {
   try {
