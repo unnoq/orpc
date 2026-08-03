@@ -141,6 +141,8 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Fetch API', link: '/docs/adapters/fetch-api' },
             { text: 'Node HTTP', link: '/docs/adapters/node-http' },
+            { text: 'AWS Lambda', link: '/docs/adapters/aws-lambda' },
+            { text: 'Fastify', link: '/docs/adapters/fastify' },
             { text: 'WebSocket', link: '/docs/adapters/websocket' },
             { text: 'Message Port', link: '/docs/adapters/message-port' },
             { text: '---' },

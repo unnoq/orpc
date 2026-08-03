@@ -49,6 +49,16 @@
         "import": "./dist/adapters/node/index.mjs",
         "default": "./dist/adapters/node/index.mjs"
       },
+      "./aws-lambda": {
+        "types": "./dist/adapters/aws-lambda/index.d.mts",
+        "import": "./dist/adapters/aws-lambda/index.mjs",
+        "default": "./dist/adapters/aws-lambda/index.mjs"
+      },
+      "./fastify": {
+        "types": "./dist/adapters/fastify/index.d.mts",
+        "import": "./dist/adapters/fastify/index.mjs",
+        "default": "./dist/adapters/fastify/index.mjs"
+      },
       "./extensions/route": {
         "types": "./dist/extensions/route.d.mts",
         "import": "./dist/extensions/route.mjs",
@@ -64,6 +74,8 @@
     "./standard": "./src/adapters/standard/index.ts",
     "./fetch": "./src/adapters/fetch/index.ts",
     "./node": "./src/adapters/node/index.ts",
+    "./aws-lambda": "./src/adapters/aws-lambda/index.ts",
+    "./fastify": "./src/adapters/fastify/index.ts",
     "./extensions/route": "./src/extensions/route.ts"
   },
   "files": [
@@ -90,12 +102,13 @@
     "@orpc/json-schema": "workspace:*",
     "@orpc/server": "workspace:*",
     "@orpc/shared": "workspace:*",
-    "@standardserver/core": "^0.6.0",
-    "@standardserver/fetch": "^0.6.0",
+    "@standardserver/core": "^0.7.1",
+    "@standardserver/fetch": "^0.7.1",
     "rou3": "^0.9.1"
   },
   "devDependencies": {
     "@scalar/api-reference": "^1.63.0",
+    "@standardserver/aws-lambda": "^0.7.1",
     "@types/swagger-ui": "^5.32.0",
     "fastify": "^5.11.0",
     "swagger-ui": "^5.32.11",

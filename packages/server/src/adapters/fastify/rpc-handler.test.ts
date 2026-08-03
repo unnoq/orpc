@@ -1,0 +1,142 @@
+import type { FastifyInstance } from 'fastify'
+import type { FastifyHandlerPlugin } from './plugin'
+import Fastify from 'fastify'
+import request from 'supertest'
+import { os } from '../../builder'
+import { RPCHandler } from './rpc-handler'
+
+describe('rpcHandler', () => {
+  let app: FastifyInstance
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    app = Fastify()
+  })
+
+  afterEach(async () => {
+    await app.close()
+  })
+
+  it('accepts context and prefix options in handle method', async () => {
+    const handler = new RPCHandler({
+      ping: os
+        .$context<{ userId: string }>()
+        .handler(({ context }) => context.userId),
+    })
+
+    app.all('/*', async (req, reply) => {
+      const result = await handler.handle(req, reply, {
+        context: { userId: 'u_123' },
+        prefix: '/api/v1',
+      })
+
+      if (!result.matched) {
+        return reply.status(404).send('not matched')
+      }
+
+      return reply
+    })
+
+    await app.ready()
+
+    const res = await request(app.server).post('/api/v1/ping').set('content-type', 'application/json').send({ json: null })
+
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('u_123')
+
+    const mismatchRes = await request(app.server).post('/invalid/ping').set('content-type', 'application/json').send({ json: null })
+
+    expect(mismatchRes.status).toBe(404)
+    expect(mismatchRes.text).toBe('not matched')
+  })
+
+  it('supports fastify handler plugin', async () => {
+    const plugin: FastifyHandlerPlugin<any> = {
+      name: 'test',
+      initFastifyHandlerOptions(options) {
+        return {
+          ...options,
+          fastifyInterceptors: [
+            async ({ reply }) => {
+              await reply.status(200).send('intercepted')
+
+              return { matched: true }
+            },
+          ],
+        }
+      },
+    }
+
+    const handler = new RPCHandler({}, { plugins: [plugin] })
+
+    app.all('/*', async (req, reply) => {
+      await handler.handle(req, reply)
+      return reply
+    })
+
+    await app.ready()
+
+    const res = await request(app.server).get('/test')
+
+    expect(res.status).toBe(200)
+    expect(res.text).toBe('intercepted')
+  })
+
+  it('enables csrfGuardPlugin by default', async () => {
+    const handler = new RPCHandler({
+      ping: os.handler(() => 'pong'),
+    })
+
+    app.all('/*', async (req, reply) => {
+      const result = await handler.handle(req, reply)
+
+      if (!result.matched) {
+        return reply.status(404).send('not matched')
+      }
+
+      return reply
+    })
+
+    await app.ready()
+
+    const res = await request(app.server)
+      .post('/ping')
+      .set('content-type', 'application/json')
+      .set('cookie', 'session=abc')
+      .set('sec-fetch-mode', 'navigate')
+      .send({ json: null })
+
+    expect(res.status).toBe(403)
+    expect(res.text).toContain('Request blocked by CSRF protection')
+  })
+
+  it('disables csrfGuardPlugin when configured', async () => {
+    const handler = new RPCHandler(
+      {
+        ping: os.handler(() => 'pong'),
+      },
+      {
+        csrfGuardPlugin: {
+          enabled: false,
+        },
+      },
+    )
+
+    app.all('/*', async (req, reply) => {
+      await handler.handle(req, reply)
+      return reply
+    })
+
+    await app.ready()
+
+    const res = await request(app.server)
+      .post('/ping')
+      .set('content-type', 'application/json')
+      .set('cookie', 'session=abc')
+      .set('sec-fetch-mode', 'navigate')
+      .send({ json: null })
+
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('pong')
+  })
+})

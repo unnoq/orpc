@@ -8,7 +8,7 @@ export interface FetchLinkTransportPlugin<T extends ClientContext> extends Stand
 }
 
 export class CompositeFetchLinkTransportPlugin<T extends ClientContext> implements FetchLinkTransportPlugin<T> {
-  name = '~composite/fetch-link-transport'
+  name = '~composite/fetch'
 
   constructor(
     protected readonly plugins: FetchLinkTransportPlugin<T>[] = [],

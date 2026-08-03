@@ -28,7 +28,7 @@ export interface FetchHandlerPlugin<T extends Context> extends StandardHandlerPl
 }
 
 export class CompositeFetchHandlerPlugin<T extends Context> implements FetchHandlerPlugin<T> {
-  readonly name = '~composite/fetch-handler'
+  readonly name = '~composite/fetch'
 
   protected readonly plugins: FetchHandlerPlugin<T>[]
 

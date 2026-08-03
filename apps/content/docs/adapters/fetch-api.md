@@ -89,12 +89,6 @@ export default {
 Deno.serve(fetch)
 ```
 
-```ts [Hono Lambda]
-import { handle } from 'hono/aws-lambda'
-
-export const handler = handle({ fetch })
-```
-
 :::
 
 <!--@include: @/shared/standard-server-cors-warning.md -->
