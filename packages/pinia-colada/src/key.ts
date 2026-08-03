@@ -32,7 +32,7 @@ const serializer = new RPCJsonSerializer()
  * The input is serialized to JSON-compatible values because Pinia Colada
  * requires entry keys to be serializable.
  *
- * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-mutation-key Pinia Colada Query/Mutation Key Docs}
+ * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-mutation-key | Pinia Colada Query/Mutation Key}
  */
 export function generateOperationKey<TType extends OperationType, TInput>(
   path: string[],

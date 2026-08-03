@@ -23,6 +23,12 @@ export interface RPCSerializerOptions extends RPCJsonSerializerOptions {
   serialize?: RPCSerializerSerializeOptions | undefined
 }
 
+/**
+ * Serializes and deserializes data for the RPC protocol,
+ * preserving native types like Date, BigInt, Set, and Map that plain JSON cannot represent.
+ *
+ * @see {@link https://orpc.dev/docs/rpc/serializer | RPC Serializer}
+ */
 export class RPCSerializer {
   private readonly jsonSerializer: RPCJsonSerializer
   private readonly defaultSerializeOptions: RPCSerializerOptions['serialize']

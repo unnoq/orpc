@@ -9,6 +9,14 @@ export interface CloudflareRateLimiterOptions {
   prefix?: string
 }
 
+/**
+ * Rate limiter adapter for Cloudflare's Rate Limiting binding.
+ *
+ * @remarks
+ * **Note**: Blocking mode is not supported by this adapter.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Ratelimit}
+ */
 export class CloudflareRateLimiter implements RateLimiter {
   private readonly prefix: string
 

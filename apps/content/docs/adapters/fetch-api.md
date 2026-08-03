@@ -8,7 +8,7 @@ oRPC supports the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/F
 
 ```ts [RPC]
 import { RPCHandler } from '@orpc/server/fetch'
-import { CORSPlugin } from '@orpc/server/plugins'
+import { CORSHandlerPlugin } from '@orpc/server/plugins'
 import { onError } from '@orpc/server'
 
 const handler = new RPCHandler(router, {
@@ -38,7 +38,7 @@ export async function fetch(request: Request): Promise<Response> {
 
 ```ts [OpenAPI]
 import { OpenAPIHandler } from '@orpc/openapi/fetch'
-import { CORSPlugin } from '@orpc/server/plugins'
+import { CORSHandlerPlugin } from '@orpc/server/plugins'
 import { onError } from '@orpc/server'
 
 const handler = new OpenAPIHandler(router, {

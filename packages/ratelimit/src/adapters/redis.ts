@@ -56,6 +56,12 @@ export interface RedisRateLimiterOptions {
   }
 }
 
+/**
+ * Rate limiter adapter for Redis. Enforces a fixed-window limit using a
+ * Redis Lua script, with optional blocking mode.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Ratelimit}
+ */
 export class RedisRateLimiter implements RateLimiter {
   private readonly redis: RedisClientType<any, any, any, any, any>
   private readonly prefix: string

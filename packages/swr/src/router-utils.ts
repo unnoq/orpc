@@ -23,10 +23,13 @@ export interface RouterUtilsOptions extends OperationKeyPrefixOptions {
 }
 
 /**
- * Create a swr router utils from a client.
+ * Creates SWR utils from a client, exposing fetcher/mutator/subscriber
+ * helpers for every procedure in the router.
  *
- * @info Both client-side and server-side clients are supported.
- * @see {@link https://orpc.dev/docs/integrations/swr SWR Integration}
+ * @remarks
+ * **Note**: Both client-side and server-side clients are supported.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/swr | SWR}
  */
 export function createRouterUtils<T extends AnyNestedClient>(
   client: T,

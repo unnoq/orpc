@@ -43,14 +43,32 @@ This repository uses:
    - our PR title should follow the [Conventional Commits Cheatsheet](https://gist.github.com/Zekfad/f51cb06ac76e2457f11c80ed705c95a3), with scope corresponding to the package.
    - In the description, summarize your changes and reference any related issue, e.g., `Fixes #123`.
 
-## Structure
+## JSDoc & Documentation Links
 
-- **@orpc/shared** — shared utilities and types.
-- **@orpc/client** — core library, ORPCError, RPC serializers, RPC link,...
-- **@orpc/contract** — contract definitions (input/output/errors/meta/route, contract builder).
-- **@orpc/server** — contract implementer, procedure/router builder, procedure/router client, RPC handler, ...
-- **@orpc/openapi-client** - OpenAPI serializers, OpenAPI Link, ...
-- **@orpc/openapi** — OpenAPI Spec generator, OpenAPI handler, ...
-- **@orpc/standard-server\*** — environment adapters (`fetch`, `node`, etc.).
-- **playgrounds/** — example applications.
-- **apps/content/** - content, documentation, and website.
+Every public API mentioned in the documentation (`apps/content/docs`) must carry a JSDoc comment with a backlink to the official website. This is enforced in CI:
+
+```bash
+pnpm docs:check-jsdoc # node scripts/verify-docs-jsdoc.ts [--filter server,client] [--strict] [--list]
+```
+
+JSDoc blocks follow this template:
+
+```ts
+/**
+ * <Summary: 1-3 short sentences. Verb-first for functions, noun phrase for types/classes.>
+ *
+ * @remarks
+ * **Warning**: <footguns, breaking behavior>
+ * **Note**: <non-obvious behavior, limits>
+ *
+ * @param name - <only extra info beyond the type>
+ * @returns <only extra info beyond the type>
+ *
+ * @see {@link https://orpc.dev/docs/... | Page Title}
+ */
+```
+
+- `@remarks` is optional (max 1-3 bold lines) and uses `**Warning**:`/`**Note**:` — not `@warning`/`@info` tags.
+- `@param`/`@returns` only when they add information beyond the type signature.
+- No `@example` blocks — examples live on the linked docs page.
+- `@see` is always the last tag. The URL must map to an existing `apps/content/docs/<path>.md` page (plus optional `#anchor` matching a real heading), and the title after `|` is the page's sidebar label from `apps/content/.vitepress/config.ts`.

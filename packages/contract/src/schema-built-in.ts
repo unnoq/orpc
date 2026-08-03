@@ -12,7 +12,10 @@ export interface AsyncIteratorObjectSchemaDetails {
 }
 
 /**
- * Define schema for an AsyncIteratorObject.
+ * Defines a schema for an AsyncIteratorObject, validating each yielded value
+ * (and optionally the return value) with the given schemas.
+ *
+ * @see {@link https://orpc.dev/docs/async-iterator-object | AsyncIteratorObject (SSE)}
  */
 export function asyncIteratorObject<TYieldIn, TYieldOut, TReturnIn = unknown, TReturnOut = unknown>(
   yieldSchema: Schema<TYieldIn, TYieldOut>,

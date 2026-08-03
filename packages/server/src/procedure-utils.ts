@@ -84,6 +84,8 @@ export type CallRest<
  * const output = await call(getting, 'input')
  * const output = await call(getting, 'input', { context: { db: 'postgres' } })
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/client/server-side#one-off-calls | Server-Side}
  */
 export function call<
   TInitialContext extends Context,

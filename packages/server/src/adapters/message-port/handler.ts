@@ -21,9 +21,8 @@ export interface MessagePortHandlerOptions<_T extends Context> {
    * such as transferring object ownership or supporting non-serializable objects like `OffscreenCanvas` or improving performance.
    *
    * @remarks
-   * - Returning `null` or `undefined` disables this feature.
-   *
-   * @warning Ensure your message port implementation supports `transferable` objects before enabling this.
+   * **Note**: Returning `null` or `undefined` disables this feature.
+   * **Warning**: Ensure your message port implementation supports `transferable` objects before enabling this.
    */
   experimental_transfer?: Value<Promisable<object[] | null | undefined>, [message: DecodedResponseMessage, port: SupportedMessagePort]>
 

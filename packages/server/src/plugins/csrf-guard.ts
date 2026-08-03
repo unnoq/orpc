@@ -9,7 +9,10 @@ import { flattenStandardHeader } from '@standardserver/core'
  * When a request includes cookies, it helps ensure the request originates from JavaScript
  * (for example, fetch/XHR) rather than from standard HTML forms or direct browser navigation.
  *
- * @info This plugin is enabled by default for `RPCHandler` over HTTP.
+ * @remarks
+ * **Note**: This plugin is enabled by default for `RPCHandler` over HTTP.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/csrf-guard | CSRF Guard}
  */
 export class CSRFGuardHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~csrf-guard'

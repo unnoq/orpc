@@ -74,6 +74,8 @@ export function resolveMetaPlugins<
  * @returns A `[metaPlugin, getMeta]` tuple:
  *   - `metaPlugin(metadata)` - Attaches metadata to a procedure under `name`.
  *   - `getMeta(procedureOrLazy)` - Retrieves the metadata, or `undefined` if not set.
+ *
+ * @see {@link https://orpc.dev/docs/metadata | Metadata}
  */
 export function defineMeta<TName extends string, TData>(
   name: TName,

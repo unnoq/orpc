@@ -86,6 +86,15 @@ export interface OpenAPIReferenceHandlerPluginOptions<T extends Context, TProvid
   docsHead?: Value<Promisable<string>, [StandardHandlerRoutingInterceptorOptions<T>]>
 }
 
+/**
+ * Serves API reference documentation powered by Scalar or Swagger UI,
+ * and exposes the OpenAPI specification as JSON.
+ *
+ * @remarks
+ * **Note**: By default, the API reference UI is served from `/` and the OpenAPI specification from `/spec.json`.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/openapi-reference | OpenAPI Reference}
+ */
 export class OpenAPIReferenceHandlerPlugin<
   T extends Context,
   TProvider extends OpenAPIReferenceHandlerPluginProvider,

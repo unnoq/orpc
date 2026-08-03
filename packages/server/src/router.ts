@@ -23,8 +23,10 @@ export type InferRouterInitialContext<T extends AnyRouter> = T extends Router<in
 /**
  * Infer all initial context of the router.
  *
- * @info A procedure is a router too.
- * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
+ * @remarks
+ * **Note**: A procedure is a router too.
+ *
+ * @see {@link https://orpc.dev/docs/router#infer-router-initial-contexts | Router}
  */
 export type InferRouterInitialContexts<T extends AnyRouter>
   = T extends Procedure<infer UInitialContext, any, any, any, any, any>
@@ -36,8 +38,10 @@ export type InferRouterInitialContexts<T extends AnyRouter>
 /**
  * Infer all current context of the router.
  *
- * @info A procedure is a router too.
- * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
+ * @remarks
+ * **Note**: A procedure is a router too.
+ *
+ * @see {@link https://orpc.dev/docs/router#infer-router-final-contexts | Router}
  */
 export type InferRouterFinalContexts<T extends AnyRouter>
   = T extends Procedure<infer UInitialContext, infer UInjectedContext, any, any, any, any>
@@ -47,10 +51,12 @@ export type InferRouterFinalContexts<T extends AnyRouter>
       }
 
 /**
- * Infer all router inputs
+ * Infer all router inputs.
  *
- * @info A procedure is a router too.
- * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
+ * @remarks
+ * **Note**: A procedure is a router too.
+ *
+ * @see {@link https://orpc.dev/docs/router#infer-router-inputs | Router}
  */
 export type InferRouterInputs<T extends AnyRouter>
   = T extends Procedure<any, any, infer UInputSchema, any, any, any>
@@ -60,10 +66,12 @@ export type InferRouterInputs<T extends AnyRouter>
       }
 
 /**
- * Infer all router outputs
+ * Infer all router outputs.
  *
- * @info A procedure is a router too.
- * @see {@link https://orpc.dev/docs/router#utilities Router Utilities Docs}
+ * @remarks
+ * **Note**: A procedure is a router too.
+ *
+ * @see {@link https://orpc.dev/docs/router#infer-router-outputs | Router}
  */
 export type InferRouterOutputs<T extends AnyRouter>
   = T extends Procedure<any, any, any, infer UOutputSchema, any, any>
@@ -74,6 +82,8 @@ export type InferRouterOutputs<T extends AnyRouter>
 
 /**
  * Infer the union of throwable errors for entire router.
+ *
+ * @see {@link https://orpc.dev/docs/router#infer-router-error | Router}
  */
 export type InferRouterError<T extends AnyRouter>
   = T extends Procedure<any, any, any, any, infer UErrorMap, infer UReturnedError>
@@ -84,6 +94,8 @@ export type InferRouterError<T extends AnyRouter>
 
 /**
  * Infer throwable errors for each procedure, preserving the router shape.
+ *
+ * @see {@link https://orpc.dev/docs/router#infer-router-errors | Router}
  */
 export type InferRouterErrors<T extends AnyRouter>
   = T extends Procedure<any, any, any, any, infer UErrorMap, infer UReturnedError>

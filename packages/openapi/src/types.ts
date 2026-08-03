@@ -38,7 +38,9 @@ export type JsonifiedClientError<T>
     : T
 
 /**
- * Convert types that JSON not support to corresponding json types
+ * Client type whose outputs and error data replace types JSON cannot represent with their JSON equivalents.
+ *
+ * @see {@link https://orpc.dev/docs/openapi/link | OpenAPI Link}
  */
 export type JsonifiedClient<T extends AnyNestedClient>
   = T extends Client<infer UClientContext, infer UInput, infer UOutput, infer UError>

@@ -8,6 +8,12 @@ import { WebSocketHandler } from './handler'
 export interface RPCHandlerOptions<T extends Context>
   extends StandardHandlerOptions<T>, RPCHandlerCodecOptions<T>, WebSocketHandlerOptions<T> {}
 
+/**
+ * Serves an oRPC router over the RPC protocol on a standard WebSocket
+ * connection (Deno, Bun, Cloudflare Durable Objects, and more).
+ *
+ * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket}
+ */
 export class RPCHandler<T extends Context> extends WebSocketHandler<T> {
   constructor(
     router: Router<T>,

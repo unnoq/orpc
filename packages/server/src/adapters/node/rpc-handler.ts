@@ -23,6 +23,12 @@ export interface RPCHandlerOptions<T extends Context>
   }
 }
 
+/**
+ * Serves an oRPC router over the RPC protocol using Node.js built-in
+ * HTTP request/response objects.
+ *
+ * @see {@link https://orpc.dev/docs/adapters/node-http | Node HTTP}
+ */
 export class RPCHandler<T extends Context> extends NodeHttpHandler<T> {
   constructor(
     router: Router<T>,

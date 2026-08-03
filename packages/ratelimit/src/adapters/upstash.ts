@@ -30,6 +30,12 @@ export interface UpstashRateLimiterOptions {
   waitUntil?: (promise: Promise<any>) => any
 }
 
+/**
+ * Rate limiter adapter for Upstash Rate Limit. Delegates limit checks to a
+ * configured `Ratelimit` instance, with optional blocking mode.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/ratelimit#adapters | Ratelimit}
+ */
 export class UpstashRateLimiter implements RateLimiter {
   private blockingUntilReady: UpstashRateLimiterOptions['blockingUntilReady']
   private waitUntil: UpstashRateLimiterOptions['waitUntil']

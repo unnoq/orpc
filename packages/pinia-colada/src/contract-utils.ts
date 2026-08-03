@@ -15,6 +15,16 @@ export interface ContractUtilsFactoryOptions<
 > extends Omit<RouterUtilsOptions<RouterContractClient<RouterContract, TClientContext>>, 'path'> {
 }
 
+/**
+ * Creates a factory that builds Pinia Colada utils directly from a contract,
+ * using the given contract client factory. Useful for scaling large projects
+ * where each part only needs a slice of the router.
+ *
+ * @remarks
+ * **Note**: The contract must define a `path` meta matching its position in the root router contract.
+ *
+ * @see {@link https://orpc.dev/docs/advanced/scaling-large-projects#pinia-colada-integration | Scaling Large Projects}
+ */
 export function createContractUtilsFactory<
   TClientContext extends ClientContext,
 >(

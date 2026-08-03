@@ -40,6 +40,12 @@ interface StoredEvent<T> {
   payload: T
 }
 
+/**
+ * Publisher adapter backed by in-memory storage, with optional resume support.
+ * Events are delivered to subscribers within the same process only.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher}
+ */
 export class MemoryPublisher<T extends Record<string, object>> extends Publisher<T> {
   private readonly listenersMap: Map<keyof T, ((payload: any) => void)[]> = new Map()
   private readonly idGenerator = new SequentialIdGenerator()

@@ -24,8 +24,13 @@ export interface RPCHandlerOptions<T extends Context>
 }
 
 /**
- * Requires the AWS Lambda Node.js runtime with response streaming enabled,
- * handlers should be wrapped with `awslambda.streamifyResponse`.
+ * Serves an oRPC router over the RPC protocol on AWS Lambda,
+ * behind API Gateway or Lambda Function URLs.
+ *
+ * @remarks
+ * **Warning**: Requires the Lambda Node.js runtime with response streaming enabled, so handlers must be wrapped with `awslambda.streamifyResponse`.
+ *
+ * @see {@link https://orpc.dev/docs/adapters/aws-lambda | AWS Lambda}
  */
 export class RPCHandler<T extends Context> extends AwsLambdaHandler<T> {
   constructor(

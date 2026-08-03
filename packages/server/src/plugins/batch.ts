@@ -71,6 +71,15 @@ export interface BatchHandlerPluginOptions<T extends Context> {
   }
 }
 
+/**
+ * Handles batch requests sent by the client Batch Link Plugin, splitting each
+ * batch into sub-requests and streaming their responses back together.
+ *
+ * @remarks
+ * **Note**: HTTP/2 and later already multiplex requests over a single connection, which often makes this plugin unnecessary.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/batch | Batch}
+ */
 export class BatchHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~batch'
 

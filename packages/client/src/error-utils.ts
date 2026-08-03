@@ -3,6 +3,12 @@ import type { AnyORPCError, ORPCErrorCode, ORPCErrorJSON } from './error'
 import { isPlainObject } from '@orpc/shared'
 import { ORPCError } from './error'
 
+/**
+ * Checks if an error is an `ORPCError` whose type is inferable at the TypeScript level,
+ * narrowing it so `code` and `data` are fully typed.
+ *
+ * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isinferableerror | Error Handling}
+ */
 export function isInferableError<T>(error: T): error is Extract<T, AnyORPCError> {
   return error instanceof ORPCError && error.inferable
 }

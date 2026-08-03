@@ -125,6 +125,8 @@ export function traceReadableStream<T>(
 
 /**
  * Converts a {@link ReadableStream} into an {@link AsyncIteratorClass}.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk | AI SDK}
  */
 export function streamToAsyncIteratorObject<T>(
   stream: ReadableStream<T>,
@@ -195,6 +197,8 @@ export function asyncIteratorToStream<T>(
 /**
  * Converts an `AsyncIterator` into a `ReadableStream`, ensuring that
  * all emitted object values are *unproxied* before enqueuing.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk | AI SDK}
  */
 export function asyncIteratorToUnproxiedDataStream<T>(
   iterator: AsyncIterator<T>,

@@ -9,6 +9,11 @@ import { OpenAPIHandlerCodec } from '../standard'
 export interface OpenAPIHandlerOptions<T extends Context>
   extends NodeHttpHandlerOptions<T>, Omit<StandardHandlerOptions<T>, 'plugins'>, OpenAPIHandlerCodecOptions<T> {}
 
+/**
+ * Serves oRPC procedures over the OpenAPI (RESTful) protocol using Node.js built-in HTTP request/response.
+ *
+ * @see {@link https://orpc.dev/docs/adapters/node-http | Node HTTP}
+ */
 export class OpenAPIHandler<T extends Context> extends NodeHttpHandler<T> {
   constructor(
     router: Router<T>,

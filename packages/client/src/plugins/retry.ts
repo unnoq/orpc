@@ -21,6 +21,12 @@ export interface RetryLinkPluginAttemptOptions<T extends RetryLinkPluginContext>
   error: unknown
 }
 
+/**
+ * Client context options that control retry behavior per call
+ * when the `RetryLinkPlugin` is enabled.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/retry | Retry}
+ */
 export interface RetryLinkPluginContext {
   /**
    * Maximum retry attempts before throwing.
@@ -33,7 +39,9 @@ export interface RetryLinkPluginContext {
   /**
    * Delay (in ms) before retrying.
    *
-   * @info Why 2000ms? The EventSource spec suggests a default retry delay of 2 seconds if it doesn't specify
+   * @remarks
+   * **Note**: Why 2000ms? The EventSource spec suggests a default retry delay of 2 seconds if it doesn't specify
+   *
    * @default (o) => o.lastEventRetry ?? 2000
    */
   retryDelay?: Value<Promisable<number>, [RetryLinkPluginAttemptOptions<RetryLinkPluginContext>]>
@@ -58,6 +66,15 @@ export interface RetryLinkPluginOptions<_T extends RetryLinkPluginContext> {
   default?: RetryLinkPluginContext | undefined
 }
 
+/**
+ * Automatically retries failed requests based on customizable retry strategies,
+ * improving the resilience of your application.
+ *
+ * @remarks
+ * **Note**: Retry behavior is configured through the client context on each call.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/retry | Retry}
+ */
 export class RetryLinkPlugin<T extends RetryLinkPluginContext & ClientContext> implements StandardLinkPlugin<T> {
   private readonly defaultRetry: Exclude<RetryLinkPluginContext['retry'], undefined>
   private readonly defaultRetryDelay: Exclude<RetryLinkPluginContext['retryDelay'], undefined>

@@ -53,7 +53,7 @@ export interface ORPCErrorFactory<TCode extends ORPCErrorCode, TData> extends Er
  * }
  * ```
  *
- * @see {@link https://orpc.dev/docs/error-handling#error-factory Error Factory Docs}
+ * @see {@link https://orpc.dev/docs/error-handling#error-factory | Error Handling}
  */
 export function error<TCode extends ORPCErrorCode, TData = unknown>(
   code: TCode,

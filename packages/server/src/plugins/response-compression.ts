@@ -32,7 +32,7 @@ export interface ResponseCompressionHandlerPluginOptions<_T extends Context> {
  * Compresses response bodies based on the client's Accept-Encoding header.
  * Works at the standard handler level, so it supports all adapters.
  *
- * @see {@link https://orpc.dev/docs/plugins/response-compression Response Compression Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/response-compression | Response Compression}
  */
 export class ResponseCompressionHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~response-compression'

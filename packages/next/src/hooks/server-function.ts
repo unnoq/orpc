@@ -96,6 +96,15 @@ const PENDING_STATE = {
   status: 'pending',
 }
 
+/**
+ * A React hook that executes a server function and tracks its status.
+ *
+ * @remarks
+ * **Note**: Unlike direct server function calls, errors are deserialized into native
+ * `ORPCError` instances instead of plain JSON (`ORPCErrorJSON`).
+ *
+ * @see {@link https://orpc.dev/docs/integrations/next#hooks | Next.js}
+ */
 export function useServerFunction<TInput, TOutput, TError extends AnyORPCErrorJSON>(
   fn: ServerFunction<TInput, TOutput, TError>,
   options: UserSeverFunctionOptions<TInput, TOutput, ServerFunctionError<TError>> = {},

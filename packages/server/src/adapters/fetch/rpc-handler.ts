@@ -22,6 +22,13 @@ export interface RPCHandlerOptions<T extends Context>
   }
 }
 
+/**
+ * Serves an oRPC router over the RPC protocol using the Fetch API
+ * (Request/Response), supported by modern runtimes like Deno, Bun,
+ * Cloudflare Workers, and browsers.
+ *
+ * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API}
+ */
 export class RPCHandler<T extends Context> extends FetchHandler<T> {
   constructor(
     router: Router<T>,

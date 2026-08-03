@@ -17,7 +17,7 @@ export class Lazy<T> {
   }
 
   /**
-   * Checks if the given instance satisfies the {@see Lazy} class/interface.
+   * Checks if the given instance satisfies the {@link Lazy} class/interface.
    */
   static [Symbol.hasInstance](instance: unknown): boolean {
     if (this !== Lazy) {

@@ -19,7 +19,7 @@ export interface ResponseCompressionLinkPluginOptions<_T extends ClientContext> 
  * based on the Content-Encoding header. Works at the standard link level,
  * so it supports all adapters.
  *
- * @see {@link https://orpc.dev/docs/plugins/response-compression Response Compression Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/response-compression | Response Compression}
  */
 export class ResponseCompressionLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~response-compression'

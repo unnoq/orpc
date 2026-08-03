@@ -32,6 +32,17 @@ const MethodDecoratorMap = {
   OPTIONS: Options,
 }
 
+/**
+ * Decorator that implements an oRPC contract (procedure or router contract)
+ * on a NestJS controller method. It registers the corresponding NestJS routes
+ * and handles request decoding and response encoding for you.
+ *
+ * @remarks
+ * **Note**: Every procedure contract must define an `openapi.path` meta;
+ * use `populateRouterContractOpenAPIPaths` from `@orpc/openapi` to fill in missing paths.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/nest#implement-your-contract | NestJS}
+ */
 export function Implement<T extends RouterContract>(
   contract: T,
 ): <U extends Promisable<ContractedRouter<T, DefaultInitialContext>>>(

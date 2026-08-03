@@ -12,6 +12,12 @@ import { createProcedureClient } from './procedure-client'
 import { createGuardedProcedureLazy } from './procedure-utils'
 import { getRouter } from './router-utils'
 
+/**
+ * The client type derived from a router, exposing every procedure as a callable
+ * function while preserving the router's shape.
+ *
+ * @see {@link https://orpc.dev/docs/client/client-side#creating-a-client | Client-Side}
+ */
 export type RouterClient<TRouter extends AnyRouter, TClientContext extends ClientContext = object>
   = TRouter extends Procedure<any, any, infer $InputSchema, infer $OutputSchema, infer $ErrorMap, infer $ReturnedError>
     ? ProcedureClient<TClientContext, $InputSchema, $OutputSchema, $ErrorMap, $ReturnedError>
@@ -19,6 +25,12 @@ export type RouterClient<TRouter extends AnyRouter, TClientContext extends Clien
         [K in keyof TRouter]: TRouter[K] extends Lazyable<infer U extends AnyRouter> ? RouterClient<U, TClientContext> : never
       }
 
+/**
+ * Creates a server-side client that calls the router's procedures directly,
+ * within the same process, without any network layer.
+ *
+ * @see {@link https://orpc.dev/docs/client/server-side#router-clients | Server-Side}
+ */
 export function createRouterClient<T extends AnyRouter, TClientContext extends ClientContext = object>(
   router: Lazyable<T | undefined>,
   ...rest: MaybeOptionalOptions<

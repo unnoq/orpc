@@ -25,7 +25,7 @@ export interface TanstackQueryMetaPlugin<
  *
  * Apply them to router utils with {@link ContractOptionsUtilsPlugin}.
  *
- * @see {@link https://orpc.dev/docs/integrations/tanstack-query#contract-options-plugin TanStack Query Contract Options Plugin Docs}
+ * @see {@link https://orpc.dev/docs/integrations/tanstack-query#contract-options-plugin | Tanstack Query}
  */
 export function tanstackQuery<
   TInputSchema extends AnySchema,
@@ -66,7 +66,7 @@ export function getTanstackQueryMeta(
  * The contract shape must match the client the utils are created from,
  * so pass the root router contract when utils paths start from the root.
  *
- * @see {@link https://orpc.dev/docs/integrations/tanstack-query#contract-options-plugin TanStack Query Contract Options Plugin Docs}
+ * @see {@link https://orpc.dev/docs/integrations/tanstack-query#contract-options-plugin | Tanstack Query}
  */
 export class ContractOptionsUtilsPlugin<T extends AnyNestedClient = AnyNestedClient> implements RouterUtilsPlugin<T> {
   readonly name = '~contract-options'

@@ -25,7 +25,7 @@ export interface RethrowHandlerPluginOptions<T extends Context> {
  * and rethrow matching errors directly to your framework's error handling mechanism
  * (e.g., NestJS exception filters, Express error middleware).
  *
- * @see {@link https://orpc.dev/docs/plugins/rethrow Rethrow Plugin Documentation}
+ * @see {@link https://orpc.dev/docs/plugins/rethrow | Rethrow}
  */
 export class RethrowHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~rethrow'

@@ -9,6 +9,12 @@ import { CompositeRouterUtilsPlugin } from './plugin'
 import { isProcedureUtilsOptions, mergeProcedureUtilsOptions, ProcedureUtils } from './procedure-utils'
 import { SharedUtils } from './shared-utils'
 
+/**
+ * The utils shape derived from a client: procedure clients map to procedure
+ * utils, and routers map recursively to nested utils.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/tanstack-query | Tanstack Query}
+ */
 export type RouterUtils<T extends AnyNestedClient>
   = T extends Client<infer UClientContext, infer UInput, infer UOutput, infer UError>
     ? Public<ProcedureUtils<UClientContext, UInput, UOutput, UError>>
@@ -70,9 +76,13 @@ export interface RouterUtilsOptions<T extends AnyNestedClient> extends Operation
 }
 
 /**
- * Create a router utils from a client.
+ * Creates TanStack Query utils from a client, exposing query/mutation
+ * option builders for every procedure in the router.
  *
- * @info Both client-side and server-side clients are supported.
+ * @remarks
+ * **Note**: Both client-side and server-side clients are supported.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/tanstack-query | Tanstack Query}
  */
 export function createRouterUtils<T extends AnyNestedClient>(
   client: T,

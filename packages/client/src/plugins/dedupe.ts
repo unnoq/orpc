@@ -31,6 +31,12 @@ export interface DedupeLinkPluginOptions<T extends ClientContext> {
   filter?: Value<boolean, [options: StandardLinkTransportInterceptorOptions<T>]>
 }
 
+/**
+ * Prevents redundant requests by deduplicating similar in-flight requests,
+ * reducing the number of requests sent to the server.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/dedupe | Dedupe}
+ */
 export class DedupeLinkPlugin<T extends ClientContext> implements StandardLinkPlugin<T> {
   name = '~dedupe'
   before = ['~batch']

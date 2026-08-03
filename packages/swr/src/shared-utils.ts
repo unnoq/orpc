@@ -14,7 +14,7 @@ export class SharedUtils<TInput> {
   /**
    * Generate a matcher function that returns `true` if the key matches the specified conditions.
    *
-   * @see {@link https://orpc.dev/docs/integrations/swr#manual-revalidation SWR Manual Revalidation Docs}
+   * @see {@link https://orpc.dev/docs/integrations/swr#manual-revalidation | SWR Manual Revalidation}
    */
   matcher<TStrategy extends MatcherStrategy>(
     ...rest: MaybeOptionalOptions<MatcherOptions<TStrategy, TInput>>

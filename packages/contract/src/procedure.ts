@@ -33,7 +33,7 @@ export class ProcedureContract<
   }
 
   /**
-   * Checks if the given instance satisfies the {@see ProcedureContract} class/interface.
+   * Checks if the given instance satisfies the {@link ProcedureContract} class/interface.
    */
   static [Symbol.hasInstance](instance: unknown): boolean {
     if (this !== ProcedureContract) {

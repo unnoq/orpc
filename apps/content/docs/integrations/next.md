@@ -182,13 +182,13 @@ This integration also includes React hooks for server functions. `useServerFunct
 ```tsx [useServerFunction]
 'use client'
 
-import { useServerFunction } from '@orpc/next/hooks'
+import { isInferableError } from '@orpc/client'
 import {
   getIssueMessage,
-  isInferableError,
   onErrorDeferred,
   parseFormData,
-} from '@orpc/next/hooks'
+} from '@orpc/next'
+import { useServerFunction } from '@orpc/next/hooks'
 
 export function MyComponent() {
   const { execute, data, error, status } = useServerFunction(serverFunction, {

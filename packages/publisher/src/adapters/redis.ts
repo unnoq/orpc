@@ -62,6 +62,12 @@ export interface RedisPublisherOptions extends PublisherOptions {
   }
 }
 
+/**
+ * Publisher adapter for Redis. Distributes events across processes via
+ * Redis Pub/Sub, with optional resume support backed by Redis Streams.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher}
+ */
 export class RedisPublisher<T extends Record<string, object>> extends Publisher<T> {
   private readonly subscriber: Exclude<RedisPublisherOptions['subscriber'], undefined>
   private readonly prefix: Exclude<RedisPublisherOptions['prefix'], undefined>

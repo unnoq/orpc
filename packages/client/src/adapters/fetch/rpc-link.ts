@@ -8,6 +8,11 @@ export interface RPCLinkOptions<T extends ClientContext>
   extends Omit<StandardLinkOptions<T>, 'plugins'>, FetchLinkTransportOptions<T>, RPCLinkCodecOptions<T> {
 }
 
+/**
+ * Client link that communicates with an RPC Handler over the Fetch API (HTTP).
+ *
+ * @see {@link https://orpc.dev/docs/adapters/fetch-api | Fetch API}
+ */
 export class RPCLink<T extends ClientContext> extends StandardLink<T> {
   constructor(options: RPCLinkOptions<T>) {
     const codec = new RPCLinkCodec(options)

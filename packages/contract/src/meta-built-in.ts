@@ -13,6 +13,13 @@ export interface PathMetaPlugin<
   name: '~path'
 }
 
+/**
+ * Built-in metadata plugins.
+ * `meta.path` records a procedure contract's path inside the root contract,
+ * which is required for the contract client factory pattern.
+ *
+ * @see {@link https://orpc.dev/docs/advanced/scaling-large-projects | Scaling Large Projects}
+ */
 export const meta = {
   path<
     TInputSchema extends AnySchema,

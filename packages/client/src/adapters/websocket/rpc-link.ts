@@ -8,6 +8,11 @@ export interface RPCLinkOptions<T extends ClientContext>
   extends StandardLinkOptions<T>, WebSocketLinkTransportOptions<T>, RPCLinkCodecOptions<T> {
 }
 
+/**
+ * Client link that communicates with an RPC Handler over a WebSocket connection.
+ *
+ * @see {@link https://orpc.dev/docs/adapters/websocket | WebSocket}
+ */
 export class RPCLink<T extends ClientContext> extends StandardLink<T> {
   constructor(options: RPCLinkOptions<T>) {
     const codec = new RPCLinkCodec(options)

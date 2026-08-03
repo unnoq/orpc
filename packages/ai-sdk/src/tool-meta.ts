@@ -16,9 +16,10 @@ export type FunctionTool<
  * Base [AI SDK Tool](https://ai-sdk.dev/docs/foundations/tools) options attached to a procedure/contract,
  * used as defaults when creating tools from it.
  *
+ * @remarks
  * **Note**: When defined multiple times, options are overridden by the most recent call.
  *
- * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer AI SDK Tool Implementer Docs}
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer | AI SDK}
  */
 export type AiSdkToolMeta<
   TInputSchema extends AnySchema = AnySchema,
@@ -46,9 +47,8 @@ export interface AiSdkToolFunction {
  * Attaches base [AI SDK Tool](https://ai-sdk.dev/docs/foundations/tools) options to a procedure/contract,
  * used as defaults when creating tools from it.
  *
+ * @remarks
  * **Note**: When defined multiple times, options are overridden by the most recent call.
- *
- * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer AI SDK Tool Implementer Docs}
  *
  * @example
  * ```ts
@@ -59,6 +59,8 @@ export interface AiSdkToolFunction {
  *   }))
  *   .input(z.object({ location: z.string() }))
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer | AI SDK}
  */
 export const aiSdkTool: AiSdkToolFunction = incoming => ({
   name: '~ai-sdk/tool',
@@ -76,7 +78,7 @@ export const aiSdkTool: AiSdkToolFunction = incoming => ({
  * Reads the base [AI SDK Tool](https://ai-sdk.dev/docs/foundations/tools) options
  * attached to a procedure/contract by {@link aiSdkTool}.
  *
- * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer AI SDK Tool Implementer Docs}
+ * @see {@link https://orpc.dev/docs/integrations/ai-sdk#tool-implementer | AI SDK}
  */
 export function getAiSdkToolMeta(procedureOrLazy: AnyProcedureContract | Lazy<any>): AiSdkToolMeta | undefined {
   return procedureOrLazy['~orpc'].meta['~ai-sdk/tool'] as AiSdkToolMeta | undefined

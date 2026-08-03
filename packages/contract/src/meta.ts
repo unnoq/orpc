@@ -2,6 +2,12 @@ import type { ErrorMap } from './error'
 import type { AnySchema } from './schema'
 import { isTypescriptObject } from '@orpc/shared'
 
+/**
+ * Arbitrary metadata attached to a procedure.
+ * Middleware, plugins, and tooling can read it later to control behavior.
+ *
+ * @see {@link https://orpc.dev/docs/metadata | Metadata}
+ */
 export interface Meta {
   [key: PropertyKey]: unknown
 }
@@ -16,6 +22,12 @@ export interface MetaPluginDefinition<
   __TErrorMap?: { type: TErrorMap }
 }
 
+/**
+ * A metadata plugin passed to `.meta(...)`.
+ * Defines how metadata is initialized and merged, and can infer or restrict procedure types.
+ *
+ * @see {@link https://orpc.dev/docs/metadata | Metadata}
+ */
 export interface MetaPlugin<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
@@ -40,6 +52,12 @@ export interface MetaPlugin<
   'apply'?: (meta: Meta) => Meta
 }
 
+/**
+ * A `MetaPlugin` with all type parameters relaxed to `any`.
+ *
+ * @see {@link https://orpc.dev/docs/contract/procedure | Procedure Contract}
+ * @see {@link https://orpc.dev/docs/procedure | Procedure}
+ */
 export type AnyMetaPlugin = MetaPlugin<any, any, any>
 
 export const HIDDEN_META_PLUGINS_SYMBOL = Symbol.for('ORPC_HIDDEN_META_PLUGINS')

@@ -14,7 +14,7 @@ This example serves the OpenAPI document at `/spec.json` and renders Scalar at `
 import { createServer } from 'node:http'
 import { OpenAPIGenerator } from '@orpc/openapi'
 import { OpenAPIHandler } from '@orpc/openapi/node'
-import { CORSPlugin } from '@orpc/server/plugins'
+import { CORSHandlerPlugin } from '@orpc/server/plugins'
 import { ZodToJsonSchemaConverter } from '@orpc/zod'
 
 const openAPIHandler = new OpenAPIHandler(router, {

@@ -18,6 +18,8 @@ import { registry } from 'zod/v4/core'
  *   examples: [{ name: 'John', age: 20 }],
  * })
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/integrations/zod | Zod}
  */
 export const JSON_SCHEMA_REGISTRY = registry<Exclude<JsonSchema<$input | $output>, boolean>>()
 
@@ -37,6 +39,8 @@ export const JSON_SCHEMA_REGISTRY = registry<Exclude<JsonSchema<$input | $output
  *   examples: [{ name: 'John', age: "20" }],
  * })
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/integrations/zod | Zod}
  */
 export const JSON_SCHEMA_INPUT_REGISTRY = registry<Exclude<JsonSchema<$input>, boolean>>()
 
@@ -56,5 +60,7 @@ export const JSON_SCHEMA_INPUT_REGISTRY = registry<Exclude<JsonSchema<$input>, b
  *   examples: [{ name: 'John', age: 20 }],
  * })
  * ```
+ *
+ * @see {@link https://orpc.dev/docs/integrations/zod | Zod}
  */
 export const JSON_SCHEMA_OUTPUT_REGISTRY = registry<Exclude<JsonSchema<$output>, boolean>>()

@@ -9,6 +9,11 @@ import { OpenAPIHandlerCodec } from '../standard'
 export interface OpenAPIHandlerOptions<T extends Context>
   extends FastifyHandlerOptions<T>, Omit<StandardHandlerOptions<T>, 'plugins'>, OpenAPIHandlerCodecOptions<T> {}
 
+/**
+ * Serves oRPC procedures over the OpenAPI (RESTful) protocol as part of a Fastify server.
+ *
+ * @see {@link https://orpc.dev/docs/adapters/fastify | Fastify}
+ */
 export class OpenAPIHandler<T extends Context> extends FastifyHandler<T> {
   constructor(
     router: Router<T>,

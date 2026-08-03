@@ -23,6 +23,12 @@ export interface EvlogHandlerPluginOptions<_T extends Context> extends BaseEvlog
   logAbort?: boolean
 }
 
+/**
+ * Instruments an oRPC handler with Evlog structured logging, request tracking,
+ * and error monitoring.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/evlog | Evlog}
+ */
 export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~evlog'
 
@@ -86,8 +92,8 @@ export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlu
               response: {
                 ...result.response,
                 /**
-                 * @warning
-                 * Remember use `override` for AsyncIteratorObject to remain other special properties
+                 * @remarks
+                 * **Warning**: Remember use `override` for AsyncIteratorObject to remain other special properties
                  */
                 body: override(result.response.body, wrapAsyncIteratorPreservingEventMeta(result.response.body, {
                   runWith,
@@ -113,8 +119,8 @@ export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlu
               response: {
                 ...result.response,
                 /**
-                 * @warning
-                 * Remember use `override` for ReadableStream to remain other special properties
+                 * @remarks
+                 * **Warning**: Remember use `override` for ReadableStream to remain other special properties
                  */
                 body: override(result.response.body, wrapReadableStream(result.response.body, {
                   runWith,
@@ -195,8 +201,8 @@ export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlu
 
       if (isAsyncIteratorObject(output)) {
         /**
-         * @warning
-         * Remember use `override` for AsyncIteratorObject to remain other special properties
+         * @remarks
+         * **Warning**: Remember use `override` for AsyncIteratorObject to remain other special properties
          */
         return override(output, wrapAsyncIteratorPreservingEventMeta(output, {
           onError: (error) => {
@@ -207,8 +213,8 @@ export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlu
 
       if (output instanceof ReadableStream) {
         /**
-         * @warning
-         * Remember use `override` for ReadableStream to remain other special properties
+         * @remarks
+         * **Warning**: Remember use `override` for ReadableStream to remain other special properties
          */
         return override(output, wrapReadableStream(output, {
           onError: (error) => {

@@ -22,6 +22,8 @@ export interface PopulateRouterContractOpenAPIPathsOptions {
  *
  * Builds paths by joining router keys with `/`.
  * Useful when you want to ensure all contracts define openapi.path, such as for NestJS integration requirements.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/nest | NestJS}
  */
 export function populateRouterContractOpenAPIPaths<T extends RouterContract>(
   router: T,

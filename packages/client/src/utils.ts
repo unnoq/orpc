@@ -36,6 +36,9 @@ export type SafeResult<TOutput, TError>
  * if (inferableError) {
  *  console.log(inferableError) // or error, both are well typed
  * }
+ * ```
+ *
+ * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isinferableerror | Error Handling}
  */
 export async function safe<TOutput, TError = ThrowableError>(promise: PromiseWithError<TOutput, TError>): Promise<SafeResult<TOutput, TError>> {
   try {

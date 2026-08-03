@@ -17,6 +17,12 @@ export interface ZodToJsonSchemaConverterOptions extends Omit<ToJSONSchemaParams
   cache?: boolean
 }
 
+/**
+ * Converts Zod schemas into JSON Schema using Zod's built-in `toJSONSchema`,
+ * with additional support for types such as `z.bigint()`, `z.date()`, `z.set()`, and `z.map()`.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/zod | Zod}
+ */
 export class ZodToJsonSchemaConverter implements JsonSchemaConverter {
   private readonly toJSONSchemaParams: ToJSONSchemaParams
   private readonly cache: undefined | { [d in JsonSchemaConverterDirection]: WeakMap<$ZodType, [jsonSchema: JsonSchema, optional: boolean]> }

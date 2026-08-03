@@ -3,6 +3,11 @@ import { toArray } from '@orpc/shared'
 import { mergeStandardHeaders } from '@standardserver/core'
 import { toStandardHeaders } from '@standardserver/fetch'
 
+/**
+ * The context shape into which the Response Headers Plugin injects `resHeaders`.
+ *
+ * @see {@link https://orpc.dev/docs/plugins/response-headers | Response Headers}
+ */
 export interface ResponseHeadersHandlerPluginContext {
   /**
    * Response headers as a Headers instance. This is injected by the Response Headers Plugin.
@@ -15,7 +20,7 @@ export interface ResponseHeadersHandlerPluginContext {
  * The Response Headers Plugin allows you to set response headers in oRPC.
  * It injects a resHeaders instance into the context, enabling you to modify response headers easily.
  *
- * @see {@link https://orpc.dev/docs/plugins/response-headers Response Headers Plugin Docs}
+ * @see {@link https://orpc.dev/docs/plugins/response-headers | Response Headers}
  */
 export class ResponseHeadersHandlerPlugin<T extends ResponseHeadersHandlerPluginContext> implements StandardHandlerPlugin<T> {
   name = '~response-headers'

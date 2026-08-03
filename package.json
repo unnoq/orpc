@@ -13,6 +13,7 @@
     "lint": "eslint --max-warnings=0 .",
     "lint:fix": "eslint --max-warnings=0 --fix .",
     "repo:fix": "sherif --fix",
+    "docs:check-jsdoc": "node scripts/verify-docs-jsdoc.ts",
     "sponsors:sync": "node scripts/sync-sponsors.ts && eslint --max-warnings=0 --fix **/README.md apps/content/.vitepress/theme/sponsors.ts"
   },
   "devDependencies": {

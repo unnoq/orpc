@@ -3,6 +3,13 @@ import type { JsonSchema, JsonSchemaConverter, JsonSchemaConverterDirection } fr
 import { StandardJsonSchemaConverter } from '@orpc/json-schema'
 import { Schema as EffectSchema } from 'effect'
 
+/**
+ * A JSON Schema converter for Effect Schema, built on top of
+ * [Effect Schema to JSON Schema](https://effect.website/docs/schema/json-schema/).
+ * Useful with tools such as the OpenAPI Generator.
+ *
+ * @see {@link https://orpc.dev/docs/integrations/effect#json-schema-converter | Effect}
+ */
 export class EffectSchemaToJsonSchemaConverter implements JsonSchemaConverter {
   private readonly converter = new StandardJsonSchemaConverter()
 

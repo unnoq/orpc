@@ -234,4 +234,10 @@ export class Builder<
   }
 }
 
+/**
+ * The oRPC procedure builder. Chain methods like `.input`, `.use`, and `.handler`
+ * to define procedures, then compose them into routers.
+ *
+ * @see {@link https://orpc.dev/docs/procedure | Procedure}
+ */
 export const os = Builder.create()

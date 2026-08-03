@@ -28,6 +28,12 @@ export interface DurablePublisherOptions extends PublisherOptions {
   getStubByName?: (namespace: DurableObjectNamespace, event: string) => DurableObjectStub
 }
 
+/**
+ * Publisher adapter for Cloudflare Durable Objects. Routes publishes and
+ * subscriptions to a `DurablePublisherObject` per event, delivering events over WebSockets.
+ *
+ * @see {@link https://orpc.dev/docs/helpers/publisher#adapters | Publisher}
+ */
 export class DurablePublisher<T extends Record<string, object>> extends Publisher<T> {
   private readonly prefix: string
   private readonly serializer: Public<RPCSerializer>
