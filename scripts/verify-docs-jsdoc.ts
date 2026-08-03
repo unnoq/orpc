@@ -12,8 +12,9 @@ import ts from 'typescript'
  */
 
 const ROOT_DIR = process.cwd()
-const DOCS_DIR = path.join(ROOT_DIR, 'apps/content/docs')
+const CONTENT_DIR = path.join(ROOT_DIR, 'apps/content')
 const PACKAGES_DIR = path.join(ROOT_DIR, 'packages')
+const SITE_URL_PREFIX = 'https://orpc.dev/'
 const DOCS_URL_PREFIX = 'https://orpc.dev/docs/'
 
 /**
@@ -48,6 +49,8 @@ interface Issue {
   note?: string
 }
 
+const SKIP_DIRS = new Set(['node_modules', '.vitepress', 'public', 'dist'])
+
 async function findFiles(dir: string, extension: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
   const result: string[] = []
@@ -56,6 +59,10 @@ async function findFiles(dir: string, extension: string): Promise<string[]> {
     const fullPath = path.join(dir, entry.name)
 
     if (entry.isDirectory()) {
+      if (SKIP_DIRS.has(entry.name)) {
+        continue
+      }
+
       result.push(...await findFiles(fullPath, extension))
     }
     else if (entry.isFile() && entry.name.endsWith(extension)) {
@@ -187,20 +194,28 @@ function extractHeadings(outsideFenceLines: string[]): { title: string, slugs: M
   return { title, slugs }
 }
 
+/**
+ * Collects every content page (keyed by site path, `''` for the homepage) and, for
+ * `docs/` pages only, the `@orpc/*` APIs their code fences import.
+ */
 async function collectDocs(): Promise<{ mentions: Map<string, Mention>, pages: Map<string, DocPage> }> {
   const mentions = new Map<string, Mention>()
   const pages = new Map<string, DocPage>()
 
-  for (const file of await findFiles(DOCS_DIR, '.md')) {
+  for (const file of await findFiles(CONTENT_DIR, '.md')) {
     const raw = await readFile(file, 'utf8')
-    const relPage = path.relative(DOCS_DIR, file).replace(/\.md$/, '').replaceAll(path.sep, '/')
+    const relPage = path.relative(CONTENT_DIR, file).replace(/\.md$/, '').replaceAll(path.sep, '/')
     const { code, outside } = extractCodeFences(raw)
 
-    pages.set(relPage.replace(/\/index$/, '') || 'index', {
+    pages.set(relPage === 'index' ? '' : relPage.replace(/\/index$/, ''), {
       file,
       raw,
       ...extractHeadings(outside),
     })
+
+    if (!relPage.startsWith('docs/')) {
+      continue
+    }
 
     for (const fence of code) {
       for (const [specifier, names] of collectImportedNames(fence)) {
@@ -370,16 +385,16 @@ function checkMention(
       continue
     }
 
-    const [pagePath = '', anchor] = url.slice(DOCS_URL_PREFIX.length).split('#')
+    const [pagePath = '', anchor] = url.slice(SITE_URL_PREFIX.length).split('#')
     const page = pages.get(pagePath)
 
     if (!page) {
-      report('error', 'E4', `backlink page "${pagePath}" has no apps/content/docs/${pagePath}.md`)
+      report('error', 'E4', `backlink page "${pagePath}" has no apps/content/${pagePath}.md`)
       continue
     }
 
     if (anchor !== undefined && !page.slugs.has(anchor)) {
-      report('error', 'E5', `anchor "#${anchor}" not found in apps/content/docs/${pagePath}.md`)
+      report('error', 'E5', `anchor "#${anchor}" not found in apps/content/${pagePath}.md`)
       continue
     }
 
@@ -407,10 +422,10 @@ function checkMention(
   }
 }
 
-const ORPC_DOCS_URL_RE = /https:\/\/orpc\.dev\/docs\/[^\s)}\]|'"`]+/g
+const ORPC_URL_RE = /https:\/\/orpc\.dev[^\s)}\]|'"`]*/g
 
 /**
- * Validates that every `https://orpc.dev/docs/...` URL appearing anywhere in package
+ * Validates that every `https://orpc.dev...` URL appearing anywhere in package
  * sources (inline markdown links, member-level docs, ...) points to an existing
  * content page and heading. Existence only — titles are enforced on `@see` tags.
  */
@@ -441,7 +456,7 @@ async function scanSourceLinks(context: CheckContext, filterDirs: Set<string> | 
       const lines = (await readFile(file, 'utf8')).split('\n')
 
       for (const [index, line] of lines.entries()) {
-        for (const match of line.matchAll(ORPC_DOCS_URL_RE)) {
+        for (const match of line.matchAll(ORPC_URL_RE)) {
           const url = match[0].replace(/[.,;:]+$/, '')
           scanned += 1
 
@@ -456,16 +471,17 @@ async function scanSourceLinks(context: CheckContext, filterDirs: Set<string> | 
             })
           }
 
-          const [pagePath = '', anchor] = url.slice(DOCS_URL_PREFIX.length).split('#')
+          const [rawPath = '', anchor] = url.slice(SITE_URL_PREFIX.length - 1).split('#')
+          const pagePath = rawPath.replace(/^\/+/, '').replace(/\/+$/, '')
           const page = context.pages.get(pagePath)
 
           if (!page) {
-            report('E4', `link page "${pagePath}" has no apps/content/docs/${pagePath}.md`)
+            report('E4', `link page "/${pagePath}" has no apps/content/${pagePath || 'index'}.md`)
             continue
           }
 
           if (anchor !== undefined && !page.slugs.has(anchor)) {
-            report('E5', `anchor "#${anchor}" not found in apps/content/docs/${pagePath}.md`)
+            report('E5', `anchor "#${anchor}" not found in apps/content/${pagePath || 'index'}.md`)
           }
         }
       }
