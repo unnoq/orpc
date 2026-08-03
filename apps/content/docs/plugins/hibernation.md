@@ -94,7 +94,7 @@ The plugin provides `HibernationAsyncIteratorClass` and `encodeHibernationRPCEve
 
 ::: details Cloudflare Durable Object Chat Room Example?
 
-This example demonstrates how to set up a chat room using [Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/) and [WebSocket Hibernation](https://developers.cloudflare.com/durable-objects/examples/websocket-hibernation-server/). Everyone connected to the same Durable Object can send messages to each other.
+This example shows how to build a chat room with [Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/) and [WebSocket Hibernation](https://developers.cloudflare.com/durable-objects/examples/websocket-hibernation-server/). Everyone connected to the same Durable Object can exchange messages. You can try a working version in the Cloudflare Playground, see [Playgrounds](/docs/playgrounds).
 
 ::: code-group
 
