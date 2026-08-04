@@ -4,7 +4,7 @@ it('exports plugins', async () => {
     CORSHandlerPlugin: expect.any(Function),
     RequestHeadersHandlerPlugin: expect.any(Function),
     ResponseHeadersHandlerPlugin: expect.any(Function),
-    CSRFGuardHandlerPlugin: expect.any(Function),
+    SimpleCsrfProtectionHandlerPlugin: expect.any(Function),
     RethrowHandlerPlugin: expect.any(Function),
     RequestCompressionHandlerPlugin: expect.any(Function),
     RequestLimitHandlerPlugin: expect.any(Function),

@@ -1,5 +1,5 @@
 import { ORPCError } from '@orpc/client'
-import { CSRFGuardHandlerPlugin } from './csrf-guard'
+import { SimpleCsrfProtectionHandlerPlugin } from './simple-csrf-protection'
 
 function makeRequest(headers: Record<string, unknown> = {}) {
   return {
@@ -13,7 +13,7 @@ function makeRequest(headers: Record<string, unknown> = {}) {
 function getInterceptor() {
   const existingInterceptor = vi.fn()
 
-  const options = new CSRFGuardHandlerPlugin<any>().init({
+  const options = new SimpleCsrfProtectionHandlerPlugin<any>().init({
     interceptors: [existingInterceptor],
   } as any)
 
@@ -38,7 +38,7 @@ async function invokeInterceptor(headers: Record<string, unknown>) {
   return { result, next, nextResult }
 }
 
-describe('csrfGuardHandlerPlugin', () => {
+describe('simpleCsrfProtectionHandlerPlugin', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })

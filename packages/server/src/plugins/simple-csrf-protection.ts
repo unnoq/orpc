@@ -14,10 +14,10 @@ import { flattenStandardHeader } from '@standardserver/core'
  * still carry cookies, so it is the recommended safeguard when you enable the `GET`
  * method on RPC handlers or rely on cookie-based authentication.
  *
- * @see {@link https://orpc.dev/docs/plugins/csrf-guard | CSRF Guard Plugin}
+ * @see {@link https://orpc.dev/docs/plugins/simple-csrf-protection | Simple CSRF Protection Plugin}
  */
-export class CSRFGuardHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
-  name = '~csrf-guard'
+export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
+  name = '~simple-csrf-protection'
 
   init(options: StandardHandlerOptions<T>): StandardHandlerOptions<T> {
     const interceptor: StandardHandlerInterceptor<T> = async (interceptorOptions) => {
