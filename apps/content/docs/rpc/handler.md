@@ -72,7 +72,7 @@ Enabling `GET` is dangerous when your application stores tokens in cookies with 
 To enable `GET` safely, do one of the following:
 
 - Set authentication cookies to `SameSite=Strict`, which browsers never send cross-site
-- Use an independent protection, such as the [CSRF Guard Plugin](/docs/plugins/csrf-guard)
+- Use an independent protection, such as the [Simple CSRF Protection Plugin](/docs/plugins/simple-csrf-protection)
 - Allow `GET` only for safe procedures that never modify data, as shown below
 
 Learn more about this attack on [MDN](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF) and in the [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).
@@ -81,13 +81,13 @@ Learn more about this attack on [MDN](https://developer.mozilla.org/en-US/docs/W
 Add `GET` to `allowMethods` to enable it for every procedure:
 
 ```ts
-import { CSRFGuardHandlerPlugin } from '@orpc/server/plugins'
+import { SimpleCsrfProtectionHandlerPlugin } from '@orpc/server/plugins'
 import { RPC_DEFAULT_ALLOW_METHODS } from '@orpc/server/standard'
 
 const handler = new RPCHandler(router, {
   allowMethods: ['GET', ...RPC_DEFAULT_ALLOW_METHODS],
   plugins: [
-    new CSRFGuardHandlerPlugin(), // reject requests triggered by navigations, forms, etc.
+    new SimpleCsrfProtectionHandlerPlugin(), // reject requests triggered by navigations, forms, etc.
   ],
 })
 ```

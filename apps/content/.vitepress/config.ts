@@ -155,7 +155,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Batch', link: '/docs/plugins/batch' },
             { text: 'CORS', link: '/docs/plugins/cors' },
-            { text: 'CSRF Guard', link: '/docs/plugins/csrf-guard' },
+            { text: 'Simple CSRF Protection', link: '/docs/plugins/simple-csrf-protection' },
             { text: 'Dedupe', link: '/docs/plugins/dedupe' },
             { text: 'OpenAPI Reference', link: '/docs/plugins/openapi-reference' },
             { text: 'Request Compression', link: '/docs/plugins/request-compression' },
