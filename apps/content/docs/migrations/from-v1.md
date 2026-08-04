@@ -937,7 +937,10 @@ const spec = await generator.generate(router, {
 
 :::
 
-The `oo` helper (`oo.spec`) was removed. Attach specs with `openapi({ spec })` metadata instead. The `shouldHoistDef` option was replaced by `customComponentName`.
+Two smaller changes in the same area:
+
+- The `oo` helper (`oo.spec`) was removed. To customize the operation object, attach [`openapi({ spec })` metadata](/docs/openapi/specification#customizing-the-operation-object) directly on the procedure or router.
+- The `shouldHoistDef` option was replaced by [`customComponentName`](/docs/openapi/specification#hoisting-defs). Root `$defs` are now always hoisted into `components.schemas`; this option only renames them.
 
 ### `OpenAPIReferencePlugin` renamed and reshaped
 
