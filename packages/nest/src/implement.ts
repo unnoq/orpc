@@ -69,8 +69,11 @@ export function Implement<T extends RouterContract>(
       applyDecorators(
         MethodDecoratorMap[method](path),
         HttpCode(successStatus),
-        UseInterceptors(ImplementInterceptor),
       )(target, propertyKey, descriptor)
+
+      queueMicrotask(() => {
+        UseInterceptors(ImplementInterceptor)(target, propertyKey, descriptor)
+      })
     }
   }
 
@@ -90,13 +93,15 @@ export function Implement<T extends RouterContract>(
 
       Object.setPrototypeOf(target[methodName], descriptor.value!)
 
-      for (const p of Reflect.getOwnMetadataKeys(target, propertyKey)) {
-        Reflect.defineMetadata(p, Reflect.getOwnMetadata(p, target, propertyKey), target, methodName)
-      }
+      queueMicrotask(() => {
+        for (const p of Reflect.getOwnMetadataKeys(target, propertyKey)) {
+          Reflect.defineMetadata(p, Reflect.getOwnMetadata(p, target, propertyKey), target, methodName)
+        }
 
-      for (const p of Reflect.getOwnMetadataKeys(target.constructor, propertyKey)) {
-        Reflect.defineMetadata(p, Reflect.getOwnMetadata(p, target.constructor, propertyKey), target.constructor, methodName)
-      }
+        for (const p of Reflect.getOwnMetadataKeys(target.constructor, propertyKey)) {
+          Reflect.defineMetadata(p, Reflect.getOwnMetadata(p, target.constructor, propertyKey), target.constructor, methodName)
+        }
+      })
 
       Implement(contract[key] as any)(target, methodName, Object.getOwnPropertyDescriptor(target, methodName)!)
     }
