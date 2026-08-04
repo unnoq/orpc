@@ -862,25 +862,13 @@ Contract types and utilities changed word order from `ContractRouter*` to `Route
 | `RequestValidationPlugin`                        | `RequestValidationLinkPlugin`                          |
 | `ResponseValidationPlugin`                       | `ResponseValidationLinkPlugin`                         |
 
-The implementer also gained `.$context`, `.use`, and `.middleware`, so you can set up context and shared middleware directly. See [Contract Implementation](/docs/contract/implementation).
+The implementer works the same as in v1: `implement(contract)` still supports `.$context`, `.use`, and `.middleware`. New in v2, it also accepts a [procedure config](/docs/advanced/validation-customization), either as a second argument or through `.$config`. See [Contract Implementation](/docs/contract/implementation).
 
-::: code-group
-
-```ts [v2]
+```ts
 import { implement } from '@orpc/server'
 
-const os = implement(contract)
-  .$context<{ db: Database }>()
-  .use(loggingMiddleware)
+const os = implement(contract, { disableOutputValidation: true })
 ```
-
-```ts [v1]
-import { implement } from '@orpc/server'
-
-const os = implement(contract) // context and middleware via separate builders
-```
-
-:::
 
 Contract routing uses `openapi()` metadata now, as described in [Routing Moved to OpenAPI Metadata](#routing-moved-to-openapi-metadata).
 
