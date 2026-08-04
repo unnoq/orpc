@@ -10,7 +10,9 @@ import { flattenStandardHeader } from '@standardserver/core'
  * (for example, fetch/XHR) rather than from standard HTML forms or direct browser navigation.
  *
  * @remarks
- * **Note**: This plugin is enabled by default for `RPCHandler` over HTTP.
+ * Unlike `SameSite` cookies, this protection also covers cross-site requests that
+ * still carry cookies, so it is the recommended safeguard when you enable the `GET`
+ * method on RPC handlers or rely on cookie-based authentication.
  *
  * @see {@link https://orpc.dev/docs/plugins/csrf-guard | CSRF Guard Plugin}
  */

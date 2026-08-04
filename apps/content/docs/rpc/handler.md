@@ -50,6 +50,69 @@ export async function fetch(request: Request) {
 
 <!--@include: @/shared/standard-server-cors-warning.md -->
 
+## Supported HTTP Methods
+
+By default, `RPCHandler` only responds to `POST`, `PUT`, `PATCH`, and `DELETE` requests. Any other method, such as `GET` or `HEAD`, is treated as unmatched, as if no procedure exists at that path.
+
+This is a security default: cross-site, browsers can only send these methods via a [CORS preflight](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request) or an HTML form, never from a plain link. Safe methods like `GET` or `HEAD` are excluded because invoking a procedure can modify data.
+
+Use `allowMethods` to replace the allowlist: tighten it to `POST` only, or also accept [`QUERY`](https://datatracker.ietf.org/doc/draft-ietf-httpbis-safe-method-w-body/), which reads input from the request body and stays preflight-protected:
+
+```ts
+const handler = new RPCHandler(router, {
+  allowMethods: ['POST', 'PUT', 'PATCH', 'DELETE', 'QUERY'],
+})
+```
+
+### Enabling the GET Method
+
+::: danger Dangerous with cookie-based authentication
+Enabling `GET` is dangerous when your application stores tokens in cookies with `SameSite=Lax` (the browser default) or `SameSite=None`. These cookies **are still sent on cross-site top-level navigations**, so an attacker only needs a signed-in user to click a link like `https://example.com/rpc/planet/delete?data=...` and the procedure runs with the victim's cookies. No JavaScript, no CORS bypass.
+
+To enable `GET` safely, do one of the following:
+
+- Set authentication cookies to `SameSite=Strict`, which browsers never send cross-site
+- Use an independent protection, such as the [CSRF Guard Plugin](/docs/plugins/csrf-guard)
+- Allow `GET` only for safe procedures that never modify data, as shown below
+
+Learn more about this attack on [MDN](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF) and in the [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).
+:::
+
+Add `GET` to `allowMethods` to enable it for every procedure:
+
+```ts
+import { CSRFGuardHandlerPlugin } from '@orpc/server/plugins'
+import { RPC_DEFAULT_ALLOW_METHODS } from '@orpc/server/standard'
+
+const handler = new RPCHandler(router, {
+  allowMethods: ['GET', ...RPC_DEFAULT_ALLOW_METHODS],
+  plugins: [
+    new CSRFGuardHandlerPlugin(), // reject requests triggered by navigations, forms, etc.
+  ],
+})
+```
+
+Or pass a function to decide per request. For example, only allow `GET` for procedures that declare it via [OpenAPI metadata](/docs/openapi/routing):
+
+```ts
+import { getOpenAPIMeta, openapi } from '@orpc/openapi'
+import { RPC_DEFAULT_ALLOW_METHODS } from '@orpc/server/standard'
+
+const listPlanets = os
+  .meta(openapi({ method: 'GET', path: '/planets' }))
+  .handler(() => ['Earth', 'Mars'])
+
+const handler = new RPCHandler({ listPlanets }, {
+  allowMethods: (method, procedure, path) => {
+    if (method === 'GET' && getOpenAPIMeta(procedure)?.method === 'GET') {
+      return true
+    }
+
+    return RPC_DEFAULT_ALLOW_METHODS.includes(method)
+  },
+})
+```
+
 ## Interceptors
 
 Interceptors let you observe or change different stages of an RPC request. Common use cases include logging, error handling, and metrics.
@@ -161,19 +224,6 @@ const handler = new RPCHandler(router, {
   ],
 })
 ```
-
-::: info
-HTTP-based `RPCHandler` implementations enable the [CSRF Guard Plugin](/docs/plugins/csrf-guard) by default to protect RPC requests from CSRF attacks. Disable it with `csrfGuardHandlerPlugin.enabled`.
-
-```ts
-const handler = new RPCHandler(router, {
-  csrfGuardHandlerPlugin: {
-    enabled: false,
-  },
-})
-```
-
-:::
 
 ## Custom Serializer
 

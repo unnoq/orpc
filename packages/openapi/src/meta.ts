@@ -436,6 +436,11 @@ openapi.prefix = prefix => ({
   name: '~openapi/prefix',
 })
 
+/**
+ * Retrieves the OpenAPI metadata attached to a procedure or router, or `undefined` if not set.
+ *
+ * @see {@link https://orpc.dev/docs/rpc/handler#enabling-the-get-method | RPC Handler - Enabling the GET Method}
+ */
 export function getOpenAPIMeta(procedureOrLazy: AnyProcedureContract | Lazy<any>): OpenAPIMeta | undefined {
   return procedureOrLazy['~orpc'].meta['~openapi'] as OpenAPIMeta | undefined
 }

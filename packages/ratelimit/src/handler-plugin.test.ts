@@ -6,6 +6,7 @@ describe('ratelimitHandlerPlugin', () => {
   const handlerFn = vi.fn()
   const procedure = os.handler(handlerFn)
   const handler = new RPCHandler(procedure, {
+    allowMethods: ['GET'], // tests below send GET requests
     plugins: [
       new RateLimitHandlerPlugin(),
     ],

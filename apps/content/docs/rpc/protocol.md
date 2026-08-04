@@ -28,7 +28,7 @@ const router = {
 
 ## Sending Input
 
-You can use any HTTP method. Send input in the query string or request body, depending on the method.
+Requests can use the `POST`, `PUT`, `PATCH`, or `DELETE` method, or other methods like `GET` and `QUERY` when the server [allows them](/docs/rpc/handler#supported-http-methods). Send input in the query string (`GET`) or request body (other methods).
 
 ::: info
 Request payloads depend on the serializer and are not plain JSON. Learn more in [RPC Serializer Format](/docs/rpc/serializer#serialization-format).

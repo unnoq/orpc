@@ -111,46 +111,36 @@ describe('rpcHandler', () => {
     expect(responseStream.text).toBe('intercepted')
   })
 
-  it('enables csrfGuardPlugin by default', async () => {
+  it('treats GET requests as unmatched by default', async () => {
     const handler = new RPCHandler({
       ping: os.handler(() => 'pong'),
     })
 
     const responseStream = new TestResponseStream()
     const result = await handler.handle(createEvent({
-      headers: {
-        'host': 'example.com',
-        'content-type': 'application/json',
-        'cookie': 'session=abc',
-        'sec-fetch-mode': 'navigate',
-      },
+      requestContext: { http: { method: 'GET' } },
+      rawQueryString: `data=${encodeURIComponent(JSON.stringify({ json: null }))}`,
+      body: undefined,
     }), responseStream)
 
-    expect(result.matched).toBe(true)
-    expect(responseStream.metadata?.statusCode).toBe(403)
-    expect(responseStream.text).toContain('Request blocked by CSRF protection')
+    expect(result.matched).toBe(false)
   })
 
-  it('disables csrfGuardPlugin when configured', async () => {
+  it('allows GET requests when allowMethods includes GET', async () => {
     const handler = new RPCHandler(
       {
         ping: os.handler(() => 'pong'),
       },
       {
-        csrfGuardPlugin: {
-          enabled: false,
-        },
+        allowMethods: ['GET'],
       },
     )
 
     const responseStream = new TestResponseStream()
     const result = await handler.handle(createEvent({
-      headers: {
-        'host': 'example.com',
-        'content-type': 'application/json',
-        'cookie': 'session=abc',
-        'sec-fetch-mode': 'navigate',
-      },
+      requestContext: { http: { method: 'GET' } },
+      rawQueryString: `data=${encodeURIComponent(JSON.stringify({ json: null }))}`,
+      body: undefined,
     }), responseStream)
 
     expect(result.matched).toBe(true)

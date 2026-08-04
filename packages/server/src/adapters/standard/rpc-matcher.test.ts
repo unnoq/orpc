@@ -221,6 +221,81 @@ describe('rpcMatcher', () => {
     await expect(matcher.match('POST', '/nested/echo', undefined)).resolves.toBeDefined()
   })
 
+  describe('allowMethods', () => {
+    it.each([
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+    ] as const)('matches %s requests by default', async (method) => {
+      const matcher = new RPCMatcher(router)
+
+      await expect(matcher.match(method, '/ping', undefined)).resolves.toBeDefined()
+    })
+
+    it.each([
+      'GET',
+      'HEAD',
+      'OPTIONS',
+      'QUERY',
+      'TRACE',
+    ] as const)('treats %s requests as unmatched by default', async (method) => {
+      const matcher = new RPCMatcher(router)
+
+      await expect(matcher.match(method, '/ping', undefined)).resolves.toBeUndefined()
+    })
+
+    it('replaces the default allowlist entirely when a list is provided', async () => {
+      const matcher = new RPCMatcher(router, { allowMethods: ['GET', 'QUERY'] })
+
+      await expect(matcher.match('GET', '/ping', undefined)).resolves.toBeDefined()
+      await expect(matcher.match('QUERY', '/ping', undefined)).resolves.toBeDefined()
+      await expect(matcher.match('POST', '/ping', undefined)).resolves.toBeUndefined()
+    })
+
+    it('decides per request with the method, matched procedure, and path', async () => {
+      const allowMethods = vi.fn((method: string, _procedure: unknown, path: string[]) => method === 'GET' && path[0] === 'ping')
+      const matcher = new RPCMatcher(router, { allowMethods })
+
+      const matched = await matcher.match('GET', '/ping', undefined)
+      expect(matched).toBeDefined()
+      expect(matched!.path).toEqual(['ping'])
+      expect(matched!.procedure).toBe(procedure1)
+      expect(allowMethods).toHaveBeenCalledWith('GET', procedure1, ['ping'])
+
+      await expect(matcher.match('GET', '/nested/echo', undefined)).resolves.toBeUndefined()
+      expect(allowMethods).toHaveBeenCalledWith('GET', procedure2, ['nested', 'echo'])
+
+      // the function replaces the default allowlist entirely
+      await expect(matcher.match('POST', '/ping', undefined)).resolves.toBeUndefined()
+      expect(allowMethods).toHaveBeenCalledWith('POST', procedure1, ['ping'])
+
+      expect(allowMethods).toHaveBeenCalledTimes(3)
+    })
+
+    it('consults the function with lazily resolved procedures', async () => {
+      const allowMethods = vi.fn(() => false)
+      const matcher = new RPCMatcher(router, { allowMethods })
+
+      await expect(matcher.match('POST', '/lazy/info', undefined)).resolves.toBeUndefined()
+      expect(allowMethods).toHaveBeenCalledOnce()
+      expect(allowMethods).toHaveBeenCalledWith('POST', procedure3, ['lazy', 'info'])
+
+      allowMethods.mockReturnValueOnce(true)
+      const matched = await matcher.match('POST', '/lazy/info', undefined)
+      expect(matched).toBeDefined()
+      expect(matched!.procedure).toBe(procedure3)
+    })
+
+    it('does not consult the function for unmatched paths', async () => {
+      const allowMethods = vi.fn(() => true)
+      const matcher = new RPCMatcher(router, { allowMethods })
+
+      await expect(matcher.match('POST', '/missing', undefined)).resolves.toBeUndefined()
+      expect(allowMethods).not.toHaveBeenCalled()
+    })
+  })
+
   describe('prefix', () => {
     it('handles prefix stripping', async () => {
       const matcher = new RPCMatcher(router)
