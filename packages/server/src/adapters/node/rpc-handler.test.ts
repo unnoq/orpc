@@ -70,51 +70,39 @@ describe('rpcHandler', () => {
     expect(res.text).toBe('intercepted')
   })
 
-  it('enables csrfGuardPlugin by default', async () => {
+  it('treats GET requests as unmatched by default', async () => {
     const handler = new RPCHandler({
       ping: os.handler(() => 'pong'),
     })
 
-    let result: Awaited<ReturnType<typeof handler.handle>> | undefined
-
     const res = await request(async (req: IncomingMessage, response: ServerResponse) => {
-      result = await handler.handle(req as any, response as any)
+      const result = await handler.handle(req as any, response as any)
 
       if (!result.matched) {
         response.statusCode = 404
         response.end('not matched')
       }
     })
-      .post('/ping')
-      .set('content-type', 'application/json')
-      .set('cookie', 'session=abc')
-      .set('sec-fetch-mode', 'navigate')
-      .send({ json: null })
+      .get(`/ping?data=${encodeURIComponent(JSON.stringify({ json: null }))}`)
 
-    expect(res.status).toBe(403)
-    expect(res.text).toContain('Request blocked by CSRF protection')
+    expect(res.status).toBe(404)
+    expect(res.text).toBe('not matched')
   })
 
-  it('disables csrfGuardPlugin when configured', async () => {
+  it('allows GET requests when allowMethods includes GET', async () => {
     const handler = new RPCHandler(
       {
         ping: os.handler(() => 'pong'),
       },
       {
-        csrfGuardPlugin: {
-          enabled: false,
-        },
+        allowMethods: ['GET'],
       },
     )
 
     const res = await request(async (req: IncomingMessage, response: ServerResponse) => {
       await handler.handle(req as any, response as any)
     })
-      .post('/ping')
-      .set('content-type', 'application/json')
-      .set('cookie', 'session=abc')
-      .set('sec-fetch-mode', 'navigate')
-      .send({ json: null })
+      .get(`/ping?data=${encodeURIComponent(JSON.stringify({ json: null }))}`)
 
     expect(res.status).toBe(200)
     expect(res.text).toContain('pong')

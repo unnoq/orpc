@@ -21,6 +21,7 @@ describe('requestLimitHandlerPlugin', () => {
         ping: procedure,
       },
       {
+        allowMethods: ['GET'], // this test sends a GET request
         plugins: [new RequestLimitHandlerPlugin({ maxBodySize: 22 })],
       },
     )

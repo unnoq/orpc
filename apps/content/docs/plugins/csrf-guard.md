@@ -19,19 +19,6 @@ const handler = new OpenAPIHandler(router, {
 })
 ```
 
-::: info
-HTTP-based `RPCHandler` implementations enable this plugin by default. Disable it with `csrfGuardHandlerPlugin.enabled`.
-
-```ts
-const handler = new RPCHandler(router, {
-  csrfGuardHandlerPlugin: {
-    enabled: false,
-  },
-})
-```
-
-:::
-
 <!--@include: @/shared/any-handler-support-info.md -->
 
 ## Learn More

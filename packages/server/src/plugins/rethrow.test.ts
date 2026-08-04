@@ -15,6 +15,7 @@ describe('rethrowHandlerPlugin', () => {
   const filter = vi.fn(() => false)
   const interceptor = vi.fn(({ next }) => next())
   const handler = new RPCHandler(procedure, {
+    allowMethods: ['GET'], // tests below send GET requests
     interceptors: [interceptor],
     plugins: [
       new RethrowHandlerPlugin({
@@ -72,6 +73,7 @@ describe('rethrowHandlerPlugin', () => {
   it('throws when another interceptor corrupts the plugin context', async () => {
     const interceptor = vi.fn(({ next, ...options }) => next({ ...options, context: {} }))
     const handler = new RPCHandler(procedure, {
+      allowMethods: ['GET'],
       interceptors: [interceptor],
       plugins: [
         new RethrowHandlerPlugin({

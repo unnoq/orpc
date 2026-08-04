@@ -249,6 +249,10 @@ const link = new RPCLink({
 
 `RPCLink` sends requests with `POST` by default. Use `method` to choose the method per call.
 
+::: warning
+By default, [RPC handlers](/docs/rpc/handler#supported-http-methods) only accept `POST`, `PUT`, `PATCH`, and `DELETE` requests. Before sending `GET` or `QUERY` requests, allow them in the handler first, and understand [the risks of enabling `GET`](/docs/rpc/handler#enabling-the-get-method).
+:::
+
 ```ts
 type ClientContext = {
   cache?: RequestCache

@@ -12,6 +12,7 @@ export const createNodeHttpClientServerTest: CreateClientServerTest = (
 ) => {
   const handler = new RPCHandler(router, {
     serializer,
+    allowMethods: ['GET', 'POST'], // the client below sends GET requests (POST as fallback)
   })
 
   const server = http.createServer(async (req, res) => {

@@ -22,7 +22,7 @@ describe('rpcHandlerCodec', () => {
       const codec = new RPCHandlerCodec(router)
 
       const result = await codec.resolveProcedure({
-        method: 'GET',
+        method: 'POST',
         url: '/missing?data=%7B%7D',
         resolveBody: vi.fn(),
         headers: {},
@@ -38,7 +38,7 @@ describe('rpcHandlerCodec', () => {
         deserialize: vi.fn().mockReturnValueOnce('__deserialized__'),
       } as any
 
-      const codec = new RPCHandlerCodec(router, { serializer })
+      const codec = new RPCHandlerCodec(router, { serializer, allowMethods: ['GET'] })
 
       const result = await codec.resolveProcedure({
         method: 'GET',
@@ -85,6 +85,31 @@ describe('rpcHandlerCodec', () => {
       expect(resolveBody).toHaveBeenCalledOnce()
       expect(serializer.deserialize).toHaveBeenCalledOnce()
       expect(serializer.deserialize).toHaveBeenCalledWith({ json: { deep: true } })
+    })
+
+    it('resolves QUERY requests when allowMethods includes QUERY and decodes input from the body', async () => {
+      const serializer = {
+        serialize: vi.fn(),
+        deserialize: vi.fn().mockReturnValueOnce('__deserialized__'),
+      } as any
+
+      const resolveBody = vi.fn().mockResolvedValueOnce({ json: null })
+      const codec = new RPCHandlerCodec(router, { serializer, allowMethods: ['QUERY'] })
+
+      const result = await codec.resolveProcedure({
+        method: 'QUERY',
+        url: '/ping',
+        resolveBody,
+        headers: {},
+        signal: undefined,
+      } as any, options as any)
+
+      expect(result).toBeDefined()
+
+      const input = await result!.decodeInput()
+
+      expect(input).toBe('__deserialized__')
+      expect(resolveBody).toHaveBeenCalledOnce()
     })
   })
 
@@ -278,7 +303,7 @@ describe('rpcHandlerCodec', () => {
       })
 
       const result = await codec.resolveProcedure({
-        method: 'GET',
+        method: 'POST',
         url: '/missing?data=%7B%7D',
         resolveBody: vi.fn(),
         headers: {},

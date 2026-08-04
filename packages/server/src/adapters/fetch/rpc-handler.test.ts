@@ -69,54 +69,82 @@ describe('rpcHandler', () => {
     return expect(response!.text()).resolves.toBe('intercepted')
   })
 
-  it('enables csrfGuardHandlerPlugin by default', async () => {
+  it('treats GET requests as unmatched by default', async () => {
     const handler = new RPCHandler({
       ping: os.handler(() => 'pong'),
     })
 
     const result = await handler.handle(
-      new Request('https://example.com/ping', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'cookie': 'session=abc',
-          'sec-fetch-mode': 'navigate',
-        },
-        body: JSON.stringify({ json: null }),
-      }),
+      new Request(`https://example.com/ping?data=${encodeURIComponent(JSON.stringify({ json: null }))}`),
     )
 
-    expect(result.response?.status).toBe(403)
-    expect(await result.response?.text()).toContain('Request blocked by CSRF protection')
+    expect(result.matched).toBe(false)
+    expect(result.response).toBeUndefined()
   })
 
-  it('disables csrfGuardHandlerPlugin when configured', async () => {
+  it('treats unsupported methods like OPTIONS as unmatched', async () => {
     const handler = new RPCHandler(
       {
         ping: os.handler(() => 'pong'),
       },
       {
-        csrfGuardHandlerPlugin: {
-          enabled: false,
-        },
+        allowMethods: ['GET'],
       },
     )
 
     const result = await handler.handle(
-      new Request('https://example.com/ping', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'cookie': 'session=abc',
-          'sec-fetch-mode': 'navigate',
-        },
-        body: JSON.stringify({ json: null }),
-      }),
+      new Request('https://example.com/ping', { method: 'OPTIONS' }),
+    )
+
+    expect(result.matched).toBe(false)
+    expect(result.response).toBeUndefined()
+  })
+
+  it('allows GET requests when allowMethods includes GET', async () => {
+    const handler = new RPCHandler(
+      {
+        ping: os.handler(() => 'pong'),
+      },
+      {
+        allowMethods: ['GET'],
+      },
+    )
+
+    const result = await handler.handle(
+      new Request(`https://example.com/ping?data=${encodeURIComponent(JSON.stringify({ json: null }))}`),
     )
 
     expect(result.matched).toBe(true)
-    expect(result.response).toBeInstanceOf(Response)
     expect(result.response!.status).toBe(200)
     await expect(result.response!.text()).resolves.toContain('pong')
+  })
+
+  it('supports deciding allowMethods per procedure', async () => {
+    const allowMethods = vi.fn((method: string, _procedure: unknown, path: string[]) => method === 'GET' && path[0] === 'public')
+
+    const handler = new RPCHandler(
+      {
+        public: os.handler(() => 'public'),
+        private: os.handler(() => 'private'),
+      },
+      {
+        allowMethods,
+      },
+    )
+
+    const allowed = await handler.handle(
+      new Request(`https://example.com/public?data=${encodeURIComponent(JSON.stringify({ json: null }))}`),
+    )
+
+    expect(allowed.matched).toBe(true)
+    expect(allowed.response!.status).toBe(200)
+    await expect(allowed.response!.text()).resolves.toContain('public')
+
+    const blocked = await handler.handle(
+      new Request(`https://example.com/private?data=${encodeURIComponent(JSON.stringify({ json: null }))}`),
+    )
+
+    expect(blocked.matched).toBe(false)
+    expect(allowMethods).toHaveBeenCalledTimes(2)
   })
 })

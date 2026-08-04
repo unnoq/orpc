@@ -1,5 +1,5 @@
 import type { AnyProcedureContract } from '@orpc/contract'
-import type { Value } from '@orpc/shared'
+import type { Promisable, Value } from '@orpc/shared'
 import type { StandardMethod } from '@standardserver/core'
 import type { AnyProcedure } from '../../procedure'
 import type { AnyRouter } from '../../router'
@@ -10,6 +10,17 @@ import { Procedure } from '../../procedure'
 import { createContractProcedure } from '../../procedure-utils'
 import { getRouter, walkProcedureContractsSync } from '../../router-utils'
 
+/**
+ * Methods that can invoke procedures by default. Browsers cannot trigger them
+ * cross-site without a CORS preflight or an HTML form, unlike `GET`, which a plain
+ * `<a>` click or redirect can trigger with `SameSite=Lax` cookies attached. Other
+ * methods (`HEAD`, `OPTIONS`, `QUERY`, ...) have safe semantics that should not
+ * invoke a procedure that can modify data.
+ *
+ * @see {@link https://orpc.dev/docs/rpc/handler#supported-http-methods | RPC Handler - Supported HTTP Methods}
+ */
+export const RPC_DEFAULT_ALLOW_METHODS: readonly StandardMethod[] = ['POST', 'PUT', 'PATCH', 'DELETE']
+
 export interface RPCMatcherOptions {
   /**
    * Filter which procedures are exposed for matching. Return `false` to exclude.
@@ -17,6 +28,17 @@ export interface RPCMatcherOptions {
    * @default true
    */
   filter?: Value<boolean, [procedure: AnyProcedureContract | AnyProcedure, path: string[]]>
+
+  /**
+   * Restricts which HTTP methods can invoke procedures, either with a list of allowed
+   * methods or decided per request via a function. Requests using a disallowed method
+   * are treated as unmatched. `GET` is excluded by default because it is exposed to
+   * Cross-Site Request Forgery (CSRF) attacks.
+   *
+   * @default RPC_DEFAULT_ALLOW_METHODS (['POST', 'PUT', 'PATCH', 'DELETE'])
+   * @see {@link https://orpc.dev/docs/rpc/handler#supported-http-methods | RPC Handler - Supported HTTP Methods}
+   */
+  allowMethods?: readonly StandardMethod[] | ((method: StandardMethod, procedure: AnyProcedure, path: string[]) => Promisable<boolean>)
 }
 
 interface TreeEntry {
@@ -32,13 +54,17 @@ interface PendingLazyRouter extends WalkProcedureContractsLazyResult {
 
 export class RPCMatcher {
   private readonly filter: Exclude<RPCMatcherOptions['filter'], undefined>
+  /** list-form `allowMethods` is normalized to a Set for O(1) lookups on every request */
+  private readonly allowMethods: ReadonlySet<StandardMethod> | ((method: StandardMethod, procedure: AnyProcedure, path: string[]) => Promisable<boolean>)
   private readonly rootRouter: AnyRouter
 
   private readonly tree: Map<`/${string}`, TreeEntry> = new Map()
   private readonly pendingLazyRouters: Map<string, PendingLazyRouter> = new Map()
 
   constructor(router: AnyRouter, options: RPCMatcherOptions = {}) {
+    const allowMethods = options.allowMethods ?? RPC_DEFAULT_ALLOW_METHODS
     this.filter = options.filter ?? true
+    this.allowMethods = typeof allowMethods === 'function' ? allowMethods : new Set(allowMethods)
     this.rootRouter = router
     this.index(router)
   }
@@ -62,7 +88,11 @@ export class RPCMatcher {
     }
   }
 
-  async match(_method: StandardMethod, pathname: `/${string}`, prefix: `/${string}` | undefined): Promise<{ path: string[], procedure: AnyProcedure } | undefined> {
+  async match(method: StandardMethod, pathname: `/${string}`, prefix: `/${string}` | undefined): Promise<{ path: string[], procedure: AnyProcedure } | undefined> {
+    if (typeof this.allowMethods !== 'function' && !this.allowMethods.has(method)) {
+      return undefined
+    }
+
     if (pathname.length > 1 && pathname.endsWith('/')) {
       // Remove trailing slash for matching
       pathname = pathname.slice(0, -1) as `/${string}`
@@ -116,9 +146,15 @@ export class RPCMatcher {
       return undefined
     }
 
+    const procedure = entry.procedure ?? await this.resolveProcedure(entry)
+
+    if (typeof this.allowMethods === 'function' && !(await this.allowMethods(method, procedure, entry.path))) {
+      return undefined
+    }
+
     return {
       path: entry.path,
-      procedure: entry.procedure ?? await this.resolveProcedure(entry),
+      procedure,
     }
   }
 

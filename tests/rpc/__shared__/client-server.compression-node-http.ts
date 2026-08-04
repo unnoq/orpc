@@ -14,6 +14,7 @@ export const createCompressionNodeHttpClientServerTest: CreateClientServerTest =
 ) => {
   const handler = new RPCHandler(router, {
     serializer,
+    allowMethods: ['GET', 'POST'], // the client below sends GET requests (POST as fallback)
     plugins: [
       new RequestCompressionHandlerPlugin(),
       new ResponseCompressionHandlerPlugin({
