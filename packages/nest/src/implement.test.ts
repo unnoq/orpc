@@ -1,10 +1,10 @@
-import type { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common'
+import type { CallHandler, CanActivate, ExecutionContext, NestInterceptor } from '@nestjs/common'
 import type { Request as ExpressRequest } from 'express'
 import type { FastifyReply } from 'fastify'
 import type { NestStandardLazyRequest } from './module'
 import { Buffer } from 'node:buffer'
 import FastifyCookie from '@fastify/cookie'
-import { Controller, HttpException, Req, Res, StreamableFile } from '@nestjs/common'
+import { Controller, HttpException, Req, Res, StreamableFile, UseGuards } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { meta, oc } from '@orpc/contract'
@@ -849,6 +849,8 @@ describe('compatibility', () => {
 
     const Meta: MethodDecorator = (target, propertyKey, descriptor) => {
       Reflect.defineMetadata('orpc:meta', 'value', target, propertyKey)
+      // NestJS enhancers like @UseGuards store metadata on the function object itself
+      Reflect.defineMetadata('orpc:fn-meta', 'fn-value', descriptor.value!)
     }
 
     @Controller()
@@ -873,6 +875,60 @@ describe('compatibility', () => {
 
     expect(Reflect.getMetadata('orpc:meta', controller, 'router_ping_2')).toEqual('value')
     expect(Reflect.getMetadata('orpc:meta', controller, 'router_pong')).toEqual('value')
+
+    expect(Reflect.getMetadata('orpc:fn-meta', (controller as any).router_ping_2)).toEqual('fn-value')
+    expect(Reflect.getMetadata('orpc:fn-meta', (controller as any).router_pong)).toEqual('fn-value')
+  })
+
+  it.each(['below @Implement', 'above @Implement'])('router-based implementation applies method-level guards to synthesized methods (%s)', async (order) => {
+    const contract = {
+      ping: oc.meta(openapi({ path: '/guarded/ping' })),
+      nested: {
+        pong: oc.meta(openapi({ path: '/guarded/pong' })),
+      },
+    }
+
+    const canActivate = vi.fn(() => false)
+
+    class DenyGuard implements CanActivate {
+      canActivate = canActivate
+    }
+
+    const router = () => ({
+      ping: implement(contract.ping).handler(() => {}),
+      nested: {
+        pong: implement(contract.nested.pong).handler(() => {}),
+      },
+    })
+
+    @Controller()
+    class BelowController {
+      @Implement(contract)
+      @UseGuards(DenyGuard)
+      router() {
+        return router()
+      }
+    }
+
+    @Controller()
+    class AboveController {
+      @UseGuards(DenyGuard)
+      @Implement(contract)
+      router() {
+        return router()
+      }
+    }
+
+    const moduleRef = await Test.createTestingModule({
+      controllers: [order === 'below @Implement' ? BelowController : AboveController],
+    }).compile()
+
+    const app = moduleRef.createNestApplication()
+    await app.init()
+
+    expect((await supertest(app.getHttpServer()).post('/guarded/ping')).status).toBe(403)
+    expect((await supertest(app.getHttpServer()).post('/guarded/pong')).status).toBe(403)
+    expect(canActivate).toHaveBeenCalledTimes(2)
   })
 
   it('should support lazy router/procedure in router-based implementation controller', async () => {
