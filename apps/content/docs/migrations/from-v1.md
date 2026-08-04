@@ -6,7 +6,7 @@ This guide walks you through upgrading an oRPC v1 app to v2. Most of your code k
 
 - The [RPC Protocol](/docs/rpc/protocol) changed, so a v1 client cannot talk to a v2 server. Deploy the upgraded server and client together.
 - Automatic middleware deduplication was removed. Middleware applied at both router and procedure level now runs twice. See [Middleware](#middleware).
-- The Batch Plugin replaced `exclude` with `filter`, which has the opposite meaning. See [Client Plugins](#client-plugins).
+- The Batch Plugin replaced `exclude` with `filter`, which has the opposite meaning. In most cases you can simply remove `exclude`. See [Batch Plugin](#batch-plugin).
 
 :::
 
@@ -807,9 +807,9 @@ Link plugins were renamed with a `LinkPlugin` suffix. Deprecated aliases exist f
 
 v2 also adds new plugins: [Timeout](/docs/plugins/timeout), [Request Compression](/docs/plugins/request-compression), and [Response Compression](/docs/plugins/response-compression).
 
-::: warning
-The [Batch Plugin](/docs/plugins/batch) replaced `exclude` with `filter`, and the meaning is inverted: `exclude` returned `true` to skip batching, `filter` returns `false` to skip batching. Negate your predicate when migrating.
-:::
+### Batch Plugin
+
+The v2 [Batch Plugin](/docs/plugins/batch) supports every response type, including [AsyncIteratorObject](/docs/async-iterator-object) and [File/Blob](/docs/binary-data). In v1, `exclude` existed mainly to skip those unsupported responses, so in most cases you can simply remove it:
 
 ::: code-group
 
@@ -818,7 +818,6 @@ import { BatchLinkPlugin } from '@orpc/client/plugins'
 
 const batchPlugin = new BatchLinkPlugin({
   groups: [{ condition: () => true, context: {} }],
-  filter: ({ path }) => !path.includes('upload'), // false = not batched
 })
 ```
 
@@ -827,7 +826,21 @@ import { BatchLinkPlugin } from '@orpc/client/plugins'
 
 const batchPlugin = new BatchLinkPlugin({
   groups: [{ condition: () => true, context: {} }],
-  exclude: ({ path }) => path.includes('upload'), // true = not batched
+  exclude: ({ path }) => {
+    return ['planets/getImage', 'planets/subscribe'].includes(path.join('/'))
+  },
+})
+```
+
+:::
+
+::: warning
+Some cases still need to skip batching, for example procedures that rely on [Hibernation](/docs/integrations/hibernation), which cannot work through batched responses. For those, use `filter`. Its meaning is inverted compared to `exclude`: `exclude` returned `true` to skip batching, while `filter` returns `false` to skip batching. Negate your predicate when migrating.
+
+```ts
+const batchPlugin = new BatchLinkPlugin({
+  groups: [{ condition: () => true, context: {} }],
+  filter: ({ path }) => path.join('/') !== 'chat/subscribe', // false = not batched
 })
 ```
 
