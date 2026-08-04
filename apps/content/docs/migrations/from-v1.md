@@ -34,11 +34,13 @@ Some packages were renamed, merged, or promoted from experimental status:
 | `@orpc/otel`                                                                         | `@orpc/opentelemetry`       |
 | `@orpc/server/hibernation` (subpath)                                                 | `@orpc/hibernation`         |
 
-The Hey API and Durable Iterator were removed. Use [Hibernation](/docs/integrations/hibernation) or [DurablePublisher](/docs/helpers/publisher#adapters) in place of Durable Iterator.
+::: warning
+The Hey API and Durable Iterator integrations no longer exist in v2. In place of Durable Iterator, use [Hibernation](/docs/integrations/hibernation) or [DurablePublisher](/docs/helpers/publisher#adapters).
+:::
 
 ## Routing Moved to OpenAPI Metadata
 
-The biggest change: `.route`, `.prefix`, `.tag`, and `.$route` no longer exist on the builder. OpenAPI routing now lives in [metadata](/docs/metadata) via the `openapi` meta from `@orpc/openapi`. See [OpenAPI Routing](/docs/openapi/routing).
+The biggest change: `.route`, `.prefix`, `.tag`, and `.$route` no longer exist on the builder. OpenAPI routing now lives in [metadata](/docs/metadata), set with the `openapi` helper from `@orpc/openapi`. See [OpenAPI Routing](/docs/openapi/routing).
 
 ::: code-group
 
@@ -67,7 +69,8 @@ const router = os
 
 :::
 
-If you prefer the old `.route` style, a compatibility extension restores it (but not `.prefix`, `.tag`, or `.$route`):
+::: tip
+If you prefer the old style, the [`.route` extension](/docs/openapi/routing#route-extension) brings `.route` back (but not `.prefix`, `.tag`, or `.$route`):
 
 ```ts
 import '@orpc/openapi/extensions/route' // once at init time
@@ -76,6 +79,8 @@ const listPlanet = os
   .route({ method: 'GET', path: '/planets' }) // works again
   .handler(async () => [])
 ```
+
+:::
 
 The same applies to lazy routers with a prefix:
 
@@ -97,23 +102,35 @@ const router = {
 
 ## Procedure Builder
 
-### `.callable` requires an extension
+### `.callable` is no longer built in
 
-`.callable` moved behind a side effect import. See [Server-Side Clients](/docs/client/server-side).
+In v2, prefer [`call` or `createRouterClient`](/docs/client/server-side) to call procedures on the server:
 
 ::: code-group
 
 ```ts [v2]
-import '@orpc/server/extensions/callable' // once at init time
-import { os } from '@orpc/server'
+import { call } from '@orpc/server'
 
-const getting = os
-  .handler(async () => 'pong')
-  .callable({ context: {} })
+const getting = os.handler(async () => 'pong')
+
+const result = await call(getting, undefined, { context: {} })
 ```
 
 ```ts [v1]
-import { os } from '@orpc/server'
+const getting = os
+  .handler(async () => 'pong')
+  .callable({ context: {} })
+
+const result = await getting()
+```
+
+:::
+
+::: tip
+If you prefer the v1 style, the [`.callable` extension](/docs/client/server-side#callable-extension) brings `.callable` back:
+
+```ts
+import '@orpc/server/extensions/callable' // once at init time
 
 const getting = os
   .handler(async () => 'pong')
@@ -124,22 +141,27 @@ const getting = os
 
 ### `.actionable` moved to `@orpc/next`
 
-Server actions now live in the [Next.js Integration](/docs/integrations/next), and "server actions" are now called "server functions".
+Server actions are now called [server functions](/docs/integrations/next#server-functions) and live in the [Next.js Integration](/docs/integrations/next). In v2, prefer `createServerFunctionable` (or `createServerFunction`): it works exactly like `.actionable`, returning a value that is both a server function and a regular procedure.
 
 ::: code-group
 
 ```ts [v2]
 'use server'
-import { createServerFunction } from '@orpc/next'
 
-export const getting = createServerFunction(gettingProcedure, { context: {} })
+import { createServerFunctionable } from '@orpc/next'
+import { os } from '@orpc/server'
 
-// or restore .actionable with a side effect import:
-// import '@orpc/next/extensions/actionable'
+const functionable = createServerFunctionable({ context: {} })
+
+export const getting = functionable(
+  os.handler(async () => 'pong'),
+)
 ```
 
 ```ts [v1]
 'use server'
+
+import { os } from '@orpc/server'
 
 export const getting = os
   .handler(async () => 'pong')
@@ -148,11 +170,20 @@ export const getting = os
 
 :::
 
-The hooks were renamed too: `useServerAction` is now `useServerFunction` and `useOptimisticServerAction` is now `useOptimisticServerFunction`, both imported from `@orpc/next/hooks` (old names still work as deprecated aliases).
+::: tip
+If you prefer the v1 style, the [`.actionable` extension](/docs/integrations/next#actionable-extension) brings `.actionable` back:
+
+```ts
+import '@orpc/next/extensions/actionable' // once at init time
+```
+
+:::
+
+The hooks were renamed too: `useServerAction` is now `useServerFunction` and `useOptimisticServerAction` is now `useOptimisticServerFunction`, both imported from `@orpc/next/hooks` (old names still work as deprecated aliases). `createFormAction` is now [`createServerFormFunction`](/docs/integrations/next#server-form-functions).
 
 ### `.input` and `.output` now stack
 
-Calling `.input` or `.output` again adds another schema instead of not allowing in v1. Use loose object schemas when stacking. See [Procedure](/docs/procedure).
+In v1, a procedure had at most one input and one output schema. In v2, each `.input` or `.output` call adds another schema on top of the previous ones. See [Multiple Schemas](/docs/procedure#multiple-schemas).
 
 ```ts
 const example = os
@@ -161,11 +192,13 @@ const example = os
   .handler(async ({ input }) => {}) // input: { name: string } & { id: number }
 ```
 
-`.$input` was removed along with this change.
+::: warning
+Use loose object schemas (like `z.looseObject`) when stacking, so one schema does not strip the keys another schema needs. `.$input` was removed along with this change.
+:::
 
 ### `.$config` options changed
 
-See [Validation Customization](/docs/advanced/validation-customization).
+The index-based validation options were replaced by two simple flags. v2 tracks the order of middleware and validation automatically, so `dedupeLeadingMiddlewares` and the index options are gone. See [Validation Customization](/docs/advanced/validation-customization).
 
 ::: code-group
 
@@ -294,7 +327,13 @@ const cacheMiddleware = os.middleware(async ({ next }, input, output) => {
 
 ### Automatic deduplication removed
 
-v1 automatically skipped router-level middleware that was already applied to a procedure. v2 no longer does this, so shared middleware runs twice unless you guard it yourself. Use the context flag pattern from [Dedupe Middleware](/docs/best-practices/dedupe-middleware):
+v1 automatically skipped router-level middleware that was already applied to a procedure. v2 no longer does this.
+
+::: warning
+Middleware applied at both the router and the procedure level now runs twice. Nothing warns you about it: an auth or logging middleware simply executes two times per request.
+:::
+
+Guard shared middleware yourself with the context flag pattern from [Dedupe Middleware](/docs/best-practices/dedupe-middleware):
 
 ```ts
 const authMiddleware = os
@@ -378,7 +417,9 @@ if (error && isDefined) {
 
 :::
 
+::: tip
 v2 also introduces `error` factories for defining reusable typed errors outside `.errors`. See [Error Handling](/docs/error-handling).
+:::
 
 ## AsyncIteratorObject (Event Iterator)
 
@@ -466,6 +507,10 @@ const handler = new RPCHandler(router)
 
 :::
 
+::: tip
+The simplest migration is to stop sending GET instead of allowing it: remove the `method` option from your [RPC Link](/docs/rpc/link) so every call uses POST (the default), and keep the handler's default `allowMethods`. Only allow GET when you really need it, for example for HTTP caching.
+:::
+
 The v2 [Simple CSRF Protection Plugin](/docs/plugins/simple-csrf-protection) checks the `Sec-Fetch-Mode` header, so it no longer needs a matching link plugin. Remove `SimpleCsrfProtectionLinkPlugin` from your client; it no longer exists.
 
 ### Interceptor options renamed
@@ -512,7 +557,7 @@ const handler = new RPCHandler(router, {
 
 ### Custom serializers use a `serializer` instance
 
-The `customJsonSerializers` option with numeric types was replaced by a `serializer` instance with string-keyed handlers, shared between handler and link. See [RPC Serializer](/docs/rpc/serializer).
+The `customJsonSerializers` option with numeric types was replaced by a `serializer` instance with string-keyed handlers, shared between [RPC Handler](/docs/rpc/handler) and [RPC Link](/docs/rpc/link). To override a built-in type, reuse its key (for example `date`) instead of matching a magic number. See [RPC Serializer](/docs/rpc/serializer).
 
 ::: code-group
 
@@ -769,6 +814,8 @@ The [Batch Plugin](/docs/plugins/batch) replaced `exclude` with `filter`, and th
 ::: code-group
 
 ```ts [v2]
+import { BatchLinkPlugin } from '@orpc/client/plugins'
+
 const batchPlugin = new BatchLinkPlugin({
   groups: [{ condition: () => true, context: {} }],
   filter: ({ path }) => !path.includes('upload'), // false = not batched
@@ -776,6 +823,8 @@ const batchPlugin = new BatchLinkPlugin({
 ```
 
 ```ts [v1]
+import { BatchLinkPlugin } from '@orpc/client/plugins'
+
 const batchPlugin = new BatchLinkPlugin({
   groups: [{ condition: () => true, context: {} }],
   exclude: ({ path }) => path.includes('upload'), // true = not batched
@@ -1062,7 +1111,7 @@ Base64Url, Cookie, Encryption, and Signing helpers are unchanged in `@orpc/serve
 
 ### Publisher
 
-Now `@orpc/publisher`. The resume option was restructured, and the Redis adapter switched from `ioredis` to `node-redis`. See [Publisher Helpers](/docs/helpers/publisher).
+The package is now `@orpc/publisher`. The resume option was restructured, and the Redis adapter switched from `ioredis` to `node-redis`. See [Publisher Helpers](/docs/helpers/publisher).
 
 ::: code-group
 
@@ -1091,7 +1140,7 @@ The Durable Object adapter moved to `@orpc/cloudflare`, with `PublisherDurableOb
 
 ### Rate Limit
 
-Now `@orpc/ratelimit`. Note the casing change from `Ratelimiter` to `RateLimiter`, and the middleware helper rename. See [Rate Limit Helpers](/docs/helpers/ratelimit).
+The package is now `@orpc/ratelimit`. Watch the casing change from `Ratelimiter` to `RateLimiter` in every class name, and the middleware helper rename. See [Rate Limit Helpers](/docs/helpers/ratelimit).
 
 ::: code-group
 
@@ -1131,23 +1180,25 @@ The Cloudflare rate limiter moved to `@orpc/cloudflare`.
 
 These renames still compile through deprecated aliases, so you can migrate them gradually:
 
-| v1 name                      | v2 name                     | Package                          |
-| ---------------------------- | --------------------------- | -------------------------------- |
-| `isDefinedError`             | `isInferableError`          | `@orpc/client`                   |
-| `InferClientErrorUnion`      | `InferClientError`          | `@orpc/client`                   |
-| `ClientPromiseResult`        | `PromiseWithError`          | `@orpc/client`                   |
-| `eventIterator`              | `asyncIteratorObject`       | `@orpc/server`, `@orpc/contract` |
-| `consumeEventIterator`       | `consumeAsyncIterator`      | `@orpc/client`                   |
-| `InferRouterCurrentContexts` | `InferRouterFinalContexts`  | `@orpc/server`                   |
-| `CORSPlugin`                 | `CORSHandlerPlugin`         | `@orpc/server/plugins`           |
-| `BodyLimitPlugin`            | `RequestLimitHandlerPlugin` | `@orpc/server/plugins`           |
-| `ClientRetryPlugin`          | `RetryLinkPlugin`           | `@orpc/client/plugins`           |
-| `DedupeRequestsPlugin`       | `DedupeLinkPlugin`          | `@orpc/client/plugins`           |
-| `RetryAfterPlugin`           | `RetryAfterLinkPlugin`      | `@orpc/client/plugins`           |
-| `AnyContractRouter`          | `RouterContract`            | `@orpc/contract`                 |
-| `ContractRouterClient`       | `RouterContractClient`      | `@orpc/contract`                 |
-| `minifyContractRouter`       | `minifyRouterContract`      | `@orpc/contract`                 |
-| `useServerAction`            | `useServerFunction`         | `@orpc/next/hooks`               |
-| `createFormAction`           | `createServerFormFunction`  | `@orpc/next`                     |
+| v1 name                      | v2 name                       | Package                          |
+| ---------------------------- | ----------------------------- | -------------------------------- |
+| `isDefinedError`             | `isInferableError`            | `@orpc/client`                   |
+| `InferClientErrorUnion`      | `InferClientError`            | `@orpc/client`                   |
+| `ClientPromiseResult`        | `PromiseWithError`            | `@orpc/client`                   |
+| `eventIterator`              | `asyncIteratorObject`         | `@orpc/server`, `@orpc/contract` |
+| `consumeEventIterator`       | `consumeAsyncIterator`        | `@orpc/client`                   |
+| `InferRouterCurrentContexts` | `InferRouterFinalContexts`    | `@orpc/server`                   |
+| `CORSPlugin`                 | `CORSHandlerPlugin`           | `@orpc/server/plugins`           |
+| `BodyLimitPlugin`            | `RequestLimitHandlerPlugin`   | `@orpc/server/plugins`           |
+| `ClientRetryPlugin`          | `RetryLinkPlugin`             | `@orpc/client/plugins`           |
+| `DedupeRequestsPlugin`       | `DedupeLinkPlugin`            | `@orpc/client/plugins`           |
+| `RetryAfterPlugin`           | `RetryAfterLinkPlugin`        | `@orpc/client/plugins`           |
+| `AnyContractRouter`          | `RouterContract`              | `@orpc/contract`                 |
+| `ContractRouterClient`       | `RouterContractClient`        | `@orpc/contract`                 |
+| `minifyContractRouter`       | `minifyRouterContract`        | `@orpc/contract`                 |
+| `useServerAction`            | `useServerFunction`           | `@orpc/next/hooks`               |
+| `useOptimisticServerAction`  | `useOptimisticServerFunction` | `@orpc/next/hooks`               |
+| `createFormAction`           | `createServerFormFunction`    | `@orpc/next`                     |
+| `createORPCVueColadaUtils`   | `createPiniaColadaUtils`      | `@orpc/pinia-colada`             |
 
 If anything is missing from this guide, check the corresponding page in the v2 docs, or open an issue on [GitHub](https://github.com/middleapi/orpc/issues).
