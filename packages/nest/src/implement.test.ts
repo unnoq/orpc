@@ -912,9 +912,7 @@ describe('compatibility', () => {
     }
   })
 
-  it.each(
-    ['below @Implement', 'above @Implement'] as const,
-  )('router-based implementation applies method-level guards to synthesized methods (%s)', async (order) => {
+  describe('router-based implementation applies method-level guards to synthesized methods', () => {
     const contract = {
       ping: oc.meta(openapi({ path: '/guarded/ping' })),
       nested: {
@@ -938,42 +936,47 @@ describe('compatibility', () => {
     })
 
     @Controller()
-    class BelowController {
-      @Implement(contract)
+    class GuardAboveController {
       @UseGuards(AuthGuard)
+      @Implement(contract)
       router() {
         return router()
       }
     }
 
     @Controller()
-    class AboveController {
-      @UseGuards(AuthGuard)
+    class GuardBelowController {
       @Implement(contract)
+      @UseGuards(AuthGuard)
       router() {
         return router()
       }
     }
 
-    const moduleRef = await Test.createTestingModule({
-      controllers: [order === 'below @Implement' ? BelowController : AboveController],
-    }).compile()
+    describe.each([
+      [GuardAboveController, '@UseGuards above @Implement'],
+      [GuardBelowController, '@UseGuards below @Implement'],
+    ] as const)('order: $1', async (Controller, _) => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [Controller],
+      }).compile()
 
-    const app = moduleRef.createNestApplication()
-    await app.init()
+      const app = moduleRef.createNestApplication()
+      await app.init()
 
-    expect((await supertest(app.getHttpServer()).post('/guarded/ping')).status).toBe(403)
-    expect((await supertest(app.getHttpServer()).post('/guarded/pong')).status).toBe(403)
+      it('rejects or allows based on the request header', async () => {
+        expect((await supertest(app.getHttpServer()).post('/guarded/ping')).status).toBe(403)
+        expect((await supertest(app.getHttpServer()).post('/guarded/pong')).status).toBe(403)
 
-    expect((await supertest(app.getHttpServer()).post('/guarded/ping').set('authorization', 'valid-token')).status).toBe(200)
-    expect((await supertest(app.getHttpServer()).post('/guarded/pong').set('authorization', 'valid-token')).status).toBe(200)
+        expect((await supertest(app.getHttpServer()).post('/guarded/ping').set('authorization', 'valid-token')).status).toBe(200)
+        expect((await supertest(app.getHttpServer()).post('/guarded/pong').set('authorization', 'valid-token')).status).toBe(200)
 
-    expect(canActivate).toHaveBeenCalledTimes(4)
+        expect(canActivate).toHaveBeenCalledTimes(4)
+      })
+    })
   })
 
-  it.each(
-    ['below @Implement', 'above @Implement'] as const,
-  )('router-based implementation applies method-level interceptors to synthesized methods (%s)', async (order) => {
+  describe('router-based implementation applies method-level interceptors to synthesized methods', () => {
     const contract = {
       ping: oc.meta(openapi({ path: '/intercepted/ping' })),
       nested: {
@@ -995,39 +998,46 @@ describe('compatibility', () => {
     })
 
     @Controller()
-    class BelowController {
-      @Implement(contract)
+    class InterceptorAboveController {
       @UseInterceptors(SpyInterceptor)
+      @Implement(contract)
       router() {
         return router()
       }
     }
 
     @Controller()
-    class AboveController {
-      @UseInterceptors(SpyInterceptor)
+    class InterceptorBelowController {
       @Implement(contract)
+      @UseInterceptors(SpyInterceptor)
       router() {
         return router()
       }
     }
 
-    const moduleRef = await Test.createTestingModule({
-      controllers: [order === 'below @Implement' ? BelowController : AboveController],
-    }).compile()
+    describe.each([
+      [InterceptorAboveController, '@UseInterceptors above @Implement'],
+      [InterceptorBelowController, '@UseInterceptors below @Implement'],
+    ] as const)('order: $1', async (Controller, _) => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [Controller],
+      }).compile()
 
-    const app = moduleRef.createNestApplication()
-    await app.init()
+      const app = moduleRef.createNestApplication()
+      await app.init()
 
-    const pingRes = await supertest(app.getHttpServer()).post('/intercepted/ping')
-    expect(pingRes.status).toBe(200)
-    expect(pingRes.body).toEqual('pong')
+      it('runs the interceptor on synthesized methods', async () => {
+        const pingRes = await supertest(app.getHttpServer()).post('/intercepted/ping')
+        expect(pingRes.status).toBe(200)
+        expect(pingRes.body).toEqual('pong')
 
-    const pongRes = await supertest(app.getHttpServer()).post('/intercepted/pong')
-    expect(pongRes.status).toBe(200)
-    expect(pongRes.body).toEqual('peng')
+        const pongRes = await supertest(app.getHttpServer()).post('/intercepted/pong')
+        expect(pongRes.status).toBe(200)
+        expect(pongRes.body).toEqual('peng')
 
-    expect(intercept).toHaveBeenCalledTimes(2)
+        expect(intercept).toHaveBeenCalledTimes(2)
+      })
+    })
   })
 
   it('should support lazy router/procedure in router-based implementation controller', async () => {
