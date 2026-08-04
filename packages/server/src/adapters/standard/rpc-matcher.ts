@@ -54,7 +54,8 @@ interface PendingLazyRouter extends WalkProcedureContractsLazyResult {
 
 export class RPCMatcher {
   private readonly filter: Exclude<RPCMatcherOptions['filter'], undefined>
-  private readonly allowMethodsFn: (method: StandardMethod, procedure: AnyProcedure, path: string[]) => boolean
+  private readonly allowMethodsSet: undefined | ReadonlySet<StandardMethod>
+  private readonly allowMethodsFn: undefined | ((method: StandardMethod, procedure: AnyProcedure, path: string[]) => boolean)
   private readonly rootRouter: AnyRouter
 
   private readonly tree: Map<`/${string}`, TreeEntry> = new Map()
@@ -65,8 +66,7 @@ export class RPCMatcher {
 
     const allowMethods = options.allowMethods ?? RPC_DEFAULT_ALLOW_METHODS
     if (typeof allowMethods !== 'function') {
-      const set = new Set(allowMethods)
-      this.allowMethodsFn = (method: StandardMethod) => set.has(method)
+      this.allowMethodsSet = new Set(allowMethods)
     }
     else {
       this.allowMethodsFn = allowMethods
@@ -96,6 +96,10 @@ export class RPCMatcher {
   }
 
   async match(method: StandardMethod, pathname: `/${string}`, prefix: `/${string}` | undefined): Promise<{ path: string[], procedure: AnyProcedure } | undefined> {
+    if (this.allowMethodsSet && !this.allowMethodsSet.has(method)) {
+      return undefined
+    }
+
     if (pathname.length > 1 && pathname.endsWith('/')) {
       // Remove trailing slash for matching
       pathname = pathname.slice(0, -1) as `/${string}`
@@ -151,7 +155,7 @@ export class RPCMatcher {
 
     const procedure = entry.procedure ?? await this.resolveProcedure(entry)
 
-    if (!this.allowMethodsFn(method, procedure, entry.path)) {
+    if (this.allowMethodsFn && !this.allowMethodsFn(method, procedure, entry.path)) {
       return undefined
     }
 
