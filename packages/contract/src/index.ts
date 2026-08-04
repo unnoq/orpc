@@ -35,6 +35,12 @@ export type {
   InferRouterContractOutputs as InferContractRouterOutputs,
 } from './router'
 export * from './router-client'
+export type {
+  /**
+   * @deprecated Use `RouterContractClient` instead.
+   */
+  RouterContractClient as ContractRouterClient,
+} from './router-client'
 export * from './router-utils'
 export {
   /**
