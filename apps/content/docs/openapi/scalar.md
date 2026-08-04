@@ -24,7 +24,7 @@ const openAPIHandler = new OpenAPIHandler(router, {
 })
 
 const openAPIGenerator = new OpenAPIGenerator({
-  schemaConverters: [
+  converters: [
     new ZodToJsonSchemaConverter(),
   ],
 })
@@ -40,19 +40,21 @@ const server = createServer(async (req, res) => {
 
   if (req.url === '/spec.json') {
     const spec = await openAPIGenerator.generate(router, {
-      info: {
-        title: 'My Playground',
-        version: '1.0.0',
-      },
-      servers: [
-        { url: '/api' }, /** Use an absolute URL in production. */
-      ],
-      security: [{ bearerAuth: [] }],
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
+      base: {
+        info: {
+          title: 'My Playground',
+          version: '1.0.0',
+        },
+        servers: [
+          { url: '/api' }, /** Use an absolute URL in production. */
+        ],
+        security: [{ bearerAuth: [] }],
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+            },
           },
         },
       },
