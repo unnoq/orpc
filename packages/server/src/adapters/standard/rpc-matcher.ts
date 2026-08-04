@@ -1,5 +1,5 @@
 import type { AnyProcedureContract } from '@orpc/contract'
-import type { Promisable, Value } from '@orpc/shared'
+import type { Value } from '@orpc/shared'
 import type { StandardMethod } from '@standardserver/core'
 import type { AnyProcedure } from '../../procedure'
 import type { AnyRouter } from '../../router'
@@ -38,7 +38,7 @@ export interface RPCMatcherOptions {
    * @default RPC_DEFAULT_ALLOW_METHODS (['POST', 'PUT', 'PATCH', 'DELETE'])
    * @see {@link https://orpc.dev/docs/rpc/handler#supported-http-methods | RPC Handler - Supported HTTP Methods}
    */
-  allowMethods?: readonly StandardMethod[] | ((method: StandardMethod, procedure: AnyProcedure, path: string[]) => Promisable<boolean>)
+  allowMethods?: readonly StandardMethod[] | ((method: StandardMethod, procedure: AnyProcedure, path: string[]) => boolean)
 }
 
 interface TreeEntry {
@@ -55,7 +55,7 @@ interface PendingLazyRouter extends WalkProcedureContractsLazyResult {
 export class RPCMatcher {
   private readonly filter: Exclude<RPCMatcherOptions['filter'], undefined>
   /** list-form `allowMethods` is normalized to a Set for O(1) lookups on every request */
-  private readonly allowMethods: ReadonlySet<StandardMethod> | ((method: StandardMethod, procedure: AnyProcedure, path: string[]) => Promisable<boolean>)
+  private readonly allowMethods: ReadonlySet<StandardMethod> | ((method: StandardMethod, procedure: AnyProcedure, path: string[]) => boolean)
   private readonly rootRouter: AnyRouter
 
   private readonly tree: Map<`/${string}`, TreeEntry> = new Map()
@@ -148,7 +148,7 @@ export class RPCMatcher {
 
     const procedure = entry.procedure ?? await this.resolveProcedure(entry)
 
-    if (typeof this.allowMethods === 'function' && !(await this.allowMethods(method, procedure, entry.path))) {
+    if (typeof this.allowMethods === 'function' && !this.allowMethods(method, procedure, entry.path)) {
       return undefined
     }
 
