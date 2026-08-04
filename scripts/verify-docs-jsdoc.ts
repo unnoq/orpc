@@ -101,7 +101,10 @@ function extractCodeFences(markdown: string): { code: string[], outside: string[
 
     if (open) {
       const lang = open[2]!.split(/[\s[{:]/)[0] ?? ''
-      fence = { marker: open[1]!, lines: [], isCode: CODE_LANGS.has(lang) }
+      // Fences labeled `[v1]` (migration guides) show previous-major code whose
+      // APIs no longer exist, so their imports must not be verified.
+      const isV1 = /\[v1\]\s*$/.test(line)
+      fence = { marker: open[1]!, lines: [], isCode: CODE_LANGS.has(lang) && !isV1 }
       continue
     }
 
