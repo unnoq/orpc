@@ -243,6 +243,7 @@ export default withMermaid(defineConfig({
           text: 'Migrations',
           collapsed: true,
           items: [
+            { text: 'Migrating from v1', link: '/docs/migrations/from-v1' },
             { text: 'Migrating from tRPC', link: '/docs/migrations/from-trpc' },
           ],
         },
