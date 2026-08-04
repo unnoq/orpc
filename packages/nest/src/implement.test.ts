@@ -1,15 +1,16 @@
-import type { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common'
+import type { CallHandler, CanActivate, ExecutionContext, NestInterceptor } from '@nestjs/common'
 import type { Request as ExpressRequest } from 'express'
 import type { FastifyReply } from 'fastify'
 import type { NestStandardLazyRequest } from './module'
 import { Buffer } from 'node:buffer'
 import FastifyCookie from '@fastify/cookie'
-import { Controller, HttpException, Req, Res, StreamableFile } from '@nestjs/common'
+import { Controller, HttpException, Req, Res, SetMetadata, StreamableFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { meta, oc } from '@orpc/contract'
 import { openapi } from '@orpc/openapi'
-import { implement, ORPCError, os } from '@orpc/server'
+import { implement, ORPCError, os, Procedure } from '@orpc/server'
 import { getOrBind } from '@orpc/shared'
 import { catchError, tap } from 'rxjs'
 import supertest from 'supertest'
@@ -185,7 +186,7 @@ describe('routing', () => {
         staticPath: implement(contract.staticPath).handler(() => 'static'),
         dynamicPath: implement(contract.dynamicPath).handler(({ input }) => `param: ${input.param}`),
         restPath: implement(contract.restPath).handler(({ input }) => `rest: ${input.rest}`),
-        prefixedPath: implement(contract.prefixedPath).handler(({ input }) => `prefixed path`),
+        prefixedPath: implement(contract.prefixedPath).handler(() => `prefixed path`),
         dynamicPrefix: implement(contract.dynamicPrefix).handler(({ input }) => `prefix: ${input.prefix}`),
         styledParams: implement(contract.styledParams).handler(({ input }) => `params: ${input.params}`),
         mixed201Path: implement(contract.mixed201Path).handler(({ input }) => `prefixes: ${input.prefixes} param: ${input.param}, rest: ${input.rest}`),
@@ -841,25 +842,39 @@ describe('compatibility', () => {
     expect(req!.url).toBe('/injection')
   })
 
-  it('router-based implementation controller can handle conflict method names and reflect all metadata on new methods', async () => {
+  it('router-based implementation controller can handle conflict method names and reflect all metadata on new methods regardless of decorator order', async () => {
     const contract = {
       ping: oc.meta(openapi({ path: '/ping' })),
       pong: oc.meta(openapi({ path: '/pong' })),
     }
 
-    const Meta: MethodDecorator = (target, propertyKey, descriptor) => {
-      Reflect.defineMetadata('orpc:meta', 'value', target, propertyKey)
+    // custom decorator metadata keyed by method name, like some third-party decorators use
+    const Meta = (key: string): MethodDecorator => (target, propertyKey) => {
+      Reflect.defineMetadata(key, 'value', target, propertyKey)
+    }
+
+    const handlerMeta = vi.fn()
+
+    class MetaGuard implements CanActivate {
+      canActivate(ctx: ExecutionContext) {
+        const reflector = new Reflector()
+        handlerMeta(reflector.get('above', ctx.getHandler()), reflector.get('below', ctx.getHandler()))
+        return true
+      }
     }
 
     @Controller()
+    @UseGuards(MetaGuard)
     class ImplController {
+      @SetMetadata('above', 'above-value')
+      @Meta('orpc:above')
       @Implement(contract)
-      // There is a limitation: @Meta must be used after @Implement.
-      @Meta
-      router() {
+      @Meta('orpc:below')
+      @SetMetadata('below', 'below-value')
+      router(@Req() req: ExpressRequest) {
         return {
-          ping: implement(contract.ping).handler(() => {}),
-          pong: implement(contract.pong).handler(() => {}),
+          ping: implement(contract.ping).handler(() => `ping:${req.url}`),
+          pong: implement(contract.pong).handler(() => `pong:${req.url}`),
         }
       }
 
@@ -869,10 +884,244 @@ describe('compatibility', () => {
       router_ping_1() {}
     }
 
-    const controller = new ImplController()
+    const moduleRef = await Test.createTestingModule({
+      controllers: [ImplController],
+    }).compile()
 
-    expect(Reflect.getMetadata('orpc:meta', controller, 'router_ping_2')).toEqual('value')
-    expect(Reflect.getMetadata('orpc:meta', controller, 'router_pong')).toEqual('value')
+    const app = moduleRef.createNestApplication()
+    await app.init()
+
+    const pingRes = await supertest(app.getHttpServer()).post('/ping')
+    expect(pingRes.status).toBe(200)
+    expect(pingRes.body).toEqual('ping:/ping')
+
+    const pongRes = await supertest(app.getHttpServer()).post('/pong')
+    expect(pongRes.status).toBe(200)
+    expect(pongRes.body).toEqual('pong:/pong')
+
+    // @SetMetadata from both sides of @Implement is visible on the runtime handlers
+    expect(handlerMeta).toHaveBeenCalledTimes(2)
+    expect(handlerMeta).toHaveBeenNthCalledWith(1, 'above-value', 'below-value')
+    expect(handlerMeta).toHaveBeenNthCalledWith(2, 'above-value', 'below-value')
+
+    const controller = app.get(ImplController)
+
+    for (const key of ['orpc:above', 'orpc:below']) {
+      expect(Reflect.getMetadata(key, controller, 'router_ping_2')).toEqual('value')
+      expect(Reflect.getMetadata(key, controller, 'router_pong')).toEqual('value')
+    }
+  })
+
+  describe('router-based implementation applies method-level guards to synthesized methods', () => {
+    const contract = {
+      ping: oc.meta(openapi({ path: '/guarded/ping' })),
+      nested: {
+        pong: oc.meta(openapi({ path: '/guarded/pong' })),
+      },
+    }
+
+    const canActivate = vi.fn((ctx: ExecutionContext) => {
+      return ctx.switchToHttp().getRequest().headers.authorization === 'valid-token'
+    })
+
+    class AuthGuard implements CanActivate {
+      canActivate = canActivate
+    }
+
+    const router = () => ({
+      ping: implement(contract.ping).handler(() => {}),
+      nested: {
+        pong: implement(contract.nested.pong).handler(() => {}),
+      },
+    })
+
+    @Controller()
+    class GuardAboveController {
+      @UseGuards(AuthGuard)
+      @Implement(contract)
+      router() {
+        return router()
+      }
+    }
+
+    @Controller()
+    class GuardBelowController {
+      @Implement(contract)
+      @UseGuards(AuthGuard)
+      router() {
+        return router()
+      }
+    }
+
+    describe.each([
+      [GuardAboveController, '@UseGuards above @Implement'],
+      [GuardBelowController, '@UseGuards below @Implement'],
+    ] as const)('order: $1', async (Controller, _) => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [Controller],
+      }).compile()
+
+      const app = moduleRef.createNestApplication()
+      await app.init()
+
+      it('rejects or allows based on the request header', async () => {
+        expect((await supertest(app.getHttpServer()).post('/guarded/ping')).status).toBe(403)
+        expect((await supertest(app.getHttpServer()).post('/guarded/pong')).status).toBe(403)
+
+        expect((await supertest(app.getHttpServer()).post('/guarded/ping').set('authorization', 'valid-token')).status).toBe(200)
+        expect((await supertest(app.getHttpServer()).post('/guarded/pong').set('authorization', 'valid-token')).status).toBe(200)
+
+        expect(canActivate).toHaveBeenCalledTimes(4)
+      })
+    })
+  })
+
+  describe('router-based implementation applies method-level interceptors to synthesized methods', () => {
+    const contract = {
+      ping: oc.meta(openapi({ path: '/intercepted/ping' })),
+      nested: {
+        pong: oc.meta(openapi({ path: '/intercepted/pong' })),
+      },
+    }
+
+    const intercepted: unknown[] = []
+
+    beforeEach(() => {
+      intercepted.length = 0
+    })
+
+    const intercept = vi.fn((ctx: ExecutionContext, next: CallHandler) => {
+      return next.handle().pipe(tap(value => intercepted.push(value)))
+    })
+
+    class SpyInterceptor implements NestInterceptor {
+      intercept = intercept
+    }
+
+    const router = () => ({
+      ping: implement(contract.ping).handler(() => 'pong'),
+      nested: {
+        pong: implement(contract.nested.pong).handler(() => 'peng'),
+      },
+    })
+
+    @Controller()
+    class InterceptorAboveController {
+      @UseInterceptors(SpyInterceptor)
+      @Implement(contract)
+      router() {
+        return router()
+      }
+    }
+
+    @Controller()
+    class InterceptorBelowController {
+      @Implement(contract)
+      @UseInterceptors(SpyInterceptor)
+      router() {
+        return router()
+      }
+    }
+
+    describe.each([
+      [InterceptorAboveController, '@UseInterceptors above @Implement'],
+      [InterceptorBelowController, '@UseInterceptors below @Implement'],
+    ] as const)('order: $1', async (Controller, order) => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [Controller],
+      }).compile()
+
+      const app = moduleRef.createNestApplication()
+      await app.init()
+
+      it('runs the interceptor on synthesized methods following decorator order', async () => {
+        const pingRes = await supertest(app.getHttpServer()).post('/intercepted/ping')
+        expect(pingRes.status).toBe(200)
+        expect(pingRes.body).toEqual('pong')
+
+        const pongRes = await supertest(app.getHttpServer()).post('/intercepted/pong')
+        expect(pongRes.status).toBe(200)
+        expect(pongRes.body).toEqual('peng')
+
+        expect(intercept).toHaveBeenCalledTimes(2)
+
+        if (order === '@UseInterceptors above @Implement') {
+          // evaluates after @Implement, so it runs inside ImplementInterceptor and observes the raw procedures
+          expect(intercepted).toHaveLength(2)
+          intercepted.forEach(value => expect(value).toBeInstanceOf(Procedure))
+        }
+        else {
+          // evaluates before @Implement, so it runs outside ImplementInterceptor and observes the encoded responses
+          expect(intercepted).toEqual(['"pong"', '"peng"'])
+        }
+      })
+    })
+  })
+
+  describe('procedure-based implementation applies method-level interceptors following decorator order', () => {
+    const contract = oc.meta(openapi({ path: '/intercepted/procedure' }))
+
+    const intercepted: unknown[] = []
+
+    beforeEach(() => {
+      intercepted.length = 0
+    })
+
+    const intercept = vi.fn((ctx: ExecutionContext, next: CallHandler) => {
+      return next.handle().pipe(tap(value => intercepted.push(value)))
+    })
+
+    class SpyInterceptor implements NestInterceptor {
+      intercept = intercept
+    }
+
+    @Controller()
+    class InterceptorAboveController {
+      @UseInterceptors(SpyInterceptor)
+      @Implement(contract)
+      procedure() {
+        return implement(contract).handler(() => 'pong')
+      }
+    }
+
+    @Controller()
+    class InterceptorBelowController {
+      @Implement(contract)
+      @UseInterceptors(SpyInterceptor)
+      procedure() {
+        return implement(contract).handler(() => 'pong')
+      }
+    }
+
+    describe.each([
+      [InterceptorAboveController, '@UseInterceptors above @Implement'],
+      [InterceptorBelowController, '@UseInterceptors below @Implement'],
+    ] as const)('order: $1', async (Controller, order) => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [Controller],
+      }).compile()
+
+      const app = moduleRef.createNestApplication()
+      await app.init()
+
+      it('runs the interceptor following decorator order', async () => {
+        const res = await supertest(app.getHttpServer()).post('/intercepted/procedure')
+        expect(res.status).toBe(200)
+        expect(res.body).toEqual('pong')
+
+        expect(intercept).toHaveBeenCalledTimes(1)
+
+        if (order === '@UseInterceptors above @Implement') {
+          // evaluates after @Implement, so it runs inside ImplementInterceptor and observes the raw procedure
+          expect(intercepted).toHaveLength(1)
+          expect(intercepted[0]).toBeInstanceOf(Procedure)
+        }
+        else {
+          // evaluates before @Implement, so it runs outside ImplementInterceptor and observes the encoded response
+          expect(intercepted).toEqual(['"pong"'])
+        }
+      })
+    })
   })
 
   it('should support lazy router/procedure in router-based implementation controller', async () => {

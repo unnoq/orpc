@@ -51,43 +51,66 @@ export function Implement<T extends RouterContract>(
   descriptor: TypedPropertyDescriptor<(...args: any[]) => U>,
 ) => void {
   if (contract instanceof ProcedureContract) {
-    const meta = getOpenAPIMeta(contract)
-
-    if (meta?.path === undefined) {
-      throw new TypeError(`
-        @Implement decorator requires contract to have a 'openapi.path' meta.
-        Please define one using '.meta(openapi({ path: '/example' }))'.
-        Or use "populateRouterContractOpenAPIPaths" from "@orpc/openapi" utility to automatically fill in any missing paths.
-      `)
-    }
-
-    const method = meta.method ?? DEFAULT_OPENAPI_METHOD
-    const path = toNestPattern(meta.prefix ? mergeHttpPath(meta.prefix, meta.path) : meta.path)
-    const successStatus = meta.successStatus ?? DEFAULT_SUCCESS_STATUS
-
     return (target, propertyKey, descriptor) => {
       applyDecorators(
-        MethodDecoratorMap[method](path),
-        HttpCode(successStatus),
+        toNestRouteDecorator(contract),
         UseInterceptors(ImplementInterceptor),
       )(target, propertyKey, descriptor)
     }
   }
 
   return (target, propertyKey, descriptor) => {
-    for (const key in contract) {
-      let methodName = `${propertyKey}_${key}`
+    // applied at the decorated method level so interceptor order follows decorator order,
+    // and synthesized methods inherit the full ordered list through the prototype chain
+    UseInterceptors(ImplementInterceptor)(target, propertyKey, descriptor)
 
-      let i = 0
-      while (methodName in target) {
-        methodName = `${propertyKey}_${key}_${i++}`
-      }
+    implementRouterContract(contract, target, propertyKey, descriptor)
+  }
+}
 
-      target[methodName] = async function (...args: any[]) {
-        const router = await descriptor.value!.apply(this, args)
-        return getRouter(router, [key])
-      }
+function toNestRouteDecorator(contract: AnyProcedureContract): MethodDecorator {
+  const meta = getOpenAPIMeta(contract)
 
+  if (meta?.path === undefined) {
+    throw new TypeError(`
+      @Implement decorator requires contract to have a 'openapi.path' meta.
+      Please define one using '.meta(openapi({ path: '/example' }))'.
+      Or use "populateRouterContractOpenAPIPaths" from "@orpc/openapi" utility to automatically fill in any missing paths.
+    `)
+  }
+
+  const method = meta.method ?? DEFAULT_OPENAPI_METHOD
+  const path = toNestPattern(meta.prefix ? mergeHttpPath(meta.prefix, meta.path) : meta.path)
+  const successStatus = meta.successStatus ?? DEFAULT_SUCCESS_STATUS
+
+  return applyDecorators(
+    MethodDecoratorMap[method](path),
+    HttpCode(successStatus),
+  )
+}
+
+function implementRouterContract(
+  contract: RouterContract,
+  target: Record<PropertyKey, any>,
+  propertyKey: string,
+  descriptor: TypedPropertyDescriptor<(...args: any[]) => any>,
+): void {
+  for (const key in contract) {
+    let methodName = `${propertyKey}_${key}`
+
+    let i = 0
+    while (methodName in target) {
+      methodName = `${propertyKey}_${key}_${i++}`
+    }
+
+    target[methodName] = async function (...args: any[]) {
+      const router = await descriptor.value!.apply(this, args)
+      return getRouter(router, [key])
+    }
+
+    Object.setPrototypeOf(target[methodName], descriptor.value!)
+
+    queueMicrotask(() => {
       for (const p of Reflect.getOwnMetadataKeys(target, propertyKey)) {
         Reflect.defineMetadata(p, Reflect.getOwnMetadata(p, target, propertyKey), target, methodName)
       }
@@ -95,8 +118,21 @@ export function Implement<T extends RouterContract>(
       for (const p of Reflect.getOwnMetadataKeys(target.constructor, propertyKey)) {
         Reflect.defineMetadata(p, Reflect.getOwnMetadata(p, target.constructor, propertyKey), target.constructor, methodName)
       }
+    })
 
-      Implement(contract[key] as any)(target, methodName, Object.getOwnPropertyDescriptor(target, methodName)!)
+    const childContract = (contract as any)[key]
+    const childDescriptor = Object.getOwnPropertyDescriptor(target, methodName)!
+
+    if (childContract instanceof ProcedureContract) {
+      const routeDecorator = toNestRouteDecorator(childContract)
+
+      // applied after the deferred metadata copies so route metadata cannot be overridden
+      queueMicrotask(() => {
+        routeDecorator(target, methodName, childDescriptor)
+      })
+    }
+    else {
+      implementRouterContract(childContract, target, methodName, childDescriptor)
     }
   }
 }

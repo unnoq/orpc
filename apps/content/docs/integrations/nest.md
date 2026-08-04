@@ -103,22 +103,8 @@ export class PlanetController {
 }
 ```
 
-::: warning
-If you using `@Implement` decorator for router contract, underhook it creates corresponding NestJS method for each procedure contract. Therefore, all other decorator should be applied before `@Implement` decorator, otherwise it will not be applied to corresponding NestJS methods.
-
-```ts
-@Controller()
-export class PlanetController {
-  @Implement(contract.planet) // ⬇️ other decorators should be below this line
-  @UseGuards(AuthGuard)
-  planet(@Req() req: Request) {
-    return {
-      // your implementation
-    }
-  }
-}
-```
-
+::: info
+When you use the `@Implement` decorator with a router contract, under the hood it creates a corresponding NestJS method for each procedure contract. All decorators applied to the original method are reflected on these methods.
 :::
 
 ## Error Handling
