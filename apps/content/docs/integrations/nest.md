@@ -105,6 +105,8 @@ export class PlanetController {
 
 ::: info
 When you use the `@Implement` decorator with a router contract, under the hood it creates a corresponding NestJS method for each procedure contract. Method-level decorators like `@UseGuards` or `@UseInterceptors` are automatically carried over to these methods, so you can combine them with `@Implement` in any order.
+
+Execution order follows decorator order, just like on regular NestJS methods. For example, an interceptor applied below `@Implement` runs outside oRPC's response encoding and observes the encoded response, while one applied above it runs inside and observes the raw implemented procedure.
 :::
 
 ## Error Handling

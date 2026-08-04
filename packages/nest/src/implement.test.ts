@@ -10,7 +10,7 @@ import { FastifyAdapter } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
 import { meta, oc } from '@orpc/contract'
 import { openapi } from '@orpc/openapi'
-import { implement, ORPCError, os } from '@orpc/server'
+import { implement, ORPCError, os, Procedure } from '@orpc/server'
 import { getOrBind } from '@orpc/shared'
 import { catchError, tap } from 'rxjs'
 import supertest from 'supertest'
@@ -186,7 +186,7 @@ describe('routing', () => {
         staticPath: implement(contract.staticPath).handler(() => 'static'),
         dynamicPath: implement(contract.dynamicPath).handler(({ input }) => `param: ${input.param}`),
         restPath: implement(contract.restPath).handler(({ input }) => `rest: ${input.rest}`),
-        prefixedPath: implement(contract.prefixedPath).handler(({ input }) => `prefixed path`),
+        prefixedPath: implement(contract.prefixedPath).handler(() => `prefixed path`),
         dynamicPrefix: implement(contract.dynamicPrefix).handler(({ input }) => `prefix: ${input.prefix}`),
         styledParams: implement(contract.styledParams).handler(({ input }) => `params: ${input.params}`),
         mixed201Path: implement(contract.mixed201Path).handler(({ input }) => `prefixes: ${input.prefixes} param: ${input.param}, rest: ${input.rest}`),
@@ -984,7 +984,15 @@ describe('compatibility', () => {
       },
     }
 
-    const intercept = vi.fn((ctx: ExecutionContext, next: CallHandler) => next.handle())
+    const intercepted: unknown[] = []
+
+    beforeEach(() => {
+      intercepted.length = 0
+    })
+
+    const intercept = vi.fn((ctx: ExecutionContext, next: CallHandler) => {
+      return next.handle().pipe(tap(value => intercepted.push(value)))
+    })
 
     class SpyInterceptor implements NestInterceptor {
       intercept = intercept
@@ -1018,7 +1026,7 @@ describe('compatibility', () => {
     describe.each([
       [InterceptorAboveController, '@UseInterceptors above @Implement'],
       [InterceptorBelowController, '@UseInterceptors below @Implement'],
-    ] as const)('order: $1', async (Controller, _) => {
+    ] as const)('order: $1', async (Controller, order) => {
       const moduleRef = await Test.createTestingModule({
         controllers: [Controller],
       }).compile()
@@ -1026,7 +1034,7 @@ describe('compatibility', () => {
       const app = moduleRef.createNestApplication()
       await app.init()
 
-      it('runs the interceptor on synthesized methods', async () => {
+      it('runs the interceptor on synthesized methods following decorator order', async () => {
         const pingRes = await supertest(app.getHttpServer()).post('/intercepted/ping')
         expect(pingRes.status).toBe(200)
         expect(pingRes.body).toEqual('pong')
@@ -1036,6 +1044,82 @@ describe('compatibility', () => {
         expect(pongRes.body).toEqual('peng')
 
         expect(intercept).toHaveBeenCalledTimes(2)
+
+        if (order === '@UseInterceptors above @Implement') {
+          // evaluates after @Implement, so it runs inside ImplementInterceptor and observes the raw procedures
+          expect(intercepted).toHaveLength(2)
+          intercepted.forEach(value => expect(value).toBeInstanceOf(Procedure))
+        }
+        else {
+          // evaluates before @Implement, so it runs outside ImplementInterceptor and observes the encoded responses
+          expect(intercepted).toEqual(['"pong"', '"peng"'])
+        }
+      })
+    })
+  })
+
+  describe('procedure-based implementation applies method-level interceptors following decorator order', () => {
+    const contract = oc.meta(openapi({ path: '/intercepted/procedure' }))
+
+    const intercepted: unknown[] = []
+
+    beforeEach(() => {
+      intercepted.length = 0
+    })
+
+    const intercept = vi.fn((ctx: ExecutionContext, next: CallHandler) => {
+      return next.handle().pipe(tap(value => intercepted.push(value)))
+    })
+
+    class SpyInterceptor implements NestInterceptor {
+      intercept = intercept
+    }
+
+    @Controller()
+    class InterceptorAboveController {
+      @UseInterceptors(SpyInterceptor)
+      @Implement(contract)
+      procedure() {
+        return implement(contract).handler(() => 'pong')
+      }
+    }
+
+    @Controller()
+    class InterceptorBelowController {
+      @Implement(contract)
+      @UseInterceptors(SpyInterceptor)
+      procedure() {
+        return implement(contract).handler(() => 'pong')
+      }
+    }
+
+    describe.each([
+      [InterceptorAboveController, '@UseInterceptors above @Implement'],
+      [InterceptorBelowController, '@UseInterceptors below @Implement'],
+    ] as const)('order: $1', async (Controller, order) => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [Controller],
+      }).compile()
+
+      const app = moduleRef.createNestApplication()
+      await app.init()
+
+      it('runs the interceptor following decorator order', async () => {
+        const res = await supertest(app.getHttpServer()).post('/intercepted/procedure')
+        expect(res.status).toBe(200)
+        expect(res.body).toEqual('pong')
+
+        expect(intercept).toHaveBeenCalledTimes(1)
+
+        if (order === '@UseInterceptors above @Implement') {
+          // evaluates after @Implement, so it runs inside ImplementInterceptor and observes the raw procedure
+          expect(intercepted).toHaveLength(1)
+          expect(intercepted[0]).toBeInstanceOf(Procedure)
+        }
+        else {
+          // evaluates before @Implement, so it runs outside ImplementInterceptor and observes the encoded response
+          expect(intercepted).toEqual(['"pong"'])
+        }
       })
     })
   })
