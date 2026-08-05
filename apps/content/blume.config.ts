@@ -3,10 +3,7 @@ import { defineConfig } from 'blume'
 export default defineConfig({
   title: 'oRPC',
   description: 'Easy to build APIs that are end-to-end type-safe and adhere to OpenAPI standards',
-  logo: {
-    image: '/logo.svg',
-    text: 'oRPC',
-  },
+  logo: '/logo.svg',
   content: {
     root: '.',
     include: [
@@ -36,5 +33,8 @@ export default defineConfig({
     posthog: {
       key: 'phc_YHeqjC9tR604AHH45kQi63fT4aBvpsS7zAaCxntBzZm',
     },
+  },
+  deployment: {
+    site: 'https://orpc.dev',
   },
 })
