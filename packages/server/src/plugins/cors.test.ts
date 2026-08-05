@@ -26,8 +26,8 @@ describe('corsHandlerPlugin', () => {
 
     expect(handlerFn).toHaveBeenCalledTimes(0)
     expect(response!.status).toBe(204)
-    expect(response!.headers.get('access-control-allow-origin')).toBe('https://example.com')
-    expect(response!.headers.get('vary')).toBe('Origin')
+    expect(response!.headers.get('access-control-allow-origin')).toBe('*')
+    expect(response!.headers.get('vary')).toBeNull()
     expect(response!.headers.get('access-control-allow-methods')).toBe('GET, HEAD, PUT, POST, DELETE, PATCH')
     expect(response!.headers.get('access-control-max-age')).toBeNull()
   })
@@ -217,9 +217,9 @@ describe('corsHandlerPlugin', () => {
     expect(response!.headers.get('access-control-allow-headers')).toBe('X-Requested-With, Content-Type')
   })
 
-  it('does not set access-control-allow-origin when request has no origin header', async () => {
+  it('does not set access-control-allow-origin when request has no origin header and origin reflects the request', async () => {
     const handler = new RPCHandler(router, {
-      plugins: [new CORSHandlerPlugin()],
+      plugins: [new CORSHandlerPlugin({ origin: origin => origin })],
     })
 
     const { response } = await handler.handle(new Request('https://example.com/ping', {
@@ -230,7 +230,7 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
 
-    // default origin function `origin => origin` returns '' for empty origin,
+    // origin function `origin => origin` returns '' for empty origin,
     // which is not included in the response as a valid origin
     expect(response!.headers.get('access-control-allow-origin')).toBe('')
     expect(response!.headers.get('vary')).toBe('Origin')
@@ -238,7 +238,7 @@ describe('corsHandlerPlugin', () => {
 
   it('does not copy Vary from the request', async () => {
     const handler = new RPCHandler(router, {
-      plugins: [new CORSHandlerPlugin()],
+      plugins: [new CORSHandlerPlugin({ origin: origin => origin })],
     })
 
     const { response } = await handler.handle(new Request('https://example.com', {
@@ -283,7 +283,7 @@ describe('corsHandlerPlugin', () => {
             }
           },
         },
-        new CORSHandlerPlugin(),
+        new CORSHandlerPlugin({ origin: origin => origin }),
       ],
     })
 
@@ -329,7 +329,7 @@ describe('corsHandlerPlugin', () => {
             }
           },
         },
-        new CORSHandlerPlugin(),
+        new CORSHandlerPlugin({ origin: origin => origin }),
       ],
     })
 

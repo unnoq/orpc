@@ -10,7 +10,7 @@ export interface CORSHandlerPluginOptions<T extends Context> {
    * Configures the `Access-Control-Allow-Origin` header.
    * Can be a string, an array of allowed origins, or a function that returns the allowed origin(s).
    *
-   * @default (origin) => origin
+   * @default '*'
    */
   origin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
@@ -79,7 +79,7 @@ export class CORSHandlerPlugin<T extends Context> implements StandardHandlerPlug
 
   constructor(options: CORSHandlerPluginOptions<T> = {}) {
     const defaults: CORSHandlerPluginOptions<T> = {
-      origin: origin => origin,
+      origin: '*',
       allowMethods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH'],
     }
 
