@@ -318,6 +318,28 @@ describe('clone', () => {
     expect(cloned[sym]).not.toBe(obj[sym])
     expect(cloned[sym][nestedSym]).toBe(3)
   })
+
+  it('clone with __proto__ property', () => {
+    const obj = JSON.parse('{ "a": 1, "__proto__": { "polluted": true } }')
+    const cloned = clone(obj)
+
+    expect(Object.getPrototypeOf(cloned)).toBe(Object.prototype)
+    expect(({} as any).polluted).toBeUndefined()
+    expect(cloned.a).toBe(1)
+    // eslint-disable-next-line no-restricted-properties, no-proto
+    expect(cloned.__proto__).toEqual({ polluted: true })
+    // eslint-disable-next-line no-restricted-properties, no-proto
+    expect(cloned.__proto__).not.toBe(obj.__proto__)
+
+    const nullProto = new NullProtoObj<any>()
+    // eslint-disable-next-line no-restricted-properties, no-proto
+    nullProto.__proto__ = 2
+    const clonedNullProto = clone(nullProto)
+
+    expect(Object.getPrototypeOf(clonedNullProto)).toBe(Object.prototype)
+    // eslint-disable-next-line no-restricted-properties, no-proto
+    expect(clonedNullProto.__proto__).toBe(2)
+  })
 })
 
 describe('bindMethods', () => {

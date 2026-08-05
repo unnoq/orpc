@@ -140,12 +140,13 @@ export function clone<T>(value: T): T {
   if (isPlainObject(value)) {
     const result: Record<PropertyKey, unknown> = {}
 
+    // Use defineOwnProperty so special keys like __proto__ don't re-parent the result.
     for (const key in value) {
-      result[key] = clone(value[key])
+      defineOwnProperty(result, key, clone(value[key]))
     }
 
     for (const sym of Object.getOwnPropertySymbols(value)) {
-      result[sym] = clone(value[sym])
+      defineOwnProperty(result, sym, clone(value[sym]))
     }
 
     return result as any
