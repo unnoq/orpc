@@ -49,7 +49,7 @@ interface Issue {
   note?: string
 }
 
-const SKIP_DIRS = new Set(['node_modules', '.vitepress', 'public', 'dist'])
+const SKIP_DIRS = new Set(['node_modules', '.vitepress', '.blume', 'public', 'dist'])
 
 async function findFiles(dir: string, extension: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
@@ -101,9 +101,9 @@ function extractCodeFences(markdown: string): { code: string[], outside: string[
 
     if (open) {
       const lang = open[2]!.split(/[\s[{:]/)[0] ?? ''
-      // Fences labeled `[v1]` (migration guides) show previous-major code whose
+      // Fences titled `v1` (migration guides) show previous-major code whose
       // APIs no longer exist, so their imports must not be verified.
-      const isV1 = /\[v1\]\s*$/.test(line)
+      const isV1 = /\s(?:\[v1\]|v1|title="v1")\s*$/.test(line)
       fence = { marker: open[1]!, lines: [], isCode: CODE_LANGS.has(lang) && !isV1 }
       continue
     }
@@ -166,6 +166,27 @@ function cleanHeadingText(text: string): string {
     .trim()
 }
 
+/** Reads the page `title` from Blume frontmatter (JSON/quoted or bare scalar). */
+function extractFrontmatterTitle(raw: string): string {
+  const fm = raw.match(/^---\n([\s\S]*?)\n---/)
+  const value = fm?.[1]?.match(/^title:[ \t]*(\S.*)$/m)?.[1]?.trim()
+
+  if (!value) {
+    return ''
+  }
+
+  if (value.startsWith('"')) {
+    try {
+      return JSON.parse(value)
+    }
+    catch {
+      return value
+    }
+  }
+
+  return value.replace(/^'(.*)'$/, '$1')
+}
+
 function extractHeadings(outsideFenceLines: string[]): { title: string, slugs: Map<string, string> } {
   const slugs = new Map<string, string>()
   const counts = new Map<string, number>()
@@ -205,15 +226,18 @@ async function collectDocs(): Promise<{ mentions: Map<string, Mention>, pages: M
   const mentions = new Map<string, Mention>()
   const pages = new Map<string, DocPage>()
 
-  for (const file of await findFiles(CONTENT_DIR, '.md')) {
+  for (const file of [...await findFiles(CONTENT_DIR, '.md'), ...await findFiles(CONTENT_DIR, '.mdx')].sort()) {
     const raw = await readFile(file, 'utf8')
-    const relPage = path.relative(CONTENT_DIR, file).replace(/\.md$/, '').replaceAll(path.sep, '/')
+    const relPage = path.relative(CONTENT_DIR, file).replace(/\.mdx?$/, '').replaceAll(path.sep, '/')
     const { code, outside } = extractCodeFences(raw)
+
+    const headings = extractHeadings(outside)
 
     pages.set(relPage === 'index' ? '' : relPage.replace(/\/index$/, ''), {
       file,
       raw,
-      ...extractHeadings(outside),
+      ...headings,
+      title: extractFrontmatterTitle(raw) || headings.title,
     })
 
     if (!relPage.startsWith('docs/')) {

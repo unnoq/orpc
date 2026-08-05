@@ -1,0 +1,47 @@
+---
+title: "CORS Handler Plugin"
+sidebar:
+  label: "CORS"
+---
+
+Use `CORSHandlerPlugin` to configure [CORS Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) for your API.
+
+## Basic
+
+```ts twoslash
+import { RPCHandler } from '@orpc/server/fetch'
+import { router } from './shared/planet'
+// ---cut---
+import { CORSHandlerPlugin } from '@orpc/server/plugins'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new CORSHandlerPlugin({
+      origin: (origin, options) => origin,
+      allowMethods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH'],
+      // ...
+    }),
+  ],
+})
+```
+
+:::info
+The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.
+:::
+
+:::warning
+To better support `Blob`, `File`, and `ReadableStream<Uint8Array>` at the root level in cross-origin scenarios,
+extend your [CORS allowlist](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_response_header) to allow clients to send and receive the `Content-Disposition` and `Standard-Server` headers. Learn more in the [Standard Server documentation](https://github.com/middleapi/standardserver#resolving-body). If you use the [CORS Plugin](/docs/plugins/cors), include them in `allowHeaders` and `exposeHeaders`:
+
+```ts
+const cors = new CORSHandlerPlugin({
+  allowHeaders: ['Content-Disposition', 'Standard-Server'],
+  exposeHeaders: ['Content-Disposition', 'Standard-Server'],
+})
+```
+
+:::
+
+## Learn More
+
+For implementation details, see the [source code](https://github.com/middleapi/orpc/blob/main/packages/server/src/plugins/cors.ts).

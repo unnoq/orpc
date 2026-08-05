@@ -37,6 +37,7 @@ allowBuilds:
   workerd: false
 
 minimumReleaseAgeExclude:
+  - blume@1.3.1
   - '@standardserver/core@0.7.1'
   - '@standardserver/fetch@0.7.1'
   - '@standardserver/node@0.7.1'
