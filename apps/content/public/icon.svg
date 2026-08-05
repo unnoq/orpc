@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" fill="none" viewBox="0 0 600 600"><circle cx="300" cy="300" r="299" fill="#000" stroke="#2F3336" stroke-width="2"/></svg>
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+<style>
+  path { fill: #000; }
+  @media (prefers-color-scheme: dark) {
+    path { fill: #fff; }
+  }
+</style>
+<path d="M4 45L17 37.5V22.5L30 15L43 22.5V7.5L30 0L4 15V45ZM56 15L43 22.5V37.5L30 45L17 37.5V52.5L30 60L56 45V15Z"/>
+</svg>

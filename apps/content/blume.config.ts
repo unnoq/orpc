@@ -4,8 +4,8 @@ export default defineConfig({
   title: 'oRPC',
   description: 'Easy to build APIs that are end-to-end type-safe and adhere to OpenAPI standards',
   logo: {
-    image: '/logo.webp',
-    text: '',
+    image: '/logo.svg',
+    text: 'oRPC',
   },
   content: {
     root: '.',
