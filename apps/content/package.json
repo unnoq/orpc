@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "blume dev",
     "build": "blume build",
-    "serve": "blume preview"
+    "preview": "blume preview"
   },
   "devDependencies": {
     "@opentelemetry/instrumentation": "^0.221.0",

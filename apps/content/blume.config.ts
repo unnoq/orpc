@@ -34,7 +34,18 @@ export default defineConfig({
       key: 'phc_YHeqjC9tR604AHH45kQi63fT4aBvpsS7zAaCxntBzZm',
     },
   },
+  seo: {
+    x: { handle: '@dinwwwh' },
+  },
+  export: true,
+  ai: {
+    mcp: {
+      enabled: true,
+    },
+  },
   deployment: {
+    output: 'server',
+    adapter: 'vercel',
     site: 'https://orpc.dev',
   },
 })
