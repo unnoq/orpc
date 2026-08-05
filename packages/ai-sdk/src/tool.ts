@@ -8,7 +8,7 @@ import type { FunctionTool } from './tool-meta'
 import { getAsyncIteratorObjectSchemaDetails } from '@orpc/contract'
 import { combineJsonSchemasWithComposition } from '@orpc/json-schema'
 import { call, Procedure } from '@orpc/server'
-import { isAsyncIteratorObject, ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
+import { ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
 import { tool } from 'ai'
 import { getAiSdkToolMeta } from './tool-meta'
 
@@ -262,12 +262,13 @@ export function createToolFactory<TInitialContext extends Context = object>(
 
     /**
      * The AI SDK already validates input against the tool's `inputSchema`,
-     * so validation is disabled at the oRPC level to avoid validating twice.
+     * so input validation is disabled at the oRPC level to avoid validating twice.
+     * Output validation stays enabled because the AI SDK does not validate
+     * the value returned from `execute` against the tool's `outputSchema`.
      */
     const disabledValidation = new Procedure({
       ...procedure['~orpc'],
       disableInputValidation: true,
-      disableOutputValidation: true,
     })
 
     const isIteratorOutput = getIteratorYieldSchemas(toArray(procedure['~orpc'].outputSchemas)) !== undefined
@@ -281,14 +282,7 @@ export function createToolFactory<TInitialContext extends Context = object>(
        */
       execute: isIteratorOutput
         ? async function* (input, callingOptions) {
-          const output = await call(disabledValidation, input as any, { signal: callingOptions.abortSignal, ...options })
-
-          if (!isAsyncIteratorObject(output)) {
-            yield output
-            return
-          }
-
-          yield* output
+          yield* await call(disabledValidation, input as any, { signal: callingOptions.abortSignal, ...options }) as AsyncIterable<any>
         }
         : (input, callingOptions) => {
             return call(disabledValidation, input as any, { signal: callingOptions.abortSignal, ...options })

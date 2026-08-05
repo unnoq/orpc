@@ -1,5 +1,7 @@
 import { asyncIteratorObject, oc, type } from '@orpc/contract'
 import { os } from '@orpc/server'
+import { generateText } from 'ai'
+import { MockLanguageModelV4 } from 'ai/test'
 import z from 'zod'
 import { createToolFactory, implementToolFactory } from './tool'
 import { aiSdkTool } from './tool-meta'
@@ -201,6 +203,39 @@ describe('implementToolFactory', () => {
     })
   })
 
+  it('the AI SDK does not validate execute results against outputSchema, so oRPC must validate output itself', async () => {
+    const contract = oc.input(inputSchema).output(outputSchema)
+
+    const greet = implementToolFactory()(contract, {
+      execute: async () => ({ greeting: 123 }) as any,
+    })
+
+    const result = await generateText({
+      model: new MockLanguageModelV4({
+        doGenerate: async () => ({
+          content: [{
+            type: 'tool-call',
+            toolCallId: 'call-1',
+            toolName: 'greet',
+            input: JSON.stringify({ name: 'Alice' }),
+          }],
+          finishReason: { unified: 'tool-calls', raw: undefined },
+          usage: {
+            inputTokens: { total: 10, noCache: 10, cacheRead: undefined, cacheWrite: undefined },
+            outputTokens: { total: 20, text: 20, reasoning: undefined },
+          },
+          warnings: [],
+        }),
+      }),
+      tools: { greet },
+      prompt: 'Greet Alice',
+    })
+
+    expect(result.toolResults).toEqual([
+      expect.objectContaining({ output: { greeting: 123 } }),
+    ])
+  })
+
   describe('async iterator output schema', () => {
     const yieldSchema = z.object({ message: z.string() })
     const returnSchema = z.object({ count: z.number() })
@@ -275,15 +310,30 @@ describe('createToolFactory', () => {
     expect(tool.metadata).toEqual({ source: 'weather-service' })
   })
 
-  it('disable validation at oRPC level to avoid twice times validation', async () => {
+  it('disable input validation at oRPC level to avoid validating twice', async () => {
+    const handler = vi.fn(() => ({ greeting: 'Hello!' }))
+
     const procedure = os
       .input(inputSchema)
       .output(outputSchema)
-      .handler(({ input }) => input as any)
+      .handler(handler)
 
     const tool = createToolFactory()(procedure)
 
-    await expect(tool.execute?.('invalid' as any, { abortSignal } as any)).resolves.toEqual('invalid')
+    await expect(tool.execute?.('invalid' as any, { abortSignal } as any)).resolves.toEqual({ greeting: 'Hello!' })
+
+    expect(handler).toHaveBeenCalledWith(expect.objectContaining({ input: 'invalid' }), 'invalid')
+  })
+
+  it('keeps output validation enabled because the AI SDK does not validate execute results', async () => {
+    const procedure = os
+      .input(inputSchema)
+      .output(outputSchema)
+      .handler(() => ({ greeting: 123 }) as any)
+
+    const tool = createToolFactory()(procedure)
+
+    await expect(tool.execute?.({ name: 'Alice' }, { abortSignal } as any)).rejects.toThrow('Output validation failed')
   })
 
   describe('async iterator output', () => {
@@ -335,7 +385,7 @@ describe('createToolFactory', () => {
       expect(finallyCalled).toBe(true)
     })
 
-    it('yields non-iterator output once when handler ignores the declared iterator schema', async () => {
+    it('rejects when handler ignores the declared iterator schema', async () => {
       const procedure = os
         .input(inputSchema)
         .output(asyncIteratorObject(yieldSchema))
@@ -343,12 +393,24 @@ describe('createToolFactory', () => {
 
       const tool = createToolFactory()(procedure)
 
-      const outputs: unknown[] = []
-      for await (const output of (tool as any).execute({ name: 'Alice' }, { abortSignal })) {
-        outputs.push(output)
-      }
+      const iterator = (tool as any).execute({ name: 'Alice' }, { abortSignal })
+      await expect(iterator.next()).rejects.toThrow('Output validation failed')
+    })
 
-      expect(outputs).toEqual([{ message: 'not an iterator' }])
+    it('validates each streamed event against the yield schema', async () => {
+      const procedure = os
+        .input(inputSchema)
+        .output(asyncIteratorObject(yieldSchema))
+        .handler(async function* () {
+          yield { message: 'one' }
+          yield { message: 123 } as any
+        })
+
+      const tool = createToolFactory()(procedure)
+
+      const iterator = (tool as any).execute({ name: 'Alice' }, { abortSignal })
+      await expect(iterator.next()).resolves.toEqual({ done: false, value: { message: 'one' } })
+      await expect(iterator.next()).rejects.toThrow('AsyncIteratorObject validation failed')
     })
   })
 })
