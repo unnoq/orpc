@@ -27,7 +27,7 @@ OpenAPI Serializers handle one-way serialization to JSON-friendly formats. They 
 | **Blob**                         |             |                    | Unsupported in `AsyncIteratorObject` |
 | **File**                         |             |                    | Unsupported in `AsyncIteratorObject` |
 | **AsyncIteratorObject**          |             |                    | Only at the root level               |
-| **ReadableStream\<Uint8Array\>** |             |                    | Only at the root level               |
+| **`ReadableStream<Uint8Array>`** |             |                    | Only at the root level               |
 
 :::warning
 To better support `Blob`, `File`, and `ReadableStream<Uint8Array>` at the root level in cross-origin scenarios,
@@ -156,7 +156,7 @@ event: message
 data: {"name":"Jane","createdAt":"2024-01-02T00:00:00.000Z"}
 ```
 
-### ReadableStream\<Uint8Array\>
+### `ReadableStream<Uint8Array>`
 
 A `ReadableStream<Uint8Array>` is passed through as-is and streamed as binary data.
 

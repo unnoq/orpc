@@ -29,7 +29,7 @@ The `link` can be any supported oRPC link, such as [RPCLink](/docs/rpc/link), [O
 ### Limitations
 
 The built-in `fetch` implementation in React Native does not support
-[File/Blob/ReadableStream\<Uint8Array\>](/docs/binary-data) or
+[File/Blob/`ReadableStream<Uint8Array>`](/docs/binary-data) or
 [AsyncIteratorObject](/docs/async-iterator-object). Follow
 [Support Stream #27741](https://github.com/facebook/react-native/issues/27741)
 for progress.
@@ -37,7 +37,7 @@ for progress.
 If you're using [Expo SDK 56 or later](https://expo.dev/changelog/sdk-56), with `expo/fetch`, you can:
 
 - Upload [File/Blob](/docs/binary-data#file-and-blob) when they are the entire input.
-- Receive [ReadableStream\<Uint8Array\>](/docs/binary-data#readablestreamuint8array) and [AsyncIteratorObject](/docs/async-iterator-object) when they are the entire output.
+- Receive [`ReadableStream<Uint8Array>`](/docs/binary-data#readablestreamuint8array) and [AsyncIteratorObject](/docs/async-iterator-object) when they are the entire output.
 
 :::info
 `expo/fetch` automatically replaces the global `fetch` from Expo SDK 56 onward, so no action is required.
