@@ -1,0 +1,42 @@
+---
+// Fixed-height sponsor slot. The server renders a skeleton so prerendered
+// HTML reserves the final card's exact size (no layout shift); client.ts
+// replaces [data-sponsor-body] with a clone of the <template> card, filled
+// with a randomly picked sponsor on every view.
+//
+// Styled with Blume's Tailwind utilities (border-border, rounded-blume, …)
+// per its theming guide, so the card tracks theme tokens and dark mode. The
+// card markup lives in the template (not client.ts) because Blume's Tailwind
+// only scans .astro/.tsx/.jsx files for classes.
+---
+
+<aside
+  class="relative my-6 box-border h-[76px] overflow-hidden rounded-blume border border-border"
+  data-sponsor-slot
+  aria-label="Sponsor"
+>
+  <span
+    class="absolute top-2 right-2.5 font-mono text-[10px] tracking-widest uppercase text-muted-foreground"
+    aria-hidden="true"
+  >Sponsor</span>
+  <div class="flex h-full items-center gap-3 px-4" data-sponsor-body>
+    <span class="size-8 flex-none rounded-md bg-muted"></span>
+    <span class="flex min-w-0 flex-1 flex-col gap-1.5">
+      <span class="h-2.5 w-32 max-w-full rounded bg-muted"></span>
+      <span class="h-2.5 w-56 max-w-full rounded bg-muted"></span>
+    </span>
+  </div>
+  <template data-sponsor-template>
+    <a
+      class="flex h-full items-center gap-3 px-4 no-underline hover:bg-muted"
+      target="_blank"
+      rel="sponsored noopener"
+    >
+      <img class="m-0 size-8 flex-none rounded-md" alt="" loading="lazy" data-no-zoom data-sponsor-logo>
+      <span class="flex min-w-0 flex-col gap-0.5">
+        <span class="truncate text-sm leading-tight font-semibold text-foreground" data-sponsor-name></span>
+        <span class="truncate text-xs leading-tight text-muted-foreground" data-sponsor-desc></span>
+      </span>
+    </a>
+  </template>
+</aside>
