@@ -23,7 +23,7 @@ jobs:
 
       - run: pnpm run type:check
 
-      - run: pnpm run docs:check-jsdoc
+      - run: pnpm run docs:validate
 
   test_matrix:
     runs-on: ubuntu-latest

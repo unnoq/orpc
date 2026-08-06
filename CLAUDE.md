@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository
 
-oRPC — typesafe API framework. pnpm monorepo (Node 22+, `pnpm` workspaces) with packages in `packages/*`, docs/website in `apps/content` (VitePress), example apps in `playgrounds/*`, root-level e2e tests in `tests/`, and benchmarks in `benches/`.
+oRPC — typesafe API framework. pnpm monorepo (Node 22+, `pnpm` workspaces) with packages in `packages/*`, docs/website in `apps/content` (Blume), example apps in `playgrounds/*`, root-level e2e tests in `tests/`, and benchmarks in `benches/`.
 
 ## Commands
 
@@ -21,5 +21,5 @@ pnpm --filter @orpc/server build   # build one package (unbuild); builds are NOT
 
 - Root vitest config (`vitest.config.ts`) runs all `*.test.ts` with `globals: true`, plus a jsdom project for `*.test.tsx` in `packages/next` and `packages/tanstack-query`.
 - Exceptions: `packages/bun` runs with `bun test`, `packages/cloudflare` with its own vitest (workerd) — both are excluded from the root vitest and root tsconfig, as is `packages/nest`. Run their tests via `pnpm --filter <pkg> test`.
-- Docs site: `cd apps/content && pnpm dev`.
+- Docs site (Blume): `cd apps/content && pnpm dev` (`blume dev`); `pnpm build` runs `blume build`. Content lives in `.mdx` files; custom pages in `apps/content/pages/`. The dev server caches content-collection frontmatter for custom pages — restart it after editing blog-post frontmatter. `pnpm docs:validate` (root) runs the JSDoc backlink checker plus `blume validate --strict` (links, anchors, assets); CI runs it too.
 - PR titles follow Conventional Commits with the package as scope (e.g. `feat(server): ...`).

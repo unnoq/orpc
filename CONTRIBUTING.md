@@ -48,7 +48,7 @@ This repository uses:
 Every public API mentioned in the documentation (`apps/content/docs`) must carry a JSDoc comment with a backlink to the official website. This is enforced in CI:
 
 ```bash
-pnpm docs:check-jsdoc # node scripts/verify-docs-jsdoc.ts [--filter server,client] [--strict] [--list]
+pnpm docs:validate # runs scripts/verify-docs-jsdoc.ts (accepts [--filter server,client] [--strict] [--list] via node) and `blume validate --strict`
 ```
 
 JSDoc blocks follow this template:
@@ -71,5 +71,5 @@ JSDoc blocks follow this template:
 - `@remarks` is optional (max 1-3 bold lines) and uses `**Warning**:`/`**Note**:` — not `@warning`/`@info` tags.
 - `@param`/`@returns` only when they add information beyond the type signature.
 - No `@example` blocks — examples live on the linked docs page.
-- `@see` is always the last tag. The URL must map to an existing `apps/content/docs/<path>.md` page (plus optional `#anchor` matching a real heading). The title after `|` is the page's title (its first heading), or `Page Title - Heading` when the link targets an anchor.
+- `@see` is always the last tag. The URL must map to an existing `apps/content/docs/<path>.mdx` page (plus optional `#anchor` matching a real heading). The title after `|` is the page's title (its frontmatter `title`), or `Page Title - Heading` when the link targets an anchor.
 - Every `https://orpc.dev/...` link anywhere in package sources (inline markdown links included) is validated against the content pages in `apps/content`.

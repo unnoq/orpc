@@ -1,0 +1,178 @@
+---
+import { getCollection } from 'astro:content'
+import BlumePage from 'blume/components/BlumePage.astro'
+import PageLayout from 'blume/components/layout/PageLayout.astro'
+import data from 'blume:data'
+
+export const prerender = true
+
+interface Author {
+  name: string
+  role?: string
+  url?: string
+  avatar?: string
+}
+
+function normalizeAuthors(raw: unknown): Author[] {
+  if (!raw) {
+    return []
+  }
+  const list = Array.isArray(raw) ? raw : [raw]
+  return list.map(author =>
+    typeof author === 'string' ? { name: author } : (author as Author),
+  )
+}
+
+export async function getStaticPaths() {
+  // With multiple content.sources, route ids carry a source prefix
+  // ("filesystem:blog/…"), so join on entryId, which matches collection ids.
+  const routeById = new Map(
+    data.routes.map(route => [route.entryId, route]),
+  )
+
+  return (await getCollection('docs'))
+    .filter(entry => entry.data.type === 'blog' && !entry.data.draft)
+    .flatMap((entry) => {
+      const route = routeById.get(entry.id)
+      if (!route?.path.startsWith('/blog/')) {
+        return []
+      }
+      return [{
+        params: { slug: route.path.slice('/blog/'.length) },
+        props: { entry, route },
+      }]
+    })
+}
+
+const { entry, route } = Astro.props
+const { config } = data
+
+const authors = normalizeAuthors(entry.data.authors)
+const tags = entry.data.search?.tags ?? []
+const date = entry.data.date ? new Date(entry.data.date) : undefined
+const words = (entry.body ?? '').split(/\s+/).filter(Boolean).length
+const minutes = Math.max(1, Math.round(words / 200))
+const dateFormat = new Intl.DateTimeFormat('en-US', { dateStyle: 'long' })
+
+// schema.org JSON-LD, matching what Blume emits for generated blog pages.
+const siteBase = (config.site ?? '').replace(/\/$/, '')
+const postJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  'headline': entry.data.title,
+  ...(entry.data.description ? { description: entry.data.description } : {}),
+  'url': `${siteBase}${route.path}`,
+  'mainEntityOfPage': `${siteBase}${route.path}`,
+  ...(date ? { datePublished: date.toISOString() } : {}),
+  ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
+  ...(siteBase ? { image: `${siteBase}/og${route.path}.png` } : {}),
+  ...(authors.length > 0
+    ? {
+        author: authors.map(author => ({
+          '@type': 'Person',
+          'name': author.name,
+          ...(author.url ? { url: author.url } : {}),
+        })),
+      }
+    : {}),
+}
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  analytics={config.analytics}
+  navigation={data.navigation}
+  favicon={config.favicon}
+  fontCssVars={data.fontCssVars}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  page={{ title: `${entry.data.title} - ${config.title}`, description: entry.data.description, route: route.path }}
+  x={config.x}
+>
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(postJsonLd).replaceAll('<', '\\u003c')}
+  />
+  <article class="mx-auto w-full max-w-3xl px-6 py-12">
+    <a
+      href="/blog"
+      class="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="m12 19-7-7 7-7" />
+        <path d="M19 12H5" />
+      </svg>
+      All articles
+    </a>
+
+    <header class="mt-10">
+      <p class="font-mono text-xs tracking-widest uppercase">
+        {tags.length > 0 && <span class="text-accent">{tags.join(', ')}</span>}
+        {tags.length > 0 && date && <span class="text-muted-foreground">{' / '}</span>}
+        {date && (
+          <time datetime={date.toISOString()} class="text-muted-foreground">
+            {dateFormat.format(date)}
+          </time>
+        )}
+      </p>
+      <h1 class="font-display mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        {entry.data.title}
+      </h1>
+      <p class="mt-4 font-mono text-xs tracking-widest text-muted-foreground uppercase">
+        {minutes} minute{minutes === 1 ? '' : 's'} read
+      </p>
+      {authors.length > 0 && (
+        <div class="mt-8 flex flex-wrap items-center gap-6">
+          {authors.map(author => (
+            <span class="flex items-center gap-3">
+              {author.avatar && (
+                <img
+                  src={author.avatar}
+                  alt=""
+                  width="40"
+                  height="40"
+                  class="size-10 rounded-blume"
+                  data-no-zoom
+                />
+              )}
+              <span class="text-sm">
+                {author.url
+                  ? (
+                      <a href={author.url} class="block font-medium hover:underline">
+                        {author.name}
+                      </a>
+                    )
+                  : (
+                      <span class="block font-medium">{author.name}</span>
+                    )}
+                {author.role && (
+                  <span class="text-muted-foreground">{author.role}</span>
+                )}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <hr class="my-10 border-border" />
+
+    <div class="prose max-w-none">
+      <BlumePage id={route.entryId} />
+    </div>
+  </article>
+</PageLayout>
