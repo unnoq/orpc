@@ -28,14 +28,25 @@ export default defineConfig({
       { label: 'Blog', path: '/blog' },
       { label: 'Learn & Contribute', path: '/learn-and-contribute' },
     ],
+    selectors: [
+      {
+        kind: 'version',
+        label: 'Version',
+        items: [
+          { label: 'v2 (latest)', path: '/v2', icon: 'rocket' },
+          { label: 'v1', path: 'https://v1.orpc.dev' },
+        ],
+      },
+    ],
   },
   analytics: {
     posthog: {
       key: 'phc_YHeqjC9tR604AHH45kQi63fT4aBvpsS7zAaCxntBzZm',
     },
   },
+
   seo: {
-    x: { handle: '@dinwwwh' },
+    x: { handle: '@middleapi' },
   },
   export: true,
   ai: {

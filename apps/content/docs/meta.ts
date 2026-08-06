@@ -3,6 +3,9 @@ import { defineMeta } from 'blume'
 export default defineMeta({
   pages: [
     'getting-started',
+    'comparison',
+    'ecosystem',
+    'playgrounds',
     'procedure',
     'router',
     'middleware',
@@ -11,7 +14,6 @@ export default defineMeta({
     'binary-data',
     'async-iterator-object',
     'metadata',
-    'playgrounds',
     'rpc',
     'openapi',
     'contract',
