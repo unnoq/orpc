@@ -59,7 +59,7 @@ export default defineConfig({
   },
 
   seo: {
-    x: { handle: '@middleapi' },
+    x: { creator: '@middleapi', handle: '@middleapi' },
   },
   export: true,
   ai: {
