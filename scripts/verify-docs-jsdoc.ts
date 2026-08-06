@@ -24,7 +24,6 @@ const DOCS_URL_PREFIX = 'https://orpc.dev/docs/'
 const ALLOWLIST: Record<string, string> = {
   // JSDoc lives in @standardserver/core's published dist; its anchor still uses
   // the pre-Blume slug scheme. Fix upstream in standardserver, then remove.
-  '@orpc/server#withEventMeta': 'external JSDoc in @standardserver/core; anchor updates with its next release',
 }
 
 interface Mention {
@@ -54,7 +53,7 @@ interface Issue {
   note?: string
 }
 
-const SKIP_DIRS = new Set(['node_modules', '.vitepress', '.blume', 'public', 'dist'])
+const SKIP_DIRS = new Set(['node_modules', '.vitepress', '.blume', '.claude', 'public', 'dist'])
 
 async function findFiles(dir: string, extension: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
