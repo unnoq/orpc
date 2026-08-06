@@ -48,7 +48,7 @@ This repository uses:
 Every public API mentioned in the documentation (`apps/content/docs`) must carry a JSDoc comment with a backlink to the official website. This is enforced in CI:
 
 ```bash
-pnpm docs:check-jsdoc # node scripts/verify-docs-jsdoc.ts [--filter server,client] [--strict] [--list]
+pnpm docs:validate # runs scripts/verify-docs-jsdoc.ts (accepts [--filter server,client] [--strict] [--list] via node) and `blume validate --strict`
 ```
 
 JSDoc blocks follow this template:
