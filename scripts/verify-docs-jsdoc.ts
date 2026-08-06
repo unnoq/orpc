@@ -22,8 +22,6 @@ const DOCS_URL_PREFIX = 'https://orpc.dev/docs/'
  * Justified exceptions, keyed by `<specifier>#<name>`, value is the reason.
  */
 const ALLOWLIST: Record<string, string> = {
-  // JSDoc lives in @standardserver/core's published dist; its anchor still uses
-  // the pre-Blume slug scheme. Fix upstream in standardserver, then remove.
 }
 
 interface Mention {
