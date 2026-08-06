@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { parseArgs } from 'node:util'
+import GithubSlugger from 'github-slugger'
 import ts from 'typescript'
 
 /**
@@ -20,7 +21,11 @@ const DOCS_URL_PREFIX = 'https://orpc.dev/docs/'
 /**
  * Justified exceptions, keyed by `<specifier>#<name>`, value is the reason.
  */
-const ALLOWLIST: Record<string, string> = {}
+const ALLOWLIST: Record<string, string> = {
+  // JSDoc lives in @standardserver/core's published dist; its anchor still uses
+  // the pre-Blume slug scheme. Fix upstream in standardserver, then remove.
+  '@orpc/server#withEventMeta': 'external JSDoc in @standardserver/core; anchor updates with its next release',
+}
 
 interface Mention {
   specifier: string
@@ -140,23 +145,6 @@ function collectImportedNames(code: string): Map<string, Set<string>> {
   return result
 }
 
-/**
- * Mirrors VitePress' default heading slugification (the @mdit-vue/shared `slugify`):
- * special characters become dashes, dashes collapse, leading digits get a `_` prefix.
- */
-function slugify(text: string): string {
-  return text
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036F]/g, '')
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u001F]/g, '')
-    .replace(/[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'\u201C\u201D\u2018\u2019<>,.?/]+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/^(\d)/, '_$1')
-    .toLowerCase()
-}
-
 function cleanHeadingText(text: string): string {
   return text
     .replace(/\{#[\w-]+\}\s*$/, '')
@@ -189,7 +177,7 @@ function extractFrontmatterTitle(raw: string): string {
 
 function extractHeadings(outsideFenceLines: string[]): { title: string, slugs: Map<string, string> } {
   const slugs = new Map<string, string>()
-  const counts = new Map<string, number>()
+  const slugger = new GithubSlugger()
   let title = ''
 
   for (const line of outsideFenceLines) {
@@ -209,10 +197,7 @@ function extractHeadings(outsideFenceLines: string[]): { title: string, slugs: M
       continue
     }
 
-    const slug = slugify(text)
-    const count = counts.get(slug) ?? 0
-    counts.set(slug, count + 1)
-    slugs.set(count === 0 ? slug : `${slug}-${count}`, text)
+    slugs.set(slugger.slug(text), text)
   }
 
   return { title, slugs }

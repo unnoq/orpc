@@ -13,8 +13,8 @@
     "lint": "eslint --max-warnings=0 .",
     "lint:fix": "eslint --max-warnings=0 --fix .",
     "repo:fix": "sherif --fix",
-    "docs:check-jsdoc": "node scripts/verify-docs-jsdoc.ts",
-    "sponsors:sync": "node scripts/sync-sponsors.ts && eslint --max-warnings=0 --fix **/README.md apps/content/.vitepress/theme/sponsors.ts"
+    "docs:validate": "node scripts/verify-docs-jsdoc.ts && pnpm run -r docs:validate",
+    "sponsors:sync": "node scripts/sync-sponsors.ts && eslint --max-warnings=0 --fix **/README.md"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.2.0",
@@ -56,6 +56,7 @@
     "eslint": "^10.8.0",
     "eslint-plugin-ban": "^2.0.0",
     "eslint-plugin-format": "^2.0.1",
+    "github-slugger": "^2.0.0",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.3.0",
     "pkg-pr-new": "^0.0.86",

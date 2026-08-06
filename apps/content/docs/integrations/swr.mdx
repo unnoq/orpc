@@ -137,7 +137,7 @@ const planet = await orpc.planet.find.call({ id: 123 })
 
 ## Operation Context
 
-When clients are invoked through the SWR integration, an **operation context** is automatically added to the [client context](/docs/rpc/link#using-client-context). This context can be used to configure the request behavior, like setting the HTTP method.
+When clients are invoked through the SWR integration, an **operation context** is automatically added to the [client context](/docs/rpc/link#client-context). This context can be used to configure the request behavior, like setting the HTTP method.
 
 ```ts
 import {

@@ -281,7 +281,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a **full matching** key for useQuery/...
    *
-   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-mutation-key | Pinia Colada Integration - Query/Mutation Key}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#querymutation-key | Pinia Colada Integration - Query/Mutation Key}
    */
   queryKey(
     ...rest: MaybeOptionalOptions<QueryKeyOptions<TInput>>
@@ -357,7 +357,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a **full matching** key for [Streamed Query Options](https://orpc.dev/docs/integrations/pinia-colada#streamed-query-options-utility).
    *
-   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-mutation-key | Pinia Colada Integration - Query/Mutation Key}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#querymutation-key | Pinia Colada Integration - Query/Mutation Key}
    */
   streamedKey(
     ...rest: MaybeOptionalOptions<StreamedKeyOptions<TInput>>
@@ -444,7 +444,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a **full matching** key for [Live Query Options](https://orpc.dev/docs/integrations/pinia-colada#live-query-options-utility).
    *
-   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-mutation-key | Pinia Colada Integration - Query/Mutation Key}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#querymutation-key | Pinia Colada Integration - Query/Mutation Key}
    */
   liveKey(
     ...rest: MaybeOptionalOptions<QueryKeyOptions<TInput>>
@@ -528,7 +528,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a **full matching** key for useInfiniteQuery/...
    *
-   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-mutation-key | Pinia Colada Integration - Query/Mutation Key}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#querymutation-key | Pinia Colada Integration - Query/Mutation Key}
    */
   infiniteKey<UPageParam>(
     optionsIn: InfiniteKeyOptions<TInput, UPageParam>,
@@ -606,7 +606,7 @@ export class ProcedureUtils<TClientContext extends ClientContext, TInput, TOutpu
   /**
    * Generate a **full matching** key for useMutation/...
    *
-   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#query-mutation-key | Pinia Colada Integration - Query/Mutation Key}
+   * @see {@link https://orpc.dev/docs/integrations/pinia-colada#querymutation-key | Pinia Colada Integration - Query/Mutation Key}
    */
   mutationKey(
     ...rest: MaybeOptionalOptions<MutationKeyOptions<TInput>>

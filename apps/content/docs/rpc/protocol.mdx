@@ -142,7 +142,7 @@ Content-Type: application/json
 }
 ```
 
-An error response should use an HTTP status code in the `4xx` or `5xx` range (must be greater than or equal to `400`) and return an [ORPCError](/docs/rpc/error) object.
+An error response should use an HTTP status code in the `4xx` or `5xx` range (must be greater than or equal to `400`) and return an [ORPCError](/docs/error-handling#orpcerror-class) object.
 
 :::info
 Response bodies depend on the serializer and are not plain JSON. Learn more in [RPC Serializer Format](/docs/rpc/serializer#serialization-format).

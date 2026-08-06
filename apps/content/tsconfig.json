@@ -7,7 +7,7 @@
     "blume.config.ts",
     "pages",
     ".blume/.astro/types.d.ts",
-    ".blume/src"
+    ".blume/src/env.d.ts"
   ],
   "exclude": [
     "**/*.test.*",

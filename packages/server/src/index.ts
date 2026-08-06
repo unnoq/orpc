@@ -140,7 +140,7 @@ export {
   /**
    * Returns a new iterator event value with attached, validated metadata.
    *
-   * @see {@link https://orpc.dev/docs/async-iterator-object#last-event-id-event-metadata | AsyncIteratorObject (SSE) - Last Event ID & Event Metadata}
+   * @see {@link https://orpc.dev/docs/async-iterator-object#last-event-id--event-metadata | AsyncIteratorObject (SSE) - Last Event ID & Event Metadata}
    */
   withEventMeta,
 } from '@standardserver/core'
