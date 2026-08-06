@@ -5,12 +5,24 @@ export default defineConfig({
   description: 'Easy to build APIs that are end-to-end type-safe and adhere to OpenAPI standards',
   logo: '/logo.svg',
   content: {
-    root: '.',
-    include: [
-      'index.mdx',
-      'docs/**/*.{md,mdx}',
-      'blog/**/*.{md,mdx}',
-      'learn-and-contribute/**/*.{md,mdx}',
+    sources: [
+      {
+        type: 'filesystem',
+        root: '.',
+        include: [
+          'index.mdx',
+          'docs/**/*.{md,mdx}',
+          'blog/**/*.{md,mdx}',
+          'learn-and-contribute/**/*.{md,mdx}',
+        ],
+      },
+      {
+        type: 'github-releases',
+        prefix: 'changelog',
+        owner: 'middleapi',
+        repo: 'orpc',
+        prereleases: true,
+      },
     ],
   },
   github: {
@@ -27,6 +39,7 @@ export default defineConfig({
       { label: 'Docs', path: '/docs' },
       { label: 'Blog', path: '/blog' },
       { label: 'Learn & Contribute', path: '/learn-and-contribute' },
+      { label: 'Changelog', path: '/changelog', href: '/changelog' },
     ],
     selectors: [
       {
