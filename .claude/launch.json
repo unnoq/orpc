@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docs",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["NODE_OPTIONS=--max-old-space-size=8192", "pnpm", "--filter", "@orpc/content", "dev"],
+      "port": 4321
+    }
+  ]
+}

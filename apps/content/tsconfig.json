@@ -3,6 +3,12 @@
   "compilerOptions": {
     "types": ["node"]
   },
+  "include": [
+    "blume.config.ts",
+    "pages",
+    ".blume/.astro/types.d.ts",
+    ".blume/src"
+  ],
   "exclude": [
     "**/*.test.*",
     "**/*.test-d.ts",

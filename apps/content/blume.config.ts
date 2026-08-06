@@ -37,7 +37,7 @@ export default defineConfig({
     },
     tabs: [
       { label: 'Docs', path: '/docs' },
-      { label: 'Blog', path: '/blog' },
+      { label: 'Blog', path: '/blog', href: '/blog' },
       { label: 'Learn & Contribute', path: '/learn-and-contribute' },
       { label: 'Changelog', path: '/changelog', href: '/changelog' },
     ],
