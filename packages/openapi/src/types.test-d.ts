@@ -22,9 +22,9 @@ describe('JsonifiedValue', () => {
     expectTypeOf<JsonifiedValue<Set<number>>>().toEqualTypeOf<number[]>()
     expectTypeOf<JsonifiedValue<Array<number>>>().toEqualTypeOf<number[]>()
     expectTypeOf<JsonifiedValue<{ a: number, b: Date }>>().toEqualTypeOf<{ a: number, b: string }>()
-    expectTypeOf<JsonifiedValue<AsyncGenerator<Date, Date>>>().toEqualTypeOf<AsyncIteratorClass<string, string>>()
-    expectTypeOf<JsonifiedValue<AsyncIteratorObject<Date, Date>>>().toEqualTypeOf<AsyncIteratorClass<string, string>>()
-    expectTypeOf<JsonifiedValue<AsyncIteratorClass<Date, Date, void>>>().toEqualTypeOf<AsyncIteratorClass<string, string>>()
+    expectTypeOf<JsonifiedValue<AsyncIteratorClass<Date, Date>>>().toEqualTypeOf<AsyncIteratorClass<string, string>>()
+    expectTypeOf<JsonifiedValue<AsyncGenerator<Date, Date>>>().toEqualTypeOf<AsyncGenerator<string, string>>()
+    expectTypeOf<JsonifiedValue<AsyncIteratorObject<Date, Date>>>().toEqualTypeOf<AsyncIteratorObject<string, string>>()
 
     expectTypeOf<JsonifiedValue<DateConstructor>>().toEqualTypeOf<unknown>()
   })

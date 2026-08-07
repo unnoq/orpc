@@ -23,8 +23,9 @@ export type JsonifiedValue<T>
                             : T extends Map<infer K, infer V> ? JsonifiedArray<[K, V][]>
                               : T extends Set<infer U> ? JsonifiedArray<U[]>
                                 : T extends AsyncIteratorClass<infer U, infer V> ? AsyncIteratorClass<JsonifiedValue<U>, JsonifiedValue<V>>
-                                  : T extends AsyncIteratorObject<infer U, infer V> ? AsyncIteratorClass<JsonifiedValue<U>, JsonifiedValue<V>>
-                                    : unknown
+                                  : T extends AsyncGenerator<infer U, infer V> ? AsyncGenerator<JsonifiedValue<U>, JsonifiedValue<V>>
+                                    : T extends AsyncIteratorObject<infer U, infer V> ? AsyncIteratorObject<JsonifiedValue<U>, JsonifiedValue<V>>
+                                      : unknown
 
 export type JsonifiedArray<T extends Array<unknown>> = T extends readonly []
   ? []
