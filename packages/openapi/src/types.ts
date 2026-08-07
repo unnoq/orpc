@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-restricted-imports
 import type { OpenAPIV3_1 } from '@hey-api/spec-types'
 import type { AnyNestedClient, Client, ORPCError } from '@orpc/client'
+import type { AsyncIteratorClass } from '@orpc/shared'
 
 export type OpenAPIDocument = OpenAPIV3_1.Document
 export type OpenAPIOperationObject = OpenAPIV3_1.OperationObject
@@ -21,8 +22,9 @@ export type JsonifiedValue<T>
                           : T extends URL ? string
                             : T extends Map<infer K, infer V> ? JsonifiedArray<[K, V][]>
                               : T extends Set<infer U> ? JsonifiedArray<U[]>
-                                : T extends AsyncIteratorObject<infer U, infer V> ? AsyncIteratorObject<JsonifiedValue<U>, JsonifiedValue<V>>
-                                  : unknown
+                                : T extends AsyncIteratorClass<infer U, infer V> ? AsyncIteratorClass<JsonifiedValue<U>, JsonifiedValue<V>>
+                                  : T extends AsyncIteratorObject<infer U, infer V> ? AsyncIteratorClass<JsonifiedValue<U>, JsonifiedValue<V>>
+                                    : unknown
 
 export type JsonifiedArray<T extends Array<unknown>> = T extends readonly []
   ? []
