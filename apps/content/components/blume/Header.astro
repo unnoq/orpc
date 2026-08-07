@@ -101,8 +101,13 @@ const activeTab = activeTabForRoute(navigation.tabs, route);
 // mobile nav below `lg`, so the inline tabs wait until `lg` to avoid duplicating
 // the drawer's links between `md` and `lg`.
 const tabsNavClass = hasSidebar
-  ? "hidden gap-1 md:flex"
-  : "hidden gap-1 lg:flex";
+  ? "hidden items-center gap-4 self-stretch ms-1 md:flex lg:ms-3 lg:gap-6"
+  : "hidden items-center gap-6 self-stretch ms-3 lg:flex";
+
+// VitePress-style tab link: full-height, with a 2px accent underline
+// reserved via `after` so the active state doesn't shift the layout.
+const tabLinkClass =
+  "relative flex h-full items-center whitespace-nowrap font-medium text-muted-foreground text-sm transition-colors after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent after:content-[''] hover:text-accent aria-[current=page]:text-accent aria-[current=page]:after:bg-accent";
 
 const iconButton =
   "inline-flex size-9 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
@@ -127,8 +132,11 @@ const clickScript = `(()=>{const dr=()=>{const h=document.querySelector("[data-b
 ---
 
 <header
-  class="sticky top-0 z-40 flex h-16 items-center gap-3 bg-background/90 px-4 backdrop-blur md:px-6"
+  class="sticky top-0 z-40 border-border border-b bg-background/85 backdrop-blur"
   data-blume-header
+>
+<div
+  class="mx-auto flex h-14 w-[min(100%,var(--docs-frame-width))] items-center gap-3 px-5"
 >
   {
     showNavToggle && (
@@ -143,15 +151,6 @@ const clickScript = `(()=>{const dr=()=>{const h=document.querySelector("[data-b
     )
   }
   <LogoSlot logo={logo} site={site} />
-  {
-    navigation.selectors.length > 0 && (
-      <div class="flex items-center gap-1.5">
-        {navigation.selectors.map((selector) => (
-          <NavSelector route={route} selector={selector} />
-        ))}
-      </div>
-    )
-  }
   {
     navigation.tabs.length > 0 && (
       <nav aria-label={n.sections} class={tabsNavClass}>
@@ -193,7 +192,7 @@ const clickScript = `(()=>{const dr=()=>{const h=document.querySelector("[data-b
           ) : (
             <a
               aria-current={tab === activeTab ? "page" : undefined}
-              class="rounded-full px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground aria-[current=page]:text-foreground"
+              class={tabLinkClass}
               href={withBase(tab.href ?? tab.path)}
             >
               {tab.label}
@@ -204,6 +203,15 @@ const clickScript = `(()=>{const dr=()=>{const h=document.querySelector("[data-b
     )
   }
   <div class="flex-1"></div>
+  {
+    navigation.selectors.length > 0 && (
+      <div class="flex items-center gap-1.5">
+        {navigation.selectors.map((selector) => (
+          <NavSelector route={route} selector={selector} />
+        ))}
+      </div>
+    )
+  }
   {
     localeSwitch && localeSwitch.length > 1 && (
       <LanguageSwitcher
@@ -257,6 +265,7 @@ const clickScript = `(()=>{const dr=()=>{const h=document.querySelector("[data-b
     </button>
     {askEnabled && <Ask strings={askStrings} />}
   </div>
+</div>
 </header>
 {
   // Chrome-only pages (blog, custom landings via PageLayout) have no sidebar

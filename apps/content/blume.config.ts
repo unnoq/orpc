@@ -35,6 +35,8 @@ export default defineConfig({
   theme: {
     // Monochrome accent to match the oRPC brand: black in light, white in dark.
     accent: { light: 'oklch(0.145 0 0)', dark: 'oklch(0.985 0 0)' },
+    // VitePress dark page background; the rest of the palette lives in theme.css.
+    background: { dark: '#161618' },
     fonts: {
       display: 'inter',
       body: 'inter',
