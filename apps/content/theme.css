@@ -170,9 +170,16 @@ main#blume-content {
   margin-inline-start: 0.75rem;
 }
 
-/* The drawer's built-in section list can't render dropdown-tab items
-   (the "More" menu) — the MobileNav override lists the sections instead. */
-[data-blume-nav-drawer] > nav:not([data-blume-nav-tree]) {
+/* The built-in drawer section lists can't render dropdown-tab items
+   (the "More" menu), so the overrides supply their own: MobileNav inside
+   the docs drawer, and the header's own drawer (data-orpc-drawer) on
+   chrome-only PageLayout pages, whose built-in drawer sits directly
+   under <body> and is hidden wholesale here. */
+[data-blume-nav-drawer]:not([data-orpc-drawer]) > nav:not([data-blume-nav-tree]) {
+  display: none;
+}
+
+body > aside[data-blume-nav-drawer]:not([data-orpc-drawer]) {
   display: none;
 }
 

@@ -14,6 +14,7 @@ import { activeTabForRoute } from "blume/components/layout/nav-utils.ts";
 import NavSelector from "blume/components/layout/NavSelector.astro";
 import { resolveSlot } from "blume/components/layout/overrides.ts";
 import Search from "blume/components/layout/Search.astro";
+import SectionsNav from "./SectionsNav.astro";
 
 interface Props {
   site: { title: string };
@@ -257,4 +258,21 @@ const clickScript = `(()=>{const dr=()=>{const h=document.querySelector("[data-b
     {askEnabled && <Ask strings={askStrings} />}
   </div>
 </header>
+{
+  // Chrome-only pages (blog, custom landings via PageLayout) have no sidebar
+  // drawer, and PageLayout's built-in tabs drawer can't render dropdown-tab
+  // items (the "More" menu) — it's hidden in theme.css and this drawer, using
+  // the same nav-toggle machinery, takes its place. `data-orpc-drawer` keeps
+  // it exempt from that hiding rule.
+  hasDrawer && !hasSidebar && navigation.tabs.length > 0 && (
+    <aside
+      aria-label={n.navigation}
+      class="fixed top-[var(--blume-drawer-top,4rem)] start-0 z-[35] h-[calc(100dvh-var(--blume-drawer-top,4rem))] w-64 max-w-[80vw] -translate-x-[105%] overflow-y-auto border-border border-e bg-background px-5 pt-4 pb-6 transition-transform rtl:translate-x-[105%] [:where([data-blume-nav-open])_&]:translate-x-0! lg:hidden"
+      data-blume-nav-drawer
+      data-orpc-drawer
+    >
+      <SectionsNav currentRoute={route} />
+    </aside>
+  )
+}
 <script is:inline set:html={clickScript} />
