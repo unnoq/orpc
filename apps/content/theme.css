@@ -120,8 +120,17 @@
    layout, stretching the page sideways and adding thousands of pixels
    of phantom height below the content on narrow viewports. Keep them
    out of layout entirely until their trigger is hovered. */
-.prose .twoslash-hover:not(:hover) .twoslash-popup-container {
+.prose .twoslash-hover:not(:hover):not(.twoslash-open) :is(.twoslash-popup-container, .twoslash-mobile-bridge) {
   display: none;
+}
+
+/* Touch has no hover: twoslash-mobile.ts pins .twoslash-open on the
+   tapped token (cleared by tapping elsewhere). Mirror the :hover reveal
+   the shiki stylesheet keys on (opacity 0 / pointer-events none
+   otherwise). */
+.prose .twoslash-hover.twoslash-open .twoslash-popup-container {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 main#blume-content {
@@ -129,25 +138,68 @@ main#blume-content {
 }
 
 .prose .twoslash-popup-container {
+  /* max-content, not shrink-to-fit: sized against the tiny token span,
+     shrink-to-fit collapses a wrappable popup to its narrowest content.
+     With the cap as max-width, only signatures that genuinely exceed it
+     wrap, at the full cap width. */
+  width: max-content;
   max-width: min(85vw, 34rem);
 }
 
+/* Wrap popup code: signatures emitted as one long line would otherwise
+   keep pre whitespace and blow the popup past its max-width. */
+.prose .twoslash-popup-container :is(pre, code) {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* Desktop: push the popup down from twoslash's translateY(1.1em) (nearly
+   on top of the token) and bridge the resulting hover gap with a ::before
+   strip, so the pointer can reach the popup without leaving the :hover
+   target — leaving it hides the popup instantly via the display:none rule
+   above. Scoped to .twoslash-hover so persisted-query popups keep their
+   own offset; on mobile widths twoslash-mobile.ts bridges with a real
+   element instead (the popup scrolls internally there, which would clip a
+   ::before hanging outside its box). */
+@media (width > 48rem) {
+  .prose .twoslash-hover .twoslash-popup-container {
+    transform: translateY(2em);
+  }
+
+  .prose .twoslash-hover .twoslash-popup-container::before {
+    content: '';
+    position: absolute;
+    /* Exactly the dead gap (~0.54em: the 2em shift minus the code line
+       under the popup's static position) plus 1px into the line's lower
+       half-leading so rounding can't reopen a seam. Any taller and it
+       overlaps the code line, trapping sideways movement between
+       neighboring hover tokens. */
+    top: calc(-0.55em - 1px);
+    left: 0;
+    right: 0;
+    height: calc(0.55em + 1px);
+  }
+}
+
 /* On narrow screens the popup is anchored to a tiny inline token and
-   squeezes into an unreadable sliver over the code. Keep it by the
-   hovered token vertically (its natural static position), but fix it,
-   size it readably, and center it horizontally in the viewport —
-   fixed positioning escapes the code scroller below. */
+   squeezes into an unreadable sliver over the code. Fix it and size it
+   readably instead — fixed positioning escapes the code scroller below.
+   twoslash-mobile.ts anchors it next to the token on reveal; the
+   viewport centering here is only the first-frame fallback until the
+   script can measure the popup's width. */
 @media (max-width: 48rem) {
   .prose .twoslash-popup-container {
     position: fixed;
     inset: auto auto auto 50%;
-    /* Twoslash offsets the popup with transform: translateY(1.1em); the
-       margin below replaces it so the fixed math stays exact. */
-    transform: none;
-    translate: -50% 0;
+    /* Replaces twoslash's transform: translateY(1.1em) — the margin below
+       keeps the fixed math exact — and centers horizontally. Centering
+       must live on transform, not the translate property: the production
+       build lowers translate into transform, which would survive the
+       script's inline override and drag the placed popup half a width
+       off-screen. */
+    transform: translateX(-50%);
     z-index: 60;
     margin: 0.375rem 0 0;
-    width: max-content;
     max-width: calc(100vw - 1.5rem);
     max-height: 45dvh;
     overflow-y: auto;
