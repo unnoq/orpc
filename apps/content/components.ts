@@ -8,6 +8,7 @@ export default defineComponents({
   layout: {
     Sidebar: './components/blume/NavTree.astro',
     MobileNav: './components/blume/MobileNav.astro',
+    Pagination: './components/blume/Pagination.astro',
     TableOfContents: './components/blume/TableOfContents.astro',
   },
 })

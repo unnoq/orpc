@@ -94,6 +94,17 @@ export default defineConfig({
       },
     },
     {
+      // Keeps mobile twoslash popups inside the viewport (theme.css anchors
+      // them below the hovered token; this nudges bottom-of-screen ones up).
+      name: 'twoslash-mobile',
+      hooks: {
+        'astro:config:setup': ({ injectScript }) => {
+          const clientPath = fileURLToPath(new URL('./components/blume/twoslash-mobile.ts', import.meta.url))
+          injectScript('page', `import '${clientPath.replaceAll('\\', '\\\\').replaceAll('\'', '\\\'')}'`)
+        },
+      },
+    },
+    {
       name: 'sponsors',
       hooks: {
         'astro:config:setup': ({ injectScript, updateConfig }) => {
