@@ -1,10 +1,13 @@
 ---
 title: "ArkType Integration"
+description: "Use ArkType types directly in oRPC via Standard Schema, with a dedicated JSON Schema converter for OpenAPI generation and Smart Coercion."
 sidebar:
   label: "ArkType"
 ---
 
-[ArkType](https://arktype.io/) implements [Standard Schema](/docs/integrations/standard-schema), so you can use it directly in your procedures without any extra setup. On top of that, `@orpc/arktype` provides a dedicated JSON Schema converter.
+:::info
+[ArkType](https://arktype.io/) implements [Standard Schema](/docs/integrations/standard-schema), so procedures accept ArkType types without any converter. The converter below is only needed when generating JSON Schema.
+:::
 
 ## Installation
 

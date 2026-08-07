@@ -1,10 +1,9 @@
 ---
 title: "Scalar (Swagger)"
+description: "Use Scalar to serve an interactive API reference UI for your oRPC API generated from its OpenAPI specification."
 sidebar:
   label: "OpenAPI Scalar (Swagger)"
 ---
-
-Use [Scalar](https://github.com/scalar/scalar) to serve an interactive API reference for your oRPC API from an [OpenAPI specification](/docs/openapi/specification).
 
 :::info
 This guide shows a manual setup. If you want a simpler option, use the [OpenAPI Reference Plugin](/docs/plugins/openapi-reference), which serves both the API reference UI and the OpenAPI specification for you.
@@ -12,7 +11,7 @@ This guide shows a manual setup. If you want a simpler option, use the [OpenAPI 
 
 ## Basic Example
 
-This example serves the OpenAPI document at `/spec.json` and renders Scalar at `/`.
+This example serves the [OpenAPI specification](/docs/openapi/specification) document at `/spec.json` and renders Scalar at `/`.
 
 ```ts
 import { createServer } from 'node:http'

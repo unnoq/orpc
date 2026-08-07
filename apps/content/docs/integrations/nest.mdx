@@ -1,10 +1,9 @@
 ---
 title: "Implement oRPC contract with NestJS"
+description: "Learn how to implement oRPC contracts in NestJS with the @orpc/nest package while keeping type safety and OpenAPI compatibility."
 sidebar:
   label: "NestJS"
 ---
-
-oRPC provides built-in support for NestJS applications through the `@orpc/nest` package. It lets you implement [oRPC contracts](/docs/contract/router) in NestJS while maintaining type safety and OpenAPI compatibility.
 
 ## Installation
 
@@ -47,7 +46,7 @@ const contract = populateRouterContractOpenAPIPaths({
 
 ## Implement Your Contract
 
-To implement your contract in NestJS, use the `@Implement` decorator and the `implement` function. The `@Implement` very similar to NestJS built-in HTTP method decorators (e.g., `@Get`, `@Post`) and can be used to implement either a single procedure contract or an router contract or combine with other NestJS decorators.
+To implement your contract in NestJS, use the `@Implement` decorator and the `implement` function. The `@Implement` very similar to NestJS built-in HTTP method decorators (e.g., `@Get`, `@Post`) and can be used to implement either a single procedure contract or an [router contract](/docs/contract/router) or combine with other NestJS decorators.
 
 ```ts
 import { Implement } from '@orpc/nest'

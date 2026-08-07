@@ -1,12 +1,13 @@
 ---
 title: "AsyncIteratorObject in Client"
+description: "Consume an AsyncIteratorObject from the client like an AsyncGenerator, with stream cancellation, error handling, and event metadata."
 sidebar:
   label: "AsyncIteratorObject (SSE)"
 ---
 
-Consume an [AsyncIteratorObject](/docs/async-iterator-object) like an [AsyncGenerator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator). Await the call, then iterate over events as they arrive.
-
 ## Basic Usage
+
+Await a call to a procedure that returns an [AsyncIteratorObject](/docs/async-iterator-object), then iterate over the events as they arrive, just like an [AsyncGenerator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator).
 
 ```ts twoslash
 import { asyncIteratorObject, oc, RouterContractClient } from '@orpc/contract'

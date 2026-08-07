@@ -1,13 +1,16 @@
 ---
 title: "Zod Integration"
+description: "Use Zod schemas directly in oRPC via Standard Schema, with a dedicated JSON Schema converter and registries for customizing generated schemas."
 sidebar:
   label: "Zod"
 ---
 
-[Zod](https://zod.dev/) implements [Standard Schema](/docs/integrations/standard-schema), so you can use it directly in your procedures without any extra setup. On top of that, `@orpc/zod` provides a dedicated JSON Schema converter and registries for customizing the generated JSON schemas.
-
 :::warning
 `@orpc/zod` requires Zod v4 or later.
+:::
+
+:::info
+[Zod](https://zod.dev/) implements [Standard Schema](/docs/integrations/standard-schema), so procedures accept Zod schemas without any converter. The converter below is only needed when generating JSON Schema.
 :::
 
 ## Installation

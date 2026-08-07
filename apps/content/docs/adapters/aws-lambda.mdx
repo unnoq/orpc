@@ -1,10 +1,9 @@
 ---
 title: "AWS Lambda Adapter"
+description: "Use oRPC on AWS Lambda behind API Gateway (payload formats 1.0 and 2.0) and Lambda Function URLs using response streaming."
 sidebar:
   label: "AWS Lambda"
 ---
-
-oRPC supports [AWS Lambda](https://aws.amazon.com/lambda/) behind [API Gateway](https://aws.amazon.com/api-gateway/) (payload format 1.0 and 2.0) and [Lambda Function URLs](https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html).
 
 :::warning
 This adapter requires the Lambda Node.js runtime with [response streaming](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html) enabled, so handlers must be wrapped with `awslambda.streamifyResponse`.

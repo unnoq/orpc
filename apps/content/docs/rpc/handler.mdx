@@ -1,10 +1,11 @@
 ---
 title: "RPC Handler"
+description: "Use RPCHandler to serve procedures over the RPC protocol, with HTTP method control, interceptors, plugins, custom serializers, and error responses."
 ---
 
-Use `RPCHandler` to communicate with [RPC Link](/docs/rpc/link) and other clients that implement the [RPC protocol](/docs/rpc/protocol).
-
 ## Overview
+
+`RPCHandler` serves [RPC Link](/docs/rpc/link) clients, or any client that implements the [RPC protocol](/docs/rpc/protocol):
 
 ```ts
 const handler = new RPCHandler(router, {
