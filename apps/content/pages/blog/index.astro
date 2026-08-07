@@ -47,8 +47,6 @@ const posts = (await getCollection('docs'))
       tags: entry.data.search?.tags as string[] | undefined ?? [],
       authors: normalizeAuthors(entry.data.authors),
       minutes: readMinutes(entry.body),
-      // Prefer an explicit share image; fall back to the generated OG card.
-      cover: entry.data.seo?.image ?? (href ? `/og${href}.png` : undefined),
     }
   })
   .filter(post => post.href)
@@ -63,9 +61,6 @@ for (const post of posts) {
 }
 const tags = [...tagCounts.keys()]
   .sort((a, b) => (tagCounts.get(b)! - tagCounts.get(a)!) || a.localeCompare(b))
-
-// The featured card is always the latest post; filters only affect the grid.
-const featured = posts[0]
 
 const feed = data.feeds.find(f => f.href.startsWith('/blog'))
 
@@ -107,63 +102,13 @@ const blogJsonLd = {
     type="application/ld+json"
     set:html={JSON.stringify(blogJsonLd).replaceAll('<', '\\u003c')}
   />
-  <section class="mx-auto w-full max-w-6xl px-6 py-12">
-    {
-      featured && (
-        <a
-          href={featured.href}
-          class="group mb-10 grid overflow-hidden rounded-blume border border-border bg-muted/30 md:grid-cols-[2fr_3fr]"
-        >
-          <div class="flex flex-col gap-3 p-8">
-            <p class="text-sm text-muted-foreground">
-              {featured.date && (
-                <time datetime={featured.date.toISOString()}>
-                  {dateFormat.format(featured.date)}
-                </time>
-              )}
-              {' · '}
-              {featured.minutes} min read
-            </p>
-            <h2 class="font-display text-2xl font-semibold tracking-tight transition-colors group-hover:text-muted-foreground">
-              {featured.title}
-            </h2>
-            {featured.authors.length > 0 && (
-              <div class="mt-auto flex items-center gap-3 pt-8">
-                {featured.authors[0]!.avatar && (
-                  <img
-                    src={featured.authors[0]!.avatar}
-                    alt=""
-                    width="40"
-                    height="40"
-                    class="size-10 rounded-blume"
-                    data-no-zoom
-                  />
-                )}
-                <span class="text-sm">
-                  <span class="block font-medium">{featured.authors[0]!.name}</span>
-                  {featured.authors[0]!.role && (
-                    <span class="text-muted-foreground">
-                      {featured.authors[0]!.role}
-                    </span>
-                  )}
-                </span>
-              </div>
-            )}
-          </div>
-          {featured.cover && (
-            <img
-              src={featured.cover}
-              alt=""
-              loading="eager"
-              class="h-full max-h-105 w-full object-cover"
-              data-no-zoom
-            />
-          )}
-        </a>
-      )
-    }
+  <section class="mx-auto w-full max-w-3xl px-6 py-12">
+    <h1 class="font-display text-3xl font-bold tracking-tight">Blog</h1>
+    <p class="mt-2 text-muted-foreground">
+      News, announcements, and writing from the oRPC team.
+    </p>
 
-    <div class="mb-10 flex items-center justify-between gap-4 border-b border-border">
+    <div class="mt-10 mb-2 flex items-center justify-between gap-4 border-b border-border">
       <nav
         class="flex gap-6 overflow-x-auto overflow-y-hidden text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Blog tags"
@@ -214,47 +159,50 @@ const blogJsonLd = {
       }
     </div>
 
-    <div class="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="divide-y divide-border">
       {
         posts.map(post => (
           <a
             href={post.href}
             data-blog-card
             data-tags={post.tags.join('|')}
-            data-slug={post.href}
-            style={post.href === featured?.href ? 'display: none' : undefined}
-            class="group block"
+            class="group block py-7"
           >
-            {post.cover && (
-              <img
-                src={post.cover}
-                alt=""
-                loading="lazy"
-                class="aspect-[1200/630] w-full rounded-blume border border-border object-cover"
-                data-no-zoom
-              />
-            )}
-            <div class="mt-4 flex items-center gap-3 text-sm">
+            <p class="flex items-center gap-3 text-sm text-muted-foreground">
+              {post.date && (
+                <time datetime={post.date.toISOString()}>
+                  {dateFormat.format(post.date)}
+                </time>
+              )}
+              <span>·</span>
+              <span>{post.minutes} min read</span>
               {post.tags.map(tag => (
                 <span class="rounded-blume border border-border px-2 py-0.5 text-xs font-medium whitespace-nowrap">
                   {tag}
                 </span>
               ))}
-              {post.date && (
-                <time
-                  datetime={post.date.toISOString()}
-                  class="text-muted-foreground"
-                >
-                  {dateFormat.format(post.date)}
-                </time>
-              )}
-            </div>
-            <h3 class="font-display mt-2 line-clamp-2 text-lg font-semibold tracking-tight transition-colors group-hover:text-muted-foreground">
+            </p>
+            <h2 class="font-display mt-2 text-xl font-semibold tracking-tight transition-colors group-hover:text-accent">
               {post.title}
-            </h3>
+            </h2>
             {post.description && (
-              <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              <p class="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
                 {post.description}
+              </p>
+            )}
+            {post.authors.length > 0 && (
+              <p class="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                {post.authors[0]!.avatar && (
+                  <img
+                    src={post.authors[0]!.avatar}
+                    alt=""
+                    width="20"
+                    height="20"
+                    class="size-5 rounded-full"
+                    data-no-zoom
+                  />
+                )}
+                {post.authors.map(author => author.name).join(', ')}
               </p>
             )}
           </a>
@@ -267,7 +215,6 @@ const blogJsonLd = {
 <script>
   const buttons = document.querySelectorAll<HTMLButtonElement>('[data-blog-filter]')
   const cards = document.querySelectorAll<HTMLElement>('[data-blog-card]')
-  const featuredSlug = document.querySelector<HTMLAnchorElement>('section > a.group')?.getAttribute('href')
 
   for (const button of buttons) {
     button.addEventListener('click', () => {
@@ -282,13 +229,9 @@ const blogJsonLd = {
         other.classList.toggle('text-muted-foreground', !isActive)
       }
 
-      // The featured card always stays; a tag filter lists all of its posts
-      // in the grid, while "All articles" skips the featured duplicate.
       for (const card of cards) {
         const cardTags = (card.dataset.tags ?? '').split('|')
-        const visible = active
-          ? cardTags.includes(active)
-          : card.dataset.slug !== featuredSlug
+        const visible = !active || cardTags.includes(active)
         card.style.display = visible ? '' : 'none'
       }
     })

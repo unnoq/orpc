@@ -32,24 +32,33 @@ export default defineConfig({
     repo: 'orpc',
     dir: 'apps/content',
   },
+  theme: {
+    // Monochrome accent to match the oRPC brand: black in light, white in dark.
+    accent: { light: 'oklch(0.145 0 0)', dark: 'oklch(0.985 0 0)' },
+    // VitePress dark page background; the rest of the palette lives in theme.css.
+    background: { dark: '#161618' },
+    fonts: {
+      display: 'inter',
+      body: 'inter',
+    },
+  },
   lastModified: true,
   navigation: {
-    sidebar: {
-      display: 'group',
-    },
     tabs: [
-      { label: 'Docs', path: '/docs' },
+      { label: 'Documentation', path: '/docs' },
       { label: 'Blog', path: '/blog', href: '/blog' },
-      { label: 'Learn & Contribute', path: '/learn-and-contribute' },
       { label: 'Changelog', path: '/changelog', href: '/changelog' },
-    ],
-    selectors: [
+      { label: 'Comparison', path: '/docs', href: '/docs/comparison' },
+      { label: 'Contribute', path: '/learn-and-contribute' },
       {
-        kind: 'version',
-        label: 'Version',
+        label: 'More',
+        path: '',
         items: [
-          { label: 'v2 (latest)', path: '/', icon: 'rocket' },
-          { label: 'v1', path: 'https://v1.orpc.dev' },
+          { label: 'V1 Documentation', path: 'https://v1.orpc.dev' },
+          { label: 'Discussions', path: 'https://github.com/middleapi/orpc/discussions' },
+          { label: 'Sponsors', path: 'https://github.com/sponsors/dinwwwh' },
+          { label: 'LLM Context', path: 'https://orpc.dev/llms.txt' },
+          { label: 'LLM Context (Full)', path: 'https://orpc.dev/llms-full.txt' },
         ],
       },
     ],
@@ -65,6 +74,36 @@ export default defineConfig({
   },
   export: true,
   integrations: [
+    {
+      // Blume's PageLayout (used by the custom blog pages) imports the built-in
+      // Header directly and has no layout-slot support, so the owned header in
+      // components/blume/ is swapped in with a Vite alias that both RootLayout
+      // and PageLayout resolve. It carries the "More" dropdown tab support.
+      name: 'header-override',
+      hooks: {
+        'astro:config:setup': ({ updateConfig }) => {
+          const headerPath = fileURLToPath(new URL('./components/blume/Header.astro', import.meta.url))
+          updateConfig({
+            vite: {
+              resolve: {
+                alias: [{ find: /^\.\/Header\.astro$/u, replacement: headerPath }],
+              },
+            },
+          })
+        },
+      },
+    },
+    {
+      // Keeps mobile twoslash popups inside the viewport (theme.css anchors
+      // them below the hovered token; this nudges bottom-of-screen ones up).
+      name: 'twoslash-mobile',
+      hooks: {
+        'astro:config:setup': ({ injectScript }) => {
+          const clientPath = fileURLToPath(new URL('./components/blume/twoslash-mobile.ts', import.meta.url))
+          injectScript('page', `import '${clientPath.replaceAll('\\', '\\\\').replaceAll('\'', '\\\'')}'`)
+        },
+      },
+    },
     {
       name: 'sponsors',
       hooks: {
