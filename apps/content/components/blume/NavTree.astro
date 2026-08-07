@@ -181,20 +181,31 @@ const initialId =
     <ul class="m-0 list-none space-y-px p-0">
       {items.map((item, index) => {
         if (item.kind === "page") {
+          const isActive = item.route === currentRoute;
           return (
             <li>
               <a
-                aria-current={item.route === currentRoute ? "page" : undefined}
-                class="block py-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground aria-[current=page]:text-accent"
+                aria-current={isActive ? "page" : undefined}
+                class:list={[
+                  "block text-muted-foreground text-sm transition-colors hover:text-foreground aria-[current=page]:text-accent",
+                  // Icon rows are section entry points: a bordered icon chip
+                  // sets them apart from the plain page links below them.
+                  item.icon ? "py-1" : "py-1.5",
+                ]}
                 href={withBase(item.route)}
               >
-                <span class="flex items-center gap-2">
+                <span class="flex items-center gap-2.5">
                   {item.icon && (
-                    <Icon
-                      class="shrink-0 text-muted-foreground"
-                      name={item.icon}
-                      size={14}
-                    />
+                    <span
+                      class:list={[
+                        "flex size-6 shrink-0 items-center justify-center rounded-md border bg-background shadow-xs transition-colors",
+                        isActive
+                          ? "border-accent/40 text-accent"
+                          : "border-border text-muted-foreground",
+                      ]}
+                    >
+                      <Icon name={item.icon} size={14} />
+                    </span>
                   )}
                   <span class="flex-1 truncate">{item.label}</span>
                   {item.badge && <span class={badgeClassFor(item.badge)}>{item.badge}</span>}
