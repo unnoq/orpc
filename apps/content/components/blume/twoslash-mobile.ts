@@ -147,9 +147,17 @@ document.addEventListener('click', (event) => {
 
 // Fixed popups don't follow the page: re-anchor the last-placed one while
 // its token scrolls (capture catches every scroller, including the code
-// block's own). place() no-ops while the popup is hidden.
+// block's own), throttled to one place() per frame so scrolling never
+// forces extra layout flushes. place() no-ops while the popup is hidden.
+let reanchorQueued = false
 document.addEventListener('scroll', () => {
-  if (placed && window.matchMedia(MOBILE).matches) {
-    place(placed.hover, placed.popup)
+  if (!reanchorQueued && placed && window.matchMedia(MOBILE).matches) {
+    reanchorQueued = true
+    requestAnimationFrame(() => {
+      reanchorQueued = false
+      if (placed) {
+        place(placed.hover, placed.popup)
+      }
+    })
   }
 }, { capture: true, passive: true })
