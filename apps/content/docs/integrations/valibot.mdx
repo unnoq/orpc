@@ -1,10 +1,13 @@
 ---
 title: "Valibot Integration"
+description: "Use Valibot schemas directly in oRPC via Standard Schema, with a dedicated JSON Schema converter for OpenAPI generation and Smart Coercion."
 sidebar:
   label: "Valibot"
 ---
 
-[Valibot](https://valibot.dev/) implements [Standard Schema](/docs/integrations/standard-schema), so you can use it directly in your procedures without any extra setup. On top of that, `@orpc/valibot` provides a dedicated JSON Schema converter.
+:::info
+[Valibot](https://valibot.dev/) implements [Standard Schema](/docs/integrations/standard-schema), so procedures accept Valibot schemas without any converter. The converter below is only needed by tools that consume JSON Schema, such as OpenAPI generation and Smart Coercion.
+:::
 
 ## Installation
 

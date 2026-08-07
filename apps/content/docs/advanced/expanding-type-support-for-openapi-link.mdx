@@ -1,5 +1,6 @@
 ---
 title: "Expanding Type Support for OpenAPI Link"
+description: "Restore native types like Date and bigint on OpenAPI Link clients using the Response Validation or Smart Coercion plugins."
 ---
 
 Because of [OpenAPI Serializer limitations](/docs/openapi/serializer#limitations), values like `Date` and `bigint` are received by the client in JSON-friendly form. You can convert them back to native types on the client with either [Response Validation Plugin](/docs/plugins/response-validation) or [Smart Coercion Plugin](/docs/plugins/smart-coercion), but only under the conditions described below.

@@ -1,10 +1,11 @@
 ---
 title: "RPC Link"
+description: "Use RPCLink to call RPC Handler servers or any server implementing the RPC protocol, with headers, interceptors, plugins, and custom serializers."
 ---
 
-Use `RPCLink` to communicate with [RPC Handler](/docs/rpc/handler) and other servers that implement the [RPC protocol](/docs/rpc/protocol).
-
 ## Overview
+
+`RPCLink` can call any server that implements the [RPC protocol](/docs/rpc/protocol):
 
 ```ts
 const link = new RPCLink({

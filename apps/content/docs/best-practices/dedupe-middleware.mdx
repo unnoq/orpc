@@ -1,8 +1,7 @@
 ---
 title: "Dedupe Middleware"
+description: "Learn how to use context to prevent the same middleware from repeating expensive work when it runs multiple times in a single call."
 ---
-
-Use [context](/docs/context) to prevent the same [middleware](/docs/middleware) from repeating expensive work.
 
 ## Problem
 
@@ -17,7 +16,7 @@ Repeated middleware work can hurt performance, especially for expensive operatio
 
 ## Solution
 
-Store the computed value in `context` and reuse it when the middleware runs again.
+Store the computed value in [`context`](/docs/context) and reuse it when the [middleware](/docs/middleware) runs again.
 
 For example, this middleware loads auth at most once per call:
 

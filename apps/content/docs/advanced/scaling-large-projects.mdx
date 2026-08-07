@@ -1,10 +1,9 @@
 ---
 title: "Scaling Large Projects"
+description: "Learn how to scale large oRPC codebases by importing individual procedure contracts and creating clients with a contract client factory."
 ---
 
 A single root [client](/docs/client/client-side) is a great way to get started. As your project grows, though, it can lead to type performance issues and tangled dependencies. Splitting the client into smaller service-level clients can help for a while, but very large codebases can still outgrow that approach.
-
-This guide shows an alternative pattern for large projects: import and use individual [procedure contracts](/docs/contract/procedure) directly.
 
 ## Requirements
 
