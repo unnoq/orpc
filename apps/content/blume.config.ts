@@ -32,11 +32,16 @@ export default defineConfig({
     repo: 'orpc',
     dir: 'apps/content',
   },
+  theme: {
+    // VitePress-style blue accent (Tailwind blue-600 / blue-400 in dark).
+    accent: { light: 'oklch(0.546 0.245 262.881)', dark: 'oklch(0.707 0.165 254.624)' },
+    fonts: {
+      display: 'inter',
+      body: 'inter',
+    },
+  },
   lastModified: true,
   navigation: {
-    sidebar: {
-      display: 'group',
-    },
     tabs: [
       { label: 'Docs', path: '/docs' },
       { label: 'Blog', path: '/blog', href: '/blog' },

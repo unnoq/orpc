@@ -1,0 +1,185 @@
+/*
+ * VitePress/Flue-style theme (flueframework.com reference).
+ * Loaded after Blume's layered styles, so plain selectors here win over
+ * the theme defaults and the Tailwind utility classes in layout markup.
+ */
+
+:root {
+  /* Palette — light (VitePress defaults, measured from the reference) */
+  --blume-foreground: #1b1b1f;
+  --blume-muted: #f6f6f7;
+  --blume-muted-foreground: #61636b;
+  --blume-border: #e7e7eb;
+  --blume-code-background: #f6f8fa;
+  --blume-radius: 0.5rem;
+
+  /* Prose column: 700px like the reference article */
+  --blume-content-width: 43.75rem;
+
+  /* Layout frame */
+  --docs-frame-width: 81.875rem;
+  --docs-header-height: calc(3.5rem + 1px);
+}
+
+:root[data-theme='dark'] {
+  /* Palette — dark (VitePress dark palette) */
+  --blume-background: #161618;
+  --blume-foreground: #dfdfd6;
+  --blume-muted: #202127;
+  --blume-muted-foreground: #98989f;
+  --blume-border: #2e2e32;
+  --blume-code-background: #202127;
+}
+
+/* ---------------------------------------------------------------- */
+/* Centered layout frame: sidebar | content | toc, like the docs at */
+/* the reference site (254px / minmax(0,820px) / 16.5rem).          */
+/* ---------------------------------------------------------------- */
+
+[data-blume-doc-grid] {
+  width: min(100%, var(--docs-frame-width));
+  min-height: calc(100vh - var(--docs-header-height));
+}
+
+@media (min-width: 64rem) {
+  /* Scoped to grids that carry Blume's own responsive column classes:
+     "bare" pages (the changelog index) render a single centered column
+     and must keep grid-cols-1. */
+  [data-blume-doc-grid][class*='lg:grid-cols-'] {
+    grid-template-columns: 14.5rem minmax(0, 1fr);
+  }
+
+  /* Sidebar rail: sits under the shorter header, gets a right border */
+  [data-blume-nav-drawer] {
+    top: var(--docs-header-height);
+    height: calc(100dvh - var(--docs-header-height));
+    border-inline-end: 1px solid var(--blume-border);
+    padding: 2rem 1.5rem 2.5rem 1.25rem;
+  }
+
+  main#blume-content {
+    padding: 3rem 3rem 3.5rem;
+  }
+}
+
+/* TOC appears only when the full three-column frame fits (like the
+   reference's max-2xl collapse). */
+[data-blume-toc] {
+  display: none;
+}
+
+@media (min-width: 96rem) {
+  [data-blume-doc-grid][class*='xl:grid-cols-'] {
+    grid-template-columns: 15.875rem minmax(0, 51.25rem) 16.5rem;
+  }
+
+  [data-blume-toc] {
+    display: block;
+    top: var(--docs-header-height);
+    height: calc(100dvh - var(--docs-header-height));
+    padding-top: 3rem;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Typography — Inter with tight, bold headings                     */
+/* ---------------------------------------------------------------- */
+
+.prose {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.prose :where(h1) {
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+
+.prose :where(h2) {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin-top: 2.75rem;
+}
+
+.prose :where(h3) {
+  font-weight: 600;
+  letter-spacing: -0.0125em;
+}
+
+/* Twoslash hover popups are rendered at opacity 0 with no clipping
+   ancestor, so wide ones stretch the page sideways on narrow viewports.
+   Clip the content column instead of letting the page scroll. */
+main#blume-content {
+  overflow-x: clip;
+}
+
+.prose .twoslash-popup-container {
+  max-width: min(85vw, 34rem);
+}
+
+/* Filled code blocks like the reference (not Blume's outline style) */
+.prose pre,
+.prose pre.astro-code {
+  background: var(--blume-code-background) !important;
+}
+
+/* ---------------------------------------------------------------- */
+/* Header chrome (styled here, not via a component override, so the */
+/* custom pages that render the built-in header match the docs)     */
+/* ---------------------------------------------------------------- */
+
+[data-blume-header] {
+  height: var(--docs-header-height);
+  border-bottom: 1px solid var(--blume-border);
+  background: color-mix(in srgb, var(--blume-background) 85%, transparent);
+  /* Center the chrome on the same frame as the content grid */
+  padding-inline: max(1.25rem, calc((100% - var(--docs-frame-width)) / 2 + 1.25rem));
+}
+
+/* Section tabs: full-height text links with an accent underline for
+   the active tab, replacing the default pill treatment. */
+[data-blume-header] > nav {
+  align-self: stretch;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+[data-blume-header] > nav a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+[data-blume-header] > nav a:hover {
+  color: var(--blume-accent);
+}
+
+[data-blume-header] > nav a[aria-current='page'] {
+  color: var(--blume-accent);
+}
+
+[data-blume-header] > nav a[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--blume-accent);
+}
+
+/* Search trigger: wide, quiet gray box like the reference header */
+[data-blume-search-open] {
+  height: 2.375rem;
+  border-color: transparent;
+  border-radius: 0.5rem;
+  background: var(--blume-muted);
+}
+
+[data-blume-search-open]:hover {
+  border-color: var(--blume-border);
+}
