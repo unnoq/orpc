@@ -7,6 +7,7 @@ export default defineComponents({
   },
   layout: {
     Sidebar: './components/blume/NavTree.astro',
+    MobileNav: './components/blume/MobileNav.astro',
     TableOfContents: './components/blume/TableOfContents.astro',
   },
 })

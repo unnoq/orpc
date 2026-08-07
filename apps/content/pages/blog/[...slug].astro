@@ -129,15 +129,16 @@ const postJsonLd = {
             {dateFormat.format(date)}
           </time>
         )}
+        <span class="text-muted-foreground">
+          {' / '}
+          {minutes} min read
+        </span>
       </p>
-      <h1 class="font-display mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+      <h1 class="font-display mt-4 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
         {entry.data.title}
       </h1>
-      <p class="mt-4 font-mono text-xs tracking-widest text-muted-foreground uppercase">
-        {minutes} minute{minutes === 1 ? '' : 's'} read
-      </p>
       {authors.length > 0 && (
-        <div class="mt-8 flex flex-wrap items-center gap-6">
+        <div class="mt-6 flex flex-wrap items-center gap-6">
           {authors.map(author => (
             <span class="flex items-center gap-3">
               {author.avatar && (
@@ -170,7 +171,7 @@ const postJsonLd = {
       )}
     </header>
 
-    <hr class="my-10 border-border" />
+    <hr class="my-8 border-border" />
 
     <div class="prose max-w-none">
       <BlumePage id={route.entryId} components={{ SponsorSlot }} />

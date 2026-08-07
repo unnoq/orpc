@@ -57,7 +57,9 @@
     padding: 2rem 1.5rem 2.5rem 1.25rem;
   }
 
-  main#blume-content {
+  /* Docs content column only — PageLayout pages (blog, custom landings)
+     manage their own padding. */
+  [data-blume-doc-grid] > main#blume-content {
     padding: 3rem 3rem 3.5rem;
   }
 }
@@ -137,15 +139,44 @@ main#blume-content {
   padding-inline: max(1.25rem, calc((100% - var(--docs-frame-width)) / 2 + 1.25rem));
 }
 
+/* Header row order: logo, tabs, spacer, then selectors/search/icons on
+   the right (the version dropdown reads better beside search than
+   wedged between the logo and the tabs). */
+[data-blume-header] > button[data-blume-nav-toggle] {
+  order: -40;
+}
+
+[data-blume-header] > a {
+  order: -30;
+}
+
+[data-blume-header] > nav {
+  order: -20;
+}
+
+[data-blume-header] > .flex-1 {
+  order: -10;
+}
+
 /* Section tabs: full-height text links with an accent underline for
-   the active tab, replacing the default pill treatment. */
+   the active tab, replacing the default pill treatment. Direct children
+   only — dropdown-tab menus inside the nav keep their own styling. */
 [data-blume-header] > nav {
   align-self: stretch;
   align-items: center;
   gap: 1.5rem;
+  /* With the header's own 0.75rem gap this equals the 1.5rem tab gap,
+     so logo → nav spacing matches nav → nav spacing. */
+  margin-inline-start: 0.75rem;
 }
 
-[data-blume-header] > nav a {
+/* The drawer's built-in section list can't render dropdown-tab items
+   (the "More" menu) — the MobileNav override lists the sections instead. */
+[data-blume-nav-drawer] > nav:not([data-blume-nav-tree]) {
+  display: none;
+}
+
+[data-blume-header] > nav > a {
   position: relative;
   display: flex;
   align-items: center;
@@ -153,23 +184,57 @@ main#blume-content {
   padding: 0;
   border-radius: 0;
   background: transparent;
+  white-space: nowrap;
 }
 
-[data-blume-header] > nav a:hover {
+/* Between md and lg the header shows the tab bar, the hamburger, and the
+   full search box at once: tighten gaps and collapse search to its icon
+   so nothing wraps or truncates. */
+@media (min-width: 48rem) and (max-width: 63.9375rem) {
+  [data-blume-header] {
+    gap: 0.5rem;
+  }
+
+  [data-blume-header] > nav {
+    gap: 1rem;
+  }
+
+  [data-blume-search-open] {
+    min-width: 0;
+  }
+
+  [data-blume-search-open] > span,
+  [data-blume-search-open] > kbd {
+    display: none;
+  }
+}
+
+[data-blume-header] > nav > a:hover,
+[data-blume-header] > nav > details > summary:hover {
   color: var(--blume-accent);
 }
 
-[data-blume-header] > nav a[aria-current='page'] {
+[data-blume-header] > nav > a[aria-current='page'] {
   color: var(--blume-accent);
 }
 
-[data-blume-header] > nav a[aria-current='page']::after {
+[data-blume-header] > nav > a[aria-current='page']::after {
   content: '';
   position: absolute;
   inset-inline: 0;
   bottom: -1px;
   height: 2px;
   background: var(--blume-accent);
+}
+
+/* The page-actions popovers (Export, Connect to MCP) are up to 22rem
+   wide but live inside the scrollable TOC rail, which clips anything
+   wider than the rail. Size them to the rail instead. */
+[data-blume-toc] [data-blume-menu] {
+  inset-inline-end: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Search trigger: wide, quiet gray box like the reference header */

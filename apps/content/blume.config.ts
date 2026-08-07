@@ -33,8 +33,8 @@ export default defineConfig({
     dir: 'apps/content',
   },
   theme: {
-    // VitePress-style blue accent (Tailwind blue-600 / blue-400 in dark).
-    accent: { light: 'oklch(0.546 0.245 262.881)', dark: 'oklch(0.707 0.165 254.624)' },
+    // Monochrome accent to match the oRPC brand: black in light, white in dark.
+    accent: { light: 'oklch(0.145 0 0)', dark: 'oklch(0.985 0 0)' },
     fonts: {
       display: 'inter',
       body: 'inter',
@@ -43,18 +43,20 @@ export default defineConfig({
   lastModified: true,
   navigation: {
     tabs: [
-      { label: 'Docs', path: '/docs' },
+      { label: 'Documentation', path: '/docs' },
       { label: 'Blog', path: '/blog', href: '/blog' },
-      { label: 'Learn & Contribute', path: '/learn-and-contribute' },
       { label: 'Changelog', path: '/changelog', href: '/changelog' },
-    ],
-    selectors: [
+      { label: 'Comparison', path: '/docs', href: '/docs/comparison' },
+      { label: 'Contribute', path: '/learn-and-contribute' },
       {
-        kind: 'version',
-        label: 'Version',
+        label: 'More',
+        path: '',
         items: [
-          { label: 'v2 (latest)', path: '/', icon: 'rocket' },
-          { label: 'v1', path: 'https://v1.orpc.dev' },
+          { label: 'V1 Documentation', path: 'https://v1.orpc.dev' },
+          { label: 'Discussions', path: 'https://github.com/middleapi/orpc/discussions' },
+          { label: 'Sponsors', path: 'https://github.com/sponsors/dinwwwh' },
+          { label: 'LLM Context', path: 'https://orpc.dev/llms.txt' },
+          { label: 'LLM Context (Full)', path: 'https://orpc.dev/llms-full.txt' },
         ],
       },
     ],
@@ -70,6 +72,25 @@ export default defineConfig({
   },
   export: true,
   integrations: [
+    {
+      // Blume's PageLayout (used by the custom blog pages) imports the built-in
+      // Header directly and has no layout-slot support, so the owned header in
+      // components/blume/ is swapped in with a Vite alias that both RootLayout
+      // and PageLayout resolve. It carries the "More" dropdown tab support.
+      name: 'header-override',
+      hooks: {
+        'astro:config:setup': ({ updateConfig }) => {
+          const headerPath = fileURLToPath(new URL('./components/blume/Header.astro', import.meta.url))
+          updateConfig({
+            vite: {
+              resolve: {
+                alias: [{ find: /^\.\/Header\.astro$/u, replacement: headerPath }],
+              },
+            },
+          })
+        },
+      },
+    },
     {
       name: 'sponsors',
       hooks: {
