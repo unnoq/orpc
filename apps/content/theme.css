@@ -191,10 +191,13 @@ main#blume-content {
   .prose .twoslash-popup-container {
     position: fixed;
     inset: auto auto auto 50%;
-    /* Twoslash offsets the popup with transform: translateY(1.1em); the
-       margin below replaces it so the fixed math stays exact. */
-    transform: none;
-    translate: -50% 0;
+    /* Replaces twoslash's transform: translateY(1.1em) — the margin below
+       keeps the fixed math exact — and centers horizontally. Centering
+       must live on transform, not the translate property: the production
+       build lowers translate into transform, which would survive the
+       script's inline override and drag the placed popup half a width
+       off-screen. */
+    transform: translateX(-50%);
     z-index: 60;
     margin: 0.375rem 0 0;
     max-width: calc(100vw - 1.5rem);

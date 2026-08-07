@@ -80,7 +80,7 @@ function place(hover: Element, popup: HTMLElement): void {
   popup.style.bottom = below ? 'auto' : `${window.innerHeight - rect.top + GAP}px`
   popup.style.maxHeight = `${Math.max(below ? spaceBelow : spaceAbove, 80)}px`
   popup.style.left = `${left}px`
-  popup.style.translate = 'none'
+  popup.style.transform = 'none'
   popup.style.marginTop = '0'
 
   // Flush at the token's text edge, 1px into the popup, at the popup's
@@ -106,7 +106,7 @@ function reveal(target: EventTarget | null): void {
     // Drop placement left over from a mobile-width session so the
     // absolute-positioned popup anchors normally; desktop bridges with a
     // CSS ::before, so the strip goes too.
-    for (const prop of ['top', 'bottom', 'maxHeight', 'marginTop', 'left', 'translate'] as const) {
+    for (const prop of ['top', 'bottom', 'maxHeight', 'marginTop', 'left', 'transform'] as const) {
       found.popup.style[prop] = ''
     }
     found.hover.querySelector(`:scope > .${BRIDGE_CLASS}`)?.remove()
