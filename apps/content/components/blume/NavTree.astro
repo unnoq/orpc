@@ -182,8 +182,14 @@ const initialId =
       {items.map((item, index) => {
         if (item.kind === "page") {
           const isActive = item.route === currentRoute;
+          // Icon rows form a quick-links block at the top of a section; rule
+          // off the first plain page after them so the two read as separate
+          // lists.
+          const prev = items[index - 1];
+          const afterIconRows =
+            !item.icon && prev?.kind === "page" && Boolean(prev.icon);
           return (
-            <li>
+            <li class:list={[afterIconRows && "mt-3 border-border border-t pt-3"]}>
               <a
                 aria-current={isActive ? "page" : undefined}
                 class:list={[
