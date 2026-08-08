@@ -13,9 +13,25 @@ import { resolveMetaPlugins } from './meta-utils'
 import { ProcedureContract } from './procedure'
 import { augmentContractRouter } from './router-utils'
 
+/**
+ * The input schema type used before `.input` is called.
+ * Input is `void` for better compatibility with third-party libraries,
+ * such as TanStack Query, which allow calling mutations without input.
+ */
 export type InitialInputSchema = Schema<void, unknown>
+
+/**
+ * The output schema type used before `.output` is called.
+ */
 export type InitialOutputSchema = Schema<unknown>
 
+/**
+ * The contract builder behind `oc`. Chain its methods to define procedure
+ * contracts — metadata, errors, and input/output schemas — without any
+ * business logic.
+ *
+ * @see {@link https://orpc.dev/docs/contract/procedure | Procedure Contract}
+ */
 export class ContractBuilder<
   TErrorMap extends ErrorMap,
 > extends ProcedureContract<InitialInputSchema, InitialOutputSchema, TErrorMap> {
@@ -27,15 +43,24 @@ export class ContractBuilder<
     super(definition)
   }
 
+  /**
+   * Creates a fresh contract builder with an empty definition.
+   * Prefer the exported `oc` instance over calling this directly.
+   *
+   * @see {@link https://orpc.dev/docs/contract/procedure | Procedure Contract}
+   */
   static create(): ContractBuilder<object> {
-    // The initial input schema is void for better compatibility with third-party libraries like TanStack Query,
-    // for example, which allow calling mutations without input, ...
     return new ContractBuilder({
       errorMap: {},
       meta: {},
     })
   }
 
+  /**
+   * Applies metadata plugins to contracts built from this builder.
+   *
+   * @see {@link https://orpc.dev/docs/contract/procedure#metadata | Procedure Contract - Metadata}
+   */
   meta(
     ...plugins: MetaPlugin<InitialInputSchema, InitialOutputSchema, TErrorMap>[]
   ): ContractBuilder<TErrorMap> {
@@ -52,6 +77,11 @@ export class ContractBuilder<
     }) as any
   }
 
+  /**
+   * Defines typesafe errors that implementations of this contract can throw.
+   *
+   * @see {@link https://orpc.dev/docs/contract/procedure#typesafe-errors | Procedure Contract - Typesafe Errors}
+   */
   errors<T extends ErrorMap>(
     errors: T,
   ): ContractBuilder<MergedErrorMap<TErrorMap, T>> {
@@ -68,6 +98,11 @@ export class ContractBuilder<
     return result as any
   }
 
+  /**
+   * Defines the input schema used to validate and type the procedure input.
+   *
+   * @see {@link https://orpc.dev/docs/contract/procedure#inputoutput-validation | Procedure Contract - Input/Output Validation}
+   */
   input<T extends AnySchema>(
     schema: T,
   ): ProcedureContractBuilderWithInput<T, TErrorMap> {
@@ -84,6 +119,11 @@ export class ContractBuilder<
     return result as any
   }
 
+  /**
+   * Defines the output schema used to validate and type the procedure output.
+   *
+   * @see {@link https://orpc.dev/docs/contract/procedure#inputoutput-validation | Procedure Contract - Input/Output Validation}
+   */
   output<T extends AnySchema>(
     schema: T,
   ): ProcedureContractBuilderWithOutput<T, TErrorMap> {
@@ -100,6 +140,12 @@ export class ContractBuilder<
     return result as any
   }
 
+  /**
+   * Applies the builder's errors and metadata to every procedure contract in
+   * the given router contract.
+   *
+   * @see {@link https://orpc.dev/docs/contract/router#extending-router | Router Contract - Extending Router}
+   */
   router<T extends RouterContract>(
     router: T,
   ): AugmentedContractRouter<T, TErrorMap> {
@@ -108,8 +154,9 @@ export class ContractBuilder<
 }
 
 /**
- * The contract builder — the entry point for defining procedure and router contracts
- * (input/output schemas, errors, and metadata) without any business logic.
+ * The oRPC contract builder. Chain methods like `.input`, `.errors`, and
+ * `.output` to define procedure contracts, then compose them into router
+ * contracts.
  *
  * @see {@link https://orpc.dev/docs/contract/procedure | Procedure Contract}
  */
