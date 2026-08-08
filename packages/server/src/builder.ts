@@ -15,6 +15,13 @@ import { decorateMiddleware } from './middleware-decorated'
 import { DecoratedProcedure } from './procedure-decorated'
 import { augmentRouter } from './router-utils'
 
+/**
+ * The initial context type used when `.$context` is not called.
+ * Augment this interface with `declare module '@orpc/server'` to define
+ * a default initial context type globally.
+ *
+ * @see {@link https://orpc.dev/docs/context#default-initial-context | Context - Default Initial Context}
+ */
 export interface DefaultInitialContext {
 }
 
@@ -26,16 +33,32 @@ export interface BuilderDefinition<
   orderedMiddlewares: OrderedMiddleware[]
 }
 
+/**
+ * The procedure builder behind `os`. Chain its methods to gradually define
+ * context, middleware, errors, schemas, and finally a handler or router.
+ *
+ * @see {@link https://orpc.dev/docs/procedure | Procedure}
+ */
 export class Builder<
   TInitialContext extends Context,
   TErrorMap extends ErrorMap,
 > {
   '~orpc': BuilderDefinition<InitialInputSchema, InitialOutputSchema, TErrorMap>
 
+  /**
+   * Private constructor to prevent direct instantiation.
+   * Use the static `create` method to initialize a new instance with a safe initial definition.
+   */
   private constructor(definition: BuilderDefinition<InitialInputSchema, InitialOutputSchema, TErrorMap>) {
     this['~orpc'] = definition
   }
 
+  /**
+   * Creates a fresh builder with an empty definition.
+   * Prefer the exported `os` instance over calling this directly.
+   *
+   * @see {@link https://orpc.dev/docs/procedure | Procedure}
+   */
   static create<T extends Context = DefaultInitialContext>(): Builder<T & object, Record<never, never>> {
     // Using `& object` avoids "has no properties in common with type" errors
     // when combining procedures or routers with compatible but non-overlapping contexts.
@@ -47,6 +70,12 @@ export class Builder<
     })
   }
 
+  /**
+   * Declares the initial context type that must be provided when executing
+   * procedures built from this builder.
+   *
+   * @see {@link https://orpc.dev/docs/context#initial-context | Context - Initial Context}
+   */
   $context<T extends Context = DefaultInitialContext>(): Builder<T & object, TErrorMap> {
     // Using `& object` avoids "has no properties in common with type" errors
     // when combining procedures or routers with compatible but non-overlapping contexts.
@@ -55,6 +84,12 @@ export class Builder<
     return this as any
   }
 
+  /**
+   * Overrides the procedure configuration, such as disabling runtime
+   * input/output validation.
+   *
+   * @see {@link https://orpc.dev/docs/advanced/validation-customization | Validation Customization}
+   */
   $config(config: ProcedureConfig): Builder<TInitialContext, TErrorMap> {
     return new Builder({
       ...this['~orpc'],
@@ -62,6 +97,11 @@ export class Builder<
     })
   }
 
+  /**
+   * Applies metadata plugins to procedures built from this builder.
+   *
+   * @see {@link https://orpc.dev/docs/metadata | Metadata}
+   */
   meta(
     ...plugins: MetaPlugin<InitialInputSchema, InitialOutputSchema, TErrorMap>[]
   ): Builder<TInitialContext, TErrorMap> {
@@ -78,6 +118,12 @@ export class Builder<
     })
   }
 
+  /**
+   * Defines typesafe errors that procedures built from this builder can throw
+   * via the `errors` utility in handlers and middleware.
+   *
+   * @see {@link https://orpc.dev/docs/error-handling#typesafe-errors | Error Handling - Typesafe Errors}
+   */
   errors<U extends ErrorMap>(
     errors: U,
   ): Builder<TInitialContext, MergedErrorMap<TErrorMap, U>> {
@@ -94,6 +140,12 @@ export class Builder<
     return builder as any
   }
 
+  /**
+   * Applies a middleware that runs before the handler of every procedure
+   * built from this builder.
+   *
+   * @see {@link https://orpc.dev/docs/middleware | Middleware}
+   */
   use<
     $OutContext extends IntersectPick<TInitialContext, $OutContext>,
     $InContext extends Context = TInitialContext,
@@ -128,6 +180,12 @@ export class Builder<
     return builder as any
   }
 
+  /**
+   * Creates a standalone middleware that can be composed and applied to any
+   * compatible builder or procedure with `.use`.
+   *
+   * @see {@link https://orpc.dev/docs/middleware | Middleware}
+   */
   middleware<
     $OutContext extends IntersectPick<TInitialContext, $OutContext>,
     $Input,
@@ -158,6 +216,11 @@ export class Builder<
     return current
   }
 
+  /**
+   * Defines the input schema used to validate and type the procedure input.
+   *
+   * @see {@link https://orpc.dev/docs/procedure#inputoutput-validation | Procedure - Input/Output Validation}
+   */
   input<$ extends AnySchema>(schema: $): BuilderWithInput<TInitialContext, object, $, TErrorMap> {
     let builder = new Builder({
       ...this['~orpc'],
@@ -172,6 +235,11 @@ export class Builder<
     return builder as any
   }
 
+  /**
+   * Defines the output schema used to validate and type the procedure output.
+   *
+   * @see {@link https://orpc.dev/docs/procedure#inputoutput-validation | Procedure - Input/Output Validation}
+   */
   output<$ extends AnySchema>(schema: $): BuilderWithOutput<TInitialContext, object, $, TErrorMap> {
     let builder = new Builder({
       ...this['~orpc'],
@@ -186,6 +254,12 @@ export class Builder<
     return builder as any
   }
 
+  /**
+   * Defines the function that implements the procedure and completes the
+   * chain, returning a callable procedure.
+   *
+   * @see {@link https://orpc.dev/docs/procedure | Procedure}
+   */
   handler<T>(
     handler: ProcedureHandler<TInitialContext, InferSchemaOutput<InitialInputSchema>, T, ORPCErrorConstructorMap<TErrorMap>>,
   ): DecoratedProcedure<
@@ -209,6 +283,12 @@ export class Builder<
     return procedure as any
   }
 
+  /**
+   * Applies the builder's middleware, errors, and metadata to every procedure
+   * in the given router.
+   *
+   * @see {@link https://orpc.dev/docs/router#extending-router | Router - Extending Router}
+   */
   router<T extends AnyRouter>(
     router: T,
   ): AugmentedRouter<T, TErrorMap> {
@@ -218,6 +298,12 @@ export class Builder<
     }) as any
   }
 
+  /**
+   * Like `.router`, but loads the router lazily on first access, which helps
+   * reduce startup time for large applications.
+   *
+   * @see {@link https://orpc.dev/docs/router#lazy-router | Router - Lazy Router}
+   */
   lazy<T extends AnyRouter>(
     loader: () => Promise<{ default: T }>,
   ): Lazy<AugmentedRouter<T, TErrorMap>> {
