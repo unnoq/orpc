@@ -307,6 +307,41 @@ describe('batchHandlerPlugin', () => {
       expect(response!.status).toBe(400)
       expect(await response!.text()).toContain('Invalid batch request data parameter')
     })
+
+    it('returns 400 when a GET batch contains a non-GET sub-request', async () => {
+      const handler = createHandler()
+      const data = encodeURIComponent(JSON.stringify([
+        makePeerRequestMessage(0, '/ping', 'GET'),
+        makePeerRequestMessage(1, '/ping', 'POST'),
+      ]))
+
+      const { response } = await handler.handle(createBatchRequest({
+        mode: 'buffered',
+        method: 'GET',
+        data,
+      }))
+
+      expect(response!.status).toBe(400)
+      expect(await response!.text()).toContain('GET batch requests only accept GET sub-requests')
+      expect(handlerFn).toHaveBeenCalledTimes(0)
+    })
+
+    it('returns 400 when a GET batch sub-request omits the method (defaults to POST)', async () => {
+      const handler = createHandler()
+      const data = encodeURIComponent(JSON.stringify([
+        { kind: 'request', id: 0, json: { url: '/ping', headers: {} } },
+      ]))
+
+      const { response } = await handler.handle(createBatchRequest({
+        mode: 'buffered',
+        method: 'GET',
+        data,
+      }))
+
+      expect(response!.status).toBe(400)
+      expect(await response!.text()).toContain('GET batch requests only accept GET sub-requests')
+      expect(handlerFn).toHaveBeenCalledTimes(0)
+    })
   })
 
   describe('configuration options', () => {
