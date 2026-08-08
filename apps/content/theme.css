@@ -24,12 +24,14 @@
 }
 
 :root[data-theme='dark'] {
-  /* Palette — dark (VitePress values) */
-  --blume-foreground: #dfdfd6;
-  --blume-muted: #202127;
-  --blume-muted-foreground: #98989f;
-  --blume-border: #2e2e32;
-  --blume-code-background: #202127;
+  /* Palette — dark (Zed One Dark values; page background lives in
+     blume.config.ts `theme`). Surfaces sit above the page, code blocks
+     recess below it like Zed's editor pane. */
+  --blume-foreground: #dce0e5;
+  --blume-muted: #2f343e;
+  --blume-muted-foreground: #a9afbc;
+  --blume-border: #363c46;
+  --blume-code-background: #21252b;
 }
 
 /* ---------------------------------------------------------------- */
