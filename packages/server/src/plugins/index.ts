@@ -6,6 +6,7 @@ export {
    */
   CORSHandlerPlugin as CORSPlugin,
 } from './cors'
+export * from './method-override'
 export * from './request-compression'
 export * from './request-headers'
 export {
