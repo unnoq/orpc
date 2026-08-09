@@ -5,7 +5,7 @@ import { sponsorAdsInjectPlugin } from './sponsors/inject'
 
 export default defineConfig({
   title: 'oRPC',
-  description: 'Easy to build APIs that are end-to-end type-safe and adhere to OpenAPI standards',
+  description: 'Build APIs that are typesafe end to end, with OpenAPI included',
   logo: '/logo.svg',
   content: {
     sources: [
@@ -13,7 +13,6 @@ export default defineConfig({
         type: 'filesystem',
         root: '.',
         include: [
-          'index.mdx',
           'docs/**/*.{md,mdx}',
           'blog/**/*.{md,mdx}',
         ],
@@ -70,6 +69,11 @@ export default defineConfig({
 
   seo: {
     x: { creator: '@middleapi', handle: '@middleapi' },
+    og: {
+      titles: {
+        '/': 'Typesafe APIs Made Simple',
+      },
+    },
   },
   export: true,
   integrations: [

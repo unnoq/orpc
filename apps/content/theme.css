@@ -328,3 +328,493 @@ main#blume-content {
 body > aside[data-blume-nav-drawer]:not([data-orpc-drawer]) {
   display: none;
 }
+
+/* ---------------------------------------------------------------- */
+/* Landing page (pages/index.astro + pages/_home/*)                 */
+/* Its code panes live outside `.prose`, so the dual-theme Shiki     */
+/* variables and the pane chrome are re-declared here.               */
+/* ---------------------------------------------------------------- */
+
+/* Dot field behind the hero and the closing CTA, faded out with a
+   mask so it never meets a section border. Tinted from the
+   foreground so it stays equally faint in both themes. */
+.orpc-dots {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(color-mix(in oklch, var(--blume-foreground) 14%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 10%, transparent 70%);
+  pointer-events: none;
+}
+
+.orpc-dots-bottom {
+  mask-image: radial-gradient(ellipse 75% 60% at 50% 100%, #000 10%, transparent 70%);
+}
+
+/* Buttons */
+
+.orpc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--blume-radius);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.orpc-btn-primary {
+  background: var(--blume-accent);
+  color: var(--blume-accent-foreground);
+}
+
+.orpc-btn-primary:hover {
+  opacity: 0.85;
+}
+
+.orpc-btn-ghost {
+  border: 1px solid var(--blume-border);
+}
+
+.orpc-btn-ghost:hover {
+  background: var(--blume-muted);
+}
+
+/* Copyable install command */
+
+.orpc-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 0.875rem;
+  border: 1px solid var(--blume-border);
+  border-radius: var(--blume-radius);
+  background: var(--blume-muted);
+  font-family: var(--blume-font-mono);
+  font-size: 0.8125rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.orpc-install:hover {
+  border-color: color-mix(in oklch, var(--blume-foreground) 25%, transparent);
+}
+
+.orpc-install:active {
+  background: color-mix(in oklch, var(--blume-foreground) 8%, var(--blume-muted));
+}
+
+/* Wrap at the space between packages rather than scrolling inside the pill:
+   a horizontally scrollable tap target fights the tap-to-copy on touch and
+   hides the copy icon off the right edge. */
+.orpc-install code {
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+
+/* Both icons occupy one grid cell so the swap can't shift the row. */
+.orpc-install-icon {
+  display: inline-grid;
+  flex: none;
+  color: var(--blume-muted-foreground);
+}
+
+.orpc-install-icon > * {
+  grid-area: 1 / 1;
+}
+
+.orpc-icon-done,
+.orpc-install.is-copied .orpc-icon-idle {
+  opacity: 0;
+}
+
+.orpc-install.is-copied .orpc-icon-done {
+  opacity: 1;
+}
+
+/* Showcase: two panes share one frame, stacked below `lg`. */
+
+/* One window: tab bar, caption, and code panes share a single frame, so the
+   tabs read as the window's own chrome instead of buttons floating above it. */
+.orpc-showcase {
+  border: 1px solid var(--blume-border);
+  border-radius: calc(var(--blume-radius) + 0.125rem);
+  background: var(--blume-code-background);
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 30px 60px -40px rgb(0 0 0 / 0.35);
+}
+
+/* The frame is recessed below the page in dark mode, so a cast shadow reads as
+   grime rather than lift. */
+:root[data-theme='dark'] .orpc-showcase {
+  box-shadow: none;
+}
+
+/* The reserved height lands on the pane grid, so the slack reads as editor
+   padding and the divider between the panes still runs the full height. */
+.orpc-showcase-body {
+  flex: 1;
+}
+
+.orpc-split-pane + .orpc-split-pane {
+  border-top: 1px solid var(--blume-border);
+}
+
+/* Matches the `xl:grid-cols-2` split in Showcase.astro. */
+@media (min-width: 80rem) {
+  .orpc-split-pane + .orpc-split-pane {
+    border-top: 0;
+    border-inline-start: 1px solid var(--blume-border);
+  }
+}
+
+/* Code panes. The custom properties retint Shiki's line-highlight tokens —
+   Blume's defaults are blue and this page is deliberately monochrome — and the
+   column layout lets the <pre> fill the pane, so its horizontal scrollbar sits
+   on the pane's bottom edge instead of floating directly under the last line
+   with empty pane below it. The pane's surface and frame belong to the card. */
+.orpc-code {
+  --blume-code-highlight: color-mix(in oklch, var(--blume-foreground) 8%, transparent);
+  --blume-code-highlight-border: color-mix(in oklch, var(--blume-foreground) 45%, transparent);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.orpc-code > pre.astro-code {
+  flex: 1;
+}
+
+.orpc-code-file {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-bottom: 1px solid var(--blume-border);
+  font-family: var(--blume-font-mono);
+  font-size: 0.75rem;
+  color: var(--blume-muted-foreground);
+}
+
+.orpc-code-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: color-mix(in oklch, var(--blume-foreground) 28%, transparent);
+}
+
+.orpc-code pre.astro-code {
+  margin: 0;
+  padding: 1.125rem 1.25rem 1.25rem;
+  overflow-x: auto;
+  background: transparent;
+  color: var(--shiki-light, var(--blume-foreground));
+  font-family: var(--blume-font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  tab-size: 2;
+  scrollbar-color: var(--blume-border) transparent;
+  scrollbar-width: thin;
+}
+
+.orpc-code pre.astro-code span {
+  color: var(--shiki-light, inherit);
+  font-style: var(--shiki-light-font-style, inherit);
+  font-weight: var(--shiki-light-font-weight, inherit);
+  text-decoration: var(--shiki-light-text-decoration, inherit);
+}
+
+:root[data-theme='dark'] .orpc-code pre.astro-code {
+  color: var(--shiki-dark, var(--blume-foreground));
+}
+
+:root[data-theme='dark'] .orpc-code pre.astro-code span {
+  color: var(--shiki-dark, inherit);
+  font-style: var(--shiki-dark-font-style, inherit);
+  font-weight: var(--shiki-dark-font-weight, inherit);
+  text-decoration: var(--shiki-dark-text-decoration, inherit);
+}
+
+/* Showcase tabs: a scrolling pill row on narrow screens, centered and
+   wrapping once there is room for it. */
+
+.orpc-tablist {
+  display: flex;
+  gap: 0.25rem;
+  padding-inline: 0.5rem;
+  border-bottom: 1px solid var(--blume-border);
+  /* Chrome sits on the page surface; the code area keeps the recessed one. */
+  background: var(--blume-background);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* Fade only the edge that has more tabs behind it, so the hint disappears once
+   you reach either end. Showcase.astro sets the attributes on scroll. */
+.orpc-tablist[data-overflow-start='true'] {
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem);
+}
+
+.orpc-tablist[data-overflow-end='true'] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+.orpc-tablist[data-overflow-start='true'][data-overflow-end='true'] {
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
+}
+
+.orpc-tablist::-webkit-scrollbar {
+  display: none;
+}
+
+/* Flat, like an editor's tab bar: the chrome around them is the card itself, so
+   the tabs carry no border or fill of their own. */
+.orpc-tab {
+  flex: none;
+  padding: 0.875rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--blume-muted-foreground);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+
+.orpc-tab:hover {
+  color: var(--blume-foreground);
+}
+
+/* Inset rather than a border plus negative margin: the strip is a scroll
+   container, which would clip anything bleeding past its edge. */
+.orpc-tab[aria-selected='true'] {
+  box-shadow: inset 0 -2px 0 var(--blume-accent);
+  color: var(--blume-foreground);
+}
+
+.orpc-panels > .orpc-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.orpc-panels > .orpc-panel[data-state='inactive'] {
+  display: none;
+}
+
+/* Side by side, stack every panel in one grid cell so the card is exactly as
+   tall as its tallest tab, computed by the browser at first paint. Reserving
+   that height from JS measured it only after layout, which shifted the page
+   below on load. Inactive panels stay laid out but hidden — visibility, not
+   display, keeps them out of the a11y tree and the tab order while still
+   contributing their height. Stacked, this would leave a hole under the short
+   tabs, so it is scoped to the two-column layout. */
+@media (min-width: 80rem) {
+  .orpc-panels {
+    display: grid;
+  }
+
+  .orpc-panels > .orpc-panel {
+    grid-area: 1 / 1;
+  }
+
+  .orpc-panels > .orpc-panel[data-state='inactive'] {
+    display: flex;
+    visibility: hidden;
+  }
+}
+
+/* Caption bar between the tabs and the code, centered so it reads as the
+   window's own subtitle rather than a comment on the left-hand pane. */
+.orpc-panel-desc {
+  margin: 0;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--blume-border);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--blume-muted-foreground);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* Headline numbers. Two columns until `lg`, then one per stat. */
+
+.orpc-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.orpc-stat:nth-child(even) {
+  border-inline-start: 1px solid var(--blume-border);
+}
+
+.orpc-stat:nth-child(n + 3) {
+  border-top: 1px solid var(--blume-border);
+}
+
+/* An odd stat count leaves the last one alone on its row; span it so its top
+   border runs the full width instead of stopping halfway. Scoped to the
+   two-column tier: a `grid-column: auto` reset in the wider tier would lose to
+   this selector's higher specificity. */
+@media (max-width: 63.9375rem) {
+  .orpc-stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 64rem) {
+  .orpc-stats {
+    grid-template-columns: repeat(var(--orpc-stat-count, 4), minmax(0, 1fr));
+  }
+
+  .orpc-stat:nth-child(n) {
+    border-top: 0;
+    border-inline-start: 1px solid var(--blume-border);
+  }
+
+  .orpc-stat:first-child {
+    border-inline-start: 0;
+  }
+
+  .orpc-stat > a {
+    padding-inline: 1.5rem;
+  }
+
+  .orpc-stat:first-child > a {
+    padding-inline-start: 0;
+  }
+
+  .orpc-stat:last-child > a {
+    padding-inline-end: 0;
+  }
+}
+
+.orpc-stat > a {
+  display: block;
+  padding: 2rem 1.5rem;
+  transition: background-color 0.15s ease;
+}
+
+/* Align the first value in each row with the section gutter above it. Scoped to
+   the two-column tier: these selectors outrank the wider tier's plain
+   `.orpc-stat > a` padding, so unscoped they would strip the inner padding off
+   the third and fourth cells there too. */
+@media (max-width: 63.9375rem) {
+  .orpc-stat:nth-child(odd) > a {
+    padding-inline-start: 0;
+  }
+
+  .orpc-stat:nth-child(even) > a {
+    padding-inline-end: 0;
+  }
+}
+
+.orpc-stat > a:hover {
+  background: color-mix(in oklch, var(--blume-muted) 55%, transparent);
+}
+
+.orpc-stat-value {
+  display: block;
+  font-family: var(--blume-font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.orpc-stat-label {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--blume-muted-foreground);
+}
+
+/* Horizontal scrollers share the code panes' thin, themed scrollbar; the
+   browser default is a chunky arrow-ended bar that reads as a page-level
+   overflow rather than a region you can swipe. */
+.orpc-scroller {
+  scrollbar-color: var(--blume-border) transparent;
+  scrollbar-width: thin;
+}
+
+/* Comparison summary table */
+
+.orpc-compare {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: start;
+}
+
+.orpc-compare :is(th, td) {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--blume-border);
+  white-space: nowrap;
+}
+
+.orpc-compare tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.orpc-compare thead th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--blume-muted-foreground);
+  text-align: center;
+}
+
+.orpc-compare thead th:first-child,
+.orpc-compare tbody th {
+  text-align: start;
+}
+
+.orpc-compare tbody th {
+  font-weight: 500;
+}
+
+.orpc-compare tbody th a {
+  text-decoration-line: underline;
+  text-decoration-color: var(--blume-border);
+  text-underline-offset: 0.25rem;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.orpc-compare tbody th a:hover {
+  text-decoration-color: currentcolor;
+}
+
+/* The first data column is oRPC; tint it so the eye lands there first. */
+.orpc-compare :is(th, td):nth-child(2) {
+  background: var(--blume-muted);
+}
+
+.orpc-compare thead th:nth-child(2) {
+  color: var(--blume-foreground);
+}
+
+.orpc-compare td {
+  text-align: center;
+}
+
+/* Star count riding inside the GitHub CTA, split off by a hairline. */
+.orpc-btn-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline-start: 0.125rem;
+  padding-inline-start: 0.625rem;
+  border-inline-start: 1px solid var(--blume-border);
+  color: var(--blume-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
