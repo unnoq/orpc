@@ -744,6 +744,14 @@ body > aside[data-blume-nav-drawer]:not([data-orpc-drawer]) {
    browser default is a chunky arrow-ended bar that reads as a page-level
    overflow rather than a region you can swipe. */
 .orpc-scroller {
+  /* Also the containing block for anything absolutely positioned inside.
+     Overflow never clips an abs-pos descendant whose containing block sits
+     outside the scroller, so the comparison table's `.sr-only` cells (Tailwind
+     makes them position: absolute) escaped it at the far right of the table and
+     stretched the document ~130px past the viewport. Mobile browsers shrink the
+     page to fit that width, which zoomed the whole landing page out and left a
+     blank band down the right edge. */
+  position: relative;
   scrollbar-color: var(--blume-border) transparent;
   scrollbar-width: thin;
 }
