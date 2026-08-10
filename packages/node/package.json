@@ -12,8 +12,7 @@
   },
   "keywords": [
     "orpc",
-    "node",
-    "static"
+    "node"
   ],
   "sideEffects": false,
   "publishConfig": {
