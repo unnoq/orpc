@@ -11,10 +11,15 @@ import { flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
 import mime from 'mime'
 
 /**
- * Content types served as utf-8. `mime` returns bare types, but a text response without an
- * explicit encoding leaves the browser to sniff one. Mirrors the rule `send` applies.
+ * `mime` returns bare types, and http defines no default charset. A text response without one
+ * is left to the html encoding sniffing algorithm, whose final fallback is the user's locale,
+ * so text is pinned to utf-8. Binary types need no charset, and `application/json` is always
+ * utf-8 by definition, where the parameter is undefined rather than merely redundant.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc8259#section-11
+ * @see https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding
  */
-const UTF8_CONTENT_TYPE_REGEX = /^text\/|^application\/(?:javascript|json)$/
+const TEXT_CONTENT_TYPE_REGEX = /^text\//
 
 const PRECOMPRESSED_ENCODINGS: [encoding: string, extension: string][] = [
   ['br', '.br'],
@@ -224,7 +229,7 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
       return 'application/octet-stream'
     }
 
-    return UTF8_CONTENT_TYPE_REGEX.test(contentType) ? `${contentType}; charset=utf-8` : contentType
+    return TEXT_CONTENT_TYPE_REGEX.test(contentType) ? `${contentType}; charset=utf-8` : contentType
   }
 
   private resolveBasePath(prefix: `/${string}` | undefined): `/${string}` {

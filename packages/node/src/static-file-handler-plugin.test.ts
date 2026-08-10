@@ -153,7 +153,8 @@ describe('staticFileHandlerPlugin', () => {
   it('detects content types beyond the common web set', async () => {
     const agent = createStaticAgent()
 
-    // Types a hand-maintained table tends to miss, and the charset rule applied to each
+    // Types a hand-maintained table tends to miss, and the charset rule applied to each.
+    // json carries no charset, the parameter is undefined for it rather than merely redundant.
     for (const [name, contentType] of [
       ['captions.vtt', 'text/vtt; charset=utf-8'],
       ['playlist.m3u8', 'application/vnd.apple.mpegurl'],
@@ -161,8 +162,11 @@ describe('staticFileHandlerPlugin', () => {
       ['favicon.ico', 'image/vnd.microsoft.icon'],
       ['archive.tar', 'application/x-tar'],
       ['sheet.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+      ['data.json', 'application/json'],
+      ['bundle.js.map', 'application/json'],
     ] as const) {
-      writeFileSync(path.join(rootDir, name), 'x')
+      // Valid json, so the test client's own json parser does not choke on the two json cases
+      writeFileSync(path.join(rootDir, name), '{}')
 
       const res = await agent.get(`/${name}`)
       expect(res.status, name).toBe(200)

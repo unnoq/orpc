@@ -23,7 +23,7 @@ Dot segments like `..` are resolved in URL space, following the [RFC 3986](https
 `rootDir` should contain only files you intend to make public. Anything reachable inside it is served, including a file a request happens to name.
 :::
 
-Content types are detected from the file extension with [mime](https://www.npmjs.com/package/mime), and text types are served as UTF-8 so the browser never has to guess an encoding. Use `mimeTypes` to override or add to the detection.
+Content types are detected from the file extension with [mime](https://www.npmjs.com/package/mime). HTTP defines no default charset, and the [HTML encoding sniffing algorithm](https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding) ends at a locale-dependent fallback, so `text/*` responses are pinned to UTF-8. Use `mimeTypes` to override or add to the detection.
 
 ## Setup
 
