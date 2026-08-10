@@ -152,19 +152,9 @@ function buildSponsorsSection(sponsors: Sponsor[]): string {
   }
 
   if (pastSponsors.length > 0) {
-    lines.push('### Past Sponsors')
-    lines.push('')
-    lines.push('<p>')
+    const noun = pastSponsors.length === 1 ? 'past sponsor' : 'past sponsors'
 
-    for (const sponsor of pastSponsors) {
-      const href = sponsor.link
-      const displayName = sponsor.name ?? sponsor.login
-      const escapedName = escapeHtml(displayName)
-
-      lines.push(`  <a href="${escapeHtml(href)}" target="_blank" rel="sponsored noopener" title="${escapedName}"><img src="${escapeHtml(sponsor.avatar)}" width="32" height="32" alt="${escapedName}" /></a>`)
-    }
-
-    lines.push('</p>')
+    lines.push(`With thanks to ${pastSponsors.length} ${noun} who helped get oRPC here.`)
     lines.push('')
   }
 
