@@ -404,6 +404,11 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
       'etag': etag,
       'last-modified': stats.mtime.toUTCString(),
       'accept-ranges': 'bytes',
+      /**
+       * A file is served as-is rather than as an encoded oRPC payload, so the adapter's
+       * body format hint is disabled instead of leaking onto every static response.
+       */
+      'standard-server': [],
     }
 
     if (negotiatesEncoding) {

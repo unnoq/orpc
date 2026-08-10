@@ -133,6 +133,8 @@ describe('staticFileHandlerPlugin', () => {
     expect(res.headers['last-modified']).toBe(statSync(path.join(rootDir, 'hello.txt')).mtime.toUTCString())
     // Guards against a Blob body, which would make the adapter attach a content-disposition
     expect(res.headers['content-disposition']).toBeUndefined()
+    // The adapter's body format hint belongs to encoded oRPC payloads, not to a served file
+    expect(res.headers['standard-server']).toBeUndefined()
   })
 
   it('serves an empty file', async () => {
@@ -341,6 +343,7 @@ describe('staticFileHandlerPlugin', () => {
       expect(res.status).toBe(206)
       expect(res.headers['content-range']).toBe('bytes 2-5/10')
       expect(res.headers['content-length']).toBe('4')
+      expect(res.headers['standard-server']).toBeUndefined()
       expect(res.body).toEqual(Buffer.from([2, 3, 4, 5]))
     })
 
