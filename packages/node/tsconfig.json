@@ -3,10 +3,6 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "references": [
-    { "path": "../server" },
-    { "path": "../shared" }
-  ],
   "include": ["package.json", "src"],
   "exclude": [
     "**/*.test.*",
