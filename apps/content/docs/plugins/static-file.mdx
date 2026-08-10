@@ -1,6 +1,6 @@
 ---
 title: "Static File Plugin"
-description: "Use StaticFileHandlerPlugin to serve static files alongside your procedures with standard HTTP semantics: ETag and Last-Modified conditional requests, range requests, index files, and directory traversal protection."
+description: "Serve static files alongside your procedures, with ETag caching, range requests, single page application fallback, and directory traversal protection."
 sidebar:
   label: "Static File"
 ---
@@ -11,23 +11,9 @@ sidebar:
 npm install @orpc/node@beta
 ```
 
-## How It Works
-
-After routing, when no procedure matches a GET or HEAD request, the plugin maps the request path to a file inside `rootDir` and serves it. Matched procedures always take precedence. Requests that resolve to a directory are redirected to their trailing slash form and answered with the directory's `index.html`.
-
-Every file response carries an [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag) and [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Last-Modified) header, so clients sending `If-None-Match` or `If-Modified-Since` receive `304 Not Modified` when the file is unchanged, and `If-Match` or `If-Unmodified-Since` receive `412 Precondition Failed`. Single [range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Range_requests) are answered with `206 Partial Content`, which enables media seeking and resumable downloads.
-
-Dot segments like `..` are resolved in URL space, following the [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-5.2.4) normalization browsers and proxies apply. One that would climb above the served path is refused rather than clamped, so a proxy in front of the handler can never disagree with it about which path was requested, and the resolved path is checked against `rootDir` again before any file is opened. Symbolic links whose target leaves `rootDir` are refused unless `allowSymlinks` is set. Dotfiles are treated as not found unless explicitly enabled, which is a request-path policy, so it does not apply to a configured `indexFile` or `fallbackFile`.
-
-:::warning
-`rootDir` should contain only files you intend to make public. Anything reachable inside it is served, including a file a request happens to name.
-:::
-
-Content types are detected from the file extension with [mime](https://www.npmjs.com/package/mime). HTTP defines no default charset, and the [HTML encoding sniffing algorithm](https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding) ends at a locale-dependent fallback, so `text/*` responses are pinned to UTF-8. Use `mimeTypes` to override or add to the detection.
-
 ## Setup
 
-The plugin reads files through the Node.js filesystem API but only interacts with the handler through standard oRPC interfaces, so it works with any handler on a Node.js compatible runtime, whether it uses the [Node HTTP Adapter](/docs/adapters/node-http) or the [Fetch API Adapter](/docs/adapters/fetch-api).
+Use `StaticFileHandlerPlugin` to serve a directory alongside your procedures. Files are only served when no procedure matches a `GET` or `HEAD` request, so procedures always take precedence.
 
 ```ts
 import { StaticFileHandlerPlugin } from '@orpc/node'
@@ -60,7 +46,7 @@ const handler = new RPCHandler(router, {
 
       /**
        * A file served with status 200 when no file matches the request path,
-       * relative to `rootDir`. Useful for single-page application routing.
+       * relative to `rootDir`. Useful for single page application routing.
        *
        * @default undefined
        */
@@ -81,8 +67,8 @@ const handler = new RPCHandler(router, {
       dotfiles: false,
 
       /**
-       * Whether precompressed sidecar files (`.br`, `.zst`, `.gz`) can be served
-       * when the client accepts their encoding and the content type is compressible.
+       * Whether precompressed `.br`, `.zst`, and `.gz` sidecar files can be served
+       * when the client accepts their encoding.
        *
        * @default false
        */
@@ -90,17 +76,16 @@ const handler = new RPCHandler(router, {
 
       /**
        * Whether symbolic links whose target lies outside `rootDir` can be served.
-       * Enabling this makes every file the links reach publicly readable.
+       * Enabling this exposes every file those links reach.
        *
        * @default false
        */
       allowSymlinks: false,
 
       /**
-       * Content types keyed by lowercase file extension without the dot, taking precedence
-       * over the type detected from the extension. Values are sent verbatim, so a text type
-       * needs its own charset. Extensions that neither this nor the detection recognises are
-       * served as `application/octet-stream`.
+       * Extra content types keyed by lowercase file extension without the dot,
+       * merged over the built-in detection. Unrecognised extensions are served
+       * as `application/octet-stream`.
        */
       mimeTypes: {},
     }),
@@ -108,8 +93,14 @@ const handler = new RPCHandler(router, {
 })
 ```
 
+Responses carry [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag) and [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Last-Modified) headers, so unchanged files revalidate as `304 Not Modified`, and [range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Range_requests) are answered with `206 Partial Content` for media seeking and resumable downloads.
+
 :::info
-When the handler is served under a [prefix](/docs/rpc/handler), files are only reachable inside that prefix, because a handler never intercepts requests outside its prefix.
+The plugin reads files with the Node.js filesystem API but talks to the handler through standard oRPC interfaces, so it works with [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom handler, on either the [Node HTTP Adapter](/docs/adapters/node-http) or the [Fetch API Adapter](/docs/adapters/fetch-api). When the handler runs under a prefix, files are only reachable inside that prefix.
+:::
+
+:::warning
+`rootDir` should contain only files you intend to make public. Requests cannot escape it through `..` segments or symbolic links, but every file inside it is reachable.
 :::
 
 ## Learn More
