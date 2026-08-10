@@ -93,7 +93,7 @@ describe('responseCompressionHandlerPlugin', () => {
       expect(response!.headers.get('content-encoding')).toBe('deflate')
     })
 
-    it('ignores q-values when parsing accept-encoding', async () => {
+    it('ignores q-value parameters when matching a coding', async () => {
       const largeText = 'x'.repeat(2000)
       const handler = new RPCHandler(os.handler(() => largeText), {
         plugins: [
@@ -233,6 +233,112 @@ describe('responseCompressionHandlerPlugin', () => {
       }))
 
       expect(matched).toBe(true)
+      expect(response!.headers.has('content-encoding')).toBe(false)
+      await expect(response!.json()).resolves.toEqual({ json: largeText })
+    })
+  })
+
+  describe('vary', () => {
+    it.each([
+      ['adds accept-encoding when absent', undefined, 'accept-encoding'],
+      ['keeps an existing accept-encoding once', 'accept-encoding', 'accept-encoding'],
+      ['appends to other fields', 'origin', 'origin, accept-encoding'],
+      ['matches case insensitively', 'Accept-Encoding', 'Accept-Encoding'],
+      ['leaves the wildcard alone', '*', '*'],
+    ])('%s', async (_label, vary, expected) => {
+      const largeText = 'x'.repeat(2000)
+      const handler = new RPCHandler(os.handler(() => largeText), {
+        plugins: [
+          {
+            name: 'set-vary',
+            init(options) {
+              return {
+                ...options,
+                routingInterceptors: [
+                  async ({ next, ...interceptorOptions }) => {
+                    const result = await next(interceptorOptions)
+                    if (!result.matched) {
+                      return result
+                    }
+                    return {
+                      ...result,
+                      response: {
+                        ...result.response,
+                        headers: { ...result.response.headers, ...vary === undefined ? {} : { vary } },
+                      },
+                    }
+                  },
+                  ...options.routingInterceptors ?? [],
+                ],
+              }
+            },
+          },
+          new ResponseCompressionHandlerPlugin({ threshold: 100 }),
+        ],
+      })
+
+      const { response } = await handler.handle(new Request('http://localhost', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'accept-encoding': 'gzip',
+        },
+        body: JSON.stringify({ json: null }),
+      }))
+
+      expect(response!.headers.get('content-encoding')).toBe('gzip')
+      expect(response!.headers.get('vary')).toBe(expected)
+    })
+  })
+
+  describe('partial responses', () => {
+    it.each([
+      ['a 206 status', 206, {}],
+      ['a content-range header', 200, { 'content-range': 'bytes 0-1999/4000' }],
+    ])('does not compress a response with %s', async (_label, status, extraHeaders) => {
+      const largeText = 'x'.repeat(2000)
+      const handler = new RPCHandler(os.handler(() => largeText), {
+        plugins: [
+          {
+            name: 'set-partial-response',
+            init(options) {
+              return {
+                ...options,
+                routingInterceptors: [
+                  async ({ next, ...interceptorOptions }) => {
+                    const result = await next(interceptorOptions)
+                    if (!result.matched) {
+                      return result
+                    }
+                    return {
+                      ...result,
+                      response: {
+                        ...result.response,
+                        status,
+                        headers: { ...result.response.headers, ...extraHeaders },
+                      },
+                    }
+                  },
+                  ...options.routingInterceptors ?? [],
+                ],
+              }
+            },
+          },
+          new ResponseCompressionHandlerPlugin({ threshold: 100 }),
+        ],
+      })
+
+      const { matched, response } = await handler.handle(new Request('http://localhost', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'accept-encoding': 'gzip',
+        },
+        body: JSON.stringify({ json: null }),
+      }))
+
+      expect(matched).toBe(true)
+      // Compressing would leave content-range describing offsets the client never receives
       expect(response!.headers.has('content-encoding')).toBe(false)
       await expect(response!.json()).resolves.toEqual({ json: largeText })
     })
