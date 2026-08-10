@@ -15,9 +15,13 @@ npm install @orpc/node@beta
 
 After routing, when no procedure matches a GET or HEAD request, the plugin maps the request path to a file inside `rootDir` and serves it. Matched procedures always take precedence. Requests that resolve to a directory are redirected to their trailing slash form and answered with the directory's `index.html`.
 
-Every file response carries a weak [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag) and [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Last-Modified) header, so clients sending `If-None-Match` or `If-Modified-Since` receive `304 Not Modified` when the file is unchanged. Single [range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Range_requests) are answered with `206 Partial Content`, which enables media seeking and resumable downloads.
+Every file response carries an [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag) and [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Last-Modified) header, so clients sending `If-None-Match` or `If-Modified-Since` receive `304 Not Modified` when the file is unchanged, and `If-Match` or `If-Unmodified-Since` receive `412 Precondition Failed`. Single [range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Range_requests) are answered with `206 Partial Content`, which enables media seeking and resumable downloads.
 
-Dot segments like `..` are resolved in URL space and clamped at the served directory, following the [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-5.2.4) normalization browsers and proxies apply, so a request can never read outside `rootDir`. Dotfiles are treated as not found unless explicitly enabled.
+Dot segments like `..` are resolved in URL space and clamped at the served directory, following the [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-5.2.4) normalization browsers and proxies apply, and the resolved path is checked against `rootDir` again before any file is opened. Symbolic links whose target leaves `rootDir` are refused unless `allowSymlinks` is set. Dotfiles are treated as not found unless explicitly enabled, which is a request-path policy, so it does not apply to a configured `indexFile` or `fallbackFile`.
+
+:::warning
+`rootDir` should contain only files you intend to make public. Anything reachable inside it is served, including a file a request happens to name.
+:::
 
 ## Setup
 
@@ -81,6 +85,14 @@ const handler = new RPCHandler(router, {
        * @default false
        */
       precompressed: false,
+
+      /**
+       * Whether symbolic links whose target lies outside `rootDir` can be served.
+       * Enabling this makes every file the links reach publicly readable.
+       *
+       * @default false
+       */
+      allowSymlinks: false,
 
       /**
        * Extra content types keyed by lowercase file extension without the dot,

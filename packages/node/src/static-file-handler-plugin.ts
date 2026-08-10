@@ -3,10 +3,10 @@ import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRout
 import type { StandardHeaders, StandardLazyRequest, StandardResponse } from '@standardserver/core'
 import type { Stats } from 'node:fs'
 import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { Readable } from 'node:stream'
-import { getOpenTelemetryConfig, isCompressibleContentType, matchesHttpPathPrefix, mergeHttpPath, parseAcceptEncodings, toArray, tryDecodeURIComponent } from '@orpc/shared'
+import { getOpenTelemetryConfig, isCompressibleContentType, matchesHttpPathPrefix, mergeHttpPath, parseAcceptEncodingQualities, toArray, tryDecodeURIComponent } from '@orpc/shared'
 import { flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
 
 const DEFAULT_MIME_TYPES: Record<string, string> = {
@@ -108,6 +108,14 @@ export interface StaticFileHandlerPluginOptions {
   precompressed?: boolean
 
   /**
+   * Whether symbolic links whose target lies outside `rootDir` can be served.
+   * Enabling this makes every file the links reach publicly readable.
+   *
+   * @default false
+   */
+  allowSymlinks?: boolean
+
+  /**
    * Extra content types keyed by lowercase file extension without the dot,
    * merged over the built-in mapping. Unknown extensions are served as
    * `application/octet-stream`.
@@ -121,6 +129,12 @@ export interface StaticFileHandlerPluginOptions {
  * and directory traversal protection. Files are served as a fallback,
  * so matched procedures always win.
  *
+ * @remarks
+ * Deliberate deviations, all matching `send`, nginx, and Hono: range handling applies to `GET`
+ * only, so `HEAD` always reports the full length even though `Accept-Ranges` advertises support;
+ * a suffix range against an empty file answers `416`; and `dotfiles` is a request-path policy,
+ * so it never applies to a configured `indexFile` or `fallbackFile`.
+ *
  * @see {@link https://orpc.dev/docs/plugins/static-file | Static File Plugin}
  */
 export class StaticFileHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
@@ -132,26 +146,36 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
   after = ['~opentelemetry']
 
   private readonly rootDir: string
-  /** `rootDir` with a trailing separator, precomputed for the containment check. */
+  /** `rootDir` with a trailing separator, precomputed for the lexical containment check. */
   private readonly rootDirPrefix: string
+  /**
+   * `rootDir` with its own symbolic links resolved, paired with its trailing separator form.
+   * Resolved once, so a symlinked `rootDir` keeps working and platform links like the macOS
+   * `/var` to `/private/var` do not reject every file.
+   */
+  private readonly rootDirRealPaths: Promise<[rootDirReal: string, rootDirRealPrefix: string]>
   private readonly path: Exclude<StaticFileHandlerPluginOptions['path'], undefined>
   private readonly indexFile: Exclude<StaticFileHandlerPluginOptions['indexFile'], undefined>
   private readonly fallbackFile: StaticFileHandlerPluginOptions['fallbackFile']
   private readonly cacheControl: Exclude<StaticFileHandlerPluginOptions['cacheControl'], undefined>
   private readonly dotfiles: Exclude<StaticFileHandlerPluginOptions['dotfiles'], undefined>
   private readonly precompressed: Exclude<StaticFileHandlerPluginOptions['precompressed'], undefined>
+  private readonly allowSymlinks: Exclude<StaticFileHandlerPluginOptions['allowSymlinks'], undefined>
   private readonly mimeTypes: Exclude<StaticFileHandlerPluginOptions['mimeTypes'], undefined>
 
   constructor(options: StaticFileHandlerPluginOptions) {
     this.rootDir = path.resolve(options.rootDir)
     this.rootDirPrefix = this.rootDir.endsWith(path.sep) ? this.rootDir : this.rootDir + path.sep
-    const basePath = options.path ?? '/'
-    this.path = basePath.length > 1 && basePath.endsWith('/') ? basePath.slice(0, -1) as `/${string}` : basePath
+    this.rootDirRealPaths = realpath(this.rootDir)
+      .catch(() => this.rootDir)
+      .then(rootDirReal => [rootDirReal, rootDirReal.endsWith(path.sep) ? rootDirReal : rootDirReal + path.sep])
+    this.path = stripTrailingSlash(options.path ?? '/')
     this.indexFile = options.indexFile ?? 'index.html'
     this.fallbackFile = options.fallbackFile
     this.cacheControl = options.cacheControl ?? 'public, max-age=0'
     this.dotfiles = options.dotfiles ?? false
     this.precompressed = options.precompressed ?? false
+    this.allowSymlinks = options.allowSymlinks ?? false
     // A null prototype prevents extensions like "constructor" from resolving through the prototype chain
     this.mimeTypes = Object.assign(Object.create(null) as Record<string, string>, DEFAULT_MIME_TYPES, options.mimeTypes)
   }
@@ -201,18 +225,29 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
     return resolved
   }
 
-  private resolveBasePath(prefix: `/${string}` | undefined): `/${string}` {
-    if (prefix === undefined) {
-      return this.path
+  /**
+   * Resolves symbolic links and confirms the target is still inside the root,
+   * which the lexical `resolveWithinRoot` check cannot see.
+   */
+  private async resolveContainedRealPath(filePath: string): Promise<string | undefined> {
+    if (this.allowSymlinks) {
+      return filePath
     }
 
-    const base = mergeHttpPath(prefix, this.path)
-    return base.length > 1 && base.endsWith('/') ? base.slice(0, -1) as `/${string}` : base
+    const [rootDirReal, rootDirRealPrefix] = await this.rootDirRealPaths
+    // An empty string is contained by no root, so an unresolvable path is simply not contained
+    const realPath = await realpath(filePath).catch(() => '')
+
+    return realPath === rootDirReal || realPath.startsWith(rootDirRealPrefix) ? realPath : undefined
+  }
+
+  private resolveBasePath(prefix: `/${string}` | undefined): `/${string}` {
+    return prefix === undefined ? this.path : stripTrailingSlash(mergeHttpPath(prefix, this.path))
   }
 
   /**
-   * Resolves segments under `rootDir` and stats the result,
-   * `resolveWithinRoot` guarantees nothing outside the root is ever touched.
+   * Resolves segments under `rootDir` and stats the result, rejecting anything that
+   * escapes the root either lexically or by following a symbolic link.
    */
   private async lookup(segments: string[]): Promise<[filePath: string, stats: Stats] | undefined> {
     const filePath = this.resolveWithinRoot(segments)
@@ -221,18 +256,26 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
       return undefined
     }
 
-    const stats = await stat(filePath).catch(() => undefined)
-    return stats === undefined ? undefined : [filePath, stats]
-  }
+    // Both resolutions are always needed, so they run together and cost the latency of one
+    const [stats, containedRealPath] = await Promise.all([
+      stat(filePath).catch(() => undefined),
+      this.resolveContainedRealPath(filePath),
+    ])
 
-  private async serve(request: StandardLazyRequest, base: `/${string}`): Promise<StandardResponse | undefined> {
-    const [pathname, search] = parseStandardUrl(request.url)
-
-    if (base !== '/' && !matchesHttpPathPrefix(pathname, base)) {
+    if (stats === undefined || containedRealPath === undefined) {
       return undefined
     }
 
+    return [filePath, stats]
+  }
+
+  /**
+   * Normalizes the url path into filesystem segments,
+   * returning `undefined` when the request can never map to a servable file.
+   */
+  private resolveSegments(pathname: string, base: `/${string}`): string[] | undefined {
     const segments: string[] = []
+
     for (const rawSegment of pathname.slice(base.length).split('/')) {
       const segment = rawSegment.includes('%') ? tryDecodeURIComponent(rawSegment) : rawSegment
 
@@ -257,18 +300,51 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
       segments.push(segment)
     }
 
-    let found = await this.lookup(segments)
+    return segments
+  }
 
-    if (found?.[1].isDirectory()) {
-      if (this.indexFile === false) {
-        found = undefined
-      }
-      else if (!pathname.endsWith('/')) {
-        // Redirect so relative links inside the index file resolve correctly
-        return { status: 301, headers: { location: `${pathname}/${search ?? ''}` } }
-      }
-      else {
-        found = await this.lookup([...segments, this.indexFile])
+  private async serve(request: StandardLazyRequest, base: `/${string}`): Promise<StandardResponse | undefined> {
+    const [pathname, search] = parseStandardUrl(request.url)
+
+    if (base !== '/' && !matchesHttpPathPrefix(pathname, base)) {
+      return undefined
+    }
+
+    const segments = this.resolveSegments(pathname, base)
+
+    if (segments === undefined) {
+      return undefined
+    }
+
+    let found: [filePath: string, stats: Stats] | undefined
+
+    if (pathname.endsWith('/')) {
+      // The url already denotes a directory, so only its index file can be served
+      found = this.indexFile === false ? undefined : await this.lookup([...segments, this.indexFile])
+    }
+    else {
+      found = await this.lookup(segments)
+
+      if (found?.[1].isDirectory()) {
+        if (this.indexFile === false) {
+          found = undefined
+        }
+        else {
+          /**
+           * Rebuilt from the normalized segments rather than echoing the request target,
+           * so the location can never be protocol relative or carry dot segments.
+           * Redirected so relative links inside the index file resolve correctly.
+           */
+          const location = `${base === '/' ? '' : base}${segments.map(segment => `/${encodeURIComponent(segment)}`).join('')}/`
+
+          return {
+            status: 301,
+            headers: {
+              location: `${location}${search ?? ''}`,
+              ...this.cacheControl === false ? {} : { 'cache-control': this.cacheControl },
+            },
+          }
+        }
       }
     }
 
@@ -292,29 +368,42 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
     let contentEncoding: string | undefined
 
     if (negotiatesEncoding) {
-      const acceptedEncodings = new Set(parseAcceptEncodings(flattenStandardHeader(request.headers['accept-encoding'])))
-      const candidates = PRECOMPRESSED_ENCODINGS.filter(([encoding]) => acceptedEncodings.has(encoding))
-      const candidateStats = await Promise.all(candidates.map(([, extension]) => stat(filePath + extension).catch(() => undefined)))
+      const qualities = parseAcceptEncodingQualities(flattenStandardHeader(request.headers['accept-encoding']))
 
-      for (let i = 0; i < candidates.length; i++) {
-        if (candidateStats[i]?.isFile()) {
-          filePath += candidates[i]![1]
-          stats = candidateStats[i]!
-          contentEncoding = candidates[i]![0]
-          break
-        }
+      const variants = await Promise.all(PRECOMPRESSED_ENCODINGS
+        // An explicit q-value takes precedence over the wildcard, so `br;q=0, *` never serves brotli
+        .filter(([encoding]) => (qualities.get(encoding) ?? qualities.get('*') ?? 0) > 0)
+        .map(async ([encoding, extension]) => {
+          const candidatePath = filePath + extension
+          // Sidecars are reached by string concatenation, so they need the same containment check
+          const [candidateStats, containedRealPath] = await Promise.all([
+            stat(candidatePath).catch(() => undefined),
+            this.resolveContainedRealPath(candidatePath),
+          ])
+
+          return candidateStats?.isFile() && containedRealPath !== undefined
+            ? { encoding, extension, stats: candidateStats }
+            : undefined
+        }))
+
+      const variant = variants.find(variant => variant !== undefined)
+
+      if (variant !== undefined) {
+        filePath += variant.extension
+        stats = variant.stats
+        contentEncoding = variant.encoding
       }
     }
 
     const size = stats.size
-    const etag = `W/"${size.toString(16)}-${stats.mtime.getTime().toString(16)}"`
-    const lastModified = stats.mtime.toUTCString()
+    // Size and mtime at millisecond resolution, a strictly finer validator than the one nginx treats as strong
+    const etag = `"${size.toString(16)}-${stats.mtime.getTime().toString(16)}"`
     // Truncated to seconds, matching the precision of http dates
     const lastModifiedTime = Math.floor(stats.mtime.getTime() / 1000) * 1000
 
     const headers: StandardHeaders = {
       'etag': etag,
-      'last-modified': lastModified,
+      'last-modified': stats.mtime.toUTCString(),
       'accept-ranges': 'bytes',
     }
 
@@ -323,12 +412,12 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
       headers.vary = 'accept-encoding'
     }
 
-    if (contentEncoding !== undefined) {
-      headers['content-encoding'] = contentEncoding
-    }
-
     if (this.cacheControl !== false) {
       headers['cache-control'] = this.cacheControl
+    }
+
+    if (isPreconditionFailed(request.headers, etag, lastModifiedTime)) {
+      return { status: 412, headers }
     }
 
     if (isRequestFresh(request.headers, etag, lastModifiedTime)) {
@@ -341,7 +430,7 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
 
     const range = request.method === 'GET' ? flattenStandardHeader(request.headers.range) : undefined
 
-    if (range !== undefined && isRangeApplicable(request.headers, lastModifiedTime)) {
+    if (range !== undefined && isRangeApplicable(request.headers, etag, lastModifiedTime)) {
       const parsed = parseByteRange(range, size)
 
       if (parsed === 'unsatisfiable') {
@@ -355,8 +444,13 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
       }
     }
 
+    // Representation metadata is kept off the 304 and 416, neither of which carries the representation
+    if (contentEncoding !== undefined) {
+      headers['content-encoding'] = contentEncoding
+    }
+
     headers['content-type'] = contentType
-    headers['content-length'] = String(end - start + 1)
+    headers['content-length'] = `${end - start + 1}`
 
     /**
      * A HEAD response uses an empty stream instead of no body, because
@@ -370,8 +464,38 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
   }
 }
 
+function stripTrailingSlash(path: `/${string}`): `/${string}` {
+  return path.length > 1 && path.endsWith('/') ? path.slice(0, -1) as `/${string}` : path
+}
+
 function stripWeakEtagPrefix(etag: string): string {
   return etag.startsWith('W/') ? etag.slice(2) : etag
+}
+
+/**
+ * Evaluated before freshness, where `If-Match` takes precedence over `If-Unmodified-Since`.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-precedence-of-preconditions
+ */
+function isPreconditionFailed(requestHeaders: StandardHeaders, etag: string, lastModifiedTime: number): boolean {
+  const ifMatch = flattenStandardHeader(requestHeaders['if-match'])?.trim()
+  // An empty list is malformed rather than unsatisfiable, so it is ignored
+  if (ifMatch !== undefined && ifMatch !== '') {
+    if (ifMatch === '*') {
+      return false
+    }
+
+    // If-Match uses the strong comparison function, so a weak tag never matches
+    return !ifMatch.split(',').some(tag => tag.trim() === etag)
+  }
+
+  const ifUnmodifiedSince = flattenStandardHeader(requestHeaders['if-unmodified-since'])
+  if (ifUnmodifiedSince !== undefined) {
+    const sinceTime = Date.parse(ifUnmodifiedSince)
+    return !Number.isNaN(sinceTime) && lastModifiedTime > sinceTime
+  }
+
+  return false
 }
 
 /**
@@ -399,26 +523,24 @@ function isRequestFresh(requestHeaders: StandardHeaders, etag: string, lastModif
   return false
 }
 
-function isRangeApplicable(requestHeaders: StandardHeaders, lastModifiedTime: number): boolean {
+function isRangeApplicable(requestHeaders: StandardHeaders, etag: string, lastModifiedTime: number): boolean {
   const ifRange = flattenStandardHeader(requestHeaders['if-range'])
 
   if (ifRange === undefined) {
     return true
   }
 
-  /**
-   * The etag form requires a strong comparison and generated etags
-   * are always weak, so it can never match.
-   */
+  // The etag form requires a strong comparison, so a weak tag can never match
   if (ifRange.startsWith('"') || ifRange.startsWith('W/')) {
-    return false
+    return ifRange === etag
   }
 
   return Date.parse(ifRange) === lastModifiedTime
 }
 
 function parseByteRange(range: string, size: number): [start: number, end: number] | 'unsatisfiable' | undefined {
-  const match = range.match(/^bytes=(\d*)-(\d*)$/)
+  // The range unit is a case insensitive token and may be followed by optional whitespace
+  const match = range.match(/^bytes=\s*(\d*)-(\d*)$/i)
 
   // Malformed and multi-range headers are ignored, serving the full file
   if (match === null || (match[1] === '' && match[2] === '')) {

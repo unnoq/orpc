@@ -93,7 +93,7 @@ describe('responseCompressionHandlerPlugin', () => {
       expect(response!.headers.get('content-encoding')).toBe('deflate')
     })
 
-    it('ignores q-values when parsing accept-encoding', async () => {
+    it('ignores q-value parameters when matching a coding', async () => {
       const largeText = 'x'.repeat(2000)
       const handler = new RPCHandler(os.handler(() => largeText), {
         plugins: [

@@ -52,20 +52,32 @@ export function matchesHttpPath(url: `/${string}`, path: `/${string}`): boolean 
     || charAfterPrefix === '#'
 }
 
+const ACCEPT_ENCODING_QUALITY_REGEX = /^\s*q=([\d.]+)\s*$/i
+
 /**
- * Parse Accept-Encoding into coding tokens (q-values ignored; order is client preference).
+ * Parse Accept-Encoding into each coding's q-value, where `0` means the coding is explicitly
+ * unacceptable. The `*` wildcard is kept under its own key, so a caller can honour it while
+ * still letting a specific coding take precedence over it.
  *
  * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-accept-encoding
  */
-export function parseAcceptEncodings(header: string | undefined): string[] {
-  if (header === undefined) {
-    return []
+export function parseAcceptEncodingQualities(header: string | undefined): Map<string, number> {
+  const qualities = new Map<string, number>()
+
+  for (const part of header?.split(',') ?? []) {
+    const [rawCoding, ...params] = part.split(';')
+    const coding = rawCoding!.trim().toLowerCase()
+
+    if (coding === '') {
+      continue
+    }
+
+    const quality = params.map(param => ACCEPT_ENCODING_QUALITY_REGEX.exec(param)?.[1]).find(value => value !== undefined)
+
+    qualities.set(coding, quality === undefined ? 1 : Number(quality))
   }
 
-  return header
-    .split(',')
-    .map(part => part.trim().split(';')[0]!.trim().toLowerCase())
-    .filter(Boolean)
+  return qualities
 }
 
 /**
