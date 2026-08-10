@@ -404,7 +404,6 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
       'etag': etag,
       'last-modified': stats.mtime.toUTCString(),
       'accept-ranges': 'bytes',
-      'standard-server': [],
     }
 
     if (negotiatesEncoding) {

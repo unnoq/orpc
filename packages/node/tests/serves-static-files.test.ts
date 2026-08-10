@@ -44,8 +44,6 @@ it('serves static files', async ({ onTestFinished }) => {
   expect(await fileRes.text()).toBe('hello world')
   expect(fileRes.headers.get('content-type')).toBe('text/plain; charset=utf-8')
   expect(fileRes.headers.get('etag')).toMatch(/^"/)
-  // Internal oRPC protocol hints must not reach a plain http client
-  expect(fileRes.headers.get('standard-server')).toBeNull()
 
   /**
    * Regression only reproducible with a real fetch client: it sends

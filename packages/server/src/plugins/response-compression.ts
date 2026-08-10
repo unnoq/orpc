@@ -108,6 +108,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'standard-server': 'octet-stream' satisfies StandardBodyHint,
                 'content-length': [],
                 'content-encoding': encoding,
+                'vary': varyByAcceptEncoding(headers.vary),
               },
             },
           }
@@ -135,6 +136,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-length': [],
                 'content-disposition': contentDisposition,
                 'content-encoding': encoding,
+                'vary': varyByAcceptEncoding(headers.vary),
               },
             },
           }
@@ -185,6 +187,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-type': res.headers.get('content-type')!,
                 'content-length': [],
                 'content-encoding': encoding,
+                'vary': varyByAcceptEncoding(headers.vary),
               },
             },
           }
@@ -205,6 +208,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-type': 'application/x-www-form-urlencoded',
                 'content-length': [],
                 'content-encoding': encoding,
+                'vary': varyByAcceptEncoding(headers.vary),
               },
             },
           }
@@ -225,6 +229,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-type': 'application/json',
                 'content-length': [],
                 'content-encoding': encoding,
+                'vary': varyByAcceptEncoding(headers.vary),
               },
             },
           }
@@ -242,6 +247,25 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
       ],
     }
   }
+}
+
+/**
+ * The encoding is chosen from the request, so a shared cache must key on it or it will hand
+ * a compressed body to a client that cannot decode it.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-vary
+ */
+function varyByAcceptEncoding(vary: string | string[] | undefined): string {
+  const current = flattenStandardHeader(vary)
+
+  if (current === undefined) {
+    return 'accept-encoding'
+  }
+
+  const fields = current.split(',').map(field => field.trim().toLowerCase())
+
+  // `*` already forbids reuse across requests, so narrowing it would be a downgrade
+  return fields.includes('accept-encoding') || fields.includes('*') ? current : `${current}, accept-encoding`
 }
 
 /**

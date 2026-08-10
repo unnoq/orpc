@@ -99,6 +99,25 @@ Responses carry [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Referen
 The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.
 :::
 
+## Compression
+
+Add the [Response Compression Plugin](/docs/plugins/response-compression) to compress files on the fly. It skips anything already encoded, so `precompressed` sidecars are served as they are, and it leaves `206 Partial Content` responses alone so range requests keep working.
+
+```ts
+import { ResponseCompressionHandlerPlugin } from '@orpc/server/plugins'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new StaticFileHandlerPlugin({ rootDir: './public', precompressed: true }),
+    new ResponseCompressionHandlerPlugin(),
+  ],
+})
+```
+
+:::tip
+Precompressing assets at build time costs nothing per request and compresses better than the on the fly pass, so reach for `precompressed` first and let the compression plugin cover whatever has no sidecar.
+:::
+
 :::warning
 `rootDir` should contain only files you intend to make public. Requests cannot escape it through `..` segments or symbolic links, but every file inside it is reachable.
 :::
