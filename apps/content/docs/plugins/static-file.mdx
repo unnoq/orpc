@@ -23,6 +23,8 @@ Dot segments like `..` are resolved in URL space, following the [RFC 3986](https
 `rootDir` should contain only files you intend to make public. Anything reachable inside it is served, including a file a request happens to name.
 :::
 
+Content types are detected from the file extension with [mime](https://www.npmjs.com/package/mime), and text types are served as UTF-8 so the browser never has to guess an encoding. Use `mimeTypes` to override or add to the detection.
+
 ## Setup
 
 The plugin reads files through the Node.js filesystem API but only interacts with the handler through standard oRPC interfaces, so it works with any handler on a Node.js compatible runtime, whether it uses the [Node HTTP Adapter](/docs/adapters/node-http) or the [Fetch API Adapter](/docs/adapters/fetch-api).
@@ -95,9 +97,10 @@ const handler = new RPCHandler(router, {
       allowSymlinks: false,
 
       /**
-       * Extra content types keyed by lowercase file extension without the dot,
-       * merged over the built-in mapping. Unknown extensions are served as
-       * `application/octet-stream`.
+       * Content types keyed by lowercase file extension without the dot, taking precedence
+       * over the type detected from the extension. Values are sent verbatim, so a text type
+       * needs its own charset. Extensions that neither this nor the detection recognises are
+       * served as `application/octet-stream`.
        */
       mimeTypes: {},
     }),

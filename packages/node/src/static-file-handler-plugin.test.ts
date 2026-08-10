@@ -150,6 +150,26 @@ describe('staticFileHandlerPlugin', () => {
     expect(res.headers['content-type']).toBe('application/octet-stream')
   })
 
+  it('detects content types beyond the common web set', async () => {
+    const agent = createStaticAgent()
+
+    // Types a hand-maintained table tends to miss, and the charset rule applied to each
+    for (const [name, contentType] of [
+      ['captions.vtt', 'text/vtt; charset=utf-8'],
+      ['playlist.m3u8', 'application/vnd.apple.mpegurl'],
+      ['calendar.ics', 'text/calendar; charset=utf-8'],
+      ['favicon.ico', 'image/vnd.microsoft.icon'],
+      ['archive.tar', 'application/x-tar'],
+      ['sheet.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+    ] as const) {
+      writeFileSync(path.join(rootDir, name), 'x')
+
+      const res = await agent.get(`/${name}`)
+      expect(res.status, name).toBe(200)
+      expect(res.headers['content-type'], name).toBe(contentType)
+    }
+  })
+
   it('does not resolve content types through the prototype chain', async () => {
     writeFileSync(path.join(rootDir, 'file.constructor'), 'x')
     writeFileSync(path.join(rootDir, 'file.__proto__'), 'x')

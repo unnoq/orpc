@@ -40,7 +40,8 @@
   "dependencies": {
     "@orpc/server": "workspace:*",
     "@orpc/shared": "workspace:*",
-    "@standardserver/core": "^0.7.1"
+    "@standardserver/core": "^0.7.1",
+    "mime": "^4.1.0"
   },
   "devDependencies": {
     "supertest": "^7.2.2"

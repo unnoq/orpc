@@ -8,45 +8,13 @@ import path from 'node:path'
 import { Readable } from 'node:stream'
 import { getOpenTelemetryConfig, isCompressibleContentType, matchesHttpPathPrefix, mergeHttpPath, parseAcceptEncodingQualities, toArray, tryDecodeURIComponent } from '@orpc/shared'
 import { flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
+import mime from 'mime'
 
-const DEFAULT_MIME_TYPES: Record<string, string> = {
-  html: 'text/html; charset=utf-8',
-  htm: 'text/html; charset=utf-8',
-  css: 'text/css; charset=utf-8',
-  js: 'text/javascript; charset=utf-8',
-  mjs: 'text/javascript; charset=utf-8',
-  cjs: 'text/javascript; charset=utf-8',
-  json: 'application/json; charset=utf-8',
-  map: 'application/json; charset=utf-8',
-  webmanifest: 'application/manifest+json',
-  txt: 'text/plain; charset=utf-8',
-  md: 'text/markdown; charset=utf-8',
-  csv: 'text/csv; charset=utf-8',
-  xml: 'application/xml',
-  pdf: 'application/pdf',
-  wasm: 'application/wasm',
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  gif: 'image/gif',
-  svg: 'image/svg+xml',
-  webp: 'image/webp',
-  avif: 'image/avif',
-  ico: 'image/x-icon',
-  bmp: 'image/bmp',
-  woff: 'font/woff',
-  woff2: 'font/woff2',
-  ttf: 'font/ttf',
-  otf: 'font/otf',
-  eot: 'application/vnd.ms-fontobject',
-  mp3: 'audio/mpeg',
-  wav: 'audio/wav',
-  ogg: 'audio/ogg',
-  mp4: 'video/mp4',
-  webm: 'video/webm',
-  zip: 'application/zip',
-  gz: 'application/gzip',
-}
+/**
+ * Content types served as utf-8. `mime` returns bare types, but a text response without an
+ * explicit encoding leaves the browser to sniff one. Mirrors the rule `send` applies.
+ */
+const UTF8_CONTENT_TYPE_REGEX = /^text\/|^application\/(?:javascript|json)$/
 
 const PRECOMPRESSED_ENCODINGS: [encoding: string, extension: string][] = [
   ['br', '.br'],
@@ -116,8 +84,9 @@ export interface StaticFileHandlerPluginOptions {
   allowSymlinks?: boolean
 
   /**
-   * Extra content types keyed by lowercase file extension without the dot,
-   * merged over the built-in mapping. Unknown extensions are served as
+   * Content types keyed by lowercase file extension without the dot, taking precedence over
+   * the type detected from the extension. Values are sent verbatim, so a text type needs its
+   * own charset. Extensions that neither this nor the detection recognises are served as
    * `application/octet-stream`.
    */
   mimeTypes?: Record<string, string>
@@ -177,7 +146,7 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
     this.precompressed = options.precompressed ?? false
     this.allowSymlinks = options.allowSymlinks ?? false
     // A null prototype prevents extensions like "constructor" from resolving through the prototype chain
-    this.mimeTypes = Object.assign(Object.create(null) as Record<string, string>, DEFAULT_MIME_TYPES, options.mimeTypes)
+    this.mimeTypes = Object.assign(Object.create(null) as Record<string, string>, options.mimeTypes)
   }
 
   init(options: StandardHandlerOptions<T>): StandardHandlerOptions<T> {
@@ -239,6 +208,23 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
     const realPath = await realpath(filePath).catch(() => '')
 
     return realPath === rootDirReal || realPath.startsWith(rootDirRealPrefix) ? realPath : undefined
+  }
+
+  private resolveContentType(filePath: string): string {
+    const extension = path.extname(filePath).slice(1).toLowerCase()
+    const configured = this.mimeTypes[extension]
+
+    if (configured !== undefined) {
+      return configured
+    }
+
+    const contentType = mime.getType(extension)
+
+    if (contentType === null) {
+      return 'application/octet-stream'
+    }
+
+    return UTF8_CONTENT_TYPE_REGEX.test(contentType) ? `${contentType}; charset=utf-8` : contentType
   }
 
   private resolveBasePath(prefix: `/${string}` | undefined): `/${string}` {
@@ -370,7 +356,7 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
 
     let [filePath, stats] = found
 
-    const contentType = this.mimeTypes[path.extname(filePath).slice(1).toLowerCase()] ?? 'application/octet-stream'
+    const contentType = this.resolveContentType(filePath)
     const negotiatesEncoding = this.precompressed && isCompressibleContentType(contentType)
 
     let contentEncoding: string | undefined
