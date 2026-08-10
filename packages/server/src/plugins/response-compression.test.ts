@@ -238,6 +238,59 @@ describe('responseCompressionHandlerPlugin', () => {
     })
   })
 
+  describe('partial responses', () => {
+    it.each([
+      ['a 206 status', 206, {}],
+      ['a content-range header', 200, { 'content-range': 'bytes 0-1999/4000' }],
+    ])('does not compress a response with %s', async (_label, status, extraHeaders) => {
+      const largeText = 'x'.repeat(2000)
+      const handler = new RPCHandler(os.handler(() => largeText), {
+        plugins: [
+          {
+            name: 'set-partial-response',
+            init(options) {
+              return {
+                ...options,
+                routingInterceptors: [
+                  async ({ next, ...interceptorOptions }) => {
+                    const result = await next(interceptorOptions)
+                    if (!result.matched) {
+                      return result
+                    }
+                    return {
+                      ...result,
+                      response: {
+                        ...result.response,
+                        status,
+                        headers: { ...result.response.headers, ...extraHeaders },
+                      },
+                    }
+                  },
+                  ...options.routingInterceptors ?? [],
+                ],
+              }
+            },
+          },
+          new ResponseCompressionHandlerPlugin({ threshold: 100 }),
+        ],
+      })
+
+      const { matched, response } = await handler.handle(new Request('http://localhost', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'accept-encoding': 'gzip',
+        },
+        body: JSON.stringify({ json: null }),
+      }))
+
+      expect(matched).toBe(true)
+      // Compressing would leave content-range describing offsets the client never receives
+      expect(response!.headers.has('content-encoding')).toBe(false)
+      await expect(response!.json()).resolves.toEqual({ json: largeText })
+    })
+  })
+
   describe('json body', () => {
     it.each(
       ['gzip', 'deflate', 'deflate-raw'] as const,

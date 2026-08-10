@@ -66,6 +66,14 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
         return result
       }
 
+      /**
+       * A partial response body is a byte range of the identity representation, so compressing it
+       * would leave `Content-Range` describing offsets the client never receives.
+       */
+      if (response.status === 206 || response.headers['content-range'] !== undefined) {
+        return result
+      }
+
       // Cache-Control: no-transform forbids intermediaries (and this plugin) from transforming the body
       if (isNoTransformCacheControl(flattenStandardHeader(response.headers['cache-control']))) {
         return result

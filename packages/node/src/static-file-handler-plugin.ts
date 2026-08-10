@@ -283,8 +283,16 @@ export class StaticFileHandlerPlugin<T extends Context> implements StandardHandl
         continue
       }
 
-      // Dot segments are resolved in url space and clamped at the root, so they can never escape it
+      /**
+       * Dot segments are resolved in url space. One that would climb above the served path is
+       * refused rather than clamped, so the path this plugin resolves always matches the one a
+       * proxy in front of it sees after its own normalization.
+       */
       if (segment === '..') {
+        if (segments.length === 0) {
+          return undefined
+        }
+
         segments.pop()
         continue
       }

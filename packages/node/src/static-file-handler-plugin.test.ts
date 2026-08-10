@@ -540,7 +540,7 @@ describe('staticFileHandlerPlugin', () => {
       expect(clamped.text).toBe('hello world')
     })
 
-    it('clamps dot segments sent verbatim by a client that does not normalize them', async ({ onTestFinished }) => {
+    it('resolves dot segments sent verbatim by a client that does not normalize them', async ({ onTestFinished }) => {
       const client = await createRawClient()
       onTestFinished(() => client.close())
 
@@ -548,9 +548,11 @@ describe('staticFileHandlerPlugin', () => {
       expect(inside.status).toBe(200)
       expect(inside.body).toBe('hello world')
 
-      const clamped = await client.get('/../../../hello.txt')
-      expect(clamped.status).toBe(200)
-      expect(clamped.body).toBe('hello world')
+      // Climbing above the served path is refused rather than clamped, so a proxy in front of
+      // this plugin can never disagree with it about which path was requested
+      const above = await client.get('/../../../hello.txt')
+      expect(above.status).toBe(404)
+      expect(above.body).toBe('not matched')
 
       // secret.txt really exists one directory above the root, so this asserts a blocked escape
       const traversed = await client.get('/nested/../../secret.txt')
@@ -558,13 +560,18 @@ describe('staticFileHandlerPlugin', () => {
       expect(traversed.body).toBe('not matched')
     })
 
-    it('clamps dot segments at the mounted path', async ({ onTestFinished }) => {
+    it('refuses dot segments that climb above the mounted path', async ({ onTestFinished }) => {
       const client = await createRawClient({ path: '/assets' })
       onTestFinished(() => client.close())
 
-      const clamped = await client.get('/assets/../../hello.txt')
-      expect(clamped.status).toBe(200)
-      expect(clamped.body).toBe('hello world')
+      const above = await client.get('/assets/../../hello.txt')
+      expect(above.status).toBe(404)
+      expect(above.body).toBe('not matched')
+
+      // Dot segments that stay within the mount are still resolved
+      const inside = await client.get('/assets/nested/../hello.txt')
+      expect(inside.status).toBe(200)
+      expect(inside.body).toBe('hello world')
     })
 
     it('never redirects to a protocol relative location', async ({ onTestFinished }) => {
