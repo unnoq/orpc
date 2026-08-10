@@ -96,7 +96,7 @@ const handler = new RPCHandler(router, {
 Responses carry [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag) and [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Last-Modified) headers, so unchanged files revalidate as `304 Not Modified`, and [range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Range_requests) are answered with `206 Partial Content` for media seeking and resumable downloads.
 
 :::info
-The plugin reads files with the Node.js filesystem API but talks to the handler through standard oRPC interfaces, so it works with [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom handler, on either the [Node HTTP Adapter](/docs/adapters/node-http) or the [Fetch API Adapter](/docs/adapters/fetch-api). When the handler runs under a prefix, files are only reachable inside that prefix.
+The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.
 :::
 
 :::warning
