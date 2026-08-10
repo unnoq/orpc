@@ -18,11 +18,6 @@ const handler = new StandardHandler(new RPCHandlerCodec({}, {}), {
   plugins: [new StaticFileHandlerPlugin({ rootDir })],
 })
 
-/** Skips the symlink containment check, which costs one `realpath` per lookup. */
-const trustedHandler = new StandardHandler(new RPCHandlerCodec({}, {}), {
-  plugins: [new StaticFileHandlerPlugin({ rootDir, allowSymlinks: true })],
-})
-
 function createRequest(url: `/${string}`, headers: Record<string, string> = {}): StandardLazyRequest {
   return {
     url,
@@ -37,7 +32,7 @@ await drainBody(response!.body)
 const etag = response!.headers.etag as string
 
 describe('static file handler plugin', () => {
-  bench('serve 10kb file', async () => {
+  bench('serve file', async () => {
     const { response } = await handler.handle(createRequest('/file.txt'), { context: {} })
     await drainBody(response!.body)
   })
@@ -58,10 +53,5 @@ describe('static file handler plugin', () => {
 
   bench('not found fall through', async () => {
     await handler.handle(createRequest('/missing/file.txt'), { context: {} })
-  })
-
-  bench('serve 10kb file (allowSymlinks)', async () => {
-    const { response } = await trustedHandler.handle(createRequest('/file.txt'), { context: {} })
-    await drainBody(response!.body)
   })
 })
