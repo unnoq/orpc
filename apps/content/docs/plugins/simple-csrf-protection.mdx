@@ -16,14 +16,14 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `cross-site` | another site | rejected unless listed in `origin` |
 | `none` | no page, such as a link opened from an email | rejected unless `origin` is `'*'` |
 
-Listing an origin only admits requests that send an `Origin` header. Links, navigations, and `<img>` loads send none, so `origin: '*'` is the only setting that lets those through.
+A listed origin only matches requests that send an `Origin` header, which links, navigations, and `<img>` loads do not, so only `'*'` admits those.
 
 Requests without Fetch Metadata pass through, such as those from `curl`, mobile apps, and other non-browser clients.
 
 ## Limitations
 
-- Fetch Metadata is [Baseline widely available](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility), supported by every major browser since Safari 16.4 in March 2023. Only browsers older than that, and proxies that strip the headers, pass through unchecked.
-- Browsers [send Fetch Metadata only to trustworthy URLs](https://w3c.github.io/webappsec-fetch-metadata/): HTTPS and `localhost`. Over plain HTTP the headers are absent while cookies are not, so every request passes. Since `localhost` qualifies, this looks correct in development and checks nothing on an HTTP deployment.
+- Fetch Metadata is [Baseline widely available](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility), supported by every major browser since Safari 16.4 in March 2023. Older browsers and header-stripping proxies pass through unchecked.
+- Browsers [send Fetch Metadata only to trustworthy URLs](https://w3c.github.io/webappsec-fetch-metadata/): HTTPS and `localhost`. Over plain HTTP the headers are absent while cookies are not, so every request passes, and `localhost` qualifying hides this in development.
 - Keep authentication cookies on `SameSite=Lax` at minimum, and prefer `SameSite=Strict` or a [synchronizer token](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern) for high-value requests.
 
 ## Setup
@@ -65,19 +65,17 @@ const handler = new RPCHandler(router, {
 ```ts
 const plugin = new SimpleCsrfProtectionHandlerPlugin({
   origin: (origin, options) => {
-    // undefined when the request sends no Origin header, such as a link or an <img> tag
+    // undefined when the request sends no Origin header
     return origin?.endsWith('.example.com') ? origin : undefined
   },
 })
 ```
 
 :::danger[Trusts every site]
-`origin: '*'` disables nearly all of this plugin. Every site becomes trusted, including links, navigations, and `<img>` loads that send no `Origin` header, so any page can invoke your procedures with the visitor's cookies. Only `allowModes` still applies.
-
-The origins you trust are a short, known list. Write them out instead.
+`origin: '*'` disables nearly all of this plugin: every site is trusted, including links and `<img>` loads that send no `Origin` header. Only `allowModes` still applies. List the origins you trust instead.
 :::
 
-Set `allowSameSite: true` to trust every origin on your site at once. Only do that when you control every subdomain, since `SameSite` cookies do not distinguish them:
+Set `allowSameSite: true` to trust your whole site at once, and only when you control every subdomain, since `SameSite` cookies do not distinguish them:
 
 ```ts
 const plugin = new SimpleCsrfProtectionHandlerPlugin({
@@ -87,7 +85,7 @@ const plugin = new SimpleCsrfProtectionHandlerPlugin({
 
 ## Restricting Fetch Modes
 
-A trusted site can reach your API by any means: `fetch`, form submissions, links, and `<img>` tags all pass. If your app renders user-supplied URLs, restrict it to scripted requests:
+A trusted site reaches your API by any means: `fetch`, forms, links, and `<img>` all pass. Restrict it to scripted requests if your app renders user-supplied URLs:
 
 ```ts
 const plugin = new SimpleCsrfProtectionHandlerPlugin({
@@ -95,7 +93,7 @@ const plugin = new SimpleCsrfProtectionHandlerPlugin({
 })
 ```
 
-`allowModes` matches [`Sec-Fetch-Mode`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Mode), which is `navigate` for form submissions and links, and `no-cors` for `<img>` and `<script>`. Leave it unset if you rely on HTML forms, including through the [Method Override Plugin](/docs/plugins/method-override). Requests without the header are never rejected.
+`allowModes` matches [`Sec-Fetch-Mode`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Mode): `navigate` for forms and links, `no-cors` for `<img>` and `<script>`. Leave it unset if you rely on HTML forms, including through the [Method Override Plugin](/docs/plugins/method-override). Requests without the header are never rejected.
 
 ## Learn More
 
