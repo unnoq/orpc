@@ -77,7 +77,7 @@ describe('corsHandlerPlugin', () => {
   })
 
   it('sets allowed origin only when custom origin function approves', async () => {
-    const customOrigin = (origin: string) => origin === 'https://allowed.com' ? origin : null
+    const customOrigin = (origin: string | undefined) => origin === 'https://allowed.com' ? origin : null
     const customRouter = {
       custom: os.handler(() => 'ok'),
     }
@@ -111,7 +111,7 @@ describe('corsHandlerPlugin', () => {
   })
 
   it('handles timingOrigin option correctly', async () => {
-    const customTimingOrigin = (origin: string) => origin === 'https://timing.com' ? origin : null
+    const customTimingOrigin = (origin: string | undefined) => origin === 'https://timing.com' ? origin : null
     const customRouter = {
       timing: os.handler(() => 'ok'),
     }
@@ -230,9 +230,8 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
 
-    // default origin function `origin => origin` returns '' for empty origin,
-    // which is not included in the response as a valid origin
-    expect(response!.headers.get('access-control-allow-origin')).toBe('')
+    // the default origin function receives undefined, so there is no origin to reflect
+    expect(response!.headers.get('access-control-allow-origin')).toBeNull()
     expect(response!.headers.get('vary')).toBe('Origin')
   })
 
