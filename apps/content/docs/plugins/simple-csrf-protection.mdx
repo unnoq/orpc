@@ -14,7 +14,9 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `same-origin` | your own pages | allowed |
 | `same-site` | another origin on your site | rejected unless listed in `origin` or `allowSameSite` |
 | `cross-site` | another site | rejected unless listed in `origin` |
-| `none` | no page, such as a link opened from an email | rejected |
+| `none` | no page, such as a link opened from an email | rejected unless `origin` is `'*'` |
+
+Listing an origin only admits requests that send an `Origin` header. Links, navigations, and `<img>` loads send none, so `origin: '*'` is the only setting that lets those through.
 
 Requests without Fetch Metadata pass through, such as those from `curl`, mobile apps, and other non-browser clients.
 
@@ -70,7 +72,7 @@ const plugin = new SimpleCsrfProtectionHandlerPlugin({
 ```
 
 :::warning
-`origin: '*'` turns off the origin check, which leaves any site able to invoke your procedures with the visitor's cookies.
+`origin: '*'` turns off the origin check entirely, including for links and `<img>` loads that send no `Origin` header. Any site can then invoke your procedures with the visitor's cookies.
 :::
 
 Set `allowSameSite: true` to trust every origin on your site at once. Only do that when you control every subdomain, since `SameSite` cookies do not distinguish them:
