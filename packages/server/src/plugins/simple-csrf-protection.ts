@@ -7,9 +7,9 @@ import { flattenStandardHeader } from '@standardserver/core'
 export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
   /**
    * Cross-site and same-site origins trusted to invoke procedures, as a string, an array, or a
-   * function returning them. `'*'` trusts every site, which disables nearly all of this plugin.
-   * Consulted only for requests your own origin did not initiate, so it usually matches the
-   * allowlist you pass to the CORS Handler Plugin.
+   * function returning them. Each entry must be a specific origin. Consulted only for requests
+   * your own origin did not initiate, so it usually matches the allowlist you pass to the CORS
+   * Handler Plugin.
    *
    * @default undefined (no other origin is trusted)
    */
@@ -102,10 +102,10 @@ export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements Sta
 
     // Your own origin did not initiate this. A cross-site `fetch` reaches the server even when
     // CORS hides the response, so it runs unless the origin is explicitly trusted. Links,
-    // navigations, and `<img>` send no `Origin` at all, so only `'*'` can admit them.
+    // navigations, and `<img>` send no `Origin` at all, so no allowlist can match them.
     const origin = flattenStandardHeader(headers.origin)
     const allowedOrigins = toArray(value(this.origin, origin, interceptorOptions))
 
-    return allowedOrigins.includes('*') || (origin !== undefined && allowedOrigins.includes(origin))
+    return origin !== undefined && allowedOrigins.includes(origin)
   }
 }

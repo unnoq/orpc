@@ -14,9 +14,9 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `same-origin` | your own pages | allowed |
 | `same-site` | another origin on your site | rejected unless listed in `origin` or `allowSameSite` |
 | `cross-site` | another site | rejected unless listed in `origin` |
-| `none` | no page, such as a link opened from an email | rejected unless `origin` is `'*'` |
+| `none` | no page, such as a link opened from an email | rejected |
 
-A listed origin only matches requests that send an `Origin` header, which links, navigations, and `<img>` loads do not, so only `'*'` admits those.
+A listed origin only matches requests that send an `Origin` header, which links, navigations, and `<img>` loads do not.
 
 Requests without Fetch Metadata pass through, such as those from `curl`, mobile apps, and other non-browser clients.
 
@@ -60,7 +60,7 @@ const handler = new RPCHandler(router, {
 })
 ```
 
-`origin` also accepts a single string, `'*'` to trust every origin, or a function:
+`origin` also accepts a single string, or a function. Every entry must be a specific origin, since there is no wildcard:
 
 ```ts
 const plugin = new SimpleCsrfProtectionHandlerPlugin({
@@ -70,10 +70,6 @@ const plugin = new SimpleCsrfProtectionHandlerPlugin({
   },
 })
 ```
-
-:::danger[Trusts every site]
-`origin: '*'` disables nearly all of this plugin: every site is trusted, including links and `<img>` loads that send no `Origin` header. Only `allowModes` still applies. List the origins you trust instead.
-:::
 
 Set `allowSameSite: true` to trust your whole site at once, and only when you control every subdomain, since `SameSite` cookies do not distinguish them:
 

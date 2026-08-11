@@ -237,17 +237,17 @@ describe('simpleCsrfProtectionHandlerPlugin', () => {
       })
     })
 
-    it('allows any origin when the allowlist contains *', async () => {
-      await expectAllowed(crossSiteHeaders, { origin: '*' })
+    it('treats * as a literal origin rather than a wildcard', async () => {
+      await expectBlocked(crossSiteHeaders, { origin: '*' })
     })
 
     it.each([
       ['a cross-site <img> tag', { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'no-cors' }],
       ['a link opened from outside the browser', { 'sec-fetch-site': 'none', 'sec-fetch-mode': 'navigate' }],
-    ])('is the only way to admit %s, which sends no origin header', async (_, headers) => {
+    ])('can never admit %s, which sends no origin header', async (_, headers) => {
       await expectBlocked(headers)
       await expectBlocked(headers, { origin: ['https://app.example.com'] })
-      await expectAllowed(headers, { origin: '*' })
+      await expectBlocked(headers, { origin: '*' })
     })
 
     it('blocks an origin that is not listed', async () => {
