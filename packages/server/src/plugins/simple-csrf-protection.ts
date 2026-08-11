@@ -59,10 +59,7 @@ export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
 export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
   name = '~simple-csrf-protection'
 
-  /**
-   * Judge the request the browser actually sent, before batch interceptors split it into
-   * sub-requests whose headers the client chooses.
-   */
+  /** Judge the real request, before batch splits it into client-authored sub-requests. */
   after = ['~batch']
 
   private readonly origin: SimpleCsrfProtectionHandlerPluginOptions<T>['origin']
@@ -101,8 +98,7 @@ export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements Sta
     if (this.allowModes !== undefined) {
       const mode = flattenStandardHeader(headers['sec-fetch-mode'])?.toLowerCase()
 
-      // Only a mode the browser actually reported can be rejected: a missing header carries
-      // no signal, and the site check below still applies to those requests.
+      // A missing header carries no signal; the site check below still covers those requests.
       if (mode !== undefined && !this.allowModes.has(mode)) {
         return false
       }
@@ -110,16 +106,15 @@ export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements Sta
 
     const site = flattenStandardHeader(headers['sec-fetch-site'])?.toLowerCase()
 
-    // No `Sec-Fetch-Site` means the client is not a browser (curl, mobile apps,
-    // server-to-server) or is one too old to send Fetch Metadata, so there is nothing to judge.
+    // Absent for non-browser clients, browsers too old to send Fetch Metadata, and any browser
+    // over plain HTTP, where the headers are never appended. Nothing to judge in those cases.
     if (site === undefined || site === 'same-origin' || (site === 'same-site' && this.allowSameSite)) {
       return true
     }
 
-    // Whatever is left was initiated by an origin other than your own: a sibling subdomain, an
-    // unrelated site, or no page at all (`none`, such as a link opened from an email). A
-    // cross-site `fetch` still reaches the server even when CORS hides the response from the
-    // caller, so the procedure runs unless the origin is explicitly trusted.
+    // Your own origin did not initiate this. A cross-site `fetch` reaches the server even when
+    // CORS hides the response, so it runs unless the origin is explicitly trusted. Links,
+    // navigations, and `<img>` send no `Origin` at all, so no allowlist can match them.
     const origin = flattenStandardHeader(headers.origin) ?? ''
     const allowedOrigins = toArray(value(this.origin, origin, interceptorOptions))
 
