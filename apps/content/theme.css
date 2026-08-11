@@ -15,10 +15,6 @@
   --blume-border: #e7e7eb;
   --blume-code-background: #f6f8fa;
 
-  /* Logo dough (the currentColor path in logo.svg): softened gray in light
-     mode — near-black reads harsh next to the pink frosting. */
-  --orpc-logo-dough: #585455;
-
   /* Prose column: 700px like the reference article */
   --blume-content-width: 43.75rem;
 
@@ -40,9 +36,6 @@
   --blume-muted-foreground: #a9afbc;
   --blume-border: #363c46;
   --blume-code-background: #21252b;
-
-  /* Dark mode keeps the theme foreground for the logo dough. */
-  --orpc-logo-dough: currentColor;
 }
 
 /* ---------------------------------------------------------------- */
