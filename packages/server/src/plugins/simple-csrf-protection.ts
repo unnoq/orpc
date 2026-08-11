@@ -7,9 +7,9 @@ import { flattenStandardHeader } from '@standardserver/core'
 export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
   /**
    * Cross-site and same-site origins trusted to invoke procedures, as a string, an array, or a
-   * function returning them. `'*'` trusts every origin. Consulted only for requests your own
-   * origin did not initiate, so it usually matches the allowlist you pass to the CORS Handler
-   * Plugin.
+   * function returning them. `'*'` trusts every site, which disables nearly all of this plugin.
+   * Consulted only for requests your own origin did not initiate, so it usually matches the
+   * allowlist you pass to the CORS Handler Plugin.
    *
    * @default undefined (no other origin is trusted)
    */

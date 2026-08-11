@@ -71,8 +71,10 @@ const plugin = new SimpleCsrfProtectionHandlerPlugin({
 })
 ```
 
-:::warning
-`origin: '*'` turns off the origin check entirely, including for links and `<img>` loads that send no `Origin` header. Any site can then invoke your procedures with the visitor's cookies.
+:::danger[Trusts every site]
+`origin: '*'` disables nearly all of this plugin. Every site becomes trusted, including links, navigations, and `<img>` loads that send no `Origin` header, so any page can invoke your procedures with the visitor's cookies. Only `allowModes` still applies.
+
+The origins you trust are a short, known list. Write them out instead.
 :::
 
 Set `allowSameSite: true` to trust every origin on your site at once. Only do that when you control every subdomain, since `SameSite` cookies do not distinguish them:
