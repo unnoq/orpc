@@ -1,4 +1,4 @@
-import type { Promisable, Value } from '@orpc/shared'
+import type { Value } from '@orpc/shared'
 import type { StandardHeaders } from '@standardserver/core'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor, StandardHandlerRoutingInterceptorOptions } from '../adapters/standard'
 import type { Context } from '../context'
@@ -12,7 +12,7 @@ export interface CORSHandlerPluginOptions<T extends Context> {
    *
    * @default (origin) => origin
    */
-  origin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
+  origin?: Value<string | readonly string[] | null | undefined, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
   /**
    * Configures the `Timing-Allow-Origin` header.
@@ -20,7 +20,7 @@ export interface CORSHandlerPluginOptions<T extends Context> {
    *
    * @default undefined
    */
-  timingOrigin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
+  timingOrigin?: Value<string | readonly string[] | null | undefined, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
   /**
    * Configures the `Access-Control-Allow-Methods` header for preflight requests.
@@ -101,7 +101,7 @@ export class CORSHandlerPlugin<T extends Context> implements StandardHandlerPlug
 
       const origin = flattenStandardHeader(interceptorOptions.request.headers.origin) ?? ''
 
-      const allowedOrigins = toArray(await value(this.options.origin, origin, interceptorOptions))
+      const allowedOrigins = toArray(value(this.options.origin, origin, interceptorOptions))
 
       if (allowedOrigins.includes('*')) {
         resHeaders['access-control-allow-origin'] = '*'
@@ -117,7 +117,7 @@ export class CORSHandlerPlugin<T extends Context> implements StandardHandlerPlug
         }
       }
 
-      const allowedTimingOrigins = toArray(await value(this.options.timingOrigin, origin, interceptorOptions))
+      const allowedTimingOrigins = toArray(value(this.options.timingOrigin, origin, interceptorOptions))
 
       if (allowedTimingOrigins.includes('*')) {
         resHeaders['timing-allow-origin'] = '*'
