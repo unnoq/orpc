@@ -32,8 +32,10 @@ export default defineConfig({
     dir: 'apps/content',
   },
   theme: {
-    // Monochrome accent to match the oRPC brand: black in light, white in dark.
-    accent: { light: 'oklch(0.145 0 0)', dark: 'oklch(0.985 0 0)' },
+    // Brand pink from the logo mark (#ff6ca5 = oklch(0.727 0.187 359)).
+    // Light mode darkens it so white accent text keeps AA contrast; dark
+    // mode uses the true brand pink (its text flips dark in theme.css).
+    accent: { light: 'oklch(0.58 0.19 359)', dark: '#ff6ca5' },
     // Zed One Dark editor background; the rest of the palette lives in theme.css.
     background: { dark: '#282c33' },
     fonts: {
