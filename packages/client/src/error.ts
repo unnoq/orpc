@@ -1,4 +1,5 @@
 import type { MaybeOptionalOptions, Registry } from '@orpc/shared'
+import type { StandardResponse } from '@standardserver/core'
 import { getConstructors, resolveMaybeOptionalOptions } from '@orpc/shared'
 
 /**
@@ -161,3 +162,26 @@ export interface ORPCErrorJSON<TCode extends string, TData> extends Pick<ORPCErr
 
 export type AnyORPCError = ORPCError<any, any>
 export type AnyORPCErrorJSON = ORPCErrorJSON<any, any>
+
+export interface MalformedResponseErrorOptions extends ErrorOptions {
+  message?: string
+  response: StandardResponse
+}
+
+/**
+ * Error indicating a response does not follow the expected oRPC format, carrying
+ * the resolved response. Found as the `cause` of a `MALFORMED_ORPC_RESPONSE`
+ * `ORPCError`.
+ *
+ * @see {@link https://orpc.dev/docs/rpc/link#malformed-responses | RPC Link - Malformed Responses}
+ * @see {@link https://orpc.dev/docs/openapi/link#malformed-responses | OpenAPI Link - Malformed Responses}
+ */
+export class MalformedResponseError extends Error {
+  response: StandardResponse
+
+  constructor(options: MalformedResponseErrorOptions) {
+    super(options.message, options)
+
+    this.response = options.response
+  }
+}

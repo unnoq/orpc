@@ -1,7 +1,8 @@
 import type { Writable } from '@orpc/shared'
-import type { AnyORPCError, ORPCErrorCode, ORPCErrorJSON } from './error'
+import type { StandardResponse } from '@standardserver/core'
+import type { AnyORPCError, MalformedResponseErrorOptions, ORPCErrorCode, ORPCErrorJSON } from './error'
 import { isPlainObject } from '@orpc/shared'
-import { ORPCError } from './error'
+import { COMMON_ERROR_STATUS_MAP, MalformedResponseError, ORPCError } from './error'
 
 /**
  * Checks if an error is an `ORPCError` whose type is inferable at the TypeScript level,
@@ -52,6 +53,40 @@ export function createORPCErrorFromJson<TCode extends ORPCErrorCode, TData>(
   ;(error.inferable as Writable<typeof error.inferable>) = json.inferable
 
   return error
+}
+
+/**
+ * Creates the `MALFORMED_ORPC_RESPONSE` `ORPCError` used when a response
+ * does not follow the expected oRPC format. Unless overridden via `options.message`,
+ * the message is inferred from the response body or status. The `cause` is a
+ * `MalformedResponseError` carrying the resolved response.
+ *
+ * @see {@link https://orpc.dev/docs/rpc/link#malformed-responses | RPC Link - Malformed Responses}
+ * @see {@link https://orpc.dev/docs/openapi/link#malformed-responses | OpenAPI Link - Malformed Responses}
+ */
+export function createORPCErrorFromMalformedResponse(options: MalformedResponseErrorOptions): ORPCError<'MALFORMED_ORPC_RESPONSE', StandardResponse> {
+  const error = new ORPCError('MALFORMED_ORPC_RESPONSE', {
+    message: options.message ?? inferMalformedResponseMessage(options.response),
+    data: options.response,
+  })
+
+  error.cause = new MalformedResponseError({ ...options, message: error.message })
+
+  return error
+}
+
+function inferMalformedResponseMessage(response: StandardResponse): string | undefined {
+  if (typeof response.body === 'string' && response.body !== '') {
+    return response.body
+  }
+
+  if (isPlainObject(response.body) && typeof response.body.message === 'string' && response.body.message !== '') {
+    return response.body.message
+  }
+
+  const commonCode = Object.entries(COMMON_ERROR_STATUS_MAP).find(([, status]) => status === response.status)?.[0]
+
+  return commonCode?.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
 }
 
 /**

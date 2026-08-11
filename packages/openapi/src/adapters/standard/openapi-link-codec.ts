@@ -2,9 +2,9 @@ import type { AnyORPCError, ClientContext, ClientOptions } from '@orpc/client'
 import type { StandardLinkCodec, StandardLinkCodecDecodedResponse } from '@orpc/client/standard'
 import type { AnyProcedureContract, RouterContract } from '@orpc/contract'
 import type { Promisable, Value } from '@orpc/shared'
-import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardResponse, StandardUrl } from '@standardserver/core'
+import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardUrl } from '@standardserver/core'
 import type { OpenAPIMeta } from '../../meta'
-import { createORPCErrorFromJson, isORPCErrorJson, ORPCError } from '@orpc/client'
+import { createORPCErrorFromJson, createORPCErrorFromMalformedResponse, isORPCErrorJson } from '@orpc/client'
 import { getRouterContract, ProcedureContract } from '@orpc/contract'
 import { unlazy } from '@orpc/server'
 import { isTypescriptObject, mergeHttpPath, pathToHttpPath, stringifyJSON, value } from '@orpc/shared'
@@ -374,24 +374,16 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
     const procedure = await this.resolveProcedure(path)
     const meta = getOpenAPIMeta(procedure)
 
+    const body = await response.resolveBody(meta?.responseBodyHint)
+
     const deserialized = await (async () => {
-      let isBodyOk = false
-
       try {
-        const body = await response.resolveBody(meta?.responseBodyHint)
-
-        isBodyOk = true
-
         return this.serializer.deserialize(body)
       }
       catch (error) {
-        if (!isBodyOk) {
-          throw new Error('Cannot parse response body, please check the response body and content-type.', {
-            cause: error,
-          })
-        }
-
-        throw new Error('Invalid OpenAPI response format.', {
+        throw createORPCErrorFromMalformedResponse({
+          message: 'Invalid OpenAPI response format.',
+          response: { status: response.status, headers: response.headers, body },
           cause: error,
         })
       }
@@ -410,9 +402,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
 
       return {
         kind: 'error',
-        error: new ORPCError<'MALFORMED_ORPC_ERROR_RESPONSE', StandardResponse>('MALFORMED_ORPC_ERROR_RESPONSE', {
-          data: { headers: response.headers, status: response.status, body: deserialized },
-        }),
+        error: createORPCErrorFromMalformedResponse({ response: { headers: response.headers, status: response.status, body } }),
       }
     }
 
