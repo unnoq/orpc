@@ -16,7 +16,9 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `cross-site` | another site | rejected unless listed in `origin` |
 | `none` | no page, such as a link opened from an email | rejected |
 
-A listed origin only matches requests that send an `Origin` header, which links, navigations, and `<img>` loads do not.
+:::warning[Navigations are always rejected]
+Links, navigations, `<img>` loads, and anything opened from outside the browser send no `Origin` header, so no allowlist entry can admit them. If users must reach a procedure by following a link, protect that route with a token-based defense such as a [synchronizer token](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern) instead.
+:::
 
 Requests without Fetch Metadata pass through, such as those from `curl`, mobile apps, and other non-browser clients.
 
@@ -65,8 +67,7 @@ const handler = new RPCHandler(router, {
 ```ts
 const plugin = new SimpleCsrfProtectionHandlerPlugin({
   origin: (origin, options) => {
-    // undefined when the request sends no Origin header
-    return origin?.endsWith('.example.com') ? origin : undefined
+    return origin.endsWith('.example.com') ? origin : undefined
   },
 })
 ```

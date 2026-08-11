@@ -8,12 +8,12 @@ export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
   /**
    * Cross-site and same-site origins trusted to invoke procedures, as a string, an array, or a
    * function returning them. Each entry must be a specific origin. Consulted only for requests
-   * your own origin did not initiate, so it usually matches the allowlist you pass to the CORS
-   * Handler Plugin.
+   * your own origin did not initiate and that carry an `Origin` header, so it usually matches
+   * the allowlist you pass to the CORS Handler Plugin.
    *
    * @default undefined (no other origin is trusted)
    */
-  origin?: Value<string | readonly string[] | null | undefined, [origin: string | undefined, options: StandardHandlerRoutingInterceptorOptions<T>]>
+  origin?: Value<string | readonly string[] | null | undefined, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
   /**
    * Trust every origin on the same site, such as a sibling subdomain. Off by default, since a
@@ -104,8 +104,11 @@ export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements Sta
     // CORS hides the response, so it runs unless the origin is explicitly trusted. Links,
     // navigations, and `<img>` send no `Origin` at all, so no allowlist can match them.
     const origin = flattenStandardHeader(headers.origin)
-    const allowedOrigins = toArray(value(this.origin, origin, interceptorOptions))
 
-    return origin !== undefined && allowedOrigins.includes(origin)
+    if (origin === undefined) {
+      return false
+    }
+
+    return toArray(value(this.origin, origin, interceptorOptions)).includes(origin)
   }
 }
