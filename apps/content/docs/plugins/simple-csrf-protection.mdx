@@ -16,8 +16,8 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `cross-site` | another site | rejected unless listed in `origin` |
 | `none` | no page, such as a link opened from an email | rejected |
 
-:::warning[Navigations are always rejected]
-Links, navigations, `<img>` loads, and anything opened from outside the browser send no `Origin` header, so no allowlist entry can admit them.
+:::warning[Requests without an `Origin` header]
+Link clicks, address-bar navigations, GET form submissions, and passive loads such as `<img>` send no `Origin`, so no allowlist entry can admit them. A POST form submission does send one and can be allowlisted.
 :::
 
 Requests without Fetch Metadata pass through, such as those from `curl`, mobile apps, and other non-browser clients.
