@@ -1,12 +1,11 @@
 import type { Promisable, Value } from '@orpc/shared'
-import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardResponse, StandardUrl } from '@standardserver/core'
+import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardUrl } from '@standardserver/core'
 import type { ClientContext, ClientOptions } from '../../types'
 import type { StandardLinkCodec, StandardLinkCodecDecodedResponse } from '../standard'
 import { isAsyncIteratorObject, pathToHttpPath, stringifyJSON, value } from '@orpc/shared'
 import { mergeStandardHeaders, parseStandardUrl } from '@standardserver/core'
 import { toStandardHeaders } from '@standardserver/fetch'
-import { ORPCError } from '../../error'
-import { createORPCErrorFromJson, isORPCErrorJson } from '../../error-utils'
+import { createORPCErrorFromJson, createORPCErrorFromMalformedResponse, isORPCErrorJson } from '../../error-utils'
 import { RPCSerializer } from '../../rpc-serializer'
 
 export interface RPCLinkCodecOptions<T extends ClientContext> {
@@ -132,7 +131,9 @@ export class RPCLinkCodec<T extends ClientContext> implements StandardLinkCodec<
         return this.serializer.deserialize(body)
       }
       catch (cause) {
-        throw new Error('Invalid RPC response format.', {
+        throw createORPCErrorFromMalformedResponse({
+          message: 'Invalid RPC response format.',
+          response: { status: response.status, headers: response.headers, body },
           cause,
         })
       }
@@ -145,9 +146,7 @@ export class RPCLinkCodec<T extends ClientContext> implements StandardLinkCodec<
 
       return {
         kind: 'error',
-        error: new ORPCError<'MALFORMED_ORPC_ERROR_RESPONSE', StandardResponse>('MALFORMED_ORPC_ERROR_RESPONSE', {
-          data: { headers: response.headers, status: response.status, body: deserialized },
-        }),
+        error: createORPCErrorFromMalformedResponse({ response: { headers: response.headers, status: response.status, body } }),
       }
     }
 

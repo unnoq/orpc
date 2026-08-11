@@ -70,6 +70,15 @@ export type {
 
 export type {
   EventMeta,
+  StandardBody,
+  StandardBodyHint,
+  StandardHeaders,
+  StandardLazyRequest,
+  StandardLazyResponse,
+  StandardMethod,
+  StandardRequest,
+  StandardResponse,
+  StandardUrl,
 } from '@standardserver/core'
 
 export {
