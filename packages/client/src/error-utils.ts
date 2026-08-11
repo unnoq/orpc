@@ -75,12 +75,23 @@ export function createORPCErrorFromMalformedResponse(options: MalformedResponseE
   return error
 }
 
+/**
+ * Bounds for using a body string as the error message,
+ * ignoring empty and unreasonably long values.
+ */
+const INFERRED_MESSAGE_MIN_LENGTH = 1
+const INFERRED_MESSAGE_MAX_LENGTH = 256
+
+function isInferableMessage(text: string): boolean {
+  return text.length >= INFERRED_MESSAGE_MIN_LENGTH && text.length <= INFERRED_MESSAGE_MAX_LENGTH
+}
+
 function inferMalformedResponseMessage(response: StandardResponse): string | undefined {
-  if (typeof response.body === 'string' && response.body !== '') {
+  if (typeof response.body === 'string' && isInferableMessage(response.body)) {
     return response.body
   }
 
-  if (isPlainObject(response.body) && typeof response.body.message === 'string' && response.body.message !== '') {
+  if (isPlainObject(response.body) && typeof response.body.message === 'string' && isInferableMessage(response.body.message)) {
     return response.body.message
   }
 

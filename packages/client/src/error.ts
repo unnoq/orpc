@@ -177,6 +177,8 @@ export interface MalformedResponseErrorOptions extends ErrorOptions {
  * @see {@link https://orpc.dev/docs/openapi/link#malformed-responses | OpenAPI Link - Malformed Responses}
  */
 export class MalformedResponseError extends Error {
+  override readonly name = 'MalformedResponseError'
+
   response: StandardResponse
 
   constructor(options: MalformedResponseErrorOptions) {
