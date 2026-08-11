@@ -17,7 +17,7 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `none` | no page, such as a link opened from an email | rejected |
 
 :::warning[Navigations are always rejected]
-Links, navigations, `<img>` loads, and anything opened from outside the browser send no `Origin` header, so no allowlist entry can admit them. If users must reach a procedure by following a link, protect that route with a token-based defense such as a [synchronizer token](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern) instead.
+Links, navigations, `<img>` loads, and anything opened from outside the browser send no `Origin` header, so no allowlist entry can admit them.
 :::
 
 Requests without Fetch Metadata pass through, such as those from `curl`, mobile apps, and other non-browser clients.
