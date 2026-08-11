@@ -102,7 +102,8 @@ export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements Sta
 
     // Your own origin did not initiate this. A cross-site `fetch` reaches the server even when
     // CORS hides the response, so it runs unless the origin is explicitly trusted. Links,
-    // navigations, and `<img>` send no `Origin` at all, so no allowlist can match them.
+    // GET navigations and passive loads such as `<img>` send no `Origin` at all, so no
+    // allowlist can match them.
     const origin = flattenStandardHeader(headers.origin)
 
     if (origin === undefined) {
