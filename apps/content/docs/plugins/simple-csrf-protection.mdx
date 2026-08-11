@@ -16,7 +16,7 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `cross-site` | another site | rejected unless listed in `origin` |
 | `none` | no page, such as a link opened from an email | rejected |
 
-Requests without Fetch Metadata pass through. They come from non-browser clients, which carry no cookies for an attacker to ride on.
+Requests without Fetch Metadata pass through: non-browser clients such as `curl` never send it, and neither do browsers over plain HTTP. See [Limitations](#limitations).
 
 ## Setup
 
@@ -89,6 +89,7 @@ const plugin = new SimpleCsrfProtectionHandlerPlugin({
 ## Limitations
 
 - Fetch Metadata is [Baseline widely available](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility), supported by every major browser since Safari 16.4 in March 2023. Only browsers older than that, and proxies that strip the headers, pass through unchecked.
+- Browsers [send Fetch Metadata only to trustworthy URLs](https://w3c.github.io/webappsec-fetch-metadata/): HTTPS and `localhost`. Over plain HTTP the headers are absent while cookies are not, so every request passes. Since `localhost` qualifies, this looks correct in development and checks nothing on an HTTP deployment.
 - Keep authentication cookies on `SameSite=Lax` at minimum, and prefer `SameSite=Strict` or a [synchronizer token](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern) for high-value requests.
 
 ## Learn More
