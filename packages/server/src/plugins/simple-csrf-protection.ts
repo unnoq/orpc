@@ -13,7 +13,7 @@ export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
    *
    * @default undefined (no other origin is trusted)
    */
-  origin?: Value<string | readonly string[] | null | undefined, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
+  origin?: Value<string | readonly string[] | null | undefined, [origin: string | undefined, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
   /**
    * Trust every origin on the same site, such as a sibling subdomain. Off by default, since a
@@ -103,9 +103,9 @@ export class SimpleCsrfProtectionHandlerPlugin<T extends Context> implements Sta
     // Your own origin did not initiate this. A cross-site `fetch` reaches the server even when
     // CORS hides the response, so it runs unless the origin is explicitly trusted. Links,
     // navigations, and `<img>` send no `Origin` at all, so no allowlist can match them.
-    const origin = flattenStandardHeader(headers.origin) ?? ''
+    const origin = flattenStandardHeader(headers.origin)
     const allowedOrigins = toArray(value(this.origin, origin, interceptorOptions))
 
-    return allowedOrigins.includes('*') || allowedOrigins.includes(origin)
+    return allowedOrigins.includes('*') || (origin !== undefined && allowedOrigins.includes(origin))
   }
 }

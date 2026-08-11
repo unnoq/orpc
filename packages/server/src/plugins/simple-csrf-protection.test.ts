@@ -254,13 +254,22 @@ describe('simpleCsrfProtectionHandlerPlugin', () => {
     })
 
     it('resolves the allowlist from a function receiving the origin and routing options', async () => {
-      const origin = vi.fn((origin: string) => [origin])
+      const origin = vi.fn((origin: string | undefined) => origin === undefined ? [] : [origin])
       const { result, next, nextResult, interceptorOptions } = invokeInterceptor(crossSiteHeaders, { origin })
 
       await expect(result).resolves.toBe(nextResult)
       expect(next).toHaveBeenCalledOnce()
       expect(origin).toHaveBeenCalledOnce()
       expect(origin).toHaveBeenCalledWith('https://app.example.com', interceptorOptions)
+    })
+
+    it('passes undefined to the function when the request sends no origin header', async () => {
+      const origin = vi.fn(() => ['https://app.example.com'])
+      const { result, next } = invokeInterceptor({ 'sec-fetch-site': 'cross-site' }, { origin })
+
+      await expect(result).resolves.toEqual({ matched: true, response: BLOCKED_RESPONSE })
+      expect(next).not.toHaveBeenCalled()
+      expect(origin).toHaveBeenCalledWith(undefined, expect.anything())
     })
 
     it('is not consulted for same-origin requests', async () => {

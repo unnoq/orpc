@@ -63,7 +63,8 @@ const handler = new RPCHandler(router, {
 ```ts
 const plugin = new SimpleCsrfProtectionHandlerPlugin({
   origin: (origin, options) => {
-    return origin.endsWith('.example.com') ? origin : undefined
+    // undefined when the request sends no Origin header, such as a link or an <img> tag
+    return origin?.endsWith('.example.com') ? origin : undefined
   },
 })
 ```
