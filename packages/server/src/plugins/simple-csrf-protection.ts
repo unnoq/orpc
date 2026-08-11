@@ -6,22 +6,17 @@ import { flattenStandardHeader } from '@standardserver/core'
 
 export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
   /**
-   * Cross-site origins trusted to invoke procedures, as a string, an array of origins,
-   * or a function returning them. Use `'*'` to trust every origin, which turns off the
-   * cross-site check entirely.
-   *
-   * Consulted for every request your own origin did not initiate, so same-origin clients never
-   * need it. Set it to the same allowlist you pass to the CORS Handler Plugin.
+   * Origins trusted to invoke procedures, as a string, an array, or a function returning them.
+   * `'*'` trusts every origin. Consulted only for requests your own origin did not initiate,
+   * so it usually matches the allowlist you pass to the CORS Handler Plugin.
    *
    * @default undefined (no other origin is trusted)
    */
   origin?: Value<string | readonly string[] | null | undefined, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
   /**
-   * Whether every other origin on the same site, such as a sibling subdomain
-   * (`docs.example.com` calling `api.example.com`), is trusted. Off by default, because a
-   * subdomain you do not control, or one that serves user content, can forge requests that
-   * carry your cookies. Prefer listing the subdomains you trust in `origin`.
+   * Trust every origin on the same site, such as a sibling subdomain. Off by default, since a
+   * subdomain you do not control can forge requests carrying your cookies. Prefer `origin`.
    *
    * @default false
    */
@@ -29,15 +24,9 @@ export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
 
   /**
    * [Sec-Fetch-Mode](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Mode)
-   * values allowed to invoke a procedure. Every mode is allowed by default, so a trusted site
-   * may reach your API through a navigation, an HTML form submission, or a subresource load
-   * such as `<img>`, as well as through `fetch`.
-   *
-   * Narrow it to `['cors', 'same-origin']` to accept scripted requests only. That also rejects
-   * requests triggered by a URL smuggled into a trusted page, for example a user-supplied avatar
-   * URL, at the cost of breaking HTML form submissions.
-   *
-   * Requests that carry no `Sec-Fetch-Mode` header are never rejected by this option.
+   * values allowed to invoke a procedure. Narrow it to `['cors', 'same-origin']` to accept
+   * scripted requests only, which rejects HTML form submissions. Requests carrying no
+   * `Sec-Fetch-Mode` header are never rejected by this option.
    *
    * @default undefined (every mode is allowed)
    */
@@ -45,14 +34,12 @@ export interface SimpleCsrfProtectionHandlerPluginOptions<T extends Context> {
 }
 
 /**
- * Adds basic Cross-Site Request Forgery (CSRF) protection to your oRPC application by
- * rejecting requests that a browser reports as initiated by another site, or by no page at
- * all, such as a link opened from an email.
+ * Adds basic Cross-Site Request Forgery (CSRF) protection by rejecting requests a browser
+ * reports as initiated by another site, or by no page at all such as a link from an email.
  *
  * @remarks
- * Unlike `SameSite` cookies, this protection also covers cross-site requests that
- * still carry cookies, so it is the recommended safeguard when you enable the `GET`
- * method on RPC handlers or rely on cookie-based authentication.
+ * **Note**: Unlike `SameSite` cookies, this also covers cross-site requests that still carry
+ * cookies, so it is the safeguard to add when enabling the `GET` method on RPC handlers.
  *
  * @see {@link https://orpc.dev/docs/plugins/simple-csrf-protection | Simple CSRF Protection Plugin}
  */
