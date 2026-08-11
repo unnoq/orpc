@@ -16,7 +16,13 @@ The plugin decides on [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/doc
 | `cross-site` | another site | rejected unless listed in `origin` |
 | `none` | no page, such as a link opened from an email | rejected |
 
-Requests without Fetch Metadata pass through: non-browser clients such as `curl` never send it, and neither do browsers over plain HTTP. See [Limitations](#limitations).
+Requests without Fetch Metadata pass through, such as those from `curl`, mobile apps, and other non-browser clients.
+
+## Limitations
+
+- Fetch Metadata is [Baseline widely available](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility), supported by every major browser since Safari 16.4 in March 2023. Only browsers older than that, and proxies that strip the headers, pass through unchecked.
+- Browsers [send Fetch Metadata only to trustworthy URLs](https://w3c.github.io/webappsec-fetch-metadata/): HTTPS and `localhost`. Over plain HTTP the headers are absent while cookies are not, so every request passes. Since `localhost` qualifies, this looks correct in development and checks nothing on an HTTP deployment.
+- Keep authentication cookies on `SameSite=Lax` at minimum, and prefer `SameSite=Strict` or a [synchronizer token](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern) for high-value requests.
 
 ## Setup
 
@@ -85,12 +91,6 @@ const plugin = new SimpleCsrfProtectionHandlerPlugin({
 ```
 
 `allowModes` matches [`Sec-Fetch-Mode`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Mode), which is `navigate` for form submissions and links, and `no-cors` for `<img>` and `<script>`. Leave it unset if you rely on HTML forms, including through the [Method Override Plugin](/docs/plugins/method-override). Requests without the header are never rejected.
-
-## Limitations
-
-- Fetch Metadata is [Baseline widely available](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility), supported by every major browser since Safari 16.4 in March 2023. Only browsers older than that, and proxies that strip the headers, pass through unchecked.
-- Browsers [send Fetch Metadata only to trustworthy URLs](https://w3c.github.io/webappsec-fetch-metadata/): HTTPS and `localhost`. Over plain HTTP the headers are absent while cookies are not, so every request passes. Since `localhost` qualifies, this looks correct in development and checks nothing on an HTTP deployment.
-- Keep authentication cookies on `SameSite=Lax` at minimum, and prefer `SameSite=Strict` or a [synchronizer token](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern) for high-value requests.
 
 ## Learn More
 
