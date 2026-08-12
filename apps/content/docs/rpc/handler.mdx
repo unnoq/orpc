@@ -101,7 +101,7 @@ import { RPC_DEFAULT_ALLOW_METHODS } from '@orpc/server/standard'
 const handler = new RPCHandler(router, {
   allowMethods: ['GET', ...RPC_DEFAULT_ALLOW_METHODS],
   plugins: [
-    new GetMethodCsrfProtectionHandlerPlugin(), // reject GET requests that may carry SameSite=Lax cookies
+    new GetMethodCsrfProtectionHandlerPlugin(), // reject GET navigations that may carry SameSite=Lax cookies
   ],
 })
 ```
