@@ -37,4 +37,4 @@ export type {
   ResponseHeadersHandlerPluginContext as ResponseHeadersPluginContext,
 } from './response-headers'
 export * from './rethrow'
-export * from './simple-csrf-protection'
+export * from './safe-method-csrf-protection'
