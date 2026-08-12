@@ -2,7 +2,7 @@ import { RPCHandler } from '../adapters/fetch/rpc-handler'
 import { RPC_DEFAULT_ALLOW_METHODS } from '../adapters/standard'
 import { os } from '../builder'
 import { BatchHandlerPlugin } from './batch'
-import { SafeMethodCsrfProtectionHandlerPlugin } from './safe-method-csrf-protection'
+import { GetMethodCsrfProtectionHandlerPlugin } from './get-method-csrf-protection'
 
 const BLOCKED_RESPONSE = {
   status: 403,
@@ -22,7 +22,7 @@ function makeRequest(headers: Record<string, unknown>, method: string) {
 function getPlugin() {
   const existingRoutingInterceptor = vi.fn()
 
-  const handlerOptions = new SafeMethodCsrfProtectionHandlerPlugin<any>().init({
+  const handlerOptions = new GetMethodCsrfProtectionHandlerPlugin<any>().init({
     routingInterceptors: [existingRoutingInterceptor],
   } as any)
 
@@ -64,7 +64,7 @@ const CROSS_SITE_NAVIGATION = {
   'sec-fetch-dest': 'document',
 }
 
-describe('safeMethodCsrfProtectionHandlerPlugin', () => {
+describe('getMethodCsrfProtectionHandlerPlugin', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -78,23 +78,21 @@ describe('safeMethodCsrfProtectionHandlerPlugin', () => {
     })
 
     it('runs after the batch plugin so it judges the original request', () => {
-      expect(new SafeMethodCsrfProtectionHandlerPlugin().after).toContain('~batch')
+      expect(new GetMethodCsrfProtectionHandlerPlugin().after).toContain('~batch')
     })
   })
 
   describe('guarded methods', () => {
     it.each([
       'POST',
+      'HEAD',
       'QUERY',
     ])('ignores %s requests, which never carry cross-site SameSite=Lax cookies', async (method) => {
       await expectAllowed(CROSS_SITE_NAVIGATION, method)
     })
 
-    it.each([
-      'GET',
-      'HEAD',
-    ])('guards %s requests', async (method) => {
-      await expectBlocked(CROSS_SITE_NAVIGATION, method)
+    it('guards GET requests', async () => {
+      await expectBlocked(CROSS_SITE_NAVIGATION, 'GET')
     })
   })
 
@@ -162,7 +160,7 @@ describe('safeMethodCsrfProtectionHandlerPlugin', () => {
     function createHandler(extraPlugins: any[] = []) {
       return new RPCHandler({ deletePlanet: os.handler(deletePlanet) }, {
         allowMethods: ['GET', ...RPC_DEFAULT_ALLOW_METHODS],
-        plugins: [new SafeMethodCsrfProtectionHandlerPlugin(), ...extraPlugins],
+        plugins: [new GetMethodCsrfProtectionHandlerPlugin(), ...extraPlugins],
       })
     }
 

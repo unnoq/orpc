@@ -4,9 +4,9 @@ import { toArray } from '@orpc/shared'
 import { flattenStandardHeader } from '@standardserver/core'
 
 /**
- * Adds Cross-Site Request Forgery (CSRF) protection that makes safe HTTP methods as secure as
- * unsafe ones such as `POST`. It rejects `GET` and `HEAD` requests arriving as top-level
- * navigations initiated cross-site or from outside the browser, the only contexts where
+ * Adds Cross-Site Request Forgery (CSRF) protection that makes the safe `GET` method as
+ * secure as unsafe ones such as `POST`. It rejects `GET` requests arriving as top-level
+ * navigations initiated cross-site or from outside the browser, the only context where
  * another site can make a browser attach `SameSite=Lax` cookies to a safe-method request.
  *
  * @remarks
@@ -15,10 +15,10 @@ import { flattenStandardHeader } from '@standardserver/core'
  * requires authentication cookies explicitly marked `SameSite=Lax` or `SameSite=Strict`,
  * since browsers may attach other cookies to the requests that pass.
  *
- * @see {@link https://orpc.dev/docs/plugins/safe-method-csrf-protection | Safe Method CSRF Protection Plugin}
+ * @see {@link https://orpc.dev/docs/plugins/get-method-csrf-protection | GET Method CSRF Protection Plugin}
  */
-export class SafeMethodCsrfProtectionHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
-  name = '~safe-method-csrf-protection'
+export class GetMethodCsrfProtectionHandlerPlugin<T extends Context> implements StandardHandlerPlugin<T> {
+  name = '~get-method-csrf-protection'
 
   /** Judge the real request, before batch splits it into client-authored sub-requests. */
   after = ['~batch']
@@ -42,7 +42,9 @@ export class SafeMethodCsrfProtectionHandlerPlugin<T extends Context> implements
   }
 
   private isAllowed({ request }: StandardHandlerRoutingInterceptorOptions<T>): boolean {
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
+    // Navigations can only use `GET` or `POST` per the HTML spec, and `POST` is unsafe, so
+    // `GET` is the only method `SameSite=Lax` cookies ride cross-site.
+    if (request.method !== 'GET') {
       return true
     }
 

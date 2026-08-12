@@ -517,12 +517,12 @@ v1 shipped `StrictGetMethodPlugin` enabled by default. v2 removed that plugin (a
 <CodeGroup>
 
 ```ts v2
-import { SafeMethodCsrfProtectionHandlerPlugin } from '@orpc/server/plugins'
+import { GetMethodCsrfProtectionHandlerPlugin } from '@orpc/server/plugins'
 import { RPC_DEFAULT_ALLOW_METHODS } from '@orpc/server/standard'
 
 const handler = new RPCHandler(router, {
   allowMethods: ['GET', ...RPC_DEFAULT_ALLOW_METHODS],
-  plugins: [new SafeMethodCsrfProtectionHandlerPlugin()],
+  plugins: [new GetMethodCsrfProtectionHandlerPlugin()],
 })
 ```
 
@@ -538,7 +538,7 @@ const handler = new RPCHandler(router)
 The simplest migration is to stop sending GET instead of allowing it: remove the `method` option from your [RPC Link](/docs/rpc/link) so every call uses POST (the default), and keep the handler's default `allowMethods`. Only allow GET when you really need it, for example for HTTP caching.
 :::
 
-The v2 [Safe Method CSRF Protection Plugin](/docs/plugins/safe-method-csrf-protection) replaces the v1 CSRF plugin pair. It checks the browser's `Sec-Fetch-*` headers, so it needs no matching link plugin and no configuration. Remove `SimpleCsrfProtectionPlugin` from your handler and `SimpleCsrfProtectionLinkPlugin` from your client; they no longer exist.
+The v2 [GET Method CSRF Protection Plugin](/docs/plugins/get-method-csrf-protection) replaces the v1 CSRF plugin pair. It checks the browser's `Sec-Fetch-*` headers, so it needs no matching link plugin and no configuration. Remove `SimpleCsrfProtectionPlugin` from your handler and `SimpleCsrfProtectionLinkPlugin` from your client; they no longer exist.
 
 ### Interceptor options renamed
 

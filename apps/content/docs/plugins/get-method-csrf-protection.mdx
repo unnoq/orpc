@@ -1,8 +1,8 @@
 ---
-title: "Safe Method CSRF Protection Plugin"
-description: "Use SafeMethodCsrfProtectionHandlerPlugin to make safe methods like GET as secure as POST by rejecting requests that may carry SameSite=Lax cookies from another site."
+title: "GET Method CSRF Protection Plugin"
+description: "Use GetMethodCsrfProtectionHandlerPlugin to make the safe GET method as secure as POST by rejecting navigations that may carry SameSite=Lax cookies from another site."
 sidebar:
-  label: "Safe Method CSRF Protection"
+  label: "GET Method CSRF Protection"
 ---
 
 ## How It Works
@@ -16,9 +16,9 @@ Cross-site, browsers withhold explicitly marked [`SameSite=Lax`](https://develop
 | `fetch`, `XMLHttpRequest` | no | allowed, CORS governs the response |
 | `<img>`, `<script>`, media, prefetch | no | allowed |
 | `<iframe>`, `<embed>`, `<object>`, which are not top-level | no | allowed |
-| `POST` and other unsafe methods | no | ignored |
+| any method other than `GET` | no | ignored |
 
-The verdict comes from [Fetch Metadata](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers#fetch_metadata_request_headers): a `GET` or `HEAD` request is rejected when [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site) reports `cross-site` or `none` on a top-level navigation (`Sec-Fetch-Mode: navigate` targeting `Sec-Fetch-Dest: document`). A guarded request stripped of either header is rejected. The result resembles upgrading your cookies to `SameSite=Strict` for safe methods, and also covers links opened from outside the browser, where browsers attach even `Strict` cookies.
+The verdict comes from [Fetch Metadata](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers#fetch_metadata_request_headers): a `GET` request is rejected when [`Sec-Fetch-Site`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site) reports `cross-site` or `none` on a top-level navigation (`Sec-Fetch-Mode: navigate` targeting `Sec-Fetch-Dest: document`). A guarded request stripped of either header is rejected. Only `GET` needs guarding, since [navigations use no method](https://html.spec.whatwg.org/multipage/browsing-the-web.html) besides `GET` and the unsafe `POST`. The result resembles upgrading your cookies to `SameSite=Strict` for safe methods, and also covers links opened from outside the browser, where browsers attach even `Strict` cookies.
 
 Cookie-less cross-site requests pass, which makes the plugin the natural safeguard for [enabling the `GET` method](/docs/rpc/handler#enabling-the-get-method). Requests from your own site always pass, including sibling subdomains, since the `SameSite` cookie model makes the site the trust boundary. Host untrusted content on a separate site, not a subdomain.
 
@@ -28,13 +28,13 @@ Cookie-less cross-site requests pass, which makes the plugin the natural safegua
 import { RPCHandler } from '@orpc/server/fetch'
 import { router } from './shared/planet'
 // ---cut---
-import { SafeMethodCsrfProtectionHandlerPlugin } from '@orpc/server/plugins'
+import { GetMethodCsrfProtectionHandlerPlugin } from '@orpc/server/plugins'
 import { RPC_DEFAULT_ALLOW_METHODS } from '@orpc/server/standard'
 
 const handler = new RPCHandler(router, {
   allowMethods: ['GET', ...RPC_DEFAULT_ALLOW_METHODS],
   plugins: [
-    new SafeMethodCsrfProtectionHandlerPlugin(),
+    new GetMethodCsrfProtectionHandlerPlugin(),
   ],
 })
 ```
@@ -58,4 +58,4 @@ With `SameSite=None` or unmarked cookies, cross-site requests the plugin allows,
 
 ## Learn More
 
-Learn more about the attack this plugin prevents on [MDN](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF) and in the [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html). For implementation details, see the [source code](https://github.com/middleapi/orpc/blob/main/packages/server/src/plugins/safe-method-csrf-protection.ts).
+Learn more about the attack this plugin prevents on [MDN](https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF) and in the [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html). For implementation details, see the [source code](https://github.com/middleapi/orpc/blob/main/packages/server/src/plugins/get-method-csrf-protection.ts).
