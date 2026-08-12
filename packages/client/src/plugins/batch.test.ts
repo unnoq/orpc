@@ -408,6 +408,49 @@ describe('batchLinkPlugin', () => {
       expect(subResponse2.headers['x-index']).toEqual('1')
     })
 
+    it('uses custom mapSubresponse and forwards its response to the caller', async () => {
+      const codec = makeCodec()
+      const transport = makeTransport()
+
+      vi.mocked(transport.send).mockImplementation(async (request) => {
+        const response = makeBufferedBatchResponseFromRequest(request)
+        return {
+          ...response,
+          headers: { ...response.headers, 'x-from-batch-response': 'true' },
+        }
+      })
+
+      const mapSubresponse = vi.fn((subResponse: StandardLazyResponse, batchResponse: StandardLazyResponse): StandardLazyResponse => ({
+        ...subResponse,
+        headers: {
+          ...subResponse.headers,
+          'x-mapped': 'true',
+          'x-batch-status': `${batchResponse.status}`,
+        },
+        resolveBody: async () => `mapped-${await subResponse.resolveBody()}`,
+      }))
+
+      const link = new StandardLink(codec, transport, {
+        plugins: [new BatchLinkPlugin({
+          groups: [defaultGroup],
+          mapSubresponse,
+        })],
+      })
+
+      await Promise.all([
+        expect(link.call(['a'], {}, { context: {} })).resolves.toBe('mapped-result-0'),
+        expect(link.call(['b'], {}, { context: {} })).resolves.toBe('mapped-result-1'),
+      ])
+
+      expect(mapSubresponse).toHaveBeenCalledTimes(2)
+
+      const subResponse1 = vi.mocked(codec.decodeResponse).mock.calls[0]![0]
+      expect(subResponse1.headers['x-mapped']).toEqual('true')
+      expect(subResponse1.headers['x-batch-status']).toEqual('207')
+      // the default merge of batch response headers is not applied anymore
+      expect(subResponse1.headers['x-from-batch-response']).toBeUndefined()
+    })
+
     it('separates GET and POST requests into distinct batches', async () => {
       const codec = makeCodec()
       const transport = makeTransport()
