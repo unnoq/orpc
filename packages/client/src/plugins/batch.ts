@@ -161,7 +161,7 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
         headers: subHeaders,
       }
     })
-    this.mapSubresponse = (subResponse, batchResponse) => {
+    this.mapSubresponse = options.mapSubresponse ?? ((subResponse, batchResponse) => {
       return {
         ...subResponse,
         headers: {
@@ -169,7 +169,7 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
           ...subResponse.headers,
         },
       }
-    }
+    })
   }
 
   init(options: StandardLinkOptions<T>): StandardLinkOptions<T> {
