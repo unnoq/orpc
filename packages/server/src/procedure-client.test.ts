@@ -602,6 +602,93 @@ describe('createProcedureClient', () => {
     })
   })
 
+  describe('with stacked object schemas', () => {
+    it('composes every schema fragment into a single flat input', async () => {
+      const rootMid = vi.fn(({ next }) => next())
+      const parentMid = vi.fn(({ next }) => next())
+      const childMid = vi.fn(({ next }) => next())
+
+      const procedure = os
+        .use(rootMid)
+        .input(z.object({ parent: z.string().transform(value => `parent__${value}`) }))
+        .use(parentMid)
+        .input(z.object({ child: z.string().transform(value => `child__${value}`) }))
+        .use(childMid)
+        .handler(({ input }) => input)
+
+      const client = createProcedureClient(procedure)
+
+      await expect(client({ parent: 'PARENT', child: 'CHILD', unknown: 'UNKNOWN' } as any))
+        .resolves
+        .toEqual({ parent: 'parent__PARENT', child: 'child__CHILD' })
+
+      expect(rootMid).toHaveBeenCalledWith(expect.any(Object), { parent: 'PARENT', child: 'CHILD', unknown: 'UNKNOWN' }, expect.any(Function))
+      expect(parentMid).toHaveBeenCalledWith(expect.any(Object), { parent: 'parent__PARENT' }, expect.any(Function))
+      expect(childMid).toHaveBeenCalledWith(expect.any(Object), { parent: 'parent__PARENT', child: 'child__CHILD' }, expect.any(Function))
+    })
+
+    it('composes fragments nested one level deep', async () => {
+      const procedure = os
+        .input(z.object({ params: z.object({ id: z.string() }) }))
+        .input(z.object({ params: z.object({ slug: z.string() }), query: z.object({ page: z.number() }) }))
+        .handler(({ input }) => input)
+
+      const client = createProcedureClient(procedure)
+
+      await expect(client({
+        params: { id: 'ID', slug: 'SLUG', unknown: 'UNKNOWN' },
+        query: { page: 1 },
+      } as any)).resolves.toEqual({
+        params: { id: 'ID', slug: 'SLUG' },
+        query: { page: 1 },
+      })
+    })
+
+    it('lets a loose schema keep the properties it accepts', async () => {
+      const parentMid = vi.fn(({ next }) => next())
+
+      const procedure = os
+        .input(z.looseObject({ parent: z.string().transform(value => `parent__${value}`) }))
+        .use(parentMid)
+        .input(z.object({ child: z.string().transform(value => `child__${value}`) }))
+        .handler(({ input }) => input)
+
+      const client = createProcedureClient(procedure)
+
+      await expect(client({ parent: 'PARENT', child: 'CHILD', unknown: 'UNKNOWN' } as any))
+        .resolves
+        .toEqual({ parent: 'parent__PARENT', child: 'child__CHILD', unknown: 'UNKNOWN' })
+
+      expect(parentMid).toHaveBeenCalledWith(expect.any(Object), { parent: 'parent__PARENT', child: 'CHILD', unknown: 'UNKNOWN' }, expect.any(Function))
+    })
+
+    it('keeps piping input schemas that do not validate into a plain object', async () => {
+      const procedure = os
+        .input(ContractModule.asyncIteratorObject(ContractModule.type<string, string>(value => `first__${value}`)))
+        .input(ContractModule.asyncIteratorObject(ContractModule.type<string, string>(value => `second__${value}`)))
+        .handler(({ input }) => input)
+
+      const client = createProcedureClient(procedure)
+      const output = await client((async function* () {
+        yield 'INPUT'
+      })())
+
+      expect(isAsyncIteratorObject(output)).toBe(true)
+      await expect(output.next()).resolves.toEqual({ done: false, value: 'second__first__INPUT' })
+    })
+
+    it('keeps piping output schemas', async () => {
+      const procedure = os
+        .output(z.looseObject({ first: z.string() }))
+        .output(z.looseObject({ second: z.string() }))
+        .handler(() => ({ first: 'FIRST', second: 'SECOND' }) as any)
+
+      const client = createProcedureClient(procedure)
+
+      await expect(client()).resolves.toEqual({ first: 'FIRST', second: 'SECOND' })
+    })
+  })
+
   describe('disable validations', () => {
     const inputSchema = z.object({ value: z.string() })
     const outputSchema = z.object({ value: z.string() })

@@ -20,6 +20,26 @@ describe('requestValidationLinkPlugin', () => {
     meta: {},
   })
 
+  const stackedObjectProcedure = new ProcedureContract({
+    inputSchemas: [
+      z.object({ parent: z.string() }),
+      z.object({ child: z.string() }),
+    ],
+    outputSchemas: [],
+    errorMap: {},
+    meta: {},
+  })
+
+  const nestedObjectProcedure = new ProcedureContract({
+    inputSchemas: [
+      z.object({ params: z.object({ id: z.string() }) }),
+      z.object({ params: z.object({ slug: z.string() }), query: z.object({ page: z.number() }) }),
+    ],
+    outputSchemas: [],
+    errorMap: {},
+    meta: {},
+  })
+
   const withoutInputSchemaProcedure = new ProcedureContract({
     outputSchemas: [],
     errorMap: {},
@@ -28,6 +48,8 @@ describe('requestValidationLinkPlugin', () => {
 
   const contract = {
     chainedProcedure,
+    stackedObjectProcedure,
+    nestedObjectProcedure,
     nested: {
       chainedProcedure,
     },
@@ -97,6 +119,56 @@ describe('requestValidationLinkPlugin', () => {
 
     expect(output).toBe('__output__')
     expect(codec.encodeInput).toHaveBeenCalledWith(2, ['chainedProcedure'], { context: {} })
+  })
+
+  it('merges what every stacked object schema validates', async () => {
+    codec.encodeInput.mockResolvedValueOnce({
+      method: 'POST',
+      url: '/stackedObjectProcedure',
+      headers: {},
+      body: '__encoded__',
+    })
+    transport.send.mockResolvedValueOnce({
+      status: 200,
+      headers: {},
+      resolveBody: () => Promise.resolve('__body__'),
+    })
+    codec.decodeResponse.mockResolvedValueOnce({ kind: 'output', output: '__output__' })
+
+    const input = { parent: 'PARENT', child: 'CHILD', unknown: 'UNKNOWN' }
+    const output = await linkUsingValidatedInput.call(['stackedObjectProcedure'], input as any, { context: {} })
+
+    expect(output).toBe('__output__')
+    expect(codec.encodeInput).toHaveBeenCalledWith(
+      { parent: 'PARENT', child: 'CHILD' },
+      ['stackedObjectProcedure'],
+      { context: {} },
+    )
+  })
+
+  it('merges stacked object schema fragments nested one level deep', async () => {
+    codec.encodeInput.mockResolvedValueOnce({
+      method: 'POST',
+      url: '/nestedObjectProcedure',
+      headers: {},
+      body: '__encoded__',
+    })
+    transport.send.mockResolvedValueOnce({
+      status: 200,
+      headers: {},
+      resolveBody: () => Promise.resolve('__body__'),
+    })
+    codec.decodeResponse.mockResolvedValueOnce({ kind: 'output', output: '__output__' })
+
+    const input = { params: { id: 'ID', slug: 'SLUG', unknown: 'UNKNOWN' }, query: { page: 1 } }
+    const output = await linkUsingValidatedInput.call(['nestedObjectProcedure'], input as any, { context: {} })
+
+    expect(output).toBe('__output__')
+    expect(codec.encodeInput).toHaveBeenCalledWith(
+      { params: { id: 'ID', slug: 'SLUG' }, query: { page: 1 } },
+      ['nestedObjectProcedure'],
+      { context: {} },
+    )
   })
 
   it('skips validation when the procedure has no input schemas', async () => {
