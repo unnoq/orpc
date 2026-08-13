@@ -1,7 +1,7 @@
 import * as a from 'arktype'
 import * as v from 'valibot'
 import z from 'zod'
-import { bindMethods, clone, findDeepMatches, get, getConstructor, getConstructors, isPlainObject, isPropertyKey, NullProtoObj, omit, set } from './object'
+import { bindMethods, clone, findDeepMatches, get, getConstructor, getConstructors, isPlainObject, isPropertyKey, mergeTwoLevels, NullProtoObj, omit, set } from './object'
 
 it('findDeepMatches', () => {
   const { maps, values } = findDeepMatches(v => typeof v === 'string', {
@@ -229,6 +229,71 @@ describe('set', () => {
     expect(Object.hasOwn(root, '__proto__')).toBe(true)
     // eslint-disable-next-line no-proto, no-restricted-properties
     expect((root as any).__proto__).toBe('value')
+  })
+})
+
+describe('mergeTwoLevels', () => {
+  it('merges the root level', () => {
+    expect(mergeTwoLevels({ a: 1, shared: 'first' }, { b: 2, shared: 'second' })).toEqual({
+      a: 1,
+      b: 2,
+      shared: 'second',
+    })
+  })
+
+  it('merges one level deeper', () => {
+    expect(mergeTwoLevels(
+      { user: { name: 'NAME', shared: 'first' } },
+      { user: { age: 1, shared: 'second' } },
+    )).toEqual({
+      user: { name: 'NAME', age: 1, shared: 'second' },
+    })
+  })
+
+  it('replaces anything deeper than two levels', () => {
+    expect(mergeTwoLevels(
+      { user: { address: { city: 'CITY' } } },
+      { user: { address: { zip: 'ZIP' } } },
+    )).toEqual({
+      user: { address: { zip: 'ZIP' } },
+    })
+  })
+
+  it('replaces when the values are not both plain objects', () => {
+    const date = new Date()
+
+    expect(mergeTwoLevels({ a: 1 }, 'REPLACED')).toBe('REPLACED')
+    expect(mergeTwoLevels('REPLACED', { a: 1 })).toEqual({ a: 1 })
+    expect(mergeTwoLevels({ a: { b: 1 } }, { a: [1] })).toEqual({ a: [1] })
+    expect(mergeTwoLevels({ a: { b: 1 } }, { a: date })).toEqual({ a: date })
+    expect(mergeTwoLevels({ a: undefined }, { a: { b: 1 } })).toEqual({ a: { b: 1 } })
+  })
+
+  it('returns a new object', () => {
+    const first = { a: { b: 1 } }
+    const merged = mergeTwoLevels(first, { a: { c: 2 } }) as any
+
+    expect(merged).not.toBe(first)
+    expect(first).toEqual({ a: { b: 1 } })
+  })
+
+  it('reads own properties only and keeps special keys as own properties', () => {
+    const merged = mergeTwoLevels({}, JSON.parse('{ "__proto__": { "polluted": true } }')) as any
+
+    // `{}.__proto__` resolves to Object.prototype, which must not be merged in as if it were own
+    expect(Object.getOwnPropertyDescriptor(merged, '__proto__')?.value).toEqual({ polluted: true })
+    expect(Object.getPrototypeOf(merged)).toBe(Object.prototype)
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('ignores inherited values when merging one level deeper', () => {
+    const first = Object.create({ inherited: { a: 1 } })
+    first.own = { b: 2 }
+
+    expect(mergeTwoLevels({ ...first }, { inherited: { c: 3 }, own: { d: 4 } })).toEqual({
+      inherited: { c: 3 },
+      own: { b: 2, d: 4 },
+    })
   })
 })
 

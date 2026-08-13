@@ -2,7 +2,7 @@ import type { ClientContext } from '@orpc/client'
 import type { StandardLinkOptions, StandardLinkPlugin } from '@orpc/client/standard'
 import type { RouterContract } from '../router'
 import { ORPCError } from '@orpc/client'
-import { isPlainObject, toArray } from '@orpc/shared'
+import { isPlainObject, mergeTwoLevels, toArray } from '@orpc/shared'
 import { ValidationError } from '../error'
 import { getProcedureContractOrThrow } from '../router-utils'
 
@@ -69,9 +69,7 @@ export class RequestValidationLinkPlugin<T extends ClientContext> implements Sta
             })
           }
 
-          currentInput = index !== 0 && isPlainObject(currentInput) && isPlainObject(result.value)
-            ? { ...currentInput, ...result.value }
-            : result.value
+          currentInput = index !== 0 ? mergeTwoLevels(currentInput, result.value) : result.value
         }
 
         return this.forwardValidatedInput

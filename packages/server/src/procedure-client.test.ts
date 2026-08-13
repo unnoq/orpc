@@ -627,6 +627,23 @@ describe('createProcedureClient', () => {
       expect(childMid).toHaveBeenCalledWith(expect.any(Object), { parent: 'parent__PARENT', child: 'child__CHILD' }, expect.any(Function))
     })
 
+    it('composes fragments nested one level deep', async () => {
+      const procedure = os
+        .input(z.object({ params: z.object({ id: z.string() }) }))
+        .input(z.object({ params: z.object({ slug: z.string() }), query: z.object({ page: z.number() }) }))
+        .handler(({ input }) => input)
+
+      const client = createProcedureClient(procedure)
+
+      await expect(client({
+        params: { id: 'ID', slug: 'SLUG', unknown: 'UNKNOWN' },
+        query: { page: 1 },
+      } as any)).resolves.toEqual({
+        params: { id: 'ID', slug: 'SLUG' },
+        query: { page: 1 },
+      })
+    })
+
     it('lets a loose schema keep the properties it accepts', async () => {
       const parentMid = vi.fn(({ next }) => next())
 

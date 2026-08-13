@@ -74,23 +74,23 @@ Every `.input` object schema validates the original input, then the results are 
 
 ```ts
 const base = os
-  .input(z.object({ name: z.string() }))
+  .input(z.object({ params: z.object({ id: z.string() }) }))
 
 const example = base
-  .input(z.object({ id: z.number() }))
+  .input(z.object({ params: z.object({ slug: z.string() }) }))
   .handler(async ({ input }) => {
-    // input is { name: string, id: number }
-    return { id: 1, name: 'example' }
+    // input is { params: { id: string, slug: string } }
+    return input
   })
 ```
 
 :::warning
-Only plain objects are merged, and only at the top level. Other values, like [`asyncIteratorObject`](/docs/async-iterator-object) or a `z.string()` transform, are piped: each schema validates what the previous one returned. Nested objects are not merged either, the last schema wins, so use `z.looseObject` when two schemas define the same one:
+Only plain objects are merged, and only for the first two levels. Deeper values and anything else, like [`asyncIteratorObject`](/docs/async-iterator-object) or a `z.string()` transform, are piped: each schema validates what the previous one returned. Use `z.looseObject` when two schemas define the same object deeper than that:
 
 ```ts
 const example = os
-  .input(z.object({ user: z.looseObject({ name: z.string() }) }))
-  .input(z.object({ user: z.looseObject({ age: z.number() }) }))
+  .input(z.object({ user: z.object({ address: z.looseObject({ city: z.string() }) }) }))
+  .input(z.object({ user: z.object({ address: z.looseObject({ zip: z.string() }) }) }))
 ```
 
 :::

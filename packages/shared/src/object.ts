@@ -119,6 +119,32 @@ function defineOwnProperty(object: object, key: PropertyKey, value: unknown): vo
   })
 }
 
+/**
+ * Merges two values by copying the second over the first, repeating the merge one level deeper for
+ * nested plain objects. Anything that is not a pair of plain objects is replaced by the second one.
+ */
+export function mergeTwoLevels(first: unknown, second: unknown): unknown {
+  if (!isPlainObject(first) || !isPlainObject(second)) {
+    return second
+  }
+
+  // Spread keeps special keys like __proto__ as own properties instead of re-parenting the result.
+  const result: Record<PropertyKey, unknown> = { ...first, ...second }
+
+  // Object.keys and Object.hasOwn skip the prototype, `first.__proto__` would otherwise
+  // resolve to Object.prototype and be merged in as if it were an own property.
+  for (const key of Object.keys(second)) {
+    const firstValue = Object.hasOwn(first, key) ? first[key] : undefined
+    const secondValue = second[key]
+
+    if (isPlainObject(firstValue) && isPlainObject(secondValue)) {
+      defineOwnProperty(result, key, { ...firstValue, ...secondValue })
+    }
+  }
+
+  return result
+}
+
 export function omit<T extends object, K extends keyof T>(
   obj: T,
   keys: readonly K[],

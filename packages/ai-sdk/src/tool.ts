@@ -8,7 +8,7 @@ import type { FunctionTool } from './tool-meta'
 import { getAsyncIteratorObjectSchemaDetails } from '@orpc/contract'
 import { combineJsonSchemasWithComposition } from '@orpc/json-schema'
 import { call, Procedure } from '@orpc/server'
-import { isPlainObject, ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
+import { isPlainObject, mergeTwoLevels, ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
 import { tool } from 'ai'
 import { getAiSdkToolMeta } from './tool-meta'
 
@@ -81,9 +81,7 @@ function combineSchemas(schemas: AnySchema[], merge: boolean): undefined | Flexi
             return result
           }
 
-          current = merge && index !== 0 && isPlainObject(current) && isPlainObject(result.value)
-            ? { ...current, ...result.value }
-            : result.value
+          current = merge && index !== 0 ? mergeTwoLevels(current, result.value) : result.value
         }
 
         return { value: current }

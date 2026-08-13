@@ -7,7 +7,7 @@ import type { MiddlewareDone } from './middleware'
 import type { AnyProcedure, Procedure, ProcedureHandlerOptions } from './procedure'
 import { cloneORPCError, ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { createORPCErrorConstructorMap, reconcileORPCError, ValidationError } from '@orpc/contract'
-import { intercept, isAsyncIteratorObject, isPlainObject, override, resolveMaybeOptionalOptions, runWithSpan, toArray, traceAsyncIterator, traceReadableStream, value } from '@orpc/shared'
+import { intercept, isAsyncIteratorObject, isPlainObject, mergeTwoLevels, override, resolveMaybeOptionalOptions, runWithSpan, toArray, traceAsyncIterator, traceReadableStream, value } from '@orpc/shared'
 import { unlazy } from './lazy'
 
 export type ProcedureClient<
@@ -232,9 +232,7 @@ async function executeProcedureInternal(procedure: AnyProcedure, options: Proced
           inputSchemas.length > 1 && isPlainObject(currentInput) ? options.input : currentInput,
         )
 
-        currentInput = i !== 0 && isPlainObject(currentInput) && isPlainObject(validated)
-          ? { ...currentInput, ...validated }
-          : validated
+        currentInput = i !== 0 ? mergeTwoLevels(currentInput, validated) : validated
       }
     }
 
