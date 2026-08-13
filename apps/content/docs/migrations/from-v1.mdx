@@ -214,13 +214,13 @@ In v1, a procedure had at most one input and one output schema. In v2, each `.in
 
 ```ts
 const example = os
-  .input(z.looseObject({ name: z.string() }))
-  .input(z.looseObject({ id: z.number() })) // adds a second schema
+  .input(z.object({ name: z.string() }))
+  .input(z.object({ id: z.number() })) // adds a second schema
   .handler(async ({ input }) => {}) // input: { name: string } & { id: number }
 ```
 
-:::warning
-Use loose object schemas (like `z.looseObject`) when stacking, so one schema does not strip the keys another schema needs. `.$input` was removed along with this change.
+:::info
+Stacked object input schemas compose into a single flat value, so one schema never strips the keys another schema needs. Output schemas are piped, so use loose object schemas (like `z.looseObject`) when stacking them. `.$input` was removed along with this change.
 :::
 
 ### `.$config` options changed

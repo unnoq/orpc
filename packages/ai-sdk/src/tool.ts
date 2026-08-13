@@ -8,7 +8,7 @@ import type { FunctionTool } from './tool-meta'
 import { getAsyncIteratorObjectSchemaDetails } from '@orpc/contract'
 import { combineJsonSchemasWithComposition } from '@orpc/json-schema'
 import { call, Procedure } from '@orpc/server'
-import { ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
+import { isPlainObject, ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
 import { tool } from 'ai'
 import { getAiSdkToolMeta } from './tool-meta'
 
@@ -42,7 +42,7 @@ function combineJsonSchemas(jsonSchemas: Record<string, unknown>[]): Record<stri
   return { $schema, ...combined }
 }
 
-function combineSchemas(schemas: AnySchema[]): undefined | FlexibleSchema {
+function combineSchemas(schemas: AnySchema[], merge: boolean): undefined | FlexibleSchema {
   if (schemas.length === 0) {
     return undefined
   }
@@ -70,14 +70,20 @@ function combineSchemas(schemas: AnySchema[]): undefined | FlexibleSchema {
       async validate(value: unknown) {
         let current = value
 
-        for (const schema of schemas) {
-          const result = await schema['~standard'].validate(current)
+        /**
+         * Mirrors the server: stacked object input schemas each validate the original value and are
+         * merged afterwards, output schemas stay piped.
+         */
+        for (const [index, schema] of schemas.entries()) {
+          const result = await schema['~standard'].validate(merge && isPlainObject(current) ? value : current)
 
           if (result.issues) {
             return result
           }
 
-          current = result.value
+          current = merge && index !== 0 && isPlainObject(current) && isPlainObject(result.value)
+            ? { ...current, ...result.value }
+            : result.value
         }
 
         return { value: current }
@@ -109,7 +115,7 @@ function getIteratorYieldSchemas(schemas: AnySchema[]): AnySchema[] | undefined 
 
 function combineOutputSchemas(outputSchemas: AnySchema[]): FlexibleSchema | undefined {
   const yieldSchemas = getIteratorYieldSchemas(outputSchemas)
-  return combineSchemas([...(yieldSchemas ?? outputSchemas)].reverse())
+  return combineSchemas([...(yieldSchemas ?? outputSchemas)].reverse(), false)
 }
 
 /**
@@ -192,7 +198,7 @@ export function implementToolFactory(_options: ImplementToolFactoryOptions = {})
     return tool({
       ...defaults,
       ...toolOptions,
-      inputSchema: combineSchemas(inputSchemas) ?? ANY_SCHEMA,
+      inputSchema: combineSchemas(inputSchemas, true) ?? ANY_SCHEMA,
       outputSchema: combineOutputSchemas(outputSchemas),
     })
   }

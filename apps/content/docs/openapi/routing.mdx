@@ -80,7 +80,7 @@ Prefixes can also include path parameters, but they must be defined as required 
 ```ts
 const base = os
   .meta(openapi({ prefix: '/{workspaceId}' }))
-  .input(z.looseObject({ workspaceId: z.string() }))
+  .input(z.object({ workspaceId: z.string() }))
   .use(({ next }, { workspaceId }) => {
     console.log('Workspace ID:', workspaceId)
     return next()
@@ -88,7 +88,7 @@ const base = os
 
 const procedure = base
   .meta(openapi({ method: 'GET', path: '/planets/{id}' }))
-  .input(z.looseObject({ id: z.string() }))
+  .input(z.object({ id: z.string() }))
   .handler(async ({ input }) => {
     console.log('Workspace ID:', input.workspaceId)
     console.log('Planet ID:', input.id)

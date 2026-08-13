@@ -75,27 +75,42 @@ describe('implementToolFactory', () => {
       age: z.number().describe('Age of the person'),
     })
 
-    it('combines input schemas by piping validation in order', async () => {
+    it('combines input schemas by merging what each one validates', async () => {
       const contract = oc
-        .input(z.looseObject({ name: z.string() }))
-        .input(extraInputSchema)
+        .input(z.object({ name: z.string() }))
+        .input(z.object({ age: z.number().describe('Age of the person') }))
 
       const tool = implementToolFactory()(contract)
       const combined = tool.inputSchema as any
 
-      expect(combined).not.toBe(extraInputSchema)
-
+      /**
+       * Both schemas strip the fragment declared by the other, so they must each validate the
+       * original value instead of what the previous one returned.
+       */
       await expect(
-        combined['~standard'].validate({ name: 'Alice', age: 18 }),
+        combined['~standard'].validate({ name: 'Alice', age: 18, unknown: true }),
       ).resolves.toEqual({ value: { name: 'Alice', age: 18 } })
 
       const failed = await combined['~standard'].validate({ name: 'Alice' })
       expect(failed.issues).toEqual([expect.objectContaining({ path: ['age'] })])
     })
 
+    it('combines non-object input schemas by piping validation in order', async () => {
+      const contract = oc
+        .input(type<string, string>(value => `first__${value}`))
+        .input(type<string, string>(value => `second__${value}`))
+
+      const tool = implementToolFactory()(contract)
+      const combined = tool.inputSchema as any
+
+      await expect(
+        combined['~standard'].validate('INPUT'),
+      ).resolves.toEqual({ value: 'second__first__INPUT' })
+    })
+
     it('combines input json schemas with allOf and hoists $schema to the root', () => {
       const contract = oc
-        .input(z.looseObject({ name: z.string() }))
+        .input(z.object({ name: z.string() }))
         .input(extraInputSchema)
 
       const tool = implementToolFactory()(contract)
@@ -156,7 +171,7 @@ describe('implementToolFactory', () => {
 
     it('converts json schema using only the schemas that support it', () => {
       const contract = oc
-        .input(z.looseObject({ name: z.string() }))
+        .input(z.object({ name: z.string() }))
         .input(type<{ age: number }>())
 
       const tool = implementToolFactory()(contract)

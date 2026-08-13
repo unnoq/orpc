@@ -2,7 +2,7 @@ import type { ClientContext } from '@orpc/client'
 import type { StandardLinkOptions, StandardLinkPlugin } from '@orpc/client/standard'
 import type { RouterContract } from '../router'
 import { ORPCError } from '@orpc/client'
-import { toArray } from '@orpc/shared'
+import { isPlainObject, toArray } from '@orpc/shared'
 import { ValidationError } from '../error'
 import { getProcedureContractOrThrow } from '../router-utils'
 
@@ -43,28 +43,35 @@ export class RequestValidationLinkPlugin<T extends ClientContext> implements Sta
       interceptors: [...toArray(options.interceptors), async ({ next, ...interceptorOptions }) => {
         const procedure = getProcedureContractOrThrow(this.contract, interceptorOptions.path)
 
-        let currentInput = interceptorOptions.input
+        const inputSchemas = toArray(procedure['~orpc'].inputSchemas)
+        const originalInput = interceptorOptions.input
+        let currentInput = originalInput
 
-        if (procedure['~orpc'].inputSchemas) {
-          for (const schema of procedure['~orpc'].inputSchemas) {
-            const result = await schema['~standard'].validate(currentInput)
+        for (const [index, schema] of inputSchemas.entries()) {
+          /**
+           * Mirrors the server: stacked object schemas each validate the original input and are
+           * merged afterwards, anything else stays piped.
+           */
+          const validating = inputSchemas.length > 1 && isPlainObject(currentInput) ? originalInput : currentInput
+          const result = await schema['~standard'].validate(validating)
 
-            if (result.issues) {
-              throw new ORPCError('BAD_REQUEST', {
+          if (result.issues) {
+            throw new ORPCError('BAD_REQUEST', {
+              message: 'Input validation failed',
+              data: {
+                issues: result.issues,
+              },
+              cause: new ValidationError({
                 message: 'Input validation failed',
-                data: {
-                  issues: result.issues,
-                },
-                cause: new ValidationError({
-                  message: 'Input validation failed',
-                  issues: result.issues,
-                  invalidData: currentInput,
-                }),
-              })
-            }
-
-            currentInput = result.value
+                issues: result.issues,
+                invalidData: validating,
+              }),
+            })
           }
+
+          currentInput = index !== 0 && isPlainObject(currentInput) && isPlainObject(result.value)
+            ? { ...currentInput, ...result.value }
+            : result.value
         }
 
         return this.forwardValidatedInput

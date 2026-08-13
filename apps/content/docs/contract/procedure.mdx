@@ -42,19 +42,19 @@ Unlike a [procedure](/docs/procedure), a contract has no `.handler` chain. If yo
 
 ### Multiple Schemas
 
-`.input` and `.output` can be called multiple times. Each call adds another schema instead of replacing an earlier one.
+`.input` and `.output` can be called multiple times. Each call adds another schema instead of replacing an earlier one, and the value must satisfy all of them.
 
 ```ts
-const example = oc
-  .input(z.looseObject({ name: z.string() }))
-  .input(z.looseObject({ id: z.number() }))
+const base = oc
+  .input(z.object({ name: z.string() }))
   .output(z.looseObject({ name: z.string() }))
+
+const example = base
+  .input(z.object({ id: z.number() }))
   .output(z.looseObject({ id: z.number() }))
 ```
 
-:::warning
-When you stack schemas, the input or output must satisfy all of them, so the schemas need to be compatible. For example, with Zod, prefer `z.looseObject` over `z.object` to allow unknown properties.
-:::
+Object input schemas compose into a single flat value instead of being piped into each other, so a contract can extend a base contract without repeating its fields. Output schemas are still piped. Learn more in the [Procedure documentation](/docs/procedure#multiple-schemas).
 
 ### `type` Utility
 
