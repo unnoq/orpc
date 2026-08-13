@@ -131,10 +131,12 @@ export function mergeTwoLevels(first: unknown, second: unknown): unknown {
   // Spread keeps special keys like __proto__ as own properties instead of re-parenting the result.
   const result: Record<PropertyKey, unknown> = { ...first, ...second }
 
-  // Object.keys and Object.hasOwn skip the prototype, `first.__proto__` would otherwise
-  // resolve to Object.prototype and be merged in as if it were an own property.
-  for (const key of Object.keys(second)) {
-    const firstValue = Object.hasOwn(first, key) ? first[key] : undefined
+  for (const key in second) {
+    if (!Object.hasOwn(first, key)) {
+      continue
+    }
+
+    const firstValue = first[key]
     const secondValue = second[key]
 
     if (isPlainObject(firstValue) && isPlainObject(secondValue)) {
