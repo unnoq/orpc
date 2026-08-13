@@ -95,6 +95,27 @@ describe('implementToolFactory', () => {
       expect(failed.issues).toEqual([expect.objectContaining({ path: ['age'] })])
     })
 
+    it('combines input schema fragments nested one level deep', async () => {
+      const contract = oc
+        .input(z.object({ params: z.object({ id: z.string() }) }))
+        .input(z.object({ params: z.object({ slug: z.string() }), query: z.object({ page: z.number() }) }))
+
+      const tool = implementToolFactory()(contract)
+      const combined = tool.inputSchema as any
+
+      await expect(
+        combined['~standard'].validate({
+          params: { id: 'ID', slug: 'SLUG', unknown: true },
+          query: { page: 1 },
+        }),
+      ).resolves.toEqual({
+        value: {
+          params: { id: 'ID', slug: 'SLUG' },
+          query: { page: 1 },
+        },
+      })
+    })
+
     it('combines non-object input schemas by piping validation in order', async () => {
       const contract = oc
         .input(type<string, string>(value => `first__${value}`))
