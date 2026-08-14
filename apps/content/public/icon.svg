@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
 <style>
-  .mono { fill: #1b1b1f; }
-  @media (prefers-color-scheme: dark) {
-    .mono { fill: #fff; }
+  .mono { fill: #fff; }
+  @media (prefers-color-scheme: light) {
+    .mono { fill: #1b1b1f; }
   }
 </style>
 <path class="mono" d="M121 254C100 253 78 246 60 234C48 226 47 221 59 216C78 209 87 200 95 181C100 169 103 168 113 171C150 181 181 152 173 115C171 109 171 105 173 103C175 100 176 99 185 95C200 88 210 79 217 67C223 57 225 55 230 57C238 61 249 85 252 106C266 186 203 258 121 254Z"/>
