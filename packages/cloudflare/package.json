@@ -33,6 +33,7 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "wrangler types",
     "build": "unbuild",
     "type:check": "wrangler types && tsc -b",
     "test": "vitest run",

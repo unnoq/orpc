@@ -4,6 +4,7 @@
   "version": "2.0.0-beta.27",
   "private": true,
   "scripts": {
+    "prepare": "wrangler types",
     "dev": "vite --port 3000",
     "type:check": "wrangler types && tsc",
     "build": "vite build",
