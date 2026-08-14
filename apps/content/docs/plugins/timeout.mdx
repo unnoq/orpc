@@ -27,7 +27,7 @@ The `link` can be any supported oRPC link, such as [RPCLink](/docs/rpc/link), [O
 
 ## Server
 
-Use `TimeoutHandlerPlugin` to abort the request signal with an `AbortError` when handling exceeds the timeout. A procedure that honors the signal stops early, and logging treats the abort as a cancellation rather than a failure. The plugin never preempts the procedure, so real errors are never masked:
+Use `TimeoutHandlerPlugin` to abort the request signal with an `AbortError` when handling exceeds the timeout:
 
 ```ts handler
 import { TimeoutHandlerPlugin } from '@orpc/server/plugins'
@@ -41,9 +41,13 @@ const handler = new RPCHandler(router, {
 })
 ```
 
+:::warning
+The plugin only aborts the request signal, it does not respond right after the timeout exceeds. The procedure must honor the signal to stop early and produce the response.
+:::
+
 ### Streaming Responses
 
-The `timeout` option only covers producing the response, so streaming responses can outlive it. Use the separate `streamingTimeout` option, usually higher than `timeout`, to limit the full duration of streaming response bodies:
+The `timeout` option only covers producing the response, so streaming responses can outlive it. Use `streamingTimeout`, usually higher, to limit the full duration of streaming response bodies ([async iterator objects](/docs/async-iterator-object) and readable streams):
 
 ```ts handler
 const handler = new RPCHandler(router, {
@@ -55,8 +59,6 @@ const handler = new RPCHandler(router, {
   ],
 })
 ```
-
-When `streamingTimeout` is exceeded, the request signal is aborted and the body ends once its producer honors the signal, for example an [async iterator object](/docs/async-iterator-object) body ends with an error event.
 
 :::info
 The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.

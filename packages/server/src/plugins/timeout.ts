@@ -27,8 +27,8 @@ export interface TimeoutHandlerPluginOptions<T extends Context> {
 
 /**
  * The Timeout Handler Plugin aborts the request signal with an `AbortError`
- * when handling exceeds a configured timeout. The plugin never preempts the
- * procedure, so its real errors keep reaching error handling and logging.
+ * when handling exceeds a configured timeout. It only aborts the signal,
+ * the procedure must honor it to stop early and produce the response.
  *
  * @see {@link https://orpc.dev/docs/plugins/timeout | Timeout Plugin}
  */
