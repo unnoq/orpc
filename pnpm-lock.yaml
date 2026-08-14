@@ -35,6 +35,9 @@ importers:
       '@orpc/experimental-effect':
         specifier: workspace:*
         version: link:packages/effect
+      '@orpc/hibernation':
+        specifier: workspace:*
+        version: link:packages/hibernation
       '@orpc/json-schema':
         specifier: workspace:*
         version: link:packages/json-schema
@@ -137,6 +140,9 @@ importers:
       lint-staged:
         specifier: ^17.3.0
         version: 17.3.0
+      pino:
+        specifier: ^10.3.1
+        version: 10.3.1
       pkg-pr-new:
         specifier: ^0.0.87
         version: 0.0.87
