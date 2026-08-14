@@ -3,7 +3,10 @@ import pluginBan from 'eslint-plugin-ban'
 
 export default antfu({
   formatters: true,
-  ignores: ['packages/hey-api/tests/client/**'],
+  ignores: [
+    'packages/cloudflare/worker-configuration.d.ts',
+    'playgrounds/cloudflare/worker-configuration.d.ts',
+  ],
   rules: {
     'pnpm/yaml-enforce-settings': 'off',
     'yaml/sort-keys': 'off',

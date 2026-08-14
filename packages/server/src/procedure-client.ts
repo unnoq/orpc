@@ -7,7 +7,7 @@ import type { MiddlewareDone } from './middleware'
 import type { AnyProcedure, Procedure, ProcedureHandlerOptions } from './procedure'
 import { cloneORPCError, ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { createORPCErrorConstructorMap, reconcileORPCError, ValidationError } from '@orpc/contract'
-import { intercept, isAsyncIteratorObject, override, resolveMaybeOptionalOptions, runWithSpan, toArray, traceAsyncIterator, traceReadableStream, value } from '@orpc/shared'
+import { intercept, isAsyncIteratorObject, isPlainObject, mergeTwoLevels, override, resolveMaybeOptionalOptions, runWithSpan, toArray, traceAsyncIterator, traceReadableStream, value } from '@orpc/shared'
 import { unlazy } from './lazy'
 
 export type ProcedureClient<
@@ -219,9 +219,20 @@ async function executeProcedureInternal(procedure: AnyProcedure, options: Proced
       ? inputSchemas.length
       : orderedMiddlewares[midIndex]!.inputSchemasLengthAtUse ?? 0
 
+    /**
+     * Stacked object schemas each validate the original input and are merged afterwards, so every
+     * schema can declare its own fragment without the previous ones stripping or rejecting it.
+     * Anything else stays piped, which keeps schemas like `asyncIteratorObject` wrapping each other.
+     */
     if (!procedure['~orpc'].disableInputValidation) {
       for (let i = startInputIndex; i < endInputIndex; i++) {
-        currentInput = await validateInput(i, inputSchemas[i]!, currentInput)
+        const validated = await validateInput(
+          i,
+          inputSchemas[i]!,
+          inputSchemas.length > 1 && isPlainObject(currentInput) ? options.input : currentInput,
+        )
+
+        currentInput = i !== 0 ? mergeTwoLevels(currentInput, validated) : validated
       }
     }
 

@@ -148,24 +148,12 @@ export class BatchHandlerPlugin<T extends Context> implements StandardHandlerPlu
             }
           }
 
-          /**
-           * A GET batch must not execute non-GET sub-requests, otherwise defenses
-           * that treat GET as safe (CSRF protections, caches, method-based rules)
-           * can be bypassed. An absent method defaults to POST, so require an explicit GET.
-           */
-          if (mightBeMessages.some(m => m.kind === 'request' && m.json.method !== 'GET')) {
-            return {
-              matched: true,
-              response: { status: 400, headers: {}, body: 'GET batch requests only accept GET sub-requests' },
-            }
-          }
-
           messages = mightBeMessages
         }
         else {
           const mightBeMessages = await interceptorOptions.request.resolveBody()
 
-          if (!Array.isArray(mightBeMessages)) {
+          if (!Array.isArray(mightBeMessages) || mightBeMessages.some(m => !isClientPeerSendMessage(m))) {
             return {
               matched: true,
               response: { status: 400, headers: {}, body: 'Invalid batch request body' },
@@ -179,6 +167,17 @@ export class BatchHandlerPlugin<T extends Context> implements StandardHandlerPlu
         return {
           matched: true,
           response: { status: 400, headers: {}, body: 'Invalid batch request' },
+        }
+      }
+
+      const outerMethod = interceptorOptions.request.method
+      if (
+        (outerMethod === 'GET' || outerMethod === 'QUERY')
+        && messages.some(message => message.kind === 'request' && message.json.method !== outerMethod)
+      ) {
+        return {
+          matched: true,
+          response: { status: 400, headers: {}, body: `${outerMethod} batch requests only accept ${outerMethod} sub-requests` },
         }
       }
 

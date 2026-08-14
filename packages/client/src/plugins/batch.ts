@@ -3,7 +3,7 @@ import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardUr
 import type { ClientPeerSendMessage } from '@standardserver/peer'
 import type { StandardLinkOptions, StandardLinkPlugin, StandardLinkTransportInterceptor, StandardLinkTransportInterceptorOptions } from '../adapters/standard'
 import type { ClientContext } from '../types'
-import { defer, isAsyncIteratorObject, loadBytes, splitInHalf, stringifyJSON, toArray, value } from '@orpc/shared'
+import { defer, isAsyncIteratorObject, loadBytes, once, splitInHalf, stringifyJSON, toArray, value } from '@orpc/shared'
 import { parseStandardUrl } from '@standardserver/core'
 import { ClientPeer, decodePeerMessage, isServerPeerSendMessage } from '@standardserver/peer'
 
@@ -161,7 +161,7 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
         headers: subHeaders,
       }
     })
-    this.mapSubresponse = (subResponse, batchResponse) => {
+    this.mapSubresponse = options.mapSubresponse ?? ((subResponse, batchResponse) => {
       return {
         ...subResponse,
         headers: {
@@ -169,7 +169,7 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
           ...subResponse.headers,
         },
       }
-    }
+    })
   }
 
   init(options: StandardLinkOptions<T>): StandardLinkOptions<T> {
@@ -217,15 +217,17 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
 
     for (const [group, items] of pending) {
       const getItems = items.filter(([options]) => options.request.method === 'GET')
-      const restItems = items.filter(([options]) => options.request.method !== 'GET')
+      const queryItems = items.filter(([options]) => options.request.method === 'QUERY')
+      const unsafeItems = items.filter(([options]) => options.request.method !== 'GET' && options.request.method !== 'QUERY')
 
       this.executeBatch('GET', group, getItems)
-      this.executeBatch('POST', group, restItems)
+      this.executeBatch('QUERY', group, queryItems)
+      this.executeBatch('POST', group, unsafeItems)
     }
   }
 
   private async executeBatch(
-    method: 'GET' | 'POST',
+    method: 'GET' | 'QUERY' | 'POST',
     group: BatchLinkPluginGroup<T>,
     groupItems: typeof this.queue extends Map<any, infer U> ? U : never,
   ): Promise<void> {
@@ -317,6 +319,25 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
               request,
               signal: controller.signal,
             })
+
+            /**
+             * An error response is not a batch response, so forward it as-is to every subrequest
+             * instead of failing to parse it.
+             */
+            if (batchResponse.status >= 400) {
+              suppressErrorFromCurrentBatch = true
+
+              const resolveBody = once(() => batchResponse.resolveBody())
+              const errorResponse: StandardLazyResponse = { ...batchResponse, resolveBody }
+
+              groupItems.forEach(([subOptions, resolve]) => {
+                resolve(this.mapSubresponse(errorResponse, batchResponse, subOptions))
+              })
+
+              await peer.close()
+
+              return
+            }
 
             const body = await batchResponse.resolveBody()
 

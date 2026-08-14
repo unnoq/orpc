@@ -115,6 +115,7 @@ Like what we build over at [middleapi](https://github.com/middleapi)? You can he
    <td align="center"><a href="https://github.com/Ryanjso?ref=orpc" target="_blank" rel="sponsored noopener" title="Ryan Soderberg"><img src="https://avatars.githubusercontent.com/u/39172778?u=5ed913c31d57e7221b75784abcad48c7ebddde27&amp;v=4" width="139" alt="Ryan Soderberg"/><br />Ryan Soderberg</a></td>
    <td align="center"><a href="https://github.com/itigoore01?ref=orpc" target="_blank" rel="sponsored noopener" title="shota"><img src="https://avatars.githubusercontent.com/u/11831107?u=c976a6dc7e055eb026304c46c99100ed22b0c8e0&amp;v=4" width="139" alt="shota"/><br />shota</a></td>
    <td align="center"><a href="https://github.com/ellis-driscoll?ref=orpc" target="_blank" rel="sponsored noopener" title="Ellis Driscoll"><img src="https://avatars.githubusercontent.com/u/70685966?u=c5f95bc33b5991d9744abe00052542e4a2ed3cb9&amp;v=4" width="139" alt="Ellis Driscoll"/><br />Ellis Driscoll</a></td>
+   <td align="center"><a href="https://github.com/hoangbn?ref=orpc" target="_blank" rel="sponsored noopener" title="Hoang Nguyen"><img src="https://avatars.githubusercontent.com/u/38968280?u=c90084c6de65c56facabab7ba13a72a49ddbc3e4&amp;v=4" width="139" alt="Hoang Nguyen"/><br />Hoang Nguyen</a></td>
   </tr>
 </table>
 

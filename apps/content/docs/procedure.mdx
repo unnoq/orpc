@@ -68,22 +68,45 @@ By specifying `.output` or the handler's return type, TypeScript can infer the o
 
 ### Multiple Schemas
 
-`.input` and `.output` can be called multiple times. Each call adds another schema instead of replacing an earlier one.
+`.input` and `.output` can be called multiple times. Each call adds a schema instead of replacing the previous one, and the value must pass all of them.
+
+Every `.input` object schema validates the original input, then the results are merged. This lets you extend a base procedure without repeating its fields. Fields that no schema defines are dropped. [Middleware](/docs/middleware) sees the fields validated before it, the handler sees them all.
 
 ```ts
-const example = os
-  .input(z.looseObject({ name: z.string() }))
-  .input(z.looseObject({ id: z.number() }))
-  .output(z.looseObject({ name: z.string() }))
-  .output(z.looseObject({ id: z.number() }))
+const base = os
+  .input(z.object({ params: z.object({ id: z.string() }) }))
+
+const example = base
+  .input(z.object({ params: z.object({ slug: z.string() }) }))
   .handler(async ({ input }) => {
-    return { id: 1, name: 'example' }
+    // input is { params: { id: string, slug: string } }
+    return input
   })
 ```
 
 :::warning
-When you stack schemas, the input or output must satisfy all of them, so the schemas need to be compatible. For example, with Zod, prefer `z.looseObject` over `z.object` to allow unknown properties.
+Only plain objects are merged, and only for the first two levels. Deeper values and anything else, like [`asyncIteratorObject`](/docs/async-iterator-object) or a `z.string()` transform, are piped: each schema validates what the previous one returned. Use `z.looseObject` when two schemas define the same object deeper than that:
+
+```ts
+const example = os
+  .input(z.object({ user: z.object({ address: z.looseObject({ city: z.string() }) }) }))
+  .input(z.object({ user: z.object({ address: z.looseObject({ zip: z.string() }) }) }))
+```
+
 :::
+
+:::warning
+Schemas that reject unknown fields, like `z.strictObject`, cannot be stacked. Each one rejects the fields the others define.
+:::
+
+`.output` schemas are piped, not merged, and run in reverse: the last one validates the handler result, then each earlier one validates what the next returned. Use `z.looseObject` so no schema drops a field another one needs.
+
+```ts
+const example = os
+  .output(z.looseObject({ name: z.string() }))
+  .output(z.looseObject({ id: z.number() }))
+  .handler(async () => ({ id: 1, name: 'example' }))
+```
 
 ### `type` Utility
 

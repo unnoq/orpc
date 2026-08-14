@@ -28,7 +28,7 @@ describe('corsHandlerPlugin', () => {
     expect(response!.status).toBe(204)
     expect(response!.headers.get('access-control-allow-origin')).toBe('https://example.com')
     expect(response!.headers.get('vary')).toBe('Origin')
-    expect(response!.headers.get('access-control-allow-methods')).toBe('GET, HEAD, PUT, POST, DELETE, PATCH')
+    expect(response!.headers.get('access-control-allow-methods')).toBe('GET, HEAD, PUT, POST, DELETE, PATCH, QUERY')
     expect(response!.headers.get('access-control-max-age')).toBeNull()
   })
 
@@ -50,7 +50,7 @@ describe('corsHandlerPlugin', () => {
     }))
 
     expect(response!.headers.get('access-control-max-age')).toBe('600')
-    expect(response!.headers.get('access-control-allow-methods')).toBe('GET, HEAD, PUT, POST, DELETE, PATCH')
+    expect(response!.headers.get('access-control-allow-methods')).toBe('GET, HEAD, PUT, POST, DELETE, PATCH, QUERY')
     expect(response!.headers.get('access-control-allow-headers')).toBe('Content-Type, Authorization')
   })
 
@@ -76,8 +76,23 @@ describe('corsHandlerPlugin', () => {
     expect(response!.headers.get('access-control-allow-headers')).toBeNull()
   })
 
+  it('uses an explicitly configured method list instead of the default', async () => {
+    const handler = new RPCHandler(router, {
+      plugins: [new CORSHandlerPlugin({ allowMethods: ['POST'] })],
+    })
+
+    const { response } = await handler.handle(new Request('https://example.com', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'https://example.com',
+      },
+    }))
+
+    expect(response!.headers.get('access-control-allow-methods')).toBe('POST')
+  })
+
   it('sets allowed origin only when custom origin function approves', async () => {
-    const customOrigin = (origin: string) => origin === 'https://allowed.com' ? origin : null
+    const customOrigin = (origin: string | undefined) => origin === 'https://allowed.com' ? origin : null
     const customRouter = {
       custom: os.handler(() => 'ok'),
     }
@@ -111,7 +126,7 @@ describe('corsHandlerPlugin', () => {
   })
 
   it('handles timingOrigin option correctly', async () => {
-    const customTimingOrigin = (origin: string) => origin === 'https://timing.com' ? origin : null
+    const customTimingOrigin = (origin: string | undefined) => origin === 'https://timing.com' ? origin : null
     const customRouter = {
       timing: os.handler(() => 'ok'),
     }
@@ -230,9 +245,8 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
 
-    // default origin function `origin => origin` returns '' for empty origin,
-    // which is not included in the response as a valid origin
-    expect(response!.headers.get('access-control-allow-origin')).toBe('')
+    // the default origin function receives undefined, so there is no origin to reflect
+    expect(response!.headers.get('access-control-allow-origin')).toBeNull()
     expect(response!.headers.get('vary')).toBe('Origin')
   })
 

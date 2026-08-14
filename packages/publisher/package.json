@@ -1,7 +1,7 @@
 {
   "name": "@orpc/publisher",
   "type": "module",
-  "version": "2.0.0-beta.26",
+  "version": "2.0.0-beta.27",
   "license": "MIT",
   "funding": "https://github.com/sponsors/dinwwwh",
   "homepage": "https://orpc.dev",
@@ -71,7 +71,7 @@
     "@standardserver/core": "^0.7.1"
   },
   "devDependencies": {
-    "@upstash/redis": "^1.38.1",
-    "redis": "^6.2.0"
+    "@upstash/redis": "^1.38.2",
+    "redis": "^6.2.1"
   }
 }
