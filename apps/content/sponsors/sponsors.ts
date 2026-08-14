@@ -166,6 +166,15 @@ export default [
     "org": false
   },
   {
+    "name": "Hoang Nguyen",
+    "login": "hoangbn",
+    "avatar": "https://avatars.githubusercontent.com/u/38968280?u=c90084c6de65c56facabab7ba13a72a49ddbc3e4&v=4",
+    "link": "https://github.com/hoangbn?ref=orpc",
+    "tierTitle": "Sponsors",
+    "tierLevel": 2,
+    "org": false
+  },
+  {
     "name": "David Walsh",
     "login": "rhinodavid",
     "avatar": "https://avatars.githubusercontent.com/u/5778036?u=b5521f07d2f88c3db2a0dae62b5f2f8357214af0&v=4",
