@@ -1,7 +1,7 @@
 {
   "name": "@orpc/cloudflare",
   "type": "module",
-  "version": "2.0.0-beta.26",
+  "version": "2.0.0-beta.27",
   "license": "MIT",
   "funding": "https://github.com/sponsors/dinwwwh",
   "homepage": "https://orpc.dev",
@@ -46,9 +46,9 @@
     "@standardserver/core": "^0.7.1"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.20.1",
+    "@cloudflare/vitest-pool-workers": "^0.21.1",
     "@vitest/coverage-istanbul": "^4.1.9",
     "vitest": "^4.1.9",
-    "wrangler": "^4.118.0"
+    "wrangler": "^4.121.0"
   }
 }

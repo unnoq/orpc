@@ -1,5 +1,5 @@
 import type { StandardUrl } from '@standardserver/core'
-import { ORPCError } from '../../error'
+import { MalformedResponseError, ORPCError } from '../../error'
 import { RPCSerializer } from '../../rpc-serializer'
 import { RPCLinkCodec } from './rpc-link-codec'
 
@@ -84,6 +84,37 @@ describe('rpcLinkCodec', () => {
       const request = await codec.encodeInput('input', ['ping'], { context: {} })
 
       expect(request.method).toBe('PATCH')
+      expect(request.body).toBe(serializeSpy.mock.results[0]!.value)
+      expect(request.url).toBe('/api/ping')
+    })
+
+    it('falls back to QUERY with a body when GET url exceeds maxUrlLength', async () => {
+      const codec = new RPCLinkCodec({
+        url: '/api',
+        method: 'GET',
+        maxUrlLength: 10,
+        fallbackMethod: 'QUERY',
+        serializer,
+      })
+
+      const request = await codec.encodeInput('input', ['ping'], { context: {} })
+
+      expect(request.method).toBe('QUERY')
+      expect(request.body).toBe(serializeSpy.mock.results[0]!.value)
+      expect(request.url).toBe('/api/ping')
+    })
+
+    it('falls back to POST by default when GET url exceeds maxUrlLength', async () => {
+      const codec = new RPCLinkCodec({
+        url: '/api',
+        method: 'GET',
+        maxUrlLength: 10,
+        serializer,
+      })
+
+      const request = await codec.encodeInput('input', ['ping'], { context: {} })
+
+      expect(request.method).toBe('POST')
       expect(request.body).toBe(serializeSpy.mock.results[0]!.value)
       expect(request.url).toBe('/api/ping')
     })
@@ -272,7 +303,7 @@ describe('rpcLinkCodec', () => {
       })
     })
 
-    it('wraps non-ORPCError error response with generic MALFORMED_ORPC_ERROR_RESPONSE ORPCError', async () => {
+    it('wraps non-ORPCError error response with generic MALFORMED_ORPC_RESPONSE ORPCError', async () => {
       const serialized = serializer.serialize({ something: 'unexpected' })
 
       const result = await codec.decodeResponse({
@@ -284,21 +315,46 @@ describe('rpcLinkCodec', () => {
       expect(result.kind).toBe('error')
       if (result.kind === 'error') {
         expect(result.error).toBeInstanceOf(ORPCError)
-        expect(result.error.code).toBe('MALFORMED_ORPC_ERROR_RESPONSE')
+        expect(result.error.code).toBe('MALFORMED_ORPC_RESPONSE')
+        expect(result.error.message).toBe('Forbidden')
         expect(result.error.data).toEqual(expect.objectContaining({
           status: 403,
           headers: { 'x-header': 'value' },
-          body: { something: 'unexpected' },
+          body: serialized,
         }))
+        expect(result.error.cause).toBeInstanceOf(MalformedResponseError)
+        expect((result.error.cause as MalformedResponseError).response).toBe(result.error.data)
       }
     })
 
-    it('throws on invalid RPC response format', async () => {
-      await expect(codec.decodeResponse({
+    it('infers MALFORMED_ORPC_RESPONSE message from the response body', async () => {
+      const result = await codec.decodeResponse({
+        status: 400,
+        headers: {},
+        resolveBody: () => Promise.resolve({ message: 'upstream exploded' }),
+      })
+
+      expect(result.kind).toBe('error')
+      if (result.kind === 'error') {
+        expect(result.error.code).toBe('MALFORMED_ORPC_RESPONSE')
+        expect(result.error.message).toBe('upstream exploded')
+      }
+    })
+
+    it('throws MALFORMED_ORPC_RESPONSE on invalid RPC response format', async () => {
+      const error: any = await codec.decodeResponse({
         status: 200,
         headers: {},
         resolveBody: () => Promise.resolve({ meta: 123 }),
-      })).rejects.toThrow('Invalid RPC response format.')
+      }).then(() => null, e => e)
+
+      expect(error).toBeInstanceOf(ORPCError)
+      expect(error.code).toBe('MALFORMED_ORPC_RESPONSE')
+      expect(error.message).toBe('Invalid RPC response format.')
+      expect(error.data).toEqual({ status: 200, headers: {}, body: { meta: 123 } })
+      expect(error.cause).toBeInstanceOf(MalformedResponseError)
+      expect(error.cause.response).toBe(error.data)
+      expect(error.cause.cause).toBeInstanceOf(Error)
     })
   })
 })

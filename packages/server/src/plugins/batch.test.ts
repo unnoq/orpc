@@ -20,7 +20,7 @@ function makePeerRequestMessage(id: number, url: string, method = 'POST', body?:
 function createBatchRequest(options: {
   mode: 'buffered' | 'streaming'
   messages?: unknown
-  method?: 'POST' | 'GET'
+  method?: 'POST' | 'GET' | 'QUERY'
   data?: string
 }) {
   if (options.method === 'GET') {
@@ -33,7 +33,7 @@ function createBatchRequest(options: {
   }
 
   return new Request('https://example.com/__batch__', {
-    method: 'POST',
+    method: options.method ?? 'POST',
     headers: { 'orpc-batch': options.mode, 'content-type': 'application/json' },
     body: JSON.stringify(options.messages),
   })
@@ -153,6 +153,7 @@ describe('batchHandlerPlugin', () => {
       }))
 
       expect(response!.status).toBe(400)
+      expect(await response!.text()).toContain('Invalid batch request body')
       expect(handlerFn).toHaveBeenCalledTimes(0)
     })
 
@@ -341,6 +342,82 @@ describe('batchHandlerPlugin', () => {
       expect(response!.status).toBe(400)
       expect(await response!.text()).toContain('GET batch requests only accept GET sub-requests')
       expect(handlerFn).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('query batches', () => {
+    it('returns 400 before execution when a QUERY batch contains a non-request message', async () => {
+      const handler = createHandler()
+
+      const { response } = await handler.handle(createBatchRequest({
+        mode: 'buffered',
+        method: 'QUERY',
+        messages: [
+          { kind: 'response', id: 0, json: { method: 'POST', url: '/ping', headers: {} } },
+        ],
+      }))
+
+      expect(response!.status).toBe(400)
+      expect(handlerFn).toHaveBeenCalledTimes(0)
+    })
+
+    it('returns 400 before execution when a QUERY batch contains a non-QUERY sub-request', async () => {
+      const handler = createHandler()
+
+      const { response } = await handler.handle(createBatchRequest({
+        mode: 'buffered',
+        method: 'QUERY',
+        messages: [
+          makePeerRequestMessage(0, '/ping', 'QUERY'),
+          makePeerRequestMessage(1, '/ping', 'POST'),
+        ],
+      }))
+
+      expect(response!.status).toBe(400)
+      expect(await response!.text()).toContain('QUERY batch requests only accept QUERY sub-requests')
+      expect(handlerFn).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('sub-request headers', () => {
+    function createHeaderCapturingHandler() {
+      const seenHeaders: Record<string, string | string[] | undefined>[] = []
+
+      const handler = new RPCHandler(router, {
+        plugins: [new BatchHandlerPlugin()],
+        interceptors: [({ next, request }) => {
+          seenHeaders.push(request.headers)
+          return next()
+        }],
+      })
+
+      return { handler, seenHeaders }
+    }
+
+    function createBatchRequestWithHeaders(headers: Record<string, string>, subRequestHeaders: Record<string, string>) {
+      return new Request('https://example.com/__batch__', {
+        method: 'POST',
+        headers: { 'orpc-batch': 'buffered', 'content-type': 'application/json', ...headers },
+        body: JSON.stringify([
+          { kind: 'request', id: 0, json: { method: 'POST', url: '/ping', headers: subRequestHeaders }, binary: undefined },
+        ]),
+      })
+    }
+
+    it('merges batch request headers into sub-requests and lets sub-requests win', async () => {
+      const { handler, seenHeaders } = createHeaderCapturingHandler()
+
+      await handler.handle(createBatchRequestWithHeaders(
+        { 'x-from-batch': 'batch', 'x-overridden': 'batch' },
+        { 'x-from-sub-request': 'sub-request', 'x-overridden': 'sub-request' },
+      ))
+
+      expect(seenHeaders[0]).toMatchObject({
+        'x-from-batch': 'batch',
+        'x-from-sub-request': 'sub-request',
+        'x-overridden': 'sub-request',
+      })
+      expect(seenHeaders[0]!['orpc-batch']).toBeUndefined()
     })
   })
 

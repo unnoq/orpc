@@ -40,6 +40,15 @@ export default [
     "org": false
   },
   {
+    "name": "あわわわとーにゅ",
+    "login": "u1-liquid",
+    "avatar": "https://avatars.githubusercontent.com/u/17376330?u=de3353804be889f009f7e0a1582daf04d0ab292d&v=4",
+    "link": "https://github.com/u1-liquid?ref=orpc",
+    "tierTitle": "Sponsors",
+    "tierLevel": 2,
+    "org": false
+  },
+  {
     "name": "nk",
     "login": "nicognaW",
     "avatar": "https://avatars.githubusercontent.com/u/66731869?u=4699bda3a9092d3ec34fbd959450767bcc8b8b6d&v=4",
@@ -152,6 +161,15 @@ export default [
     "login": "ellis-driscoll",
     "avatar": "https://avatars.githubusercontent.com/u/70685966?u=c5f95bc33b5991d9744abe00052542e4a2ed3cb9&v=4",
     "link": "https://github.com/ellis-driscoll?ref=orpc",
+    "tierTitle": "Sponsors",
+    "tierLevel": 2,
+    "org": false
+  },
+  {
+    "name": "Hoang Nguyen",
+    "login": "hoangbn",
+    "avatar": "https://avatars.githubusercontent.com/u/38968280?u=c90084c6de65c56facabab7ba13a72a49ddbc3e4&v=4",
+    "link": "https://github.com/hoangbn?ref=orpc",
     "tierTitle": "Sponsors",
     "tierLevel": 2,
     "org": false
@@ -323,15 +341,6 @@ export default [
     "login": "Stijn-Timmer",
     "avatar": "https://avatars.githubusercontent.com/u/100147665?u=106b2c18e9c98a61861b4ee7fc100f5b9906a6c9&v=4",
     "link": "https://github.com/Stijn-Timmer?ref=orpc",
-    "tierTitle": "Past Sponsors",
-    "tierLevel": 0,
-    "org": false
-  },
-  {
-    "name": "あわわわとーにゅ",
-    "login": "u1-liquid",
-    "avatar": "https://avatars.githubusercontent.com/u/17376330?u=de3353804be889f009f7e0a1582daf04d0ab292d&v=4",
-    "link": "https://github.com/u1-liquid?ref=orpc",
     "tierTitle": "Past Sponsors",
     "tierLevel": 0,
     "org": false

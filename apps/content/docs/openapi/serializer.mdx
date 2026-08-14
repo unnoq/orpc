@@ -30,7 +30,7 @@ description: "Learn how OpenAPI Serializer performs one-way serialization of com
 
 :::warning
 To better support `Blob`, `File`, and `ReadableStream<Uint8Array>` at the root level in cross-origin scenarios,
-extend your [CORS allowlist](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_response_header) to allow clients to send and receive the `Content-Disposition` and `Standard-Server` headers. Learn more in the [Standard Server documentation](https://github.com/middleapi/standardserver#resolving-body). If you use the [CORS Plugin](/docs/plugins/cors), include them in `allowHeaders` and `exposeHeaders`:
+extend your [CORS allowlist](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_response_header) to allow clients to send and receive the `Content-Disposition` and `Standard-Server` headers. Learn more in the [Standard Server documentation](https://github.com/middleapi/standardserver#how-body-parsing-works). If you use the [CORS Plugin](/docs/plugins/cors), include them in `allowHeaders` and `exposeHeaders`:
 
 ```ts
 const cors = new CORSHandlerPlugin({
@@ -137,7 +137,7 @@ Standard-Server: file
 ```
 
 :::info
-If the receiver mistakenly handles this payload as a regular (non-file) body, set the `standard-server` header to help the receiver detect the actual data type and handle it correctly. Learn more about this header in the [Standard Server Documentation](https://github.com/middleapi/standardserver#resolving-body).
+If the receiver mistakenly handles this payload as a regular (non-file) body, set the `standard-server` header to help the receiver detect the actual data type and handle it correctly. Learn more about this header in the [Standard Server Documentation](https://github.com/middleapi/standardserver#how-body-parsing-works).
 :::
 
 ### AsyncIteratorObject
@@ -169,7 +169,7 @@ Standard-Server: octet-stream
 ```
 
 :::info
-If the receiver mistakenly handles this payload as a regular (non-stream) body, set the `standard-server` header to help the receiver detect the actual data type and handle it correctly. Learn more about this header in the [Standard Server Documentation](https://github.com/middleapi/standardserver#resolving-body).
+If the receiver mistakenly handles this payload as a regular (non-stream) body, set the `standard-server` header to help the receiver detect the actual data type and handle it correctly. Learn more about this header in the [Standard Server Documentation](https://github.com/middleapi/standardserver#how-body-parsing-works).
 :::
 
 ## Learn More

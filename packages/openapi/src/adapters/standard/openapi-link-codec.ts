@@ -2,9 +2,9 @@ import type { AnyORPCError, ClientContext, ClientOptions } from '@orpc/client'
 import type { StandardLinkCodec, StandardLinkCodecDecodedResponse } from '@orpc/client/standard'
 import type { AnyProcedureContract, RouterContract } from '@orpc/contract'
 import type { Promisable, Value } from '@orpc/shared'
-import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardResponse, StandardUrl } from '@standardserver/core'
+import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardUrl } from '@standardserver/core'
 import type { OpenAPIMeta } from '../../meta'
-import { createORPCErrorFromJson, isORPCErrorJson, ORPCError } from '@orpc/client'
+import { createORPCErrorFromJson, createORPCErrorFromMalformedResponse, isORPCErrorJson } from '@orpc/client'
 import { getRouterContract, ProcedureContract } from '@orpc/contract'
 import { unlazy } from '@orpc/server'
 import { isTypescriptObject, mergeHttpPath, pathToHttpPath, stringifyJSON, value } from '@orpc/shared'
@@ -19,8 +19,6 @@ import { getOpenAPIMeta } from '../../meta'
 import { OpenAPISerializer } from '../../openapi-serializer'
 import { getDynamicPathParams, isBodylessMethod } from '../../utils'
 import { serializeHeaders } from './utils'
-
-export class OpenAPILinkCodecError extends TypeError {}
 
 export interface OpenAPILinkCodecOptions<T extends ClientContext> {
   /**
@@ -94,7 +92,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
 
       if (dynamicParams?.length) {
         if (!isTypescriptObject(input)) {
-          throw new OpenAPILinkCodecError(
+          throw new TypeError(
             `Input must be an object with "compact" input structure when the path has dynamic params (${dynamicParams.map(p => p.parameterName).join(', ')}) in call to procedure (${path.join('.')}).`,
           )
         }
@@ -139,7 +137,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
     }
 
     if (!isValidDetailedInput(input)) {
-      throw new OpenAPILinkCodecError(`
+      throw new TypeError(`
         Invalid "detailed" input structure in call to procedure (${path.join('.')}):
         • Expected an object or undefined with optional properties:
           - params (object, required when the path has dynamic params)
@@ -154,7 +152,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
 
     if (dynamicParams?.length) {
       if (!input?.params) {
-        throw new OpenAPILinkCodecError(
+        throw new TypeError(
           `The "params" property is required for "detailed" input when the path has dynamic params (${dynamicParams.map(p => p.parameterName).join(', ')}) in call to procedure (${path.join('.')}).`,
         )
       }
@@ -231,7 +229,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
     }
 
     if (!encoded) {
-      throw new OpenAPILinkCodecError(`Path param "${param.parameterName}" cannot be empty in call to procedure (${path.join('.')}).`)
+      throw new TypeError(`Path param "${param.parameterName}" cannot be empty in call to procedure (${path.join('.')}).`)
     }
 
     return encoded
@@ -374,24 +372,16 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
     const procedure = await this.resolveProcedure(path)
     const meta = getOpenAPIMeta(procedure)
 
+    const body = await response.resolveBody(meta?.responseBodyHint)
+
     const deserialized = await (async () => {
-      let isBodyOk = false
-
       try {
-        const body = await response.resolveBody(meta?.responseBodyHint)
-
-        isBodyOk = true
-
         return this.serializer.deserialize(body)
       }
       catch (error) {
-        if (!isBodyOk) {
-          throw new Error('Cannot parse response body, please check the response body and content-type.', {
-            cause: error,
-          })
-        }
-
-        throw new Error('Invalid OpenAPI response format.', {
+        throw createORPCErrorFromMalformedResponse({
+          message: 'Invalid OpenAPI response format.',
+          response: { status: response.status, headers: response.headers, body },
           cause: error,
         })
       }
@@ -410,9 +400,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
 
       return {
         kind: 'error',
-        error: new ORPCError<'MALFORMED_ORPC_ERROR_RESPONSE', StandardResponse>('MALFORMED_ORPC_ERROR_RESPONSE', {
-          data: { headers: response.headers, status: response.status, body: deserialized },
-        }),
+        error: createORPCErrorFromMalformedResponse({ response: { headers: response.headers, status: response.status, body } }),
       }
     }
 
@@ -434,7 +422,7 @@ export class OpenAPILinkCodec<T extends ClientContext> implements StandardLinkCo
     const { default: maybeProcedure } = await unlazy(getRouterContract(this.router, path))
 
     if (!(maybeProcedure instanceof ProcedureContract)) {
-      throw new OpenAPILinkCodecError(`Expected a procedure or contract at path (${path.join('.')})`)
+      throw new TypeError(`Expected a procedure or contract at path (${path.join('.')})`)
     }
 
     return maybeProcedure

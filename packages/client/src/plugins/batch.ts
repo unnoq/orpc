@@ -3,7 +3,7 @@ import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardUr
 import type { ClientPeerSendMessage } from '@standardserver/peer'
 import type { StandardLinkOptions, StandardLinkPlugin, StandardLinkTransportInterceptor, StandardLinkTransportInterceptorOptions } from '../adapters/standard'
 import type { ClientContext } from '../types'
-import { defer, isAsyncIteratorObject, loadBytes, splitInHalf, stringifyJSON, toArray, value } from '@orpc/shared'
+import { defer, isAsyncIteratorObject, loadBytes, once, splitInHalf, stringifyJSON, toArray, value } from '@orpc/shared'
 import { parseStandardUrl } from '@standardserver/core'
 import { ClientPeer, decodePeerMessage, isServerPeerSendMessage } from '@standardserver/peer'
 
@@ -30,8 +30,6 @@ export interface BatchLinkPluginGroup<T extends ClientContext> {
    */
   path?: Value<string[], [items: [StandardLinkTransportInterceptorOptions<T>, ...StandardLinkTransportInterceptorOptions<T>[]]]>
 }
-
-export class BatchLinkPluginError extends TypeError {}
 
 export interface BatchLinkPluginOptions<T extends ClientContext> {
   groups: [BatchLinkPluginGroup<T>, ...BatchLinkPluginGroup<T>[]]
@@ -163,7 +161,7 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
         headers: subHeaders,
       }
     })
-    this.mapSubresponse = (subResponse, batchResponse) => {
+    this.mapSubresponse = options.mapSubresponse ?? ((subResponse, batchResponse) => {
       return {
         ...subResponse,
         headers: {
@@ -171,7 +169,7 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
           ...subResponse.headers,
         },
       }
-    }
+    })
   }
 
   init(options: StandardLinkOptions<T>): StandardLinkOptions<T> {
@@ -219,15 +217,17 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
 
     for (const [group, items] of pending) {
       const getItems = items.filter(([options]) => options.request.method === 'GET')
-      const restItems = items.filter(([options]) => options.request.method !== 'GET')
+      const queryItems = items.filter(([options]) => options.request.method === 'QUERY')
+      const unsafeItems = items.filter(([options]) => options.request.method !== 'GET' && options.request.method !== 'QUERY')
 
       this.executeBatch('GET', group, getItems)
-      this.executeBatch('POST', group, restItems)
+      this.executeBatch('QUERY', group, queryItems)
+      this.executeBatch('POST', group, unsafeItems)
     }
   }
 
   private async executeBatch(
-    method: 'GET' | 'POST',
+    method: 'GET' | 'QUERY' | 'POST',
     group: BatchLinkPluginGroup<T>,
     groupItems: typeof this.queue extends Map<any, infer U> ? U : never,
   ): Promise<void> {
@@ -320,6 +320,25 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
               signal: controller.signal,
             })
 
+            /**
+             * An error response is not a batch response, so forward it as-is to every subrequest
+             * instead of failing to parse it.
+             */
+            if (batchResponse.status >= 400) {
+              suppressErrorFromCurrentBatch = true
+
+              const resolveBody = once(() => batchResponse.resolveBody())
+              const errorResponse: StandardLazyResponse = { ...batchResponse, resolveBody }
+
+              groupItems.forEach(([subOptions, resolve]) => {
+                resolve(this.mapSubresponse(errorResponse, batchResponse, subOptions))
+              })
+
+              await peer.close()
+
+              return
+            }
+
             const body = await batchResponse.resolveBody()
 
             if (Array.isArray(body) && body.every(v => isServerPeerSendMessage(v))) {
@@ -334,10 +353,10 @@ export class BatchLinkPlugin<T extends ClientContext> implements StandardLinkPlu
               await decodeLengthPrefixedStream(body, peer)
             }
             else {
-              throw new BatchLinkPluginError('Invalid batch response format.')
+              throw new TypeError('Invalid batch response format.')
             }
 
-            await peer.close(new BatchLinkPluginError('Batch response is incomplete.'))
+            await peer.close(new TypeError('Batch response is incomplete.'))
           }
           catch (error) {
             await peer.close(error)
@@ -365,7 +384,7 @@ async function decodeLengthPrefixedBlob(blob: Blob, peer: ClientPeer): Promise<v
 
   while (offset < buffer.length) {
     if (offset + 4 > buffer.length) {
-      throw new BatchLinkPluginError('Invalid batch response: incomplete length header.')
+      throw new TypeError('Invalid batch response: incomplete length header.')
     }
 
     const view = new DataView(buffer.buffer, buffer.byteOffset + offset, 4)
@@ -373,7 +392,7 @@ async function decodeLengthPrefixedBlob(blob: Blob, peer: ClientPeer): Promise<v
     offset += 4
 
     if (offset + length > buffer.length) {
-      throw new BatchLinkPluginError('Invalid batch response: incomplete message.')
+      throw new TypeError('Invalid batch response: incomplete message.')
     }
 
     const messageBytes = buffer.subarray(offset, offset + length)
@@ -381,7 +400,7 @@ async function decodeLengthPrefixedBlob(blob: Blob, peer: ClientPeer): Promise<v
 
     const result = decodePeerMessage(messageBytes)
     if (!result.matched || !isServerPeerSendMessage(result.message)) {
-      throw new BatchLinkPluginError('Invalid batch response: invalid message.')
+      throw new TypeError('Invalid batch response: invalid message.')
     }
 
     await peer.message(result.message)
@@ -423,7 +442,7 @@ async function decodeLengthPrefixedStream(stream: ReadableStream<Uint8Array>, pe
         const result = decodePeerMessage(messageBytes)
 
         if (!result.matched || !isServerPeerSendMessage(result.message)) {
-          throw new BatchLinkPluginError('Invalid batch response: invalid message.')
+          throw new TypeError('Invalid batch response: invalid message.')
         }
 
         await peer.message(result.message)
