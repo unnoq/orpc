@@ -20,6 +20,7 @@ temp/
 *.vitest-temp.json
 vite.config.ts.timestamp-*
 vitest.config.ts.timestamp-*
+worker-configuration.d.ts
 
 # Common manual ignore files
 *.local
