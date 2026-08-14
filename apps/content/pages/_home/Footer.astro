@@ -1,4 +1,8 @@
 ---
+// Astro inlines the SVG and spreads our props onto its root <svg>, so the mark
+// stays in sync with the file the header and favicon are generated from.
+import Logo from '../../logo.svg'
+
 interface FooterLink {
   label: string
   href: string
@@ -60,17 +64,7 @@ const years = `${FIRST_YEAR}-${new Date().getFullYear()}`
   <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_repeat(4,auto)] lg:gap-16">
     <div>
       <a href="/" class="inline-flex items-center gap-2.5" aria-label="oRPC home">
-        <svg
-          aria-hidden="true"
-          class="size-5"
-          fill="none"
-          viewBox="0 0 60 60"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M4 45L17 37.5V22.5L30 15L43 22.5V7.5L30 0L4 15V45ZM56 15L43 22.5V37.5L30 45L17 37.5V52.5L30 60L56 45V15Z"
-            fill="currentColor"></path>
-        </svg>
+        <Logo aria-hidden="true" class="size-5" />
         <span class="font-display text-base font-semibold tracking-tight">oRPC</span>
       </a>
       <p class="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
