@@ -1,6 +1,6 @@
 import type { Context } from '@orpc/server'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
-import type { StandardBody, StandardBodyHint, StandardHeaders, StandardLazyRequest, StandardMethod } from '@standardserver/core'
+import type { StandardBody, StandardBodyHint, StandardHeaders, StandardLazyRequest } from '@standardserver/core'
 import type { FilePropertyBag } from 'node:buffer'
 import { Buffer } from 'node:buffer'
 import { openAsBlob } from 'node:fs'
@@ -8,9 +8,35 @@ import { appendFile, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { ORPCError } from '@orpc/server'
-import { toArray } from '@orpc/shared'
-import { flattenStandardHeader, getFilenameFromContentDisposition } from '@standardserver/core'
+import { isAsyncIteratorObject, override, toArray, wrapAsyncIterator, wrapReadableStream } from '@orpc/shared'
+import { flattenStandardHeader, getFilenameFromContentDisposition, resolveStandardBodyHint } from '@standardserver/core'
+import { toFetchHeaders, toStandardBody } from '@standardserver/fetch'
 import { parseHeaderParameters, parseMultipart } from './multipart'
+
+export interface TmpFileUploadHandlerPluginMaxBodySize {
+  /**
+   * The maximum total size in bytes of request body content that is parsed
+   * into memory: JSON, URL-encoded forms, and the plain fields of a multipart
+   * body. A larger body rejects the request with `PAYLOAD_TOO_LARGE`. Usually
+   * the lowest of the three limits, because this content cannot stream anywhere.
+   */
+  memory: number
+
+  /**
+   * The maximum total size in bytes of upload content a request streams into
+   * temporary files: file bodies and the file parts of a multipart body
+   * combined. A larger body rejects the request with `PAYLOAD_TOO_LARGE`.
+   */
+  file: number
+
+  /**
+   * The maximum total size in bytes of a request body that is consumed as a
+   * stream: event streams and raw binary streams. Enforced while the stream is
+   * consumed, so an oversized stream fails at the reader. Usually the highest
+   * of the three limits, because this content is consumed on the fly.
+   */
+  stream: number
+}
 
 export interface TmpFileUploadHandlerPluginOptions {
   /**
@@ -23,14 +49,13 @@ export interface TmpFileUploadHandlerPluginOptions {
   tmpDir?: string
 
   /**
-   * The maximum allowed size in bytes of a single multipart field that is not
-   * a file. Fields are buffered in memory, so this bounds the memory a request
-   * can consume through them. A larger field rejects the request with
-   * `PAYLOAD_TOO_LARGE`.
+   * The size limit for each kind of request body. Every kind is required when
+   * the option is given, so none is left unbounded by accident; set a kind to
+   * `Number.POSITIVE_INFINITY` to deliberately leave it unlimited.
    *
-   * @default Infinity
+   * @default unlimited for every kind
    */
-  maxFieldSize?: number
+  maxBodySize?: TmpFileUploadHandlerPluginMaxBodySize
 }
 
 /**
@@ -63,10 +88,16 @@ export class TmpFile extends File {
  * far larger than available memory parse in constant memory. Every other body is left
  * to the standard parser.
  *
+ * Request body sizes are limited per content category: memory-parsed, spooled to
+ * disk, and streamed. This subsumes the request limit plugin while sizing each
+ * kind of body to what it actually costs.
+ *
  * @remarks
- * Temporary files are removed when the request finishes, which is before the response
- * body is transmitted. A procedure that needs the content afterwards, e.g. to return
- * the upload in its response, must copy the content or move the file first.
+ * Temporary files are removed when the request finishes. A streaming response body,
+ * an event iterator or a raw stream, keeps them alive until it completes, so
+ * responses that read the upload while streaming work. Any other response is
+ * transmitted after removal, so one that embeds the upload itself, as a `File` or
+ * inside `FormData`, needs the content copied or the file moved first.
  *
  * @see {@link https://orpc.dev/docs/plugins/tmp-file-upload | Tmp File Upload Plugin}
  */
@@ -85,28 +116,76 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
   before = ['~request-limit', '~request-compression']
 
   private readonly tmpDir: string
-  private readonly maxFieldSize: number
+  private readonly maxBodySize: TmpFileUploadHandlerPluginMaxBodySize
 
   constructor(options: TmpFileUploadHandlerPluginOptions = {}) {
     this.tmpDir = options.tmpDir ?? tmpdir()
-    this.maxFieldSize = options.maxFieldSize ?? Number.POSITIVE_INFINITY
+    this.maxBodySize = options.maxBodySize ?? {
+      memory: Number.POSITIVE_INFINITY,
+      file: Number.POSITIVE_INFINITY,
+      stream: Number.POSITIVE_INFINITY,
+    }
   }
 
   init(options: StandardHandlerOptions<T>): StandardHandlerOptions<T> {
     const routingInterceptor: StandardHandlerRoutingInterceptor<T> = async ({ next, ...interceptorOptions }) => {
       const tmpFiles = new RequestTmpFiles(this.tmpDir)
+      let cleanupDeferred = false
 
       try {
-        return await next({
+        const result = await next({
           ...interceptorOptions,
           request: {
             ...interceptorOptions.request,
             resolveBody: hint => this.resolveBody(interceptorOptions.request, hint, tmpFiles),
           },
         })
+
+        /**
+         * A streaming response body transmits after this interceptor returns and
+         * may read the uploaded tmp files while doing so, so their removal rides
+         * on the body finishing instead. That covers abandoned transfers too: the
+         * adapter cancels the body, which reaches the same finish hook only after
+         * any in-flight procedure logic has completed.
+         */
+        if (result.matched && tmpFiles.inUse) {
+          const body = result.response.body
+
+          if (isAsyncIteratorObject(body)) {
+            cleanupDeferred = true
+
+            return {
+              matched: true,
+              response: {
+                ...result.response,
+                /**
+                 * @warning
+                 * Remember use `override` for AsyncIteratorObject to remain other special properties
+                 */
+                body: override(body, wrapAsyncIterator(body, { onFinish: () => tmpFiles.cleanup() })),
+              },
+            }
+          }
+
+          if (body instanceof ReadableStream) {
+            cleanupDeferred = true
+
+            return {
+              matched: true,
+              response: {
+                ...result.response,
+                body: wrapReadableStream(body, { onFinish: () => tmpFiles.cleanup() }),
+              },
+            }
+          }
+        }
+
+        return result
       }
       finally {
-        await tmpFiles.cleanup()
+        if (!cleanupDeferred) {
+          await tmpFiles.cleanup()
+        }
       }
     }
 
@@ -117,11 +196,49 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
   }
 
   private async resolveBody(request: StandardLazyRequest, hint: StandardBodyHint | undefined, tmpFiles: RequestTmpFiles): Promise<StandardBody> {
-    const kind = resolveUploadKind(hint, request.headers, request.method)
+    // The same resolution order the standard body parsers apply
+    const resolvedHint = hint ?? resolveStandardBodyHint(request.headers)
 
-    if (kind === undefined) {
+    /**
+     * A form-data hint always means multipart here, even though it can also
+     * arrive explicitly or through the standard-server header on a body that
+     * is not. Such a body fails the multipart parse, unlike the standard
+     * parser, which would fall back to urlencoded form data.
+     */
+    if (resolvedHint === 'form-data') {
+      return this.parseMultipartBody(request, tmpFiles)
+    }
+
+    if (resolvedHint === 'file') {
+      return this.spoolFileBody(request, tmpFiles)
+    }
+
+    if (resolvedHint === 'json' || resolvedHint === 'url-search-params') {
+      return this.parseLimitedBody(request, hint, resolvedHint, this.maxBodySize.memory)
+    }
+
+    if (resolvedHint === 'event-stream' || resolvedHint === 'octet-stream') {
+      return this.parseLimitedBody(request, hint, resolvedHint, this.maxBodySize.stream)
+    }
+
+    return request.resolveBody(hint)
+  }
+
+  /**
+   * Enforces a size limit on a body the standard parser handles, counting the
+   * raw bytes before handing them back for regular parsing.
+   */
+  private async parseLimitedBody(
+    request: StandardLazyRequest,
+    hint: StandardBodyHint | undefined,
+    resolvedHint: StandardBodyHint,
+    limit: number,
+  ): Promise<StandardBody> {
+    if (limit === Number.POSITIVE_INFINITY) {
       return request.resolveBody(hint)
     }
+
+    assertContentLengthWithin(request.headers, limit)
 
     const stream = await request.resolveBody('octet-stream')
 
@@ -130,45 +247,80 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
       return stream
     }
 
-    if (kind === 'file') {
-      const contentDisposition = flattenStandardHeader(request.headers['content-disposition'])
-      const fileName = contentDisposition !== undefined ? getFilenameFromContentDisposition(contentDisposition) : undefined
-      const contentType = flattenStandardHeader(request.headers['content-type'])
+    const response = new Response(limitStream(stream, limit), {
+      headers: toFetchHeaders(request.headers),
+    })
 
-      const tmpPath = await tmpFiles.allocate()
-
-      for await (const chunk of stream) {
-        await tmpFiles.append(tmpPath, chunk)
-      }
-
-      return tmpFiles.seal(tmpPath, fileName ?? 'blob', contentType ?? '')
-    }
-
-    return this.parseFormData(stream, tmpFiles, flattenStandardHeader(request.headers['content-type']))
+    return toStandardBody(response, { hint: resolvedHint })
   }
 
-  private async parseFormData(stream: ReadableStream<Uint8Array>, tmpFiles: RequestTmpFiles, contentType: string | undefined): Promise<FormData> {
+  private async spoolFileBody(request: StandardLazyRequest, tmpFiles: RequestTmpFiles): Promise<StandardBody> {
+    assertContentLengthWithin(request.headers, this.maxBodySize.file)
+
+    const stream = await request.resolveBody('octet-stream')
+
+    // adapter might not support hint (e.g. peer adapter)
+    if (!(stream instanceof ReadableStream)) {
+      return stream
+    }
+
+    const contentDisposition = flattenStandardHeader(request.headers['content-disposition'])
+    const fileName = contentDisposition !== undefined ? getFilenameFromContentDisposition(contentDisposition) : undefined
+    const contentType = flattenStandardHeader(request.headers['content-type'])
+
+    const limited = this.maxBodySize.file === Number.POSITIVE_INFINITY ? stream : limitStream(stream, this.maxBodySize.file)
+
+    const tmpPath = await tmpFiles.allocate()
+
+    for await (const chunk of limited) {
+      await tmpFiles.append(tmpPath, chunk)
+    }
+
+    return tmpFiles.seal(tmpPath, fileName ?? 'blob', contentType ?? '')
+  }
+
+  private async parseMultipartBody(request: StandardLazyRequest, tmpFiles: RequestTmpFiles): Promise<StandardBody> {
+    const contentType = flattenStandardHeader(request.headers['content-type'])
     const boundary = contentType === undefined ? undefined : parseHeaderParameters(contentType).get('boundary')
 
     if (boundary === undefined || boundary === '') {
       throw new TypeError('Invalid multipart body: content-type header is missing the boundary parameter')
     }
 
-    const form = new FormData()
+    /**
+     * The whole multipart body, framing included, can never exceed what its two
+     * content categories allow together, which also bounds bodies that hide
+     * their size in part headers rather than part content.
+     */
+    const totalLimit = this.maxBodySize.memory + this.maxBodySize.file
 
-    await parseMultipart(stream, boundary, (part) => {
+    assertContentLengthWithin(request.headers, totalLimit)
+
+    const stream = await request.resolveBody('octet-stream')
+
+    // adapter might not support hint (e.g. peer adapter)
+    if (!(stream instanceof ReadableStream)) {
+      return stream
+    }
+
+    const limited = totalLimit === Number.POSITIVE_INFINITY ? stream : limitStream(stream, totalLimit)
+
+    const form = new FormData()
+    let memoryUsed = 0
+    let fileUsed = 0
+
+    await parseMultipart(limited, boundary, (part) => {
       const name = decodeContentDispositionParameter(part.name)
 
       if (part.filename === undefined) {
         const chunks: Buffer[] = []
-        let size = 0
 
         return {
           write: (chunk) => {
-            size += chunk.length
+            memoryUsed += chunk.length
 
-            if (size > this.maxFieldSize) {
-              throw fieldTooLargeError(name)
+            if (memoryUsed > this.maxBodySize.memory) {
+              throw new ORPCError('PAYLOAD_TOO_LARGE')
             }
 
             // The parser only guarantees the chunk until write returns, so retaining it requires a copy
@@ -187,6 +339,12 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
 
       return {
         write: async (chunk) => {
+          fileUsed += chunk.length
+
+          if (fileUsed > this.maxBodySize.file) {
+            throw new ORPCError('PAYLOAD_TOO_LARGE')
+          }
+
           tmpPath ??= await tmpFiles.allocate()
           await tmpFiles.append(tmpPath, chunk)
         },
@@ -213,6 +371,35 @@ function decodeContentDispositionParameter(value: string): string {
   return value.replaceAll('%22', '"').replaceAll('%0D', '\r').replaceAll('%0A', '\n')
 }
 
+/**
+ * Rejects early when the declared length already exceeds the limit. The length
+ * can lie, so the streaming enforcement stays either way.
+ */
+function assertContentLengthWithin(headers: StandardHeaders, limit: number): void {
+  const contentLength = Number(flattenStandardHeader(headers['content-length']))
+
+  if (Number.isFinite(contentLength) && contentLength > limit) {
+    throw new ORPCError('PAYLOAD_TOO_LARGE')
+  }
+}
+
+function limitStream(stream: ReadableStream<Uint8Array>, limit: number): ReadableStream<Uint8Array> {
+  let total = 0
+
+  return stream.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      total += chunk.byteLength
+
+      if (total > limit) {
+        controller.error(new ORPCError('PAYLOAD_TOO_LARGE'))
+        return
+      }
+
+      controller.enqueue(chunk)
+    },
+  }))
+}
+
 const EMPTY_CHUNK = new Uint8Array(0)
 
 /**
@@ -224,7 +411,8 @@ const EMPTY_CHUNK = new Uint8Array(0)
  * that cannot delete open files.
  *
  * Filesystem failures surface as `INTERNAL_SERVER_ERROR`, keeping them distinct
- * from the malformed-body errors the handler reports as `BAD_REQUEST`.
+ * from the malformed-body errors the handler reports as `BAD_REQUEST`. Their
+ * details ride only on `cause`, which is never serialized to the client.
  */
 class RequestTmpFiles {
   private dir: Promise<string> | undefined
@@ -232,13 +420,17 @@ class RequestTmpFiles {
 
   constructor(private readonly tmpDir: string) {}
 
+  get inUse(): boolean {
+    return this.dir !== undefined
+  }
+
   async allocate(): Promise<string> {
     try {
       this.dir ??= mkdtemp(path.join(this.tmpDir, 'orpc-upload-'))
       return path.join(await this.dir, String(this.count++))
     }
     catch (cause) {
-      throw toInternalError(cause)
+      throw new ORPCError('INTERNAL_SERVER_ERROR', { cause })
     }
   }
 
@@ -247,7 +439,7 @@ class RequestTmpFiles {
       await appendFile(tmpPath, chunk)
     }
     catch (cause) {
-      throw toInternalError(cause)
+      throw new ORPCError('INTERNAL_SERVER_ERROR', { cause })
     }
   }
 
@@ -258,7 +450,7 @@ class RequestTmpFiles {
       return new TmpFile(await openAsBlob(tmpPath), tmpPath, name, { type })
     }
     catch (cause) {
-      throw toInternalError(cause)
+      throw new ORPCError('INTERNAL_SERVER_ERROR', { cause })
     }
   }
 
@@ -272,64 +464,4 @@ class RequestTmpFiles {
       }
     }
   }
-}
-
-function toInternalError(cause: unknown): ORPCError<'INTERNAL_SERVER_ERROR', undefined> {
-  return new ORPCError('INTERNAL_SERVER_ERROR', {
-    message: 'Failed to store the request body in a temporary file.',
-    cause,
-  })
-}
-
-function fieldTooLargeError(name: string): ORPCError<'PAYLOAD_TOO_LARGE', undefined> {
-  return new ORPCError('PAYLOAD_TOO_LARGE', {
-    message: `Multipart field "${name}" exceeds the maximum allowed field size.`,
-  })
-}
-
-/**
- * Mirrors the decision order of the standard body parsers, so exactly the bodies
- * they would buffer into memory as a `File`, and multipart bodies, are taken over.
- *
- * @see https://github.com/middleapi/standardserver/blob/main/packages/node/src/body.ts
- */
-function resolveUploadKind(hint: StandardBodyHint | undefined, headers: StandardHeaders, method: StandardMethod): 'file' | 'form-data' | undefined {
-  hint ??= flattenStandardHeader(headers['standard-server']) as StandardBodyHint | undefined
-
-  const mimeType = flattenStandardHeader(headers['content-type'])?.split(';')[0]?.trim()
-  const contentLength = flattenStandardHeader(headers['content-length'])
-
-  if (hint === 'none' || (hint === undefined && mimeType === undefined && (contentLength === '0' || contentLength === undefined))) {
-    return undefined
-  }
-
-  if (hint === undefined && (method === 'GET' || method === 'HEAD')) {
-    return undefined
-  }
-
-  if (hint === 'json' || (hint === undefined && mimeType === 'application/json')) {
-    return undefined
-  }
-
-  /**
-   * Only multipart bodies are taken over. Other bodies the standard parser can
-   * produce form data from under this hint, such as urlencoded ones, stay with it.
-   */
-  if ((hint === 'form-data' || hint === undefined) && mimeType === 'multipart/form-data') {
-    return 'form-data'
-  }
-
-  if (hint === 'url-search-params' || (hint === undefined && mimeType === 'application/x-www-form-urlencoded')) {
-    return undefined
-  }
-
-  if (hint === 'event-stream' || (hint === undefined && mimeType === 'text/event-stream')) {
-    return undefined
-  }
-
-  if (hint === 'file' || (hint === undefined && contentLength !== undefined)) {
-    return 'file'
-  }
-
-  return undefined
 }

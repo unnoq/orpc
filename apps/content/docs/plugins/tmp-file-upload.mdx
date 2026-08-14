@@ -32,14 +32,35 @@ const handler = new RPCHandler(router, {
       tmpDir: './uploads',
 
       /**
-       * The maximum allowed size in bytes of a single multipart field that is
-       * not a file. Fields are buffered in memory, so this bounds the memory
-       * a request can consume through them. A larger field rejects the
-       * request with `PAYLOAD_TOO_LARGE`.
+       * The size limit for each kind of request body. Every kind is required
+       * when the option is given, so none is left unbounded by accident; set
+       * a kind to `Number.POSITIVE_INFINITY` to deliberately leave it
+       * unlimited.
        *
-       * @default Infinity
+       * @default unlimited for every kind
        */
-      maxFieldSize: 1024 * 1024,
+      maxBodySize: {
+        /**
+         * Content parsed into memory: JSON, URL-encoded forms, and the plain
+         * fields of a multipart body. Usually the lowest of the three limits,
+         * because this content cannot stream anywhere.
+         */
+        memory: 1024 * 1024,
+
+        /**
+         * Upload content streamed into temporary files: file bodies and the
+         * file parts of a multipart body combined.
+         */
+        file: 10 * 1024 * 1024 * 1024,
+
+        /**
+         * Content consumed as a stream: event streams and raw binary streams.
+         * Enforced while the stream is consumed, so an oversized stream fails
+         * at the reader. Usually the highest of the three limits, because this
+         * content is consumed on the fly.
+         */
+        stream: Number.POSITIVE_INFINITY,
+      },
     }),
   ],
 })
@@ -67,23 +88,16 @@ const uploadVideo = os
 ```
 
 :::warning
-Temporary files are removed when the request finishes, which is before the response body is transmitted. A procedure that needs the content afterwards, such as returning the upload in its response, must copy the content or move the file first. A moved or removed file can no longer be read through its `File` instance.
+Temporary files are removed when the request finishes. A streaming response body, an event iterator or a raw stream, keeps them alive until it completes, so responses that read the upload while streaming work. Any other response is transmitted after removal, so one that embeds the upload itself, as a `File` or inside `FormData`, needs the content copied or the file moved first. A moved or removed file can no longer be read through its `File` instance.
 :::
 
-## Limiting Upload Size
+## Limiting Body Sizes
 
-The plugin spools every file upload without a size limit, so pair it with the [Request Limit Plugin](/docs/plugins/request-limit) to bound how much disk a request can consume. The plugin orders itself so spooling receives the size-checked bytes, decompressed first when the [Request Compression Plugin](/docs/plugins/request-compression) is present:
+Each request body counts against the limit matching what it actually costs: `memory` bounds content parsed into memory, `file` bounds content streamed into temporary files, and `stream` bounds content consumed as a stream. A multipart body splits across the first two, its fields against the memory limit and its file parts against the file limit, and as a whole, framing included, it is bounded by the sum of both.
 
-```ts
-import { RequestLimitHandlerPlugin } from '@orpc/server/plugins'
+The plugin subsumes the [Request Limit Plugin](/docs/plugins/request-limit) while allowing large uploads and streams without raising the ceiling for everything else. A declared [Content-Length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Length) over the applicable limit rejects immediately, and the limits stay enforced while the body streams in, so a lying length cannot bypass them.
 
-const handler = new RPCHandler(router, {
-  plugins: [
-    new TmpFileUploadHandlerPlugin(),
-    new RequestLimitHandlerPlugin({ maxBodySize: 1024 * 1024 * 1024 }),
-  ],
-})
-```
+When the [Request Compression Plugin](/docs/plugins/request-compression) is present, the plugin orders itself to receive the decompressed bytes, so every limit applies to the real payload rather than the compressed wire size.
 
 ## Learn More
 

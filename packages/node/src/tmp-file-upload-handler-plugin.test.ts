@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { Buffer } from 'node:buffer'
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -10,6 +10,12 @@ import { RPCHandler } from '@orpc/server/node'
 import { generateContentDisposition } from '@standardserver/core'
 import request from 'supertest'
 import { TmpFile, TmpFileUploadHandlerPlugin } from './tmp-file-upload-handler-plugin'
+
+const UNLIMITED = {
+  memory: Number.POSITIVE_INFINITY,
+  file: Number.POSITIVE_INFINITY,
+  stream: Number.POSITIVE_INFINITY,
+}
 
 describe('tmpFileUploadHandlerPlugin', () => {
   let tmpDir: string
@@ -31,7 +37,7 @@ describe('tmpFileUploadHandlerPlugin', () => {
     tmpDirEntries: string[]
   }
 
-  function createAgent(options: { maxFieldSize?: number, onInput?: (input: any) => unknown } = {}) {
+  function createAgent(options: { tmpDir?: string, memory?: number, file?: number, stream?: number, onInput?: (input: any) => unknown } = {}) {
     const captured: Captured[] = []
 
     const handler = new RPCHandler({
@@ -57,7 +63,14 @@ describe('tmpFileUploadHandlerPlugin', () => {
         return options.onInput?.(input) ?? { ok: true }
       }),
     }, {
-      plugins: [new TmpFileUploadHandlerPlugin({ tmpDir, maxFieldSize: options.maxFieldSize })],
+      plugins: [new TmpFileUploadHandlerPlugin({
+        tmpDir: options.tmpDir ?? tmpDir,
+        maxBodySize: {
+          memory: options.memory ?? Number.POSITIVE_INFINITY,
+          file: options.file ?? Number.POSITIVE_INFINITY,
+          stream: options.stream ?? Number.POSITIVE_INFINITY,
+        },
+      })],
     })
 
     const agent = request(createServer(async (req: IncomingMessage, res: ServerResponse) => {
@@ -166,6 +179,56 @@ describe('tmpFileUploadHandlerPlugin', () => {
     expect(readdirSync(tmpDir)).toHaveLength(0)
   })
 
+  it('keeps tmp files alive while an event stream response reads them', async () => {
+    const { agent } = createAgent({
+      onInput: (input: TmpFile) => (async function* () {
+        yield `first:${await input.text()}`
+        yield `second:${await input.text()}`
+      })(),
+    })
+
+    const res = await agent
+      .post('/upload')
+      .set('content-type', 'application/octet-stream')
+      .send(Buffer.from('streamed upload'))
+
+    expect(res.status).toBe(200)
+    // Both yields read the tmp file after the routing interceptor returned
+    expect(res.text).toContain('first:streamed upload')
+    expect(res.text).toContain('second:streamed upload')
+
+    // Removal rides on the stream finishing, which can settle just after the response does
+    await vi.waitFor(() => {
+      expect(readdirSync(tmpDir)).toHaveLength(0)
+    })
+  })
+
+  it('keeps tmp files alive while a stream response echoes them', async () => {
+    const content = Buffer.alloc(256 * 1024, 7)
+    const { agent } = createAgent({
+      onInput: (input: TmpFile) => input.stream(),
+    })
+
+    const res = await agent
+      .post('/upload')
+      .set('content-type', 'application/octet-stream')
+      .send(content)
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = []
+        res.on('data', chunk => chunks.push(chunk))
+        res.on('end', () => callback(null, Buffer.concat(chunks)))
+      })
+
+    expect(res.status).toBe(200)
+    // The response body is the upload itself, read from the tmp file during transmission
+    expect((res.body as Buffer).equals(content)).toBe(true)
+
+    await vi.waitFor(() => {
+      expect(readdirSync(tmpDir)).toHaveLength(0)
+    })
+  })
+
   it('leaves json bodies to the standard parser and creates no tmp files for them', async () => {
     const { agent, captured } = createAgent()
 
@@ -216,8 +279,8 @@ describe('tmpFileUploadHandlerPlugin', () => {
     expect(readdirSync(tmpDir)).toHaveLength(0)
   })
 
-  it('rejects a multipart field larger than maxFieldSize with PAYLOAD_TOO_LARGE', async () => {
-    const { agent, captured } = createAgent({ maxFieldSize: 10 })
+  it('rejects multipart fields exceeding maxBodySize.memory with PAYLOAD_TOO_LARGE', async () => {
+    const { agent, captured } = createAgent({ memory: 10 })
 
     const boundary = 'X-TEST-BOUNDARY'
     const body = [
@@ -238,6 +301,26 @@ describe('tmpFileUploadHandlerPlugin', () => {
     expect(res.body.json.code).toBe('PAYLOAD_TOO_LARGE')
     expect(captured).toHaveLength(0)
     expect(readdirSync(tmpDir)).toHaveLength(0)
+  })
+
+  it('reports filesystem failures as INTERNAL_SERVER_ERROR, not BAD_REQUEST', async () => {
+    /**
+     * Spooling runs during input decoding, where the handler blames any plain
+     * error on the client as a 400, so a disk failure must arrive as an
+     * ORPCError to keep its server-fault status.
+     */
+    const blocked = path.join(tmpDir, 'not-a-directory')
+    writeFileSync(blocked, '')
+    const { agent, captured } = createAgent({ tmpDir: path.join(blocked, 'unreachable') })
+
+    const res = await agent
+      .post('/upload')
+      .set('content-type', 'application/octet-stream')
+      .send(Buffer.from('x'))
+
+    expect(res.status).toBe(500)
+    expect(res.body.json.code).toBe('INTERNAL_SERVER_ERROR')
+    expect(captured).toHaveLength(0)
   })
 
   it('removes tmp files when the procedure throws', async () => {
@@ -313,8 +396,8 @@ describe('tmpFileUploadHandlerPlugin', () => {
      * materializes the parsed entries while the request scope is still open,
      * because the backing tmp files vanish once the interceptor finishes.
      */
-    async function parseThroughPlugin(body: Buffer, contentType: string, options: { chunkSize?: number, maxFieldSize?: number, delivery?: 'sync' | 'async' } = {}): Promise<MaterializedEntry[]> {
-      const plugin = new TmpFileUploadHandlerPlugin({ tmpDir, maxFieldSize: options.maxFieldSize })
+    async function parseThroughPlugin(body: Buffer, contentType: string, options: { chunkSize?: number, memory?: number, delivery?: 'sync' | 'async' } = {}): Promise<MaterializedEntry[]> {
+      const plugin = new TmpFileUploadHandlerPlugin({ tmpDir, maxBodySize: { ...UNLIMITED, memory: options.memory ?? Number.POSITIVE_INFINITY } })
       const interceptor = plugin.init({}).routingInterceptors![0]!
 
       let entries: MaterializedEntry[]
@@ -466,7 +549,7 @@ describe('tmpFileUploadHandlerPlugin', () => {
       expect(entries).toEqual([{ kind: 'field', name: 'octet', value: 'still a field' }])
 
       // The field limit applies to it like any other field
-      await expect(parseThroughPlugin(body, `multipart/form-data; boundary=${boundary}`, { maxFieldSize: 5 }))
+      await expect(parseThroughPlugin(body, `multipart/form-data; boundary=${boundary}`, { memory: 5 }))
         .rejects
         .toSatisfy(error => error instanceof ORPCError && error.code === 'PAYLOAD_TOO_LARGE')
 
@@ -596,29 +679,25 @@ describe('tmpFileUploadHandlerPlugin', () => {
       expect(entries[0]).toMatchObject({ type: 'text/csv; charset=utf-8' })
     })
 
-    it('leaves non-multipart bodies to the standard parser under a form-data hint', async () => {
+    it('rejects a form-data hinted body that is not multipart during parsing', async () => {
       const plugin = new TmpFileUploadHandlerPlugin({ tmpDir })
       const interceptor = plugin.init({}).routingInterceptors![0]!
 
-      const standardParsed = new FormData()
-      standardParsed.append('parsed-by', 'the standard parser')
-
-      const result = await interceptor({
+      await expect(interceptor({
         context: {},
         prefix: undefined,
         request: {
           method: 'POST',
           url: '/upload',
-          headers: { 'content-type': 'application/x-www-form-urlencoded', 'content-length': '7' },
-          resolveBody: async hint => hint === 'form-data' ? standardParsed : undefined,
+          headers: { 'content-type': 'application/x-www-form-urlencoded', 'content-length': '9' },
+          resolveBody: async () => toStream(Buffer.from('key=value'), 4),
         },
         next: async (nextOptions) => {
-          expect(await nextOptions!.request.resolveBody('form-data')).toBe(standardParsed)
+          await nextOptions!.request.resolveBody('form-data')
           return { matched: false }
         },
-      })
+      })).rejects.toThrow('boundary')
 
-      expect(result).toEqual({ matched: false })
       expect(readdirSync(tmpDir)).toHaveLength(0)
     })
 
@@ -671,6 +750,321 @@ describe('tmpFileUploadHandlerPlugin', () => {
 
       // Disk work is serialized, so concurrent handles stay flat instead of one per part
       expect(maxFds - baseline).toBeLessThan(30)
+    })
+  })
+
+  describe('kind-aware size limits', () => {
+    interface PluginLimits {
+      memory?: number
+      file?: number
+      stream?: number
+    }
+
+    /**
+     * Resolves a raw body through the plugin's routing interceptor and hands it
+     * to `inspect` while the request scope is still open. The body streams in
+     * without a content-length unless one is given, exercising the streaming
+     * enforcement rather than the header precheck.
+     */
+    async function resolveThroughPlugin(options: {
+      limits?: PluginLimits
+      headers: Record<string, string>
+      body: Buffer
+      inspect: (body: unknown) => void | Promise<void>
+    }): Promise<void> {
+      const plugin = new TmpFileUploadHandlerPlugin({ tmpDir, maxBodySize: { ...UNLIMITED, ...options.limits } })
+      const interceptor = plugin.init({}).routingInterceptors![0]!
+
+      let offset = 0
+      const stream = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          if (offset >= options.body.length) {
+            controller.close()
+            return
+          }
+
+          controller.enqueue(options.body.subarray(offset, offset += 16))
+        },
+      })
+
+      await interceptor({
+        context: {},
+        prefix: undefined,
+        request: {
+          method: 'POST',
+          url: '/upload',
+          headers: options.headers,
+          resolveBody: async () => stream,
+        },
+        next: async (nextOptions) => {
+          await options.inspect(await nextOptions!.request.resolveBody())
+          return { matched: false }
+        },
+      })
+    }
+
+    function expectPayloadTooLarge(error: unknown): void {
+      expect(error).toBeInstanceOf(ORPCError)
+      expect((error as ORPCError<string, unknown>).code).toBe('PAYLOAD_TOO_LARGE')
+    }
+
+    it('limits json bodies against maxBodySize.memory', async () => {
+      // The declared length rejects before any byte is read
+      const { agent, captured } = createAgent({ memory: 10 })
+      const res = await agent
+        .post('/upload')
+        .set('content-type', 'application/json')
+        .send({ json: { padding: 'x'.repeat(64) } })
+
+      expect(res.status).toBe(413)
+      expect(res.body.json.code).toBe('PAYLOAD_TOO_LARGE')
+      expect(captured).toHaveLength(0)
+
+      // Without a declared length the limit trips while streaming
+      await expect(resolveThroughPlugin({
+        limits: { memory: 10 },
+        headers: { 'content-type': 'application/json' },
+        body: Buffer.from(JSON.stringify({ padding: 'x'.repeat(64) })),
+        inspect: () => {},
+      })).rejects.toSatisfy((error) => {
+        expectPayloadTooLarge(error)
+        return true
+      })
+
+      // Under the limit the body parses normally
+      await resolveThroughPlugin({
+        limits: { memory: 1024 },
+        headers: { 'content-type': 'application/json' },
+        body: Buffer.from(JSON.stringify({ hello: 'world' })),
+        inspect: (body) => {
+          expect(body).toEqual({ hello: 'world' })
+        },
+      })
+    })
+
+    it('limits url-encoded bodies against maxBodySize.memory', async () => {
+      await expect(resolveThroughPlugin({
+        limits: { memory: 10 },
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: Buffer.from(`key=${'v'.repeat(64)}`),
+        inspect: () => {},
+      })).rejects.toSatisfy((error) => {
+        expectPayloadTooLarge(error)
+        return true
+      })
+
+      await resolveThroughPlugin({
+        limits: { memory: 1024 },
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: Buffer.from('key=value'),
+        inspect: (body) => {
+          expect(body).toBeInstanceOf(URLSearchParams)
+          expect((body as URLSearchParams).get('key')).toBe('value')
+        },
+      })
+    })
+
+    it('limits file bodies against maxBodySize.file', async () => {
+      // The declared length rejects before anything touches the disk
+      const { agent, captured } = createAgent({ file: 1024 })
+      const res = await agent
+        .post('/upload')
+        .set('content-type', 'application/octet-stream')
+        .send(Buffer.alloc(4096, 7))
+
+      expect(res.status).toBe(413)
+      expect(res.body.json.code).toBe('PAYLOAD_TOO_LARGE')
+      expect(captured).toHaveLength(0)
+      expect(readdirSync(tmpDir)).toHaveLength(0)
+
+      // Without a declared length the limit trips mid-spool and the partial file is removed
+      await expect(resolveThroughPlugin({
+        limits: { file: 64 },
+        headers: { 'content-type': 'application/octet-stream', 'standard-server': 'file' },
+        body: Buffer.alloc(4096, 7),
+        inspect: () => {},
+      })).rejects.toSatisfy((error) => {
+        expectPayloadTooLarge(error)
+        return true
+      })
+
+      expect(readdirSync(tmpDir)).toHaveLength(0)
+    })
+
+    it('limits multipart fields and files against their own categories', async () => {
+      const form = new FormData()
+      form.append('first', 'x'.repeat(6))
+      form.append('second', 'y'.repeat(6))
+      form.append('upload-1', new File(['z'.repeat(6)], 'a.bin'))
+      form.append('upload-2', new File(['w'.repeat(6)], 'b.bin'))
+
+      const response = new Response(form)
+      const headers = { 'content-type': response.headers.get('content-type')! }
+      const body = Buffer.from(await response.arrayBuffer())
+
+      // Field bytes accumulate across parts: 12 in total
+      await expect(resolveThroughPlugin({
+        limits: { memory: 10 },
+        headers,
+        body,
+        inspect: () => {},
+      })).rejects.toSatisfy((error) => {
+        expectPayloadTooLarge(error)
+        return true
+      })
+
+      // File bytes accumulate across parts: 12 in total
+      await expect(resolveThroughPlugin({
+        limits: { file: 10 },
+        headers,
+        body,
+        inspect: () => {},
+      })).rejects.toSatisfy((error) => {
+        expectPayloadTooLarge(error)
+        return true
+      })
+
+      expect(readdirSync(tmpDir)).toHaveLength(0)
+
+      // With room for the framing in the total, both categories accommodate their 12 bytes
+      await resolveThroughPlugin({
+        limits: { memory: 1024, file: 1024 },
+        headers,
+        body,
+        inspect: (parsed) => {
+          expect([...(parsed as FormData)]).toHaveLength(4)
+        },
+      })
+    })
+
+    it('limits the whole multipart body to the sum of the memory and file limits', async () => {
+      // Payload bytes are tiny, but the multipart framing pushes the raw body over the sum
+      const form = new FormData()
+      form.append('a', 'x')
+      form.append('b', new File(['y'], 'a.bin'))
+
+      const response = new Response(form)
+      const headers = { 'content-type': response.headers.get('content-type')! }
+      const body = Buffer.from(await response.arrayBuffer())
+
+      expect(body.length).toBeGreaterThan(64)
+
+      await expect(resolveThroughPlugin({
+        limits: { memory: 32, file: 32 },
+        headers,
+        body,
+        inspect: () => {},
+      })).rejects.toSatisfy((error) => {
+        expectPayloadTooLarge(error)
+        return true
+      })
+
+      // One infinite category lifts the total bound
+      await resolveThroughPlugin({
+        limits: { memory: 32 },
+        headers,
+        body,
+        inspect: (parsed) => {
+          expect([...(parsed as FormData)]).toHaveLength(2)
+        },
+      })
+    })
+
+    it('limits streamed bodies against maxBodySize.stream while they are consumed', async () => {
+      // A raw stream fails at the reader once the limit is crossed
+      await resolveThroughPlugin({
+        limits: { stream: 64 },
+        headers: { 'content-type': 'application/octet-stream', 'standard-server': 'octet-stream' },
+        body: Buffer.alloc(4096, 7),
+        inspect: async (body) => {
+          const reader = (body as ReadableStream<Uint8Array>).getReader()
+
+          await expect((async () => {
+            while (!(await reader.read()).done);
+          })()).rejects.toSatisfy((error) => {
+            expectPayloadTooLarge(error)
+            return true
+          })
+        },
+      })
+
+      // Under the limit the bytes pass through unchanged
+      const content = Buffer.alloc(64, 7)
+      await resolveThroughPlugin({
+        limits: { stream: 1024 },
+        headers: { 'content-type': 'application/octet-stream', 'standard-server': 'octet-stream' },
+        body: content,
+        inspect: async (body) => {
+          const chunks: Buffer[] = []
+          for await (const chunk of body as ReadableStream<Uint8Array>) {
+            chunks.push(Buffer.from(chunk))
+          }
+          expect(Buffer.concat(chunks).equals(content)).toBe(true)
+        },
+      })
+    })
+
+    it('limits event streams against maxBodySize.stream while they are consumed', async () => {
+      const events = Buffer.from('event: message\ndata: "one"\n\nevent: message\ndata: "two"\n\nevent: close\n\n')
+
+      await resolveThroughPlugin({
+        limits: { stream: 1024 },
+        headers: { 'content-type': 'text/event-stream' },
+        body: events,
+        inspect: async (body) => {
+          const received: unknown[] = []
+          for await (const event of body as AsyncIterable<unknown>) {
+            received.push(event)
+          }
+          expect(received).toEqual(['one', 'two'])
+        },
+      })
+
+      await resolveThroughPlugin({
+        limits: { stream: 8 },
+        headers: { 'content-type': 'text/event-stream' },
+        body: events,
+        inspect: async (body) => {
+          await expect((async () => {
+            // eslint-disable-next-line no-empty
+            for await (const _ of body as AsyncIterable<unknown>) {}
+          })()).rejects.toSatisfy((error) => {
+            expectPayloadTooLarge(error)
+            return true
+          })
+        },
+      })
+    })
+
+    it('spools a file body identified only by its content-disposition, per the 0.8 resolution order', async () => {
+      // No content-length and no standard-server header, only a content-disposition
+      await resolveThroughPlugin({
+        headers: { 'content-type': 'application/pdf', 'content-disposition': 'attachment; filename="doc.pdf"' },
+        body: Buffer.from('pdf bytes'),
+        inspect: async (body) => {
+          expect(body).toBeInstanceOf(TmpFile)
+          expect((body as TmpFile).name).toBe('doc.pdf')
+          expect(await (body as TmpFile).text()).toBe('pdf bytes')
+        },
+      })
+    })
+
+    it('recognizes multipart content types case-insensitively, per the 0.8 resolution order', async () => {
+      const form = new FormData()
+      form.append('field', 'value')
+
+      const response = new Response(form)
+      const contentType = response.headers.get('content-type')!
+      const body = Buffer.from(await response.arrayBuffer())
+
+      await resolveThroughPlugin({
+        headers: { 'content-type': contentType.replace('multipart/form-data', 'Multipart/Form-Data') },
+        body,
+        inspect: (parsed) => {
+          expect(parsed).toBeInstanceOf(FormData)
+          expect((parsed as FormData).get('field')).toBe('value')
+        },
+      })
     })
   })
 })

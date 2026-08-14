@@ -18,7 +18,7 @@ import { RequestValidationLinkPlugin, ResponseValidationLinkPlugin } from '@orpc
 import { EvlogHandlerPlugin } from '@orpc/evlog'
 import { HibernationHandlerPlugin } from '@orpc/hibernation'
 import { SmartCoercionHandlerPlugin, SmartCoercionLinkPlugin } from '@orpc/json-schema'
-import { StaticFileHandlerPlugin } from '@orpc/node'
+import { StaticFileHandlerPlugin, TmpFileUploadHandlerPlugin } from '@orpc/node'
 import { OpenAPIReferenceHandlerPlugin } from '@orpc/openapi/plugins'
 import { PinoHandlerPlugin } from '@orpc/pino'
 import { RateLimitHandlerPlugin } from '@orpc/ratelimit'
@@ -89,6 +89,13 @@ function createHandlerPlugins() {
     new SmartCoercionHandlerPlugin(),
     new StaticFileHandlerPlugin<TestContext>({ rootDir: import.meta.dirname, path: '/static' }),
     new TimeoutHandlerPlugin<TestContext>({ timeout: 5000 }),
+    new TmpFileUploadHandlerPlugin<TestContext>({
+      maxBodySize: {
+        memory: 10 * 1024 * 1024,
+        file: 10 * 1024 * 1024,
+        stream: 10 * 1024 * 1024,
+      },
+    }),
   ]
 }
 

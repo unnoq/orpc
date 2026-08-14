@@ -21,6 +21,12 @@ import { TmpFile, TmpFileUploadHandlerPlugin } from '../src'
  * wire format real clients produce.
  */
 describe('uploads large files through tmp files', () => {
+  const UNLIMITED = {
+    memory: Number.POSITIVE_INFINITY,
+    file: Number.POSITIVE_INFINITY,
+    stream: Number.POSITIVE_INFINITY,
+  }
+
   const tmpDir = mkdtempSync(path.join(tmpdir(), 'orpc-upload-e2e-'))
 
   const router = {
@@ -190,6 +196,90 @@ describe('uploads large files through tmp files', () => {
     finally {
       limitedServer.close()
       rmSync(limitedTmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects uploads over its own file limit without the request limit plugin', async () => {
+    const limitedTmpDir = mkdtempSync(path.join(tmpdir(), 'orpc-upload-e2e-own-limit-'))
+    const limitedHandler = new RPCHandler(router, {
+      plugins: [new TmpFileUploadHandlerPlugin({ tmpDir: limitedTmpDir, maxBodySize: { ...UNLIMITED, file: 64 * 1024 } })],
+    })
+
+    const limitedServer = createServer(async (req, res) => {
+      await limitedHandler.handle(req, res, { context: {} })
+    })
+
+    try {
+      await new Promise<void>(resolve => limitedServer.listen(0, '127.0.0.1', resolve))
+      const client: RouterClient<typeof router> = createORPCClient(new RPCLink({
+        url: '/',
+        origin: `http://127.0.0.1:${(limitedServer.address() as AddressInfo).port}`,
+      }))
+
+      const content = new Uint8Array(2 * 1024 * 1024).fill(7)
+      await expect(client.upload({ file: new File([content], 'too-large.bin') })).rejects.toThrow()
+
+      // Under the limit the same server accepts the upload
+      const small = new Uint8Array(16 * 1024).fill(7)
+      await expect(client.upload({ file: new File([small], 'small.bin') })).resolves.toMatchObject({ isTmpFile: true, size: small.length })
+
+      await vi.waitFor(() => {
+        expect(readdirSync(limitedTmpDir)).toHaveLength(0)
+      })
+    }
+    finally {
+      limitedServer.close()
+      rmSync(limitedTmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it('removes tmp files when the client abandons a streaming response', async () => {
+    const streamTmpDir = mkdtempSync(path.join(tmpdir(), 'orpc-upload-e2e-stream-abort-'))
+
+    const streamHandler = new RPCHandler({
+      stream: os.input(type<File>()).handler(async function* ({ input }) {
+        yield await input.text()
+        // In-flight logic the abandoned transfer must still wait for before cleanup
+        await sleep(1500)
+        yield 'never delivered'
+      }),
+    }, {
+      plugins: [new TmpFileUploadHandlerPlugin({ tmpDir: streamTmpDir })],
+    })
+
+    const streamServer = createServer(async (req, res) => {
+      await streamHandler.handle(req, res, { context: {} })
+    })
+
+    try {
+      await new Promise<void>(resolve => streamServer.listen(0, '127.0.0.1', resolve))
+      const { port } = streamServer.address() as AddressInfo
+
+      const body = Buffer.from('held by the stream')
+
+      await new Promise<void>((resolve, reject) => {
+        const socket = connect(port, '127.0.0.1', () => {
+          socket.write(`POST /stream HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/octet-stream\r\nContent-Length: ${body.length}\r\n\r\n`)
+          socket.write(body)
+        })
+
+        // The first event proves the stream is transmitting and the tmp file is still alive
+        socket.on('data', (chunk: Buffer) => {
+          if (chunk.toString().includes('held by the stream')) {
+            socket.destroy()
+            resolve()
+          }
+        })
+        socket.on('error', reject)
+      })
+
+      await vi.waitFor(() => {
+        expect(readdirSync(streamTmpDir)).toHaveLength(0)
+      }, { timeout: 5000 })
+    }
+    finally {
+      streamServer.close()
+      rmSync(streamTmpDir, { recursive: true, force: true })
     }
   })
 
