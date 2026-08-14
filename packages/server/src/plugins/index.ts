@@ -38,3 +38,4 @@ export type {
   ResponseHeadersHandlerPluginContext as ResponseHeadersPluginContext,
 } from './response-headers'
 export * from './rethrow'
+export * from './timeout'
