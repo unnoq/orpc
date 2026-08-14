@@ -75,13 +75,14 @@ describe('parseMultipart', () => {
     }
   })
 
-  it('keeps content-type parameters and case-insensitive dispositions', async () => {
+  it('keeps content-type parameters, case-insensitive dispositions, and ignores other part headers', async () => {
     const body = buildBody(boundary, [
-      ['Content-Disposition: FORM-DATA; name="file"; filename="data.csv"', 'Content-Type: text/csv; charset=utf-8', '', 'a,b'],
+      ['Content-Disposition: FORM-DATA; name="file"; filename="data.csv"', 'Content-Type: text/csv; charset=utf-8', 'Content-Transfer-Encoding: 7bit', '', 'a,b'],
     ])
 
     const parts = await collect(body, boundary, 5)
     expect(parts[0]).toMatchObject({ name: 'file', filename: 'data.csv', type: 'text/csv; charset=utf-8' })
+    expect(parts[0]!.content.toString()).toBe('a,b')
   })
 
   it('parses an empty form, empty parts, and an empty filename', async () => {
@@ -172,6 +173,9 @@ describe('parseMultipart', () => {
 
     const missingName = buildBody(boundary, [['Content-Disposition: form-data; filename="a.txt"', '', 'v']])
     await expect(collect(missingName, boundary, 3)).rejects.toThrow('name parameter')
+
+    const bareDisposition = buildBody(boundary, [['Content-Disposition: form-data', '', 'v']])
+    await expect(collect(bareDisposition, boundary, 3)).rejects.toThrow('name parameter')
 
     const headerWithoutColon = buildBody(boundary, [['Content-Disposition: form-data; name="a"', 'not-a-header', '', 'v']])
     await expect(collect(headerWithoutColon, boundary, 3)).rejects.toThrow('malformed part header')
