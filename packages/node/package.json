@@ -43,6 +43,7 @@
     "mime": "^4.1.0"
   },
   "devDependencies": {
+    "@orpc/client": "workspace:*",
     "supertest": "^7.2.2"
   }
 }

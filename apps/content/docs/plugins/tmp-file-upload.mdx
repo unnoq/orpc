@@ -1,0 +1,90 @@
+---
+title: "Tmp File Upload Plugin"
+description: "Stream large file uploads into temporary files instead of memory, so requests far larger than available memory are parsed safely."
+sidebar:
+  label: "Tmp File Upload"
+---
+
+## Installation
+
+```package-install
+npm install @orpc/node@beta
+```
+
+## Setup
+
+Use `TmpFileUploadHandlerPlugin` to parse file uploads into temporary files. Bodies the standard parser would buffer into an in-memory [File](https://developer.mozilla.org/en-US/docs/Web/API/File), and [`multipart/form-data`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types#multipartform-data) file parts, are streamed to disk instead. Every other body is left to the standard parser.
+
+```ts
+import { TmpFileUploadHandlerPlugin } from '@orpc/node'
+import { RPCHandler } from '@orpc/server/node'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new TmpFileUploadHandlerPlugin({
+      /**
+       * The directory temporary files are created under. Each request that
+       * spools an upload gets its own subdirectory inside it, removed when
+       * the request finishes.
+       *
+       * @default os.tmpdir()
+       */
+      tmpDir: './uploads',
+
+      /**
+       * The maximum allowed size in bytes of a single multipart field that is
+       * not a file. Fields are buffered in memory, so this bounds the memory
+       * a request can consume through them. A larger field rejects the
+       * request with `PAYLOAD_TOO_LARGE`.
+       *
+       * @default Infinity
+       */
+      maxFieldSize: 1024 * 1024,
+    }),
+  ],
+})
+```
+
+:::info
+The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.
+:::
+
+## Working with Uploaded Files
+
+Procedures receive ordinary `File` instances and can read them as usual, in constant memory because the content is read lazily from disk. Each one is a `TmpFile` exposing the `path` of its backing file, so an upload can be kept with a cheap [rename](https://nodejs.org/api/fs.html#fspromisesrenameoldpath-newpath) instead of a copy:
+
+```ts
+import { TmpFile } from '@orpc/node'
+import { rename } from 'node:fs/promises'
+
+const uploadVideo = os
+  .input(z.object({ video: z.file() }))
+  .handler(async ({ input }) => {
+    if (input.video instanceof TmpFile) {
+      await rename(input.video.path, `./videos/${crypto.randomUUID()}`)
+    }
+  })
+```
+
+:::warning
+Temporary files are removed when the request finishes, which is before the response body is transmitted. A procedure that needs the content afterwards, such as returning the upload in its response, must copy the content or move the file first. A moved or removed file can no longer be read through its `File` instance.
+:::
+
+## Limiting Upload Size
+
+The plugin spools every file upload without a size limit, so pair it with the [Request Limit Plugin](/docs/plugins/request-limit) to bound how much disk a request can consume. The plugin orders itself so spooling receives the size-checked bytes, decompressed first when the [Request Compression Plugin](/docs/plugins/request-compression) is present:
+
+```ts
+import { RequestLimitHandlerPlugin } from '@orpc/server/plugins'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new TmpFileUploadHandlerPlugin(),
+    new RequestLimitHandlerPlugin({ maxBodySize: 1024 * 1024 * 1024 }),
+  ],
+})
+```
+
+## Learn More
+
+For implementation details, see the [source code](https://github.com/middleapi/orpc/blob/main/packages/node/src/tmp-file-upload-handler-plugin.ts).

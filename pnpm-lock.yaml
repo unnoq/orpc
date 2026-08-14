@@ -569,6 +569,9 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
     devDependencies:
+      '@orpc/client':
+        specifier: workspace:*
+        version: link:../client
       supertest:
         specifier: ^7.2.2
         version: 7.2.2(supports-color@10.2.2)
