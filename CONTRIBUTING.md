@@ -40,7 +40,10 @@ This repository uses:
 8. **Commit & Push**:
    - Commit should follow the [Conventional Commits Cheatsheet](https://gist.github.com/Zekfad/f51cb06ac76e2457f11c80ed705c95a3) but not required because we usually use `Squash and Merge`.
 9. **Pull Request**: Open a PR against `main` (or corresponding version branch).
-   - our PR title should follow the [Conventional Commits Cheatsheet](https://gist.github.com/Zekfad/f51cb06ac76e2457f11c80ed705c95a3), with scope corresponding to the package.
+   - our PR title should follow the [Conventional Commits Cheatsheet](https://gist.github.com/Zekfad/f51cb06ac76e2457f11c80ed705c95a3). Scope rules:
+     - Use the package name (e.g. `feat(server): ...`), or `rpc`/`openapi` for changes tied to a protocol rather than a single package, such as its serializers, handlers, links, or dedicated plugins.
+     - Use `content` only for the docs site itself (styles, Blume config, ...), and only with the `chore` type — never `feat`/`fix`/`perf`/`docs`, since these changes do not affect library users. Documentation about a package or protocol uses that package/protocol scope instead (e.g. `docs(openapi): ...`).
+     - Omit the scope when the change is too broad for a single one.
    - In the description, summarize your changes and reference any related issue, e.g., `Fixes #123`.
 
 ## JSDoc & Documentation Links
