@@ -164,7 +164,10 @@ export async function parseMultipart(
       continue
     }
 
-    buffer = Buffer.concat([buffer, chunk])
+    // A bare view suffices when nothing is retained, skipping a copy
+    buffer = buffer.length === 0
+      ? Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+      : Buffer.concat([buffer, chunk])
     await process()
   }
 
@@ -257,9 +260,16 @@ export function parseHeaderParameters(header: string): Map<string, string> {
     }
 
     const equals = header.indexOf('=', index)
+    const nextSemicolon = header.indexOf(';', index)
 
-    if (equals === -1) {
-      break
+    // A parameter without a value ends at the next semicolon and is skipped
+    if (equals === -1 || (nextSemicolon !== -1 && nextSemicolon < equals)) {
+      if (nextSemicolon === -1) {
+        break
+      }
+
+      index = nextSemicolon
+      continue
     }
 
     const key = header.slice(index, equals).trim().toLowerCase()

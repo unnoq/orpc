@@ -132,6 +132,24 @@ describe('parseMultipart', () => {
     }
   })
 
+  it('tolerates leniencies other parsers disagree on', async () => {
+    // Space before the header colon, accepted by the standard parser
+    const spacedColon = buildBody(boundary, [['Content-Disposition : form-data; name="a"', '', 'va']])
+    expect((await collect(spacedColon, boundary, 5))[0]).toMatchObject({ name: 'a' })
+
+    // Junk after the close delimiter is epilogue
+    const trailingJunk = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="a"\r\n\r\nva\r\n--${boundary}--tail junk`)
+    expect((await collect(trailingJunk, boundary, 5))[0]!.content.toString()).toBe('va')
+
+    // filename* is forbidden in multipart/form-data and stays ignored, leaving a field
+    const extendedFilename = buildBody(boundary, [[`Content-Disposition: form-data; name="f"; filename*=utf-8''ext.txt`, '', 'va']])
+    expect((await collect(extendedFilename, boundary, 5))[0]).toMatchObject({ name: 'f', filename: undefined })
+
+    // The first occurrence of a duplicate parameter wins
+    const duplicated = buildBody(boundary, [['Content-Disposition: form-data; name="first"; name="second"', '', 'va']])
+    expect((await collect(duplicated, boundary, 5))[0]).toMatchObject({ name: 'first' })
+  })
+
   it('decodes the serialization escapes in names and filenames', async () => {
     const body = buildBody(boundary, [
       ['Content-Disposition: form-data; name="quo%22ted%0Aname"; filename="my %22quoted%22%0D%0Afile.txt"', '', 'v'],
@@ -193,8 +211,14 @@ describe('parseMultipart', () => {
     const missingHeaders = Buffer.from(`--${boundary}\r\n\r\nv\r\n--${boundary}--\r\n`)
     await expect(collect(missingHeaders, boundary, 3)).rejects.toThrow('content-disposition')
 
+    // A boundary match without a delimiter tail rejects rather than complicating the parse
     const garbageAfterBoundary = Buffer.from(`--${boundary}!!\r\n--${boundary}--\r\n`)
     await expect(collect(garbageAfterBoundary, boundary, 3)).rejects.toThrow('expected CRLF')
+
+    const falseDelimiterInBody = buildBody(boundary, [
+      ['Content-Disposition: form-data; name="a"', '', `content\r\n--${boundary}Xtail`],
+    ])
+    await expect(collect(falseDelimiterInBody, boundary, 3)).rejects.toThrow('expected CRLF')
 
     // Multipart line endings are strictly CRLF
     const lfOnly = Buffer.from(buildBody(boundary, [['Content-Disposition: form-data; name="a"', '', 'v']]).toString().replaceAll('\r\n', '\n'))
@@ -314,10 +338,15 @@ describe('parseHeaderParameters', () => {
     expect(parseHeaderParameters('form-data; name=first; name=second')).toEqual(new Map([['name', 'first']]))
   })
 
+  it('skips parameters without a value', () => {
+    expect(parseHeaderParameters('form-data; x; name=a')).toEqual(new Map([['name', 'a']]))
+    expect(parseHeaderParameters('form-data; name=a; trailing')).toEqual(new Map([['name', 'a']]))
+    expect(parseHeaderParameters('form-data; only')).toEqual(new Map())
+  })
+
   it('returns nothing without parameters and survives malformed input', () => {
     expect(parseHeaderParameters('form-data')).toEqual(new Map())
     expect(parseHeaderParameters('form-data; ')).toEqual(new Map())
     expect(parseHeaderParameters('form-data; name="unterminated')).toEqual(new Map([['name', 'unterminated']]))
-    expect(parseHeaderParameters('form-data; noequals; name=x')).toBeInstanceOf(Map)
   })
 })
