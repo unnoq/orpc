@@ -5,5 +5,6 @@ export default defineMeta({
     'procedure',
     'router',
     'implementation',
+    'generate-from-openapi',
   ],
 })
