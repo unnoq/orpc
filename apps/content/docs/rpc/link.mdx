@@ -369,4 +369,24 @@ const link = new RPCLink({
 
 ## Lifecycle
 
-TODO: add lifecycle diagram
+The diagram below shows how a call flows through `RPCLink` and where each interceptor type runs:
+
+```mermaid
+sequenceDiagram
+  actor Caller
+  participant L as RPCLink
+  participant Transport as Transport (Fetch, ...)
+  participant Server
+
+  Caller ->> L: path, input, signal, lastEventId, ...
+  Note over L: interceptors
+  L ->> L: encode request
+  Note over L: transportInterceptors
+  L ->> Transport: standard request
+  Note over Transport: adapter interceptors (e.g. fetchInterceptors)
+  Transport ->> Server: request
+  Server ->> Transport: response
+  Transport ->> L: standard response
+  L ->> L: decode response
+  L ->> Caller: output or error
+```

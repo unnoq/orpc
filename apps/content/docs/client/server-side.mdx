@@ -151,4 +151,23 @@ export const base = os
 
 ## Lifecycle
 
-TODO: add lifecycle diagram
+The diagram below shows how a call flows through a server-side client. By default, middlewares registered before `.input` run before input validation, and the rest run after it:
+
+```mermaid
+sequenceDiagram
+  actor Caller
+  participant Validator as Input/Output Validator
+  participant Handler
+
+  Caller ->> Validator: input, signal, lastEventId, ...
+  Note over Validator: interceptors
+  Note over Validator: middlewares registered before .input
+  Validator ->> Validator: validate input
+  Validator -->> Caller: if invalid input
+  Note over Validator: middlewares registered after .input
+  Validator ->> Handler: validated input
+  Handler ->> Handler: execute handler
+  Handler ->> Validator: output or error
+  Validator ->> Validator: validate output
+  Validator ->> Caller: output or error
+```
