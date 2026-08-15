@@ -1,52 +1,30 @@
 import * as z from 'zod'
 import type { RouterClient } from '@orpc/server'
-import { ORPCError, os } from '@orpc/server'
-import type { IncomingHttpHeaders } from 'node:http'
+import { os } from '@orpc/server'
 
-declare function parseJWT(token: string | undefined): { userId: number } | null
-
-export const PlanetSchema = z.object({
-  id: z.number().int().min(1),
-  name: z.string(),
-  description: z.string().optional(),
-})
-
-export const listPlanet = os
-  .input(
-    z.object({
-      limit: z.number().int().min(1).max(100).optional(),
-      cursor: z.number().int().min(0).default(0),
-    }),
-  )
-  .handler(async ({ input }) => {
-    return [{ id: 1, name: 'name' }]
+export const listPlanets = os
+  .handler(async () => {
+    return [
+      { id: 1, name: 'Earth' },
+      { id: 2, name: 'Mars' },
+    ]
   })
 
 export const findPlanet = os
-  .input(PlanetSchema.pick({ id: true }))
+  .input(z.object({ id: z.number() }))
   .handler(async ({ input }) => {
-    return { id: 1, name: 'name' }
+    return { id: input.id, name: 'Earth' }
   })
 
 export const createPlanet = os
-  .$context<{ headers: IncomingHttpHeaders }>()
-  .use(({ context, next }) => {
-    const user = parseJWT(context.headers.authorization?.split(' ')[1])
-
-    if (user) {
-      return next({ context: { user } })
-    }
-
-    throw new ORPCError('UNAUTHORIZED')
-  })
-  .input(PlanetSchema.omit({ id: true }))
-  .handler(async ({ input, context }) => {
-    return { id: 1, name: 'name' }
+  .input(z.object({ name: z.string(), description: z.string().optional() }))
+  .handler(async ({ input }) => {
+    return { id: 3, ...input }
   })
 
 export const router = {
   planet: {
-    list: listPlanet,
+    list: listPlanets,
     find: findPlanet,
     create: createPlanet,
   },
