@@ -73,13 +73,13 @@ const handler = new RPCHandler(router, {
          * Content parsed into memory: JSON, URL-encoded forms, and the
          * plain fields of a multipart body. Usually the lowest limit.
          */
-        memory: 1024 * 1024,
+        memory: 1024 * 1024, // 1MB
 
         /**
          * Content streamed into temporary files: file bodies and the
          * file parts of a multipart body combined.
          */
-        file: 10 * 1024 * 1024 * 1024,
+        file: 500 * 1024 * 1024, // 500MB
 
         /**
          * Content consumed as a stream: event streams and raw binary
