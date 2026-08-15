@@ -317,4 +317,32 @@ const handler = new OpenAPIHandler(router, {
 
 ## Lifecycle
 
-TODO: add lifecycle diagram
+The diagram below shows how a request flows through `OpenAPIHandler` and where each interceptor type runs:
+
+```mermaid
+sequenceDiagram
+  actor Client
+  participant Adapter as Adapter (Fetch, Node, ...)
+  participant Handler as OpenAPIHandler
+  participant Procedure as Server-Side Procedure Client
+
+  Client ->> Adapter: request
+  Note over Adapter: adapter interceptors (e.g. fetchInterceptors)
+  Adapter ->> Handler: standard request
+  Note over Handler: routingInterceptors
+  Handler ->> Handler: find matching procedure
+  Handler -->> Adapter: if not matched
+  Note over Handler: interceptors
+  Handler ->> Handler: decode input
+  Handler ->> Procedure: input, signal, lastEventId, ...
+  Note over Procedure: clientInterceptors
+  Procedure ->> Procedure: execute procedure
+  Procedure ->> Handler: output or error
+  Handler ->> Handler: encode output or error
+  Handler ->> Adapter: standard response
+  Adapter ->> Client: response
+```
+
+:::info
+The server-side procedure client follows the [Server-Side Client Lifecycle](/docs/client/server-side#lifecycle), and `clientInterceptors` behave like server-side client `interceptors`.
+:::
