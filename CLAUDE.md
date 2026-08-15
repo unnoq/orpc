@@ -22,4 +22,7 @@ pnpm --filter @orpc/server build   # build one package (unbuild); builds are NOT
 - Root vitest config (`vitest.config.ts`) runs all `*.test.ts` with `globals: true`, plus a jsdom project for `*.test.tsx` in `packages/next` and `packages/tanstack-query`.
 - Exceptions: `packages/bun` runs with `bun test`, `packages/cloudflare` with its own vitest (workerd) — both are excluded from the root vitest and root tsconfig, as is `packages/nest`. Run their tests via `pnpm --filter <pkg> test`.
 - Docs site (Blume): `cd apps/content && pnpm dev` (`blume dev`); `pnpm build` runs `blume build`. Content lives in `.mdx` files; custom pages in `apps/content/pages/`. The dev server caches content-collection frontmatter for custom pages — restart it after editing blog-post frontmatter. `pnpm docs:validate` (root) runs the JSDoc backlink checker plus `blume validate --strict` (links, anchors, assets); CI runs it too.
-- PR titles follow Conventional Commits with the package as scope (e.g. `feat(server): ...`).
+- PR titles follow Conventional Commits. Scope rules:
+  - Use the package name (e.g. `feat(server): ...`), or `rpc`/`openapi` for changes tied to a protocol rather than a single package, such as its serializers, handlers, links, or dedicated plugins.
+  - Use `content` only for the docs site itself (styles, Blume config, ...), and only with the `chore` type — never `feat`/`fix`/`perf`/`docs`, since these changes do not affect library users. Documentation about a package or protocol uses that package/protocol scope instead (e.g. `docs(openapi): ...`).
+  - Omit the scope when the change is too broad for a single one.
