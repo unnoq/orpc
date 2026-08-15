@@ -23,7 +23,7 @@ const cors = new CORSHandlerPlugin({
 Procedures can accept `File` and `Blob` as input and return them directly or inside nested structures.
 
 :::warning
-`File` and `Blob` are usually buffered in memory by default. For large files, we recommend extending the body parser for better performance and reliability.
+`File` and `Blob` are buffered in memory by default. For large files on Node, use the [Tmp File Upload Plugin](/docs/plugins/tmp-file-upload) to stream uploads into temporary files instead.
 :::
 
 ```ts twoslash

@@ -1,0 +1,102 @@
+---
+title: "Tmp File Upload Plugin"
+description: "Stream large file uploads into temporary files instead of memory, so requests far larger than available memory are parsed safely."
+sidebar:
+  label: "Tmp File Upload"
+---
+
+## Installation
+
+```package-install
+npm install @orpc/node@beta
+```
+
+## Setup
+
+Use `TmpFileUploadHandlerPlugin` to parse file uploads into temporary files. Bodies the standard parser would buffer into an in-memory [File](https://developer.mozilla.org/en-US/docs/Web/API/File), and [`multipart/form-data`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types#multipartform-data) file parts, stream to disk instead. Every other body is left to the standard parser.
+
+```ts
+import { TmpFileUploadHandlerPlugin } from '@orpc/node'
+import { RPCHandler } from '@orpc/server/node'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new TmpFileUploadHandlerPlugin({
+      /**
+       * The directory temporary files are created under. Each request that
+       * spools an upload gets its own subdirectory inside it, removed when
+       * the request finishes.
+       *
+       * @default os.tmpdir()
+       */
+      tmpDir: './uploads',
+    }),
+  ],
+})
+```
+
+:::info
+The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.
+:::
+
+## Working with Uploaded Files
+
+Procedures receive ordinary `File` instances and read them lazily from disk, in constant memory. Each one is a `TmpFile` exposing the `path` of its backing file, so an upload can be kept with a cheap [rename](https://nodejs.org/api/fs.html#fspromisesrenameoldpath-newpath) instead of a copy:
+
+```ts
+import { TmpFile } from '@orpc/node'
+import { rename } from 'node:fs/promises'
+
+const uploadVideo = os
+  .input(z.object({ video: z.file() }))
+  .handler(async ({ input }) => {
+    if (input.video instanceof TmpFile) {
+      await rename(input.video.path, `./videos/${crypto.randomUUID()}`)
+    }
+  })
+```
+
+:::warning
+Temporary files are removed when the request finishes. A streaming response body, an event iterator or a raw stream, keeps them alive until it completes. Any other response is transmitted after removal, so a response that embeds the upload itself, as a `File` or inside `FormData`, needs the content copied or the file moved first. A moved or removed file can no longer be read through its `File` instance.
+:::
+
+## Limiting Body Sizes
+
+Use `maxBodySize` to limit each kind of request body by what it actually costs. All three kinds are required together, so none is left unbounded by accident; set a kind to `Number.POSITIVE_INFINITY` to deliberately leave it unlimited. A body over its limit rejects with `PAYLOAD_TOO_LARGE`.
+
+```ts
+const handler = new RPCHandler(router, {
+  plugins: [
+    new TmpFileUploadHandlerPlugin({
+      maxBodySize: {
+        /**
+         * Content parsed into memory: JSON, URL-encoded forms, and the
+         * plain fields of a multipart body. Usually the lowest limit.
+         */
+        memory: 1024 * 1024,
+
+        /**
+         * Content streamed into temporary files: file bodies and the
+         * file parts of a multipart body combined.
+         */
+        file: 10 * 1024 * 1024 * 1024,
+
+        /**
+         * Content consumed as a stream: event streams and raw binary
+         * streams, enforced while the stream is consumed. Usually the
+         * highest limit.
+         */
+        stream: Number.POSITIVE_INFINITY,
+      },
+    }),
+  ],
+})
+```
+
+A multipart body splits across the first two limits, fields against `memory` and file parts against `file`, and as a whole, framing included, it is bounded by the sum of both. A declared [Content-Length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Length) over the applicable limit rejects immediately, and enforcement continues while the body streams in, so a lying length cannot bypass it.
+
+With all three limits configured, the plugin subsumes the [Request Limit Plugin](/docs/plugins/request-limit). When the [Request Compression Plugin](/docs/plugins/request-compression) is present, limits apply to the decompressed payload rather than the compressed wire size.
+
+## Learn More
+
+For implementation details, see the [source code](https://github.com/middleapi/orpc/blob/main/packages/node/src/tmp-file-upload-handler-plugin.ts).
