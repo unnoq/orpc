@@ -13,7 +13,7 @@ npm install @orpc/node@beta
 
 ## Setup
 
-Use `TmpFileUploadHandlerPlugin` to parse file uploads into temporary files. Bodies the standard parser would buffer into an in-memory [File](https://developer.mozilla.org/en-US/docs/Web/API/File), and [`multipart/form-data`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types#multipartform-data) file parts, are streamed to disk instead. Every other body is left to the standard parser.
+Use `TmpFileUploadHandlerPlugin` to parse file uploads into temporary files. Bodies the standard parser would buffer into an in-memory [File](https://developer.mozilla.org/en-US/docs/Web/API/File), and [`multipart/form-data`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types#multipartform-data) file parts, stream to disk instead. Every other body is left to the standard parser.
 
 ```ts
 import { TmpFileUploadHandlerPlugin } from '@orpc/node'
@@ -30,37 +30,6 @@ const handler = new RPCHandler(router, {
        * @default os.tmpdir()
        */
       tmpDir: './uploads',
-
-      /**
-       * The size limit for each kind of request body. Every kind is required
-       * when the option is given, so none is left unbounded by accident; set
-       * a kind to `Number.POSITIVE_INFINITY` to deliberately leave it
-       * unlimited.
-       *
-       * @default unlimited for every kind
-       */
-      maxBodySize: {
-        /**
-         * Content parsed into memory: JSON, URL-encoded forms, and the plain
-         * fields of a multipart body. Usually the lowest of the three limits,
-         * because this content cannot stream anywhere.
-         */
-        memory: 1024 * 1024,
-
-        /**
-         * Upload content streamed into temporary files: file bodies and the
-         * file parts of a multipart body combined.
-         */
-        file: 10 * 1024 * 1024 * 1024,
-
-        /**
-         * Content consumed as a stream: event streams and raw binary streams.
-         * Enforced while the stream is consumed, so an oversized stream fails
-         * at the reader. Usually the highest of the three limits, because this
-         * content is consumed on the fly.
-         */
-        stream: Number.POSITIVE_INFINITY,
-      },
     }),
   ],
 })
@@ -72,7 +41,7 @@ The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/
 
 ## Working with Uploaded Files
 
-Procedures receive ordinary `File` instances and can read them as usual, in constant memory because the content is read lazily from disk. Each one is a `TmpFile` exposing the `path` of its backing file, so an upload can be kept with a cheap [rename](https://nodejs.org/api/fs.html#fspromisesrenameoldpath-newpath) instead of a copy:
+Procedures receive ordinary `File` instances and read them lazily from disk, in constant memory. Each one is a `TmpFile` exposing the `path` of its backing file, so an upload can be kept with a cheap [rename](https://nodejs.org/api/fs.html#fspromisesrenameoldpath-newpath) instead of a copy:
 
 ```ts
 import { TmpFile } from '@orpc/node'
@@ -88,16 +57,45 @@ const uploadVideo = os
 ```
 
 :::warning
-Temporary files are removed when the request finishes. A streaming response body, an event iterator or a raw stream, keeps them alive until it completes, so responses that read the upload while streaming work. Any other response is transmitted after removal, so one that embeds the upload itself, as a `File` or inside `FormData`, needs the content copied or the file moved first. A moved or removed file can no longer be read through its `File` instance.
+Temporary files are removed when the request finishes. A streaming response body, an event iterator or a raw stream, keeps them alive until it completes. Any other response is transmitted after removal, so a response that embeds the upload itself, as a `File` or inside `FormData`, needs the content copied or the file moved first. A moved or removed file can no longer be read through its `File` instance.
 :::
 
 ## Limiting Body Sizes
 
-Each request body counts against the limit matching what it actually costs: `memory` bounds content parsed into memory, `file` bounds content streamed into temporary files, and `stream` bounds content consumed as a stream. A multipart body splits across the first two, its fields against the memory limit and its file parts against the file limit, and as a whole, framing included, it is bounded by the sum of both.
+Use `maxBodySize` to limit each kind of request body by what it actually costs. All three kinds are required together, so none is left unbounded by accident; set a kind to `Number.POSITIVE_INFINITY` to deliberately leave it unlimited. A body over its limit rejects with `PAYLOAD_TOO_LARGE`.
 
-The plugin subsumes the [Request Limit Plugin](/docs/plugins/request-limit) while allowing large uploads and streams without raising the ceiling for everything else. A declared [Content-Length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Length) over the applicable limit rejects immediately, and the limits stay enforced while the body streams in, so a lying length cannot bypass them.
+```ts
+const handler = new RPCHandler(router, {
+  plugins: [
+    new TmpFileUploadHandlerPlugin({
+      maxBodySize: {
+        /**
+         * Content parsed into memory: JSON, URL-encoded forms, and the
+         * plain fields of a multipart body. Usually the lowest limit.
+         */
+        memory: 1024 * 1024,
 
-When the [Request Compression Plugin](/docs/plugins/request-compression) is present, the plugin orders itself to receive the decompressed bytes, so every limit applies to the real payload rather than the compressed wire size.
+        /**
+         * Content streamed into temporary files: file bodies and the
+         * file parts of a multipart body combined.
+         */
+        file: 10 * 1024 * 1024 * 1024,
+
+        /**
+         * Content consumed as a stream: event streams and raw binary
+         * streams, enforced while the stream is consumed. Usually the
+         * highest limit.
+         */
+        stream: Number.POSITIVE_INFINITY,
+      },
+    }),
+  ],
+})
+```
+
+A multipart body splits across the first two limits, fields against `memory` and file parts against `file`, and as a whole, framing included, it is bounded by the sum of both. A declared [Content-Length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Length) over the applicable limit rejects immediately, and enforcement continues while the body streams in, so a lying length cannot bypass it.
+
+With all three limits configured, the plugin subsumes the [Request Limit Plugin](/docs/plugins/request-limit). When the [Request Compression Plugin](/docs/plugins/request-compression) is present, limits apply to the decompressed payload rather than the compressed wire size.
 
 ## Learn More
 
