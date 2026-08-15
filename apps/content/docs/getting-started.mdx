@@ -5,4 +5,193 @@ sidebar:
   icon: rocket
 ---
 
-// TODO
+oRPC turns plain TypeScript functions into a fully typed API. You write each procedure once, and oRPC gives you a typed client, a REST API with an OpenAPI document, and typed event streams, all without code generation. This guide builds the smallest complete setup: a router, a server, and a typed client calling it.
+
+:::tip[Prefer a running example?]
+Open one of the [playgrounds](/docs/playgrounds) in StackBlitz and follow along in a complete project.
+:::
+
+## Installation
+
+Install the server and client packages, plus a schema library for validation. This guide uses [Zod](https://zod.dev/), but [Valibot](https://valibot.dev/), [ArkType](https://arktype.io/), and any other [Standard Schema](https://standardschema.dev/) library work the same way.
+
+```package-install
+npm install @orpc/server@beta @orpc/client@beta zod
+```
+
+## Define a Router
+
+Procedures are the functions of your API. Build them with the `os` builder and implement their logic in `.handler`. A router is a plain object that groups procedures, nested as deeply as you like.
+
+```ts twoslash
+declare function parseJWT(token: string | undefined): { userId: number } | null
+// ---cut---
+import type { IncomingHttpHeaders } from 'node:http'
+import { ORPCError, os } from '@orpc/server'
+import * as z from 'zod'
+
+const PlanetSchema = z.object({
+  id: z.number().int().min(1),
+  name: z.string(),
+  description: z.string().optional(),
+})
+
+export const listPlanet = os
+  .input(
+    z.object({
+      limit: z.number().int().min(1).max(100).optional(),
+      cursor: z.number().int().min(0).default(0),
+    }),
+  )
+  .handler(async ({ input }) => {
+    // your list code here
+    return [{ id: 1, name: 'name' }]
+  })
+
+export const findPlanet = os
+  .input(PlanetSchema.pick({ id: true }))
+  .handler(async ({ input }) => {
+    // your find code here
+    return { id: 1, name: 'name' }
+  })
+
+export const createPlanet = os
+  .$context<{ headers: IncomingHttpHeaders }>()
+  .use(({ context, next }) => {
+    const user = parseJWT(context.headers.authorization?.split(' ')[1])
+
+    if (user) {
+      return next({ context: { user } })
+    }
+
+    throw new ORPCError('UNAUTHORIZED')
+  })
+  .input(PlanetSchema.omit({ id: true }))
+  .handler(async ({ input, context }) => {
+    // your create code here
+    return { id: 1, name: 'name' }
+  })
+
+export const router = {
+  planet: {
+    list: listPlanet,
+    find: findPlanet,
+    create: createPlanet,
+  },
+}
+```
+
+A few things to notice:
+
+- `.input` validates requests before your handler runs. No `.output` schema is needed: the client's result type flows straight from the handler's return type.
+- `createPlanet` declares what it needs from the environment with [`.$context`](/docs/context) and injects `user` through [middleware](/docs/middleware) with `.use`. `parseJWT` stands in for your own token verification.
+- Throw an [`ORPCError`](/docs/error-handling) to reject a call with a specific error code.
+
+:::info
+`.handler` is the only required step. Every other chain is optional. Learn more in the [Procedure documentation](/docs/procedure).
+:::
+
+## Create a Server
+
+This example serves the router over HTTP with the [Node adapter](/docs/adapters/node-http). The same router also runs on Bun, Deno, and Cloudflare Workers through the [Fetch API adapter](/docs/adapters/fetch-api).
+
+```ts twoslash
+import { router } from './shared/getting-started'
+// ---cut---
+import { createServer } from 'node:http'
+import { onError } from '@orpc/server'
+import { RPCHandler } from '@orpc/server/node'
+import { CORSHandlerPlugin } from '@orpc/server/plugins'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new CORSHandlerPlugin(),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error)
+    }),
+  ],
+})
+
+const server = createServer(async (req, res) => {
+  const { matched } = await handler.handle(req, res, {
+    prefix: '/rpc',
+    context: { headers: req.headers }, // <- initial context
+  })
+
+  if (matched) {
+    return
+  }
+
+  res.statusCode = 404
+  res.end('Not found')
+})
+
+server.listen(3000, '127.0.0.1', () => console.log('Listening on 127.0.0.1:3000'))
+```
+
+The `context` passed to `handle` fulfills what `createPlanet` declared with `.$context`: it carries each request's headers, so the auth middleware can check the `authorization` header the client sends.
+
+`RPCHandler` serves procedures over oRPC's fast [RPC protocol](/docs/rpc/protocol). Learn more in the [RPC Handler documentation](/docs/rpc/handler).
+
+:::info
+oRPC can also serve the same router as a REST API. Add [routing metadata](/docs/openapi/routing) to your procedures, serve them with the [OpenAPI Handler](/docs/openapi/handler), and generate an [OpenAPI specification](/docs/openapi/specification) from the same definitions.
+:::
+
+## Create a Client
+
+Pass an [RPC Link](/docs/rpc/link) to `createORPCClient` to build a fully typed client:
+
+```ts twoslash
+import type { router } from './shared/getting-started'
+// ---cut---
+import type { RouterClient } from '@orpc/server'
+import { createORPCClient } from '@orpc/client'
+import { RPCLink } from '@orpc/client/fetch'
+
+const link = new RPCLink({
+  origin: 'http://127.0.0.1:3000',
+  url: '/rpc', // <- must match the server's prefix
+  headers: { authorization: 'Bearer token' }, // <- checked by createPlanet's middleware
+})
+
+export const orpc: RouterClient<typeof router> = createORPCClient(link)
+```
+
+:::tip
+The client only needs the router's type. Import it with `import type`, or export the `RouterClient<typeof router>` type from the server, so no server code ends up in your client bundle. Learn more in the [Client-Side Clients documentation](/docs/client/client-side).
+:::
+
+When the client runs in the same process as the server, skip the network entirely and call procedures through a [server-side client](/docs/client/server-side).
+
+## Call a Procedure
+
+Call your procedures like local functions, with end-to-end type safety and autocompletion:
+
+```ts twoslash
+import { client as orpc } from './shared/getting-started'
+// ---cut---
+const planet = await orpc.planet.find({ id: 1 })
+
+orpc.planet.create
+//          ^|
+
+//
+
+//
+
+//
+//
+```
+
+Inputs are validated before your handler runs, and `planet` is typed from the handler's return value. Renaming a procedure or changing its schema is reflected in the client immediately, with no code generation step in between.
+
+## Next Steps
+
+- Master the core primitives: [Procedure](/docs/procedure), [Router](/docs/router), [Middleware](/docs/middleware), [Context](/docs/context), and [Error Handling](/docs/error-handling)
+- Stream typed events over SSE with [AsyncIteratorObject](/docs/async-iterator-object)
+- Expose the same router as a REST API with the [OpenAPI Handler](/docs/openapi/handler) and generate its [OpenAPI specification](/docs/openapi/specification)
+- Define your API as a [contract first](/docs/contract/procedure), then let TypeScript enforce the implementation
+- Integrate with your stack: [TanStack Query](/docs/integrations/tanstack-query), [SWR](/docs/integrations/swr), [Pinia Colada](/docs/integrations/pinia-colada), [Next.js](/docs/integrations/next), and [NestJS](/docs/integrations/nest)
+- Deploy on your runtime with the [adapters](/docs/adapters/node-http) for Node, Fetch API environments, Fastify, AWS Lambda, and more
