@@ -132,6 +132,16 @@ describe('parseMultipart', () => {
     }
   })
 
+  it('decodes the serialization escapes in names and filenames', async () => {
+    const body = buildBody(boundary, [
+      ['Content-Disposition: form-data; name="quo%22ted%0Aname"; filename="my %22quoted%22%0D%0Afile.txt"', '', 'v'],
+    ])
+
+    const parts = await collect(body, boundary, 4)
+    expect(parts[0]!.name).toBe('quo"ted\nname')
+    expect(parts[0]!.filename).toBe('my "quoted"\r\nfile.txt')
+  })
+
   it('keeps quoted content-disposition parameters verbatim, including backslashes', async () => {
     const body = buildBody(boundary, [
       ['Content-Disposition: form-data; name="na;me=x"; filename="C:\\tmp\\a; .png"', '', 'v'],
@@ -246,7 +256,9 @@ describe('parseMultipart', () => {
       form.append('field', 'value')
       form.append('field', 'value 2 for the same name')
       form.append('unicode', 'tiếng Việt 🚀')
+      form.append('quo"ted\nname', 'escaped by the serializer')
       form.append('file', new File(['file content'], 'tệp tin 🚀.txt', { type: 'text/plain' }))
+      form.append('escapes', new File(['x'], 'my "quoted"\r\nfile.txt', { type: 'text/plain' }))
       form.append('binary', new File([new Uint8Array([0, 1, 2, 253, 254, 255])], 'raw.bin', { type: 'application/octet-stream' }))
       form.append('empty', new File([], 'empty.bin'))
 

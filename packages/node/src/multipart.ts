@@ -11,14 +11,16 @@ const HEADER_BLOCK_END = Buffer.from('\r\n\r\n')
 
 export interface MultipartPart {
   /**
-   * The `name` parameter of the part's `Content-Disposition` header.
+   * The `name` parameter of the part's `Content-Disposition` header, with the
+   * serialization escapes of `"`, `\r`, and `\n` decoded.
    */
   name: string
 
   /**
    * The `filename` parameter of the part's `Content-Disposition` header,
-   * `undefined` when the part is a plain field. An empty string is a file
-   * part, matching how browsers submit an empty file input.
+   * decoded like `name`, or `undefined` when the part is a plain field. An
+   * empty string is a file part, matching how browsers submit an empty file
+   * input.
    */
   filename: string | undefined
 
@@ -211,7 +213,24 @@ function parsePartHeaders(block: string): MultipartPart {
     throw new TypeError('Invalid multipart body: content-disposition header is missing the name parameter')
   }
 
-  return { name, filename: parameters.get('filename'), type: contentType }
+  const filename = parameters.get('filename')
+
+  return {
+    name: decodeContentDispositionParameter(name),
+    filename: filename === undefined ? undefined : decodeContentDispositionParameter(filename),
+    type: contentType,
+  }
+}
+
+/**
+ * The multipart serialization every spec-compliant client uses escapes `"`, `\r`,
+ * and `\n` in content-disposition names and filenames as `%22`, `%0D`, and `%0A`,
+ * and the standard parser reverses exactly these three.
+ *
+ * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart/form-data-encoding-algorithm
+ */
+function decodeContentDispositionParameter(value: string): string {
+  return value.replaceAll('%22', '"').replaceAll('%0D', '\r').replaceAll('%0A', '\n')
 }
 
 /**

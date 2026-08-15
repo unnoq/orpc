@@ -310,7 +310,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
     let fileUsed = 0
 
     await parseMultipart(limited, boundary, (part) => {
-      const name = decodeContentDispositionParameter(part.name)
+      const name = part.name
 
       if (part.filename === undefined) {
         const chunks: Buffer[] = []
@@ -332,7 +332,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
         }
       }
 
-      const filename = decodeContentDispositionParameter(part.filename)
+      const filename = part.filename
       // A part without a content-type defaults to text/plain, matching the standard parser
       const type = part.type ?? 'text/plain'
       let tmpPath: string | undefined
@@ -357,18 +357,6 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
 
     return form
   }
-}
-
-/**
- * The multipart serialization every spec-compliant client uses escapes `"`, `\r`,
- * and `\n` in content-disposition names and filenames as `%22`, `%0D`, and `%0A`,
- * and the standard parser reverses exactly these three, so the parser's undecoded
- * values need the same reversal.
- *
- * @see https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart/form-data-encoding-algorithm
- */
-function decodeContentDispositionParameter(value: string): string {
-  return value.replaceAll('%22', '"').replaceAll('%0D', '\r').replaceAll('%0A', '\n')
 }
 
 /**
