@@ -76,6 +76,7 @@ A few things to notice:
 Clients reach your router through an HTTP server. `RPCHandler` does the translation: it matches each incoming request to a procedure, validates the input, runs your handler, and sends the result back. This example uses [Node's built-in HTTP module](/docs/adapters/node-http). The same router also runs on Bun, Deno, and Cloudflare Workers through the [Fetch API adapter](/docs/adapters/fetch-api).
 
 ```ts twoslash
+/// <reference types="node" />
 import { router } from './shared/getting-started'
 // ---cut---
 import { createServer } from 'node:http'
