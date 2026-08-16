@@ -6,6 +6,7 @@ export default defineMeta({
     'comparison',
     'ecosystem',
     'playgrounds',
+    'api-reference',
     'procedure',
     'router',
     'middleware',
