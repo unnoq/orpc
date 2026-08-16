@@ -4,7 +4,7 @@
   <a href="https://codecov.io/gh/middleapi/orpc">
     <img alt="codecov" src="https://codecov.io/gh/middleapi/orpc/branch/main/graph/badge.svg">
   </a>
-  <a href="https://www.npmjs.com/package/@orpc/json-schema">
+  <a href="https://npmx.dev/package/@orpc/json-schema">
     <img alt="weekly downloads" src="https://img.shields.io/npm/dw/%40orpc%2Fjson-schema?logo=npm" />
   </a>
   <a href="https://app.codspeed.io/middleapi/orpc?utm_source=badge">
@@ -29,43 +29,43 @@ You can read the documentation [here](https://orpc.dev).
 
 **Core**
 
-- [@orpc/contract](https://www.npmjs.com/package/@orpc/contract): Define API contract as the single source of truth.
-- [@orpc/server](https://www.npmjs.com/package/@orpc/server): Build APIs or implement contracts.
-- [@orpc/client](https://www.npmjs.com/package/@orpc/client): Consume APIs with end-to-end type safety.
-- [@orpc/openapi](https://www.npmjs.com/package/@orpc/openapi): Add OpenAPI compatibility to APIs.
+- [@orpc/contract](https://npmx.dev/package/@orpc/contract): Define API contract as the single source of truth.
+- [@orpc/server](https://npmx.dev/package/@orpc/server): Build APIs or implement contracts.
+- [@orpc/client](https://npmx.dev/package/@orpc/client): Consume APIs with end-to-end type safety.
+- [@orpc/openapi](https://npmx.dev/package/@orpc/openapi): Add OpenAPI compatibility to APIs.
 
 **Schema validation**
 
-- [@orpc/zod](https://www.npmjs.com/package/@orpc/zod): Integrate with [Zod](https://zod.dev/).
-- [@orpc/valibot](https://www.npmjs.com/package/@orpc/valibot): Integrate with [Valibot](https://valibot.dev/).
-- [@orpc/arktype](https://www.npmjs.com/package/@orpc/arktype): Integrate with [ArkType](https://arktype.io/).
+- [@orpc/zod](https://npmx.dev/package/@orpc/zod): Integrate with [Zod](https://zod.dev/).
+- [@orpc/valibot](https://npmx.dev/package/@orpc/valibot): Integrate with [Valibot](https://valibot.dev/).
+- [@orpc/arktype](https://npmx.dev/package/@orpc/arktype): Integrate with [ArkType](https://arktype.io/).
 
 **Built-in features**
 
-- [@orpc/publisher](https://www.npmjs.com/package/@orpc/publisher): Pub/Sub with memory, Redis, and Upstash adapters.
-- [@orpc/ratelimit](https://www.npmjs.com/package/@orpc/ratelimit): Rate limiting with memory, Redis, and Upstash adapters.
-- [@orpc/hibernation](https://www.npmjs.com/package/@orpc/hibernation): Leverage Hibernation APIs like [Cloudflare's Hibernation WebSocket](https://developers.cloudflare.com/durable-objects/best-practices/websockets/#durable-objects-hibernation-websocket-api).
-- [@orpc/json-schema](https://www.npmjs.com/package/@orpc/json-schema): Smart coercion for OpenAPI requests.
+- [@orpc/publisher](https://npmx.dev/package/@orpc/publisher): Pub/Sub with memory, Redis, and Upstash adapters.
+- [@orpc/ratelimit](https://npmx.dev/package/@orpc/ratelimit): Rate limiting with memory, Redis, and Upstash adapters.
+- [@orpc/hibernation](https://npmx.dev/package/@orpc/hibernation): Leverage Hibernation APIs like [Cloudflare's Hibernation WebSocket](https://developers.cloudflare.com/durable-objects/best-practices/websockets/#durable-objects-hibernation-websocket-api).
+- [@orpc/json-schema](https://npmx.dev/package/@orpc/json-schema): Smart coercion for OpenAPI requests.
 
 **Framework & ecosystem integrations**
 
-- [@orpc/next](https://www.npmjs.com/package/@orpc/next): Integrate with [Next.js Server Functions](https://nextjs.org/docs/app/getting-started/mutating-data).
-- [@orpc/ai-sdk](https://www.npmjs.com/package/@orpc/ai-sdk): Turn contracts and procedures into [AI SDK](https://ai-sdk.dev/) tools.
-- [@orpc/tanstack-query](https://www.npmjs.com/package/@orpc/tanstack-query): Integrate with [TanStack Query](https://tanstack.com/query/latest).
-- [@orpc/pinia-colada](https://www.npmjs.com/package/@orpc/pinia-colada): Integrate with [Pinia Colada](https://pinia-colada.esm.dev/).
-- [@orpc/swr](https://www.npmjs.com/package/@orpc/swr): Integrate with [SWR](https://swr.vercel.app/).
-- [@orpc/experimental-effect](https://www.npmjs.com/package/@orpc/experimental-effect): Integrate with [Effect](https://effect.website/).
-- [@orpc/nest](https://www.npmjs.com/package/@orpc/nest): Implement your contract with [NestJS](https://nestjs.com/).
-- [@orpc/node](https://www.npmjs.com/package/@orpc/node): [Node.js](https://nodejs.org/) plugins, helpers, like serving static files.
-- [@orpc/bun](https://www.npmjs.com/package/@orpc/bun): Adapters for [Bun's Redis](https://bun.sh/).
-- [@orpc/cloudflare](https://www.npmjs.com/package/@orpc/cloudflare): Adapters for [Cloudflare's RateLimit and Durable Objects](https://developers.cloudflare.com/workers/).
-- [@orpc/trpc](https://www.npmjs.com/package/@orpc/trpc): Reuse existing [tRPC](https://trpc.io/) routers within oRPC.
+- [@orpc/next](https://npmx.dev/package/@orpc/next): Integrate with [Next.js Server Functions](https://nextjs.org/docs/app/getting-started/mutating-data).
+- [@orpc/ai-sdk](https://npmx.dev/package/@orpc/ai-sdk): Turn contracts and procedures into [AI SDK](https://ai-sdk.dev/) tools.
+- [@orpc/tanstack-query](https://npmx.dev/package/@orpc/tanstack-query): Integrate with [TanStack Query](https://tanstack.com/query/latest).
+- [@orpc/pinia-colada](https://npmx.dev/package/@orpc/pinia-colada): Integrate with [Pinia Colada](https://pinia-colada.esm.dev/).
+- [@orpc/swr](https://npmx.dev/package/@orpc/swr): Integrate with [SWR](https://swr.vercel.app/).
+- [@orpc/experimental-effect](https://npmx.dev/package/@orpc/experimental-effect): Integrate with [Effect](https://effect.website/).
+- [@orpc/nest](https://npmx.dev/package/@orpc/nest): Implement your contract with [NestJS](https://nestjs.com/).
+- [@orpc/node](https://npmx.dev/package/@orpc/node): [Node.js](https://nodejs.org/) plugins for static file serving and large uploads.
+- [@orpc/bun](https://npmx.dev/package/@orpc/bun): Adapters for [Bun's Redis](https://bun.sh/).
+- [@orpc/cloudflare](https://npmx.dev/package/@orpc/cloudflare): Adapters for [Cloudflare's RateLimit and Durable Objects](https://developers.cloudflare.com/workers/).
+- [@orpc/trpc](https://npmx.dev/package/@orpc/trpc): Reuse existing [tRPC](https://trpc.io/) routers within oRPC.
 
 **Observability**
 
-- [@orpc/opentelemetry](https://www.npmjs.com/package/@orpc/opentelemetry): Integrate with [OpenTelemetry](https://opentelemetry.io/) for distributed tracing.
-- [@orpc/pino](https://www.npmjs.com/package/@orpc/pino): Integrate with [Pino](https://getpino.io/) for logging.
-- [@orpc/evlog](https://www.npmjs.com/package/@orpc/evlog): Integrate with [Evlog](https://evlog.dev/) for logging.
+- [@orpc/opentelemetry](https://npmx.dev/package/@orpc/opentelemetry): Integrate with [OpenTelemetry](https://opentelemetry.io/) for distributed tracing.
+- [@orpc/pino](https://npmx.dev/package/@orpc/pino): Integrate with [Pino](https://getpino.io/) for logging.
+- [@orpc/evlog](https://npmx.dev/package/@orpc/evlog): Integrate with [Evlog](https://evlog.dev/) for logging.
 
 ## Sponsors
 
