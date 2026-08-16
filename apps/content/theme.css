@@ -281,6 +281,24 @@ main#blume-content {
 /* Non-owned chrome                                                 */
 /* ---------------------------------------------------------------- */
 
+/* Blume tints `:::tip` blocks with the accent color, which here is the brand
+   pink — a tip then reads as an alarm, barely distinguishable from the red
+   `:::danger` blocks. Green instead (GitHub's alert convention); the docs use
+   no `success`/`check` callouts for it to collide with. Matched on Blume's own
+   accent utilities, the only marker the tip variant leaves in the markup. */
+aside[class~='bg-accent/10'] {
+  border-color: color-mix(in oklab, var(--color-green-500) 25%, transparent);
+  background-color: color-mix(in oklab, var(--color-green-500) 10%, transparent);
+}
+
+aside[class~='bg-accent/10'] [class~='text-accent'] {
+  color: var(--color-green-600);
+}
+
+:root[data-theme='dark'] aside[class~='bg-accent/10'] [class~='text-accent'] {
+  color: var(--color-green-400);
+}
+
 /* Search trigger: wide, quiet gray box like the reference header */
 [data-blume-search-open] {
   height: 2.375rem;
