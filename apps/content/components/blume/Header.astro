@@ -233,6 +233,26 @@ const clickScript = `(()=>{const dr=()=>{const h=document.querySelector("[data-b
     )
   }
   <div class="flex items-center gap-2">
+    <a
+      aria-label="oRPC on X"
+      class={iconButton}
+      href="https://x.com/middleapi"
+      rel="noreferrer"
+      target="_blank"
+    >
+      <svg
+        aria-hidden="true"
+        fill="currentColor"
+        height="16"
+        viewBox="0 0 16 16"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M9.294 6.775 14.463 1h-1.224L8.75 6.014 5.163 1H1.025l5.42 7.583L1.025 14.64H2.25l4.74-5.295 3.786 5.295h4.138L9.294 6.775Zm-1.678 1.874-.55-.764-4.369-6.07h1.881l3.527 4.9.549.763 4.583 6.368h-1.881L7.616 8.65Z"
+        />
+      </svg>
+    </a>
     {
       navigation.repoUrl && (
         <a
