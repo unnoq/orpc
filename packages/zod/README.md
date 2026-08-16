@@ -56,7 +56,7 @@ You can read the documentation [here](https://orpc.dev).
 - [@orpc/swr](https://npmx.dev/package/@orpc/swr): Integrate with [SWR](https://swr.vercel.app/).
 - [@orpc/experimental-effect](https://npmx.dev/package/@orpc/experimental-effect): Integrate with [Effect](https://effect.website/).
 - [@orpc/nest](https://npmx.dev/package/@orpc/nest): Implement your contract with [NestJS](https://nestjs.com/).
-- [@orpc/node](https://npmx.dev/package/@orpc/node): [Node.js](https://nodejs.org/) plugins, helpers, like serving static files.
+- [@orpc/node](https://npmx.dev/package/@orpc/node): [Node.js](https://nodejs.org/) plugins for static file serving and large uploads.
 - [@orpc/bun](https://npmx.dev/package/@orpc/bun): Adapters for [Bun's Redis](https://bun.sh/).
 - [@orpc/cloudflare](https://npmx.dev/package/@orpc/cloudflare): Adapters for [Cloudflare's RateLimit and Durable Objects](https://developers.cloudflare.com/workers/).
 - [@orpc/trpc](https://npmx.dev/package/@orpc/trpc): Reuse existing [tRPC](https://trpc.io/) routers within oRPC.
