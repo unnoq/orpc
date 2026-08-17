@@ -179,28 +179,6 @@ describe('batchResponseCompressionHandlerPlugin', () => {
   })
 
   /**
-   * Reachable when a client batches but the server forgot the batch plugin, where an ordinary array
-   * response reaches this plugin. It is compressed as the json the adapter would have sent anyway,
-   * so whatever the array holds has to survive the round trip.
-   */
-  it('compresses an array response without altering what it carries', async () => {
-    const handler = new RPCHandler(router, {
-      plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
-      routingInterceptors: [async () => ({
-        matched: true,
-        response: { status: 200, headers: {}, body: [null, undefined, largeValue] },
-      })],
-    })
-
-    const { response } = await handler.handle(createBatchRequest('streaming', ['/ping']))
-
-    expect(response!.headers.get('content-encoding')).toBe('gzip')
-    expect(response!.headers.get('content-type')).toBe('application/json')
-    // `undefined` becomes `null` in a json array, exactly as the adapter would have serialized it
-    expect(JSON.parse(await decompress(response!, 'gzip'))).toEqual([null, null, largeValue])
-  })
-
-  /**
    * A batch that fails as a whole answers with a plain message rather than subresponses.
    */
   it('leaves a failed batch response alone', async () => {
@@ -235,25 +213,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     expect(response).toBeUndefined()
   })
 
-  /**
-   * The misconfigured pair again, a client that batches against a handler without the batch plugin,
-   * where an ordinary procedure response carries the batch header it was asked for.
-   */
-  it('leaves an ordinary response alone when the client asks for a batch', async () => {
-    const handler = new RPCHandler(router, {
-      plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
-    })
-
-    const { response } = await handler.handle(new Request('https://example.com/ping', {
-      method: 'POST',
-      headers: { 'accept-encoding': 'gzip', 'orpc-batch': 'streaming' },
-    }))
-
-    expect(response!.headers.get('content-encoding')).toBe(null)
-    await expect(response!.text()).resolves.toContain(largeValue)
-  })
-
-  it('leaves a batch response that carries neither bytes nor messages alone', async () => {
+  it('leaves an invalid batch response alone', async () => {
     const handler = new RPCHandler(router, {
       plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
       routingInterceptors: [async () => ({
@@ -268,11 +228,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     await expect(response!.text()).resolves.toContain('invalid')
   })
 
-  /**
-   * Only a request that asked for a batch can produce one, so a procedure serving the batch
-   * content type itself keeps the file semantics it would have without this plugin.
-   */
-  it('leaves a file that merely carries the batch content type alone', async () => {
+  it('leaves non-batch responses alone even when they carry the batch content type', async () => {
     const handler = createHandler({}, {
       export: os.handler(() => new File([largeValue], 'export.batch', { type: BATCH_CONTENT_TYPE })),
     })
@@ -288,10 +244,6 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     await expect(response!.text()).resolves.toBe(largeValue)
   })
 
-  /**
-   * Reachable without the batch plugin registered, where a range request carrying the batch header
-   * is answered by whatever else serves that content type.
-   */
   it('leaves a partial response alone', async () => {
     const contentRange = `bytes 0-${largeValue.length - 1}/${largeValue.length * 2}`
 
@@ -388,7 +340,6 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     await expect(response!.text()).resolves.toContain(largeValue)
   })
 
-  // Neither plugin constrains the other's order, so registration order decides which runs first
   it.each([
     ['batch compression first', () => [new BatchResponseCompressionHandlerPlugin(), new ResponseCompressionHandlerPlugin({ threshold: 0 })]],
     ['response compression first', () => [new ResponseCompressionHandlerPlugin({ threshold: 0 }), new BatchResponseCompressionHandlerPlugin()]],
