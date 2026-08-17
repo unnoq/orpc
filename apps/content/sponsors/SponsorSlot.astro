@@ -4,14 +4,15 @@
 // replaces [data-sponsor-body] with a clone of the <template> card, filled
 // with a randomly picked sponsor on every view.
 //
-// Styled with Blume's Tailwind utilities (border-border, rounded-blume, …)
-// per its theming guide, so the card tracks theme tokens and dark mode. The
-// card markup lives in the template (not client.ts) because Blume's Tailwind
-// only scans .astro/.tsx/.jsx files for classes.
+// Styled with Blume's Tailwind utilities (rounded-blume, text-muted-foreground,
+// …) per its theming guide, so the card tracks theme tokens and dark mode. Its
+// border and tinted background come from `.orpc-ad-card` in theme.css, shared
+// with the rail cards: client.ts sets the picked sponsor's brand color on this
+// element and the tint is mixed from it.
 ---
 
 <aside
-  class="relative my-6 box-border h-[76px] overflow-hidden rounded-blume border border-border"
+  class="orpc-ad-card relative my-6 box-border h-[76px] overflow-hidden rounded-blume"
   data-sponsor-slot
   aria-label="Sponsor"
 >
@@ -28,7 +29,7 @@
   </div>
   <template data-sponsor-template>
     <a
-      class="flex h-full items-center gap-3 px-4 no-underline hover:bg-muted"
+      class="flex h-full items-center gap-3 px-4 no-underline"
       target="_blank"
       rel="sponsored noopener"
     >

@@ -91,6 +91,232 @@
 }
 
 /* ---------------------------------------------------------------- */
+/* Ads: the in-article card (sponsors/SponsorSlot.astro) and the two */
+/* side rails (sponsors/rails.ts), both mounted on the client.       */
+/* ---------------------------------------------------------------- */
+
+/* Every ad card, in-article or in a rail. The advertiser's brand color arrives
+   as --orpc-ad-color (set per card from ads.ts); mixing it into the page
+   background rather than painting it flat means one authored value tints the
+   card in both themes, and never fights the foreground text for contrast. */
+.orpc-ad-card {
+  --orpc-ad-color: var(--blume-muted-foreground);
+  --orpc-ad-tint: 7%;
+  --orpc-ad-tint-hover: 13%;
+
+  border: 1px solid color-mix(in oklab, var(--orpc-ad-color) 30%, var(--blume-border));
+  background: color-mix(in oklab, var(--orpc-ad-color) var(--orpc-ad-tint), var(--blume-background));
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.orpc-ad-card:hover {
+  background: color-mix(in oklab, var(--orpc-ad-color) var(--orpc-ad-tint-hover), var(--blume-background));
+}
+
+/* A bright brand color reads weaker against the dark page, so it takes a
+   heavier mix there to land at the same perceived tint. */
+:root[data-theme='dark'] .orpc-ad-card {
+  --orpc-ad-tint: 12%;
+  --orpc-ad-tint-hover: 18%;
+}
+
+/* Rails: fixed columns in the page's flanks. Their left and width are measured
+   and set by sponsors/rails.ts, which reads the article and the columns beside
+   it — the site has four content layouts and one CSS rule per layout is one
+   rule to get wrong when a fifth appears. Everything that does not depend on
+   that measurement lives here. */
+.orpc-ad-rail {
+  --orpc-ad-logo-size: 2rem;
+  --orpc-ad-card-height: 7rem;
+
+  position: fixed;
+  top: var(--docs-header-height);
+  bottom: 0;
+  z-index: 10;
+  /* Hidden until rails.ts has measured a flank wide enough to hold a card. */
+  display: none;
+  flex-direction: column;
+  padding-block: 1.5rem;
+  /* Scrolls only in the rare case its cards outrun a short window. Scroll
+     chaining is deliberately left alone: a rail is a full-height column down
+     the whole page flank, so containing the wheel here would freeze the article
+     for anyone whose pointer happens to rest over it — Chrome blocks chaining
+     on an `overflow-y: auto` box even when its content fits. */
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+/* Top-aligned, not centered: a centered rail would re-center whenever a card
+   appears or drops out — sliding a different slot under a cursor that is
+   already over one. Growing downward keeps every card put. */
+.orpc-ad-rail-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.orpc-ad-rail-label {
+  margin: 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--blume-muted-foreground);
+}
+
+.orpc-ad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Everything a rail says about itself — the unsold slots, the call to action,
+   the count — sits back at low opacity, so the only thing at full strength is
+   an ad someone paid for. It all comes forward together when the reader looks
+   at the rail. Dimmed rather than hidden, so the rail never changes size under
+   the cursor and the inventory is always visible for what it is. */
+.orpc-ad-open-slot,
+.orpc-ad-action,
+.orpc-ad-count {
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+
+.orpc-ad-rail-inner:hover :is(.orpc-ad-open-slot, .orpc-ad-action, .orpc-ad-count),
+.orpc-ad-rail-inner:focus-within :is(.orpc-ad-open-slot, .orpc-ad-action, .orpc-ad-count) {
+  opacity: 1;
+}
+
+/* The card a rail drops when the window is too short for all six: the label,
+   five slots, the call to action and the count stop fitting below roughly the
+   card height times six plus the header. Only ever an unsold slot — rails.ts
+   marks the last one — so a paid ad is never the thing that vanishes. The
+   taller cards of a wide window need the taller window to match. */
+@media (max-height: 53.75rem) {
+  .orpc-ad-droppable {
+    display: none;
+  }
+}
+
+/* One height for every card in a rail, booked or not, however long the tagline
+   runs: the rail is a price list, and a slot that renders shorter than its
+   neighbours looks like it is worth less. */
+.orpc-ad-rail-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: var(--orpc-ad-card-height);
+  padding: 0.75rem;
+  border-radius: var(--blume-radius);
+  text-align: center;
+  text-decoration: none;
+}
+
+/* Two lines, then ellipsis — the cap the min-height above is measured against. */
+.orpc-ad-rail-card .orpc-ad-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.orpc-ad-logo {
+  width: var(--orpc-ad-logo-size);
+  height: var(--orpc-ad-logo-size);
+  margin: 0;
+  border-radius: 0.375rem;
+}
+
+.orpc-ad-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--blume-foreground);
+}
+
+.orpc-ad-description {
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: var(--blume-muted-foreground);
+}
+
+/* An unsold slot: the same card at the same size as a booked one — a slot is
+   worth what its neighbours are worth — but dashed and untinted, so it reads as
+   an invitation rather than as an ad. */
+.orpc-ad-open {
+  border-style: dashed;
+  background: none;
+}
+
+.orpc-ad-open:hover {
+  border-color: var(--blume-muted-foreground);
+  background: var(--blume-muted);
+}
+
+/* Stands in for the advertiser's logo, so an empty card is exactly as tall as
+   the ones around it. */
+.orpc-ad-open-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--orpc-ad-logo-size);
+  height: var(--orpc-ad-logo-size);
+  border: 1px dashed var(--blume-border);
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--blume-muted-foreground);
+}
+
+.orpc-ad-count {
+  margin: 0;
+  font-size: 0.625rem;
+  line-height: 1;
+  text-align: center;
+  color: var(--blume-muted-foreground);
+}
+
+/* The frame is capped at 81.875rem so the docs stay legible, but between the
+   13-inch laptops and the wide monitors that cap strands a band of empty page
+   on either side while the rails have nowhere to go. Through that band the
+   frame takes the whole window — the header follows it, sharing the same
+   variable — which does not move the article (it sits half a nav column right
+   of centre either way) and turns the stranded margin into usable flank. */
+@media (min-width: 82rem) and (max-width: 103.9375rem) {
+  /* Scoped to the pages built on the docs grid, so a landing page's header
+     keeps its usual measure. Read from the server-rendered markup rather than
+     a class the client adds, so nothing reflows once scripts run. Where
+     `:has()` is unsupported the frame simply stays capped, and the rails then
+     measure the smaller flank and fit themselves to it. */
+  :root:has([data-blume-doc-grid][class*='lg:grid-cols-']),
+  :root:has([data-blume-doc-grid][class*='xl:grid-cols-']) {
+    --docs-frame-width: 100%;
+  }
+
+  /* The three-column grid caps its middle track at 51.25rem, which the
+     full-width frame would otherwise leave packed against the left with the
+     slack piled up on the right. Letting the track fill keeps the nav and
+     contents on the window edges and the article centred between them, with
+     the leftover split evenly as flanks. Below 96rem the grid is two columns
+     and needs no help; the query above it does not apply there. */
+  @media (min-width: 96rem) {
+    [data-blume-doc-grid][class*='xl:grid-cols-'] {
+      grid-template-columns: 15.875rem minmax(0, 1fr) 16.5rem;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- */
 /* Typography — Inter with tight, bold headings                     */
 /* ---------------------------------------------------------------- */
 
