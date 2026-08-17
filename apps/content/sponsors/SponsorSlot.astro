@@ -26,13 +26,10 @@ const cells = grid
   : Array.from({ length: INLINE_CELLS }, (_, index) => ({ position: undefined, sponsor: pool[index] ?? null }))
 ---
 
-<aside
-  aria-label={grid ? 'Sponsors' : 'Sponsor'}
-  class="my-6"
-  data-sponsor-slot={grid ? undefined : ''}
->
-  <p class="mb-2 font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-    {grid ? 'Sponsors' : 'Sponsor'}
+{/* Always plural: even an inline slot carries two cells. */}
+<aside aria-label="Sponsors" class="my-6" data-sponsor-slot={grid ? undefined : ''}>
+  <p class="slot-label font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+    Sponsors
   </p>
 
   {/* One card per row until `md`, where the prose column reaches 673-700px and

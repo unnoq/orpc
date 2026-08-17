@@ -879,6 +879,13 @@ a.slot-card {
   text-decoration: none;
 }
 
+/* Same tie for the label: prose's paragraph margin beat `mb-2`, opening 16px
+   under the label and another 16px above it, which pushed the whole slot away
+   from the content it sits between. */
+p.slot-label {
+  margin-block: 0 0.5rem;
+}
+
 /* Tint colours are per-sponsor data, supplied inline as a light/dark pair by
    AdCard.astro. Tailwind's `dark:` variant tracks prefers-color-scheme, but
    the site switches on [data-theme], so the pair is resolved here instead. */
