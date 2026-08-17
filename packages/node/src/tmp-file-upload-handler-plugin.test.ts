@@ -1125,4 +1125,111 @@ describe('tmpFileUploadHandlerPlugin', () => {
       })
     })
   })
+
+  describe('per-request size limits', () => {
+    interface AuthContext { user?: string }
+
+    /**
+     * Runs a request through a plugin whose limits follow the request context:
+     * 16 bytes of every kind for a guest, 4096 for an authenticated user.
+     */
+    async function runWithContextualLimits(options: {
+      context: AuthContext
+      headers?: Record<string, string>
+      body?: Buffer
+      /** How many times the routed request resolves its body. */
+      resolutions?: number
+      /** Runs while the request scope is still open, before tmp files are removed. */
+      inspect?: (resolved: unknown[]) => void | Promise<void>
+    }): Promise<{ resolverCalls: Array<{ context: AuthContext, url: string }>, resolved: unknown[] }> {
+      const resolverCalls: Array<{ context: AuthContext, url: string }> = []
+
+      const plugin = new TmpFileUploadHandlerPlugin<AuthContext>({
+        tmpDir,
+        maxBodySize: async ({ context, request }) => {
+          resolverCalls.push({ context, url: request.url })
+
+          const limit = context.user === undefined ? 16 : 4096
+
+          return { memory: limit, file: limit, stream: limit }
+        },
+      })
+
+      const interceptor = plugin.init({}).routingInterceptors![0]!
+      const resolved: unknown[] = []
+
+      await interceptor({
+        context: options.context,
+        prefix: undefined,
+        request: {
+          method: 'POST',
+          url: '/upload',
+          headers: options.headers ?? { 'content-type': 'application/json' },
+          resolveBody: async () => toStream(options.body ?? Buffer.alloc(0)),
+        },
+        next: async (nextOptions) => {
+          for (let i = 0; i < (options.resolutions ?? 1); i++) {
+            resolved.push(await nextOptions!.request.resolveBody())
+          }
+
+          await options.inspect?.(resolved)
+
+          return { matched: false }
+        },
+      })
+
+      return { resolverCalls, resolved }
+    }
+
+    it('limits memory-parsed bodies by what the resolver returns for the request', async () => {
+      const body = Buffer.from(JSON.stringify({ padding: 'x'.repeat(64) }))
+
+      const authed = await runWithContextualLimits({ context: { user: 'admin' }, body })
+
+      expect(authed.resolved).toEqual([{ padding: 'x'.repeat(64) }])
+      expect(authed.resolverCalls).toEqual([{ context: { user: 'admin' }, url: '/upload' }])
+
+      await expect(runWithContextualLimits({ context: {}, body })).rejects.toSatisfy((error) => {
+        expect(error).toBeInstanceOf(ORPCError)
+        expect((error as ORPCError<string, unknown>).code).toBe('PAYLOAD_TOO_LARGE')
+        return true
+      })
+    })
+
+    it('limits spooled files by what the resolver returns for the request', async () => {
+      const headers = { 'content-type': 'application/octet-stream', 'standard-server': 'file' }
+      const body = Buffer.alloc(64, 7)
+
+      await runWithContextualLimits({
+        context: { user: 'admin' },
+        headers,
+        body,
+        inspect: async ([resolvedBody]) => {
+          expect(resolvedBody).toBeInstanceOf(TmpFile)
+          expect(Buffer.from(await (resolvedBody as TmpFile).arrayBuffer()).equals(body)).toBe(true)
+        },
+      })
+
+      await expect(runWithContextualLimits({ context: {}, headers, body })).rejects.toSatisfy((error) => {
+        expect(error).toBeInstanceOf(ORPCError)
+        expect((error as ORPCError<string, unknown>).code).toBe('PAYLOAD_TOO_LARGE')
+        return true
+      })
+
+      expect(readdirSync(tmpDir)).toHaveLength(0)
+    })
+
+    it('skips the resolver when no body is parsed', async () => {
+      // The routed request never resolves its body
+      const untouched = await runWithContextualLimits({ context: { user: 'admin' }, resolutions: 0 })
+
+      expect(untouched.resolverCalls).toHaveLength(0)
+
+      // A request whose headers describe no body is left to the standard parser
+      const bodyless = await runWithContextualLimits({ context: { user: 'admin' }, headers: {} })
+
+      expect(bodyless.resolverCalls).toHaveLength(0)
+      expect(bodyless.resolved[0]).toBeInstanceOf(ReadableStream)
+    })
+  })
 })
