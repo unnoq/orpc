@@ -867,3 +867,51 @@ body > aside[data-blume-nav-drawer]:not([data-orpc-drawer]) {
   color: var(--blume-muted-foreground);
   font-variant-numeric: tabular-nums;
 }
+
+/* Sponsor slots (apps/content/sponsors/). Two rules Tailwind cannot carry:
+   the prose link reset, and the per-sponsor brand tint. */
+
+/* `.prose :where(a)` ties with Tailwind's `no-underline` on specificity and
+   wins on source order, so the reset is restated here. Qualified with the
+   element so it beats that tie outright rather than relying on file order. */
+a.slot-card {
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+/* Same tie for the label: prose's paragraph margin beat `mb-2`, opening 16px
+   under the label and another 16px above it, which pushed the whole slot away
+   from the content it sits between. */
+p.slot-label {
+  margin-block: 0 0.5rem;
+}
+
+/* Tint colours are per-sponsor data, supplied inline as a light/dark pair by
+   AdCard.astro. Tailwind's `dark:` variant tracks prefers-color-scheme, but
+   the site switches on [data-theme], so the pair is resolved here instead. */
+.slot-card {
+  background-color: var(--slot-bg, transparent);
+}
+
+:root[data-theme='dark'] .slot-card {
+  background-color: var(--slot-bg-dark, transparent);
+}
+
+/* A wash layered over whatever tint the card carries, so hover reads the same
+   on a tinted card and an untinted one. */
+.slot-card:hover {
+  background-image: linear-gradient(rgb(0 0 0 / 5%), rgb(0 0 0 / 5%));
+}
+
+:root[data-theme='dark'] .slot-card:hover {
+  background-image: linear-gradient(rgb(255 255 255 / 7%), rgb(255 255 255 / 7%));
+}
+
+/* An unsold cell has no tint of its own, so hover and focus give it the muted
+   surface. Stated here rather than as a `hover:bg-muted` utility because the
+   dark tint rule above outranks a lone hover class, which left dark mode --
+   the default theme -- with no fill at all. */
+a.slot-card.slot-empty:hover,
+a.slot-card.slot-empty:focus-visible {
+  background-color: var(--blume-muted);
+}
