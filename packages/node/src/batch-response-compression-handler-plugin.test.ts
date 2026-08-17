@@ -225,6 +225,49 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     await expect(response!.text()).resolves.toContain(largeValue)
   })
 
+  it('leaves a request that matched no procedure alone', async () => {
+    const { matched, response } = await createHandler().handle(new Request('https://example.com/absent', {
+      method: 'POST',
+      headers: { 'accept-encoding': 'gzip' },
+    }))
+
+    expect(matched).toBe(false)
+    expect(response).toBeUndefined()
+  })
+
+  /**
+   * The misconfigured pair again, a client that batches against a handler without the batch plugin,
+   * where an ordinary procedure response carries the batch header it was asked for.
+   */
+  it('leaves a body that is neither framed nor an array alone', async () => {
+    const handler = new RPCHandler(router, {
+      plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
+    })
+
+    const { response } = await handler.handle(new Request('https://example.com/ping', {
+      method: 'POST',
+      headers: { 'accept-encoding': 'gzip', 'orpc-batch': 'streaming' },
+    }))
+
+    expect(response!.headers.get('content-encoding')).toBe(null)
+    await expect(response!.text()).resolves.toContain(largeValue)
+  })
+
+  it('leaves a batch content type that carries no bytes alone', async () => {
+    const handler = new RPCHandler(router, {
+      plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
+      routingInterceptors: [async () => ({
+        matched: true,
+        response: { status: 200, headers: { 'content-type': BATCH_CONTENT_TYPE }, body: largeValue },
+      })],
+    })
+
+    const { response } = await handler.handle(createBatchRequest('streaming', ['/ping']))
+
+    expect(response!.headers.get('content-encoding')).toBe(null)
+    await expect(response!.text()).resolves.toContain(largeValue)
+  })
+
   /**
    * Only a request that asked for a batch can produce one, so a procedure serving the batch
    * content type itself keeps the file semantics it would have without this plugin.
