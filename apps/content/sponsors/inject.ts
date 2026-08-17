@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const WORDS_PER_AD = 150
+export const WORDS_PER_AD = 200
 export const SLOT_TAG = '<SponsorSlot />'
 export const GRID_SLOT_TAG = '<SponsorSlot grid />'
 
