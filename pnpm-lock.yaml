@@ -574,9 +574,6 @@ importers:
       '@standardserver/fetch':
         specifier: ^0.8.0
         version: 0.8.0
-      '@standardserver/peer':
-        specifier: ^0.8.0
-        version: 0.8.0
       mime:
         specifier: ^4.1.0
         version: 4.1.0

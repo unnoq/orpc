@@ -188,11 +188,11 @@ describe('batchResponseCompressionHandlerPlugin', () => {
   })
 
   /**
-   * Reachable when a client batches but the server forgot the batch plugin, where an ordinary
-   * array response reaches this plugin. The message guards throw on a `null` element, and a throw
-   * here would leave the request without a response at all.
+   * Reachable when a client batches but the server forgot the batch plugin, where an ordinary array
+   * response reaches this plugin. It is compressed as the json the adapter would have sent anyway,
+   * so whatever the array holds has to survive the round trip.
    */
-  it('leaves an array response that holds something other than messages alone', async () => {
+  it('compresses an array response that holds something other than messages', async () => {
     const handler = new RPCHandler(router, {
       plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
       routingInterceptors: [async () => ({
@@ -206,8 +206,10 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     ]))
 
     expect(response!.status).toBe(200)
-    expect(response!.headers.get('content-encoding')).toBe(null)
-    await expect(response!.json()).resolves.toEqual([null, null, largeValue])
+    expect(response!.headers.get('content-encoding')).toBe('gzip')
+    expect(response!.headers.get('content-type')).toBe('application/json')
+    // `undefined` becomes `null` in a json array, exactly as the adapter would have serialized it
+    expect(JSON.parse(await decompress(response!, 'gzip'))).toEqual([null, null, largeValue])
   })
 
   /**

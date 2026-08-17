@@ -1,13 +1,11 @@
 import type { Context } from '@orpc/server'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
 import type { StandardBodyHint, StandardHeaders } from '@standardserver/core'
-import type { PeerMessage, ServerPeerSendMessage } from '@standardserver/peer'
 import { Duplex } from 'node:stream'
 import { constants, createDeflate, createDeflateRaw, createGzip } from 'node:zlib'
 import { BATCH_CONTENT_TYPE } from '@orpc/server/plugins'
-import { isNoTransformCacheControl, isTypescriptObject, parseAcceptEncodingQualities, stringifyJSON, toArray, varyByAcceptEncoding } from '@orpc/shared'
+import { isNoTransformCacheControl, parseAcceptEncodingQualities, stringifyJSON, toArray, varyByAcceptEncoding } from '@orpc/shared'
 import { flattenStandardHeader } from '@standardserver/core'
-import { isServerPeerSendMessage } from '@standardserver/peer'
 
 export interface BatchResponseCompressionHandlerPluginOptions {
   /**
@@ -124,9 +122,10 @@ export class BatchResponseCompressionHandlerPlugin<T extends Context> implements
 
       /**
        * A buffered batch with no binary subresponse stays a plain array of messages, serialized
-       * as json by the adapter.
+       * as json by the adapter. The header and status above already say this is a batch envelope,
+       * so the array itself is the only thing left to recognise.
        */
-      if (Array.isArray(body) && body.every(isBatchMessage)) {
+      if (Array.isArray(body)) {
         const json = new Blob([stringifyJSON(body)])
 
         if (json.size < this.threshold) {
@@ -199,18 +198,6 @@ export class BatchResponseCompressionHandlerPlugin<T extends Context> implements
       ],
     }
   }
-}
-
-/**
- * Recognises a message of a buffered batch by exactly the test the batch client decodes it with, so
- * a batch is compressed whenever the client can read it back. Deliberately no tighter than that: the
- * test looks at `kind` alone, which an ordinary array of objects can satisfy, and compressing one of
- * those as json is what the response compression plugin would do with it anyway. The object check
- * comes first because the test reads properties off its argument, and so throws on a `null` an
- * ordinary array response is free to hold.
- */
-function isBatchMessage(maybe: unknown): maybe is ServerPeerSendMessage {
-  return isTypescriptObject(maybe) && isServerPeerSendMessage(maybe as unknown as PeerMessage)
 }
 
 interface CompressionStreamPair {
