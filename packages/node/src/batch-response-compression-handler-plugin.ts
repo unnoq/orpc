@@ -203,9 +203,11 @@ export class BatchResponseCompressionHandlerPlugin<T extends Context> implements
 
 /**
  * Recognises a message of a buffered batch by exactly the test the batch client decodes it with, so
- * a batch is compressed whenever the client can read it back. The object check comes first because
- * that test reads properties off its argument, and so throws on a `null` an ordinary array response
- * is free to hold.
+ * a batch is compressed whenever the client can read it back. Deliberately no tighter than that: the
+ * test looks at `kind` alone, which an ordinary array of objects can satisfy, and compressing one of
+ * those as json is what the response compression plugin would do with it anyway. The object check
+ * comes first because the test reads properties off its argument, and so throws on a `null` an
+ * ordinary array response is free to hold.
  */
 function isBatchMessage(maybe: unknown): maybe is ServerPeerSendMessage {
   return isTypescriptObject(maybe) && isServerPeerSendMessage(maybe as unknown as PeerMessage)

@@ -3,7 +3,7 @@ import type { IncomingMessage } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { Buffer } from 'node:buffer'
 import { createServer, request as httpRequest } from 'node:http'
-import { createGunzip } from 'node:zlib'
+import { createGunzip, gunzipSync } from 'node:zlib'
 import { os } from '@orpc/server'
 import { RPCHandler } from '@orpc/server/node'
 import { BatchHandlerPlugin } from '@orpc/server/plugins'
@@ -48,14 +48,19 @@ function startBatchServer(
   return server
 }
 
-function sendBatchRequest(port: number, messages: unknown[], headers: Record<string, string> = { 'accept-encoding': 'gzip' }) {
+function sendBatchRequest(
+  port: number,
+  messages: unknown[],
+  headers: Record<string, string> = { 'accept-encoding': 'gzip' },
+  mode: 'buffered' | 'streaming' = 'streaming',
+) {
   return new Promise<IncomingMessage>((resolve, reject) => {
     const req = httpRequest({
       host: '127.0.0.1',
       port,
       path: '/__batch__',
       method: 'POST',
-      headers: { ...headers, 'content-type': 'application/json', 'orpc-batch': 'streaming' },
+      headers: { ...headers, 'content-type': 'application/json', 'orpc-batch': mode },
     }, resolve)
 
     req.on('error', reject)
@@ -150,6 +155,42 @@ it('keeps flushing keep-alive frames while the batch is idle', async ({ onTestFi
     () => expect(decompressedBytes).toBeGreaterThanOrEqual(2 * KEEP_ALIVE_FRAME_SIZE),
     { timeout: 2000 },
   )
+})
+
+/**
+ * A json batch keeps the type and hint that tell the client to parse json, and the hint is cleared
+ * by sending an empty header value, so what matters is that no header line reaches the wire at all.
+ */
+it('sends a buffered json batch compressed, as json the client can still parse', async ({ onTestFinished }) => {
+  const server = startBatchServer({ ping: os.handler(() => largeValue) })
+  onTestFinished(() => {
+    server.close()
+  })
+
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
+  const { port } = server.address() as AddressInfo
+
+  const res = await sendBatchRequest(
+    port,
+    [makePeerRequestMessage(0, '/ping'), makePeerRequestMessage(1, '/ping')],
+    { 'accept-encoding': 'gzip' },
+    'buffered',
+  )
+
+  expect(res.statusCode).toBe(207)
+  expect(res.headers['content-encoding']).toBe('gzip')
+  expect(res.headers['content-type']).toBe('application/json')
+  expect(res.headers['standard-server']).toBeUndefined()
+  expect(res.headers['content-length']).toBeUndefined()
+  expect(res.headers.vary).toBe('accept-encoding')
+
+  const chunks: Buffer[] = []
+  res.on('data', (chunk: Buffer) => chunks.push(chunk))
+  await new Promise<void>(resolve => res.on('end', resolve))
+
+  const wire = Buffer.concat(chunks)
+  expect(wire.subarray(0, 2)).toEqual(Buffer.from([0x1F, 0x8B])) // gzip magic
+  expect(JSON.parse(gunzipSync(wire).toString())).toHaveLength(2)
 })
 
 it('leaves the batch response alone when the client accepts no supported encoding', async ({ onTestFinished }) => {
