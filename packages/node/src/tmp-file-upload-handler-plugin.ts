@@ -1,5 +1,6 @@
 import type { Context } from '@orpc/server'
-import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
+import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor, StandardHandlerRoutingInterceptorOptions } from '@orpc/server/standard'
+import type { Promisable, Value } from '@orpc/shared'
 import type { StandardBody, StandardBodyHint, StandardHeaders, StandardLazyRequest } from '@standardserver/core'
 import type { FilePropertyBag } from 'node:buffer'
 import { Buffer } from 'node:buffer'
@@ -8,7 +9,7 @@ import { appendFile, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { ORPCError } from '@orpc/server'
-import { isAsyncIteratorObject, override, toArray, wrapAsyncIterator, wrapReadableStream } from '@orpc/shared'
+import { isAsyncIteratorObject, override, toArray, value, wrapAsyncIterator, wrapReadableStream } from '@orpc/shared'
 import { flattenStandardHeader, getFilenameFromContentDisposition, resolveStandardBodyHint } from '@standardserver/core'
 import { toFetchHeaders, toStandardBody } from '@standardserver/fetch'
 import { parseHeaderParameters, parseMultipart } from './multipart'
@@ -38,7 +39,7 @@ export interface TmpFileUploadHandlerPluginMaxBodySize {
   stream: number
 }
 
-export interface TmpFileUploadHandlerPluginOptions {
+export interface TmpFileUploadHandlerPluginOptions<T extends Context> {
   /**
    * The directory temporary files are created under. Each request that spools
    * an upload gets its own subdirectory inside it, removed when the request
@@ -49,13 +50,20 @@ export interface TmpFileUploadHandlerPluginOptions {
   tmpDir?: string
 
   /**
-   * The size limit for each kind of request body. Every kind is required when
-   * the option is given, so none is left unbounded by accident; set a kind to
-   * `Number.POSITIVE_INFINITY` to deliberately leave it unlimited.
+   * The size limit for each kind of request body, either fixed or resolved
+   * per request, so limits can follow the request itself, such as a larger
+   * allowance for an authenticated user than for a guest. Every kind is
+   * required when the option is given, so none is left unbounded by accident;
+   * set a kind to `Number.POSITIVE_INFINITY` to deliberately leave it
+   * unlimited.
+   *
+   * A resolver runs only when a body is parsed, so a request without one never
+   * pays for it, and it receives the request as it arrived, before this plugin
+   * wraps its body resolution.
    *
    * @default unlimited for every kind
    */
-  maxBodySize?: TmpFileUploadHandlerPluginMaxBodySize
+  maxBodySize?: Value<Promisable<TmpFileUploadHandlerPluginMaxBodySize>, [options: StandardHandlerRoutingInterceptorOptions<T>]>
 }
 
 /**
@@ -96,8 +104,8 @@ export class TmpFile extends File {
  * to the standard parser.
  *
  * Request body sizes are limited per content category: memory-parsed, spooled to
- * disk, and streamed. This subsumes the request limit plugin while sizing each
- * kind of body to what it actually costs.
+ * disk, and streamed, each limit fixed or resolved per request. This subsumes the
+ * request limit plugin while sizing each kind of body to what it actually costs.
  *
  * @remarks
  * Temporary files are removed when the request finishes. A streaming response body,
@@ -123,9 +131,9 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
   before = ['~request-limit', '~request-compression']
 
   private readonly tmpDir: string
-  private readonly maxBodySize: TmpFileUploadHandlerPluginMaxBodySize
+  private readonly maxBodySize: Exclude<TmpFileUploadHandlerPluginOptions<T>['maxBodySize'], undefined>
 
-  constructor(options: TmpFileUploadHandlerPluginOptions = {}) {
+  constructor(options: TmpFileUploadHandlerPluginOptions<T> = {}) {
     this.tmpDir = options.tmpDir ?? tmpdir()
     this.maxBodySize = options.maxBodySize ?? {
       memory: Number.POSITIVE_INFINITY,
@@ -144,7 +152,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
           ...interceptorOptions,
           request: {
             ...interceptorOptions.request,
-            resolveBody: hint => this.resolveBody(interceptorOptions.request, hint, tmpFiles),
+            resolveBody: hint => this.resolveBody(interceptorOptions, hint, tmpFiles),
           },
         })
 
@@ -202,9 +210,22 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
     }
   }
 
-  private async resolveBody(request: StandardLazyRequest, hint: StandardBodyHint | undefined, tmpFiles: RequestTmpFiles): Promise<StandardBody> {
+  private async resolveBody(
+    interceptorOptions: StandardHandlerRoutingInterceptorOptions<T>,
+    hint: StandardBodyHint | undefined,
+    tmpFiles: RequestTmpFiles,
+  ): Promise<StandardBody> {
+    const { request } = interceptorOptions
+
     // The same resolution order the standard body parsers apply
     const resolvedHint = hint ?? resolveStandardBodyHint(request.headers)
+
+    // A body-less request has nothing to limit or spool
+    if (resolvedHint === 'none') {
+      return request.resolveBody(hint)
+    }
+
+    const maxBodySize = await value(this.maxBodySize, interceptorOptions)
 
     /**
      * A form-data hint always means multipart here, even though it can also
@@ -213,22 +234,19 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
      * parser, which would fall back to urlencoded form data.
      */
     if (resolvedHint === 'form-data') {
-      return this.parseMultipartBody(request, tmpFiles)
+      return this.parseMultipartBody(request, tmpFiles, maxBodySize)
     }
 
     if (resolvedHint === 'file') {
-      return this.spoolFileBody(request, tmpFiles)
+      return this.spoolFileBody(request, tmpFiles, maxBodySize.file)
     }
 
     if (resolvedHint === 'json' || resolvedHint === 'url-search-params') {
-      return this.parseLimitedBody(request, hint, resolvedHint, this.maxBodySize.memory)
+      return this.parseLimitedBody(request, hint, resolvedHint, maxBodySize.memory)
     }
 
-    if (resolvedHint === 'event-stream' || resolvedHint === 'octet-stream') {
-      return this.parseLimitedBody(request, hint, resolvedHint, this.maxBodySize.stream)
-    }
-
-    return request.resolveBody(hint)
+    // Event streams and raw binary streams, the kinds consumed on the fly
+    return this.parseLimitedBody(request, hint, resolvedHint, maxBodySize.stream)
   }
 
   /**
@@ -261,8 +279,8 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
     return toStandardBody(response, { hint: resolvedHint })
   }
 
-  private async spoolFileBody(request: StandardLazyRequest, tmpFiles: RequestTmpFiles): Promise<StandardBody> {
-    assertContentLengthWithin(request.headers, this.maxBodySize.file)
+  private async spoolFileBody(request: StandardLazyRequest, tmpFiles: RequestTmpFiles, fileLimit: number): Promise<StandardBody> {
+    assertContentLengthWithin(request.headers, fileLimit)
 
     const stream = await request.resolveBody('octet-stream')
 
@@ -275,7 +293,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
     const fileName = contentDisposition !== undefined ? getFilenameFromContentDisposition(contentDisposition) : undefined
     const contentType = flattenStandardHeader(request.headers['content-type'])
 
-    const limited = this.maxBodySize.file === Number.POSITIVE_INFINITY ? stream : limitStream(stream, this.maxBodySize.file)
+    const limited = fileLimit === Number.POSITIVE_INFINITY ? stream : limitStream(stream, fileLimit)
 
     const tmpPath = await tmpFiles.allocate()
 
@@ -286,7 +304,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
     return tmpFiles.seal(tmpPath, fileName ?? 'blob', contentType ?? '')
   }
 
-  private async parseMultipartBody(request: StandardLazyRequest, tmpFiles: RequestTmpFiles): Promise<StandardBody> {
+  private async parseMultipartBody(request: StandardLazyRequest, tmpFiles: RequestTmpFiles, maxBodySize: TmpFileUploadHandlerPluginMaxBodySize): Promise<StandardBody> {
     const contentType = flattenStandardHeader(request.headers['content-type'])
     const boundary = contentType === undefined ? undefined : parseHeaderParameters(contentType).get('boundary')
 
@@ -299,7 +317,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
      * content categories allow together, which also bounds bodies that hide
      * their size in part headers rather than part content.
      */
-    const totalLimit = this.maxBodySize.memory + this.maxBodySize.file
+    const totalLimit = maxBodySize.memory + maxBodySize.file
 
     assertContentLengthWithin(request.headers, totalLimit)
 
@@ -326,7 +344,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
           write: (chunk) => {
             memoryUsed += chunk.length
 
-            if (memoryUsed > this.maxBodySize.memory) {
+            if (memoryUsed > maxBodySize.memory) {
               throw new ORPCError('PAYLOAD_TOO_LARGE')
             }
 
@@ -348,7 +366,7 @@ export class TmpFileUploadHandlerPlugin<T extends Context> implements StandardHa
         write: async (chunk) => {
           fileUsed += chunk.length
 
-          if (fileUsed > this.maxBodySize.file) {
+          if (fileUsed > maxBodySize.file) {
             throw new ORPCError('PAYLOAD_TOO_LARGE')
           }
 

@@ -101,6 +101,26 @@ A multipart body splits across the first two limits, fields against `memory` and
 
 With all three limits configured, the plugin subsumes the [Request Limit Plugin](/docs/plugins/request-limit). When the [Request Compression Plugin](/docs/plugins/request-compression) is present, limits apply to the decompressed payload rather than the compressed wire size.
 
+## Per-Request Limits
+
+`maxBodySize` also accepts a function, sync or async, receiving the handler `context`, `request`, and `prefix`, so limits can follow who is uploading:
+
+```ts
+const handler = new RPCHandler(router, {
+  plugins: [
+    new TmpFileUploadHandlerPlugin({
+      maxBodySize: async ({ context }) => ({
+        memory: 1024 * 1024, // 1MB
+        file: context.user === undefined
+          ? 10 * 1024 * 1024 // 10MB for guests
+          : 2 * 1024 * 1024 * 1024, // 2GB for authenticated users
+        stream: Number.POSITIVE_INFINITY,
+      }),
+    }),
+  ],
+})
+```
+
 ## Learn More
 
 For implementation details, see the [source code](https://github.com/middleapi/orpc/blob/main/packages/node/src/tmp-file-upload-handler-plugin.ts).
