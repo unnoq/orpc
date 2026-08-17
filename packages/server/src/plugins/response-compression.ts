@@ -1,7 +1,7 @@
 import type { StandardBodyHint } from '@standardserver/core'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '../adapters/standard'
 import type { Context } from '../context'
-import { isAsyncIteratorObject, isCompressibleContentType, parseAcceptEncodingQualities, stringifyJSON, toArray } from '@orpc/shared'
+import { isAsyncIteratorObject, isCompressibleContentType, isNoTransformCacheControl, parseAcceptEncodingQualities, stringifyJSON, toArray, varyByAcceptEncoding } from '@orpc/shared'
 import { flattenStandardHeader, generateContentDisposition } from '@standardserver/core'
 
 // Rough UTF-8 estimate. Mostly ASCII text stays close to 1 byte/char;
@@ -108,7 +108,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'standard-server': 'octet-stream' satisfies StandardBodyHint,
                 'content-length': [],
                 'content-encoding': encoding,
-                'vary': varyByAcceptEncoding(headers.vary),
+                'vary': varyByAcceptEncoding(flattenStandardHeader(headers.vary)),
               },
             },
           }
@@ -136,7 +136,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-length': [],
                 'content-disposition': contentDisposition,
                 'content-encoding': encoding,
-                'vary': varyByAcceptEncoding(headers.vary),
+                'vary': varyByAcceptEncoding(flattenStandardHeader(headers.vary)),
               },
             },
           }
@@ -187,7 +187,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-type': res.headers.get('content-type')!,
                 'content-length': [],
                 'content-encoding': encoding,
-                'vary': varyByAcceptEncoding(headers.vary),
+                'vary': varyByAcceptEncoding(flattenStandardHeader(headers.vary)),
               },
             },
           }
@@ -208,7 +208,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-type': 'application/x-www-form-urlencoded',
                 'content-length': [],
                 'content-encoding': encoding,
-                'vary': varyByAcceptEncoding(headers.vary),
+                'vary': varyByAcceptEncoding(flattenStandardHeader(headers.vary)),
               },
             },
           }
@@ -229,7 +229,7 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
                 'content-type': 'application/json',
                 'content-length': [],
                 'content-encoding': encoding,
-                'vary': varyByAcceptEncoding(headers.vary),
+                'vary': varyByAcceptEncoding(flattenStandardHeader(headers.vary)),
               },
             },
           }
@@ -247,37 +247,4 @@ export class ResponseCompressionHandlerPlugin<T extends Context> implements Stan
       ],
     }
   }
-}
-
-/**
- * The encoding is chosen from the request, so a shared cache must key on it or it will hand
- * a compressed body to a client that cannot decode it.
- *
- * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-vary
- */
-function varyByAcceptEncoding(vary: string | string[] | undefined): string {
-  const current = flattenStandardHeader(vary)
-
-  if (current === undefined) {
-    return 'accept-encoding'
-  }
-
-  const fields = current.split(',').map(field => field.trim().toLowerCase())
-
-  // `*` already forbids reuse across requests, so narrowing it would be a downgrade
-  return fields.includes('accept-encoding') || fields.includes('*') ? current : `${current}, accept-encoding`
-}
-
-/**
- * Whether Cache-Control includes the no-transform directive.
- *
- * @see https://www.rfc-editor.org/rfc/rfc9111.html#name-no-transform
- */
-const CACHE_CONTROL_NO_TRANSFORM_REGEX = /(?:^|,)\s*no-transform\s*(?:,|$)/i
-function isNoTransformCacheControl(cacheControl: string | undefined): boolean {
-  if (cacheControl === undefined) {
-    return false
-  }
-
-  return CACHE_CONTROL_NO_TRANSFORM_REGEX.test(cacheControl)
 }

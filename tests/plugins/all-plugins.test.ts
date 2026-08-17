@@ -18,7 +18,7 @@ import { RequestValidationLinkPlugin, ResponseValidationLinkPlugin } from '@orpc
 import { EvlogHandlerPlugin } from '@orpc/evlog'
 import { HibernationHandlerPlugin } from '@orpc/hibernation'
 import { SmartCoercionHandlerPlugin, SmartCoercionLinkPlugin } from '@orpc/json-schema'
-import { StaticFileHandlerPlugin, TmpFileUploadHandlerPlugin } from '@orpc/node'
+import { BatchResponseCompressionHandlerPlugin, StaticFileHandlerPlugin, TmpFileUploadHandlerPlugin } from '@orpc/node'
 import { OpenAPIReferenceHandlerPlugin } from '@orpc/openapi/plugins'
 import { PinoHandlerPlugin } from '@orpc/pino'
 import { RateLimitHandlerPlugin } from '@orpc/ratelimit'
@@ -72,6 +72,7 @@ const router = implementer.router({
 function createHandlerPlugins() {
   return [
     new BatchHandlerPlugin<TestContext>(),
+    new BatchResponseCompressionHandlerPlugin<TestContext>({ threshold: 0 }),
     new CORSHandlerPlugin<TestContext>(),
     new EvlogHandlerPlugin<TestContext>(),
     new GetMethodCsrfProtectionHandlerPlugin<TestContext>(),
@@ -164,6 +165,8 @@ describe('all plugins on one handler and one link', () => {
     expect(exchanges[0]!.request.headers.get('orpc-batch')).toEqual('streaming')
     // the batch request is compressed as a whole, and decompressed before it is split
     expect(exchanges[0]!.request.headers.get('content-encoding')).toEqual('gzip')
+    // the batch response is compressed as a whole, and decompressed before it is decoded
+    expect(exchanges[0]!.response.headers.get('content-encoding')).toEqual('gzip')
   })
 
   it('compresses a standalone call in both directions through every plugin', async () => {

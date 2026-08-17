@@ -81,6 +81,37 @@ export function parseAcceptEncodingQualities(header: string | undefined): Map<st
 }
 
 /**
+ * Add `accept-encoding` to a Vary header value. The encoding is chosen from the request, so a
+ * shared cache must key on it or it will hand a compressed body to a client that cannot decode it.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-vary
+ */
+export function varyByAcceptEncoding(vary: string | undefined): string {
+  if (vary === undefined) {
+    return 'accept-encoding'
+  }
+
+  const fields = vary.split(',').map(field => field.trim().toLowerCase())
+
+  // `*` already forbids reuse across requests, so narrowing it would be a downgrade
+  return fields.includes('accept-encoding') || fields.includes('*') ? vary : `${vary}, accept-encoding`
+}
+
+/**
+ * Whether Cache-Control includes the no-transform directive, which forbids transforming the body.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc9111.html#name-no-transform
+ */
+const CACHE_CONTROL_NO_TRANSFORM_REGEX = /(?:^|,)\s*no-transform\s*(?:,|$)/i
+export function isNoTransformCacheControl(cacheControl: string | undefined): boolean {
+  if (cacheControl === undefined) {
+    return false
+  }
+
+  return CACHE_CONTROL_NO_TRANSFORM_REGEX.test(cacheControl)
+}
+
+/**
  * inspired from Hono Compression Plugin
  */
 const COMPRESSIBLE_CONTENT_TYPE_REGEX = /^\s*(?:text\/(?!event-stream(?:[;\s]|$))[^;\s]+|application\/(?:javascript|json|xml|xml-dtd|ecmascript|dart|postscript|rtf|tar|toml|vnd\.dart|vnd\.ms-fontobject|vnd\.ms-opentype|wasm|x-httpd-php|x-javascript|x-ns-proxy-autoconfig|x-sh|x-tar|x-virtualbox-hdd|x-virtualbox-ova|x-virtualbox-ovf|x-virtualbox-vbox|x-virtualbox-vdi|x-virtualbox-vhd|x-virtualbox-vmdk|x-www-form-urlencoded)|font\/(?:otf|ttf)|image\/(?:bmp|vnd\.adobe\.photoshop|vnd\.microsoft\.icon|vnd\.ms-dds|x-icon|x-ms-bmp)|message\/rfc822|model\/gltf-binary|x-shader\/x-fragment|x-shader\/x-vertex|[^;\s]+?\+(?:json|text|xml|yaml))(?:[;\s]|$)/i

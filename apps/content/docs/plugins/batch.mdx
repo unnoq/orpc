@@ -106,6 +106,21 @@ const handler = new RPCHandler(router, {
 })
 ```
 
+## Compression
+
+A batch response might be left uncompressed by the [Response Compression Plugin](/docs/plugins/response-compression), depending on the shape it takes. On Node.js, add the [Batch Response Compression Plugin](/docs/plugins/batch-response-compression) when you know your batch responses are all compressible. It covers every one of them, without giving up streaming:
+
+```ts
+import { BatchResponseCompressionHandlerPlugin } from '@orpc/node'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new BatchHandlerPlugin(),
+    new BatchResponseCompressionHandlerPlugin(),
+  ],
+})
+```
+
 ## Groups
 
 Only requests in the same group are batched together. Each group also defines a context, as described in [client context](/docs/rpc/link#client-context).
@@ -173,4 +188,4 @@ const link = new RPCLink({
 
 ## Learn More
 
-See the [BatchHandlerPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/server/src/plugins/batch-handler-plugin.ts) and the [BatchLinkPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/client/src/plugins/batch-link-plugin.ts) for implementation details.
+See the [BatchHandlerPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/server/src/plugins/batch.ts) and the [BatchLinkPlugin source code](https://github.com/middleapi/orpc/blob/main/packages/client/src/plugins/batch.ts) for implementation details.

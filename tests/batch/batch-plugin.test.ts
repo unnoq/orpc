@@ -1,12 +1,14 @@
 import { ORPCError, os } from '@orpc/server'
 import { sleep } from '@standardserver/shared'
 import { z } from 'zod'
+import { createCompressionNodeHttpBatchClientServerTest } from './__shared__/client-server.compression-node-http'
 import { createHonoFetchBatchClientServerTest } from './__shared__/client-server.hono-fetch'
 import { createNodeHttpBatchClientServerTest } from './__shared__/client-server.node-http'
 
 describe.each([
   ['node-http', createNodeHttpBatchClientServerTest],
   ['hono-fetch', createHonoFetchBatchClientServerTest],
+  ['compression-node-http', createCompressionNodeHttpBatchClientServerTest],
 ])('batch plugin: %s', (_name, createClientServer) => {
   it('keeps successful and failed subrequests isolated within one batch', async () => {
     const success = vi.fn(async (_options: unknown, input: string) => {
@@ -38,6 +40,25 @@ describe.each([
     })
     expect(success).toHaveBeenCalledTimes(1)
     expect(failure).toHaveBeenCalledTimes(1)
+    expect(fetchSpy).toHaveBeenCalledTimes(1) // ensure batch was used
+  })
+
+  /**
+   * A buffered batch with no binary subresponse is a plain json array rather than the binary
+   * framing every other case here produces, so it travels a different encoding path.
+   */
+  it('round-trips a buffered batch of json-only responses', async () => {
+    const router = {
+      echo: os.input(z.string()).handler(({ input }) => `echo:${input}`),
+    }
+
+    const { client, fetchSpy } = createClientServer(router, { mode: 'buffered' })
+
+    await Promise.all([
+      expect(client.echo('alpha')).resolves.toBe('echo:alpha'),
+      expect(client.echo('beta')).resolves.toBe('echo:beta'),
+    ])
+
     expect(fetchSpy).toHaveBeenCalledTimes(1) // ensure batch was used
   })
 
