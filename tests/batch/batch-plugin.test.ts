@@ -1,6 +1,7 @@
 import { ORPCError, os } from '@orpc/server'
 import { sleep } from '@standardserver/shared'
 import { z } from 'zod'
+import { createCompressionFetchBatchClientServerTest } from './__shared__/client-server.compression-fetch'
 import { createCompressionNodeHttpBatchClientServerTest } from './__shared__/client-server.compression-node-http'
 import { createHonoFetchBatchClientServerTest } from './__shared__/client-server.hono-fetch'
 import { createNodeHttpBatchClientServerTest } from './__shared__/client-server.node-http'
@@ -9,6 +10,7 @@ describe.each([
   ['node-http', createNodeHttpBatchClientServerTest],
   ['hono-fetch', createHonoFetchBatchClientServerTest],
   ['compression-node-http', createCompressionNodeHttpBatchClientServerTest],
+  ['compression-fetch', createCompressionFetchBatchClientServerTest],
 ])('batch plugin: %s', (_name, createClientServer) => {
   it('keeps successful and failed subrequests isolated within one batch', async () => {
     const success = vi.fn(async (_options: unknown, input: string) => {

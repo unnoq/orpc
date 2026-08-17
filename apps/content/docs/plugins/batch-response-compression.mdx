@@ -51,7 +51,7 @@ const handler = new RPCHandler(router, {
 ```
 
 :::info
-The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.
+Batching is specific to the RPC protocol, so the `handler` is an [RPCHandler](/docs/rpc/handler). Either adapter serves it, the Node.js one above or the [Fetch](/docs/adapters/fetch-api) one, as long as it runs on Node.js, where `zlib` lives.
 :::
 
 :::warning
