@@ -867,3 +867,35 @@ body > aside[data-blume-nav-drawer]:not([data-orpc-drawer]) {
   color: var(--blume-muted-foreground);
   font-variant-numeric: tabular-nums;
 }
+
+/* Sponsor slots (apps/content/sponsors/). Two rules Tailwind cannot carry:
+   the prose link reset, and the per-sponsor brand tint. */
+
+/* `.prose :where(a)` ties with Tailwind's `no-underline` on specificity and
+   wins on source order, so the reset is restated here. Qualified with the
+   element so it beats that tie outright rather than relying on file order. */
+a.slot-card {
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+/* Tint colours are per-sponsor data, supplied inline as a light/dark pair by
+   AdCard.astro. Tailwind's `dark:` variant tracks prefers-color-scheme, but
+   the site switches on [data-theme], so the pair is resolved here instead. */
+.slot-card {
+  background-color: var(--slot-bg, transparent);
+}
+
+:root[data-theme='dark'] .slot-card {
+  background-color: var(--slot-bg-dark, transparent);
+}
+
+/* A wash layered over whatever tint the card carries, so hover reads the same
+   on a tinted card and an untinted one. */
+.slot-card:hover {
+  background-image: linear-gradient(rgb(0 0 0 / 5%), rgb(0 0 0 / 5%));
+}
+
+:root[data-theme='dark'] .slot-card:hover {
+  background-image: linear-gradient(rgb(255 255 255 / 7%), rgb(255 255 255 / 7%));
+}

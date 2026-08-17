@@ -126,8 +126,9 @@ export default defineConfig({
       name: 'sponsors',
       hooks: {
         'astro:config:setup': ({ injectScript, updateConfig }) => {
-          // Inject <SponsorSlot /> into docs/blog MDX at build; fill the
-          // slots with a random sponsor per view via the client script.
+          // Inject <SponsorSlot /> into docs/blog MDX at build. The first one
+          // is a static grid of every position; the client script fills the
+          // later two-cell slots with a random pick per view.
           updateConfig({ vite: { plugins: [sponsorAdsInjectPlugin()] } })
           const clientPath = fileURLToPath(new URL('./sponsors/client.ts', import.meta.url))
           injectScript('page', `import '${clientPath.replaceAll('\\', '\\\\').replaceAll('\'', '\\\'')}'`)

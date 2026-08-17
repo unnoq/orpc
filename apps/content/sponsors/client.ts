@@ -1,27 +1,16 @@
-import type { AdSponsor } from './data'
-import { adPool } from './data'
+import type { AdSponsor } from './ads'
+import { soldSponsors, trackedHref } from './ads'
 
-function withTracking(href: string): string {
-  // mailto: links take no tracking param; synced hrefs may carry their own.
-  if (!href.startsWith('http') || href.includes('ref=')) {
-    return href
-  }
-  return `${href}${href.includes('?') ? '&' : '?'}ref=orpc`
-}
+// Imports ads.ts directly rather than data.ts so the sponsor wall's data never
+// reaches this bundle. Only the inline slots rotate; the grid is static and
+// carries no [data-sponsor-slot], so nothing here touches it.
 
-/**
- * Clone the slot's server-rendered <template> card (its markup and Tailwind
- * classes live in SponsorSlot.astro, which Blume scans) and fill it with the
- * given sponsor.
- */
-function buildCard(slot: Element, sponsor: AdSponsor): Element | null {
-  const template = slot.querySelector<HTMLTemplateElement>('template[data-sponsor-template]')
-  const card = template?.content.firstElementChild?.cloneNode(true) as HTMLAnchorElement | undefined
-  if (!card) {
-    return null
-  }
+/** Rewrite a server-rendered card in place. Geometry is fixed, so nothing moves. */
+function apply(card: HTMLAnchorElement, sponsor: AdSponsor): void {
+  card.href = trackedHref(sponsor.href)
+  // The tagline truncates in the card, so it doubles as the hover tooltip.
+  card.title = sponsor.description
 
-  card.href = withTracking(sponsor.href)
   const logo = card.querySelector<HTMLImageElement>('[data-sponsor-logo]')
   if (logo) {
     logo.src = sponsor.logo
@@ -30,53 +19,65 @@ function buildCard(slot: Element, sponsor: AdSponsor): Element | null {
   if (name) {
     name.textContent = sponsor.name
   }
-  const desc = card.querySelector('[data-sponsor-desc]')
-  if (desc) {
-    desc.textContent = sponsor.description
+  const description = card.querySelector('[data-sponsor-desc]')
+  if (description) {
+    description.textContent = sponsor.description
   }
-  return card
+
+  // Mirrors AdCard.astro's inline tint; theme.css picks the mode. Cleared when
+  // the incoming sponsor has none, or the outgoing one's colour would linger.
+  for (const [property, value] of [
+    ['--slot-bg', sponsor.background?.light],
+    ['--slot-bg-dark', sponsor.background?.dark],
+  ] as const) {
+    if (value === undefined) {
+      card.style.removeProperty(property)
+    }
+    else {
+      card.style.setProperty(property, value)
+    }
+  }
+}
+
+/** `count` distinct sponsors in random order, or all of them if the pool is smaller. */
+function sample(pool: AdSponsor[], count: number): AdSponsor[] {
+  const shuffled = [...pool]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!]
+  }
+  return shuffled.slice(0, count)
 }
 
 /**
- * Fill every server-rendered sponsor skeleton with a randomly picked sponsor.
- * Runs on each page load (the site is an MPA), so every view gets a fresh
- * pick. Each slot draws independently, with a sponsor's chance being its
- * `weight` as a percentage of the pool's total — so the same ad can appear
- * multiple times on one page.
+ * Give each inline slot a fresh set of sponsors. Runs on every page load (the
+ * site is an MPA). Slots draw independently and without replacement, so one
+ * slot never repeats a sponsor, though two slots on a page may overlap.
  */
-function fillSlots(): void {
-  const slots = document.querySelectorAll('[data-sponsor-slot]')
-  if (slots.length === 0) {
+function rotate(): void {
+  const pool = soldSponsors()
+  if (pool.length < 2) {
+    // Nothing to vary: the server already rendered the only possible order.
     return
   }
 
-  const pool = adPool()
-  if (pool.length === 0) {
-    slots.forEach(slot => slot.remove())
-    return
-  }
-
-  const totalWeight = pool.reduce((sum, sponsor) => sum + sponsor.weight, 0)
-  const pick = (): AdSponsor => {
-    let r = Math.random() * totalWeight
-    for (const sponsor of pool) {
-      r -= sponsor.weight
-      if (r <= 0) {
-        return sponsor
+  for (const slot of document.querySelectorAll('[data-sponsor-slot]')) {
+    const cards = slot.querySelectorAll<HTMLAnchorElement>('[data-sponsor-card]')
+    const picks = sample(pool, cards.length)
+    cards.forEach((card, index) => {
+      const sponsor = picks[index]
+      if (sponsor) {
+        apply(card, sponsor)
       }
-    }
-    return pool[pool.length - 1]!
+    })
   }
-
-  slots.forEach((slot) => {
-    const card = buildCard(slot, pick())
-    slot.querySelector('[data-sponsor-body]')?.replaceWith(card ?? '')
-  })
 }
 
+// Blume injects this as a module script, so it runs after the document is
+// parsed; the guard only covers a non-deferred injection.
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', fillSlots)
+  document.addEventListener('DOMContentLoaded', rotate)
 }
 else {
-  fillSlots()
+  rotate()
 }

@@ -1,42 +1,49 @@
 ---
-// Fixed-height sponsor slot. The server renders a skeleton so prerendered
-// HTML reserves the final card's exact size (no layout shift); client.ts
-// replaces [data-sponsor-body] with a clone of the <template> card, filled
-// with a randomly picked sponsor on every view.
+// Two shapes, both injected into MDX by inject.ts:
 //
-// Styled with Blume's Tailwind utilities (border-border, rounded-blume, …)
-// per its theming guide, so the card tracks theme tokens and dark mode. The
-// card markup lives in the template (not client.ts) because Blume's Tailwind
-// only scans .astro/.tsx/.jsx files for classes.
+//   <SponsorSlot grid />  the page's first slot — every position, sold or not.
+//   <SponsorSlot />       later slots — two cells that client.ts rotates
+//                         through the pool, so a page varies per view.
+//
+// Both render real cards on the server. The inline ones are rewritten in place
+// rather than swapped in, so the markup never changes shape: no skeleton, no
+// layout shift, and the cards still show without JS.
+import AdCard from './AdCard.astro'
+import AdvertiseCard from './AdvertiseCard.astro'
+import { adSlots, soldSponsors } from './data'
+
+interface Props {
+  grid?: boolean
+}
+
+const { grid = false } = Astro.props
+
+const INLINE_CELLS = 2
+
+const pool = soldSponsors()
+const cells = grid
+  ? adSlots()
+  : Array.from({ length: INLINE_CELLS }, (_, index) => ({ position: undefined, sponsor: pool[index] ?? null }))
 ---
 
 <aside
-  class="relative my-6 box-border h-[76px] overflow-hidden rounded-blume border border-border"
-  data-sponsor-slot
-  aria-label="Sponsor"
+  aria-label={grid ? 'Sponsors' : 'Sponsor'}
+  class="my-6"
+  data-sponsor-slot={grid ? undefined : ''}
 >
-  <span
-    class="absolute top-2 right-2.5 font-mono text-[10px] tracking-widest uppercase text-muted-foreground"
-    aria-hidden="true"
-  >Sponsor</span>
-  <div class="flex h-full items-center gap-3 px-4" data-sponsor-body>
-    <span class="size-8 flex-none rounded-md bg-muted"></span>
-    <span class="flex min-w-0 flex-1 flex-col gap-1.5">
-      <span class="h-2.5 w-32 max-w-full rounded bg-muted"></span>
-      <span class="h-2.5 w-56 max-w-full rounded bg-muted"></span>
-    </span>
+  <p class="mb-2 font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+    {grid ? 'Sponsors' : 'Sponsor'}
+  </p>
+
+  {/* One card per row on a phone, so the name and tagline keep the full width;
+      two-up from `sm` on. */}
+  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    {
+      cells.map(({ position, sponsor }) => (
+        sponsor
+          ? <AdCard sponsor={sponsor} />
+          : <AdvertiseCard position={position} />
+      ))
+    }
   </div>
-  <template data-sponsor-template>
-    <a
-      class="flex h-full items-center gap-3 px-4 no-underline hover:bg-muted"
-      target="_blank"
-      rel="sponsored noopener"
-    >
-      <img class="m-0 size-8 flex-none rounded-md" alt="" loading="lazy" data-no-zoom data-sponsor-logo>
-      <span class="flex min-w-0 flex-col gap-0.5">
-        <span class="truncate text-sm leading-tight font-semibold text-foreground" data-sponsor-name></span>
-        <span class="truncate text-xs leading-tight text-muted-foreground" data-sponsor-desc></span>
-      </span>
-    </a>
-  </template>
 </aside>

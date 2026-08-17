@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 export const WORDS_PER_AD = 150
 export const SLOT_TAG = '<SponsorSlot />'
+export const GRID_SLOT_TAG = '<SponsorSlot grid />'
 
 /**
  * Insert `<SponsorSlot />` tags into MDX source. One simple rule: walk the
@@ -13,6 +14,9 @@ export const SLOT_TAG = '<SponsorSlot />'
  * have passed since the last slot, resetting the count. If the trailing
  * content also clears the bar — or the page never triggered at all — one
  * more slot goes at the end. Frontmatter is left untouched.
+ *
+ * Wherever the page's first slot lands it gets the `grid` variant, which lists
+ * every position at once; the rest stay two-cell rotating slots.
  */
 export function injectSlots(source: string): string {
   const lines = source.split('\n')
@@ -43,11 +47,11 @@ export function injectSlots(source: string): string {
   }
 
   // Splice bottom-up so earlier indices stay valid.
-  for (const line of insertBefore.reverse()) {
-    lines.splice(line, 0, '', SLOT_TAG, '')
+  for (const [order, line] of [...insertBefore.entries()].reverse()) {
+    lines.splice(line, 0, '', order === 0 ? GRID_SLOT_TAG : SLOT_TAG, '')
   }
   if (insertBefore.length === 0 || words >= WORDS_PER_AD) {
-    lines.push('', SLOT_TAG, '')
+    lines.push('', insertBefore.length === 0 ? GRID_SLOT_TAG : SLOT_TAG, '')
   }
 
   return lines.join('\n')

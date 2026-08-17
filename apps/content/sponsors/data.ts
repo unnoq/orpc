@@ -1,19 +1,48 @@
-import ads from './ads'
+import type { AdSponsor } from './ads'
+import ads, { AD_POSITIONS } from './ads'
 import sponsors from './sponsors'
 
-export interface AdSponsor {
-  name: string
-  /** Tagline shown under the name. */
-  description: string
-  /** Square icon URL (GitHub avatar works) or inline data URI. */
-  logo: string
-  href: string
-  /** Relative appearance frequency (normalized to > 0 by the sync script). */
-  weight: number
+export type { AdPosition, AdSponsor } from './ads'
+export { soldSponsors, trackedHref } from './ads'
+
+export interface AdSlot {
+  /** Fixed 1-based position a sponsor buys; empty ones quote it in the mailto. */
+  position: number
+  sponsor: AdSponsor | null
 }
 
-export function adPool(): AdSponsor[] {
-  return ads
+/** Every position in order, empty ones included. */
+export function adSlots(): AdSlot[] {
+  return AD_POSITIONS.map(position => ({ position, sponsor: ads[position] ?? null }))
+}
+
+const ADVERTISE_EMAIL = 'dinwwwh@gmail.com'
+
+/**
+ * Prefilled enquiry. Pass a position only from the grid, where cells map to
+ * positions a sponsor actually buys; the inline slots rotate at random, so
+ * naming the cell they happened to click would point at an unrelated slot.
+ * The position goes in the body rather than only the subject so it survives
+ * clients that let the sender rewrite the subject line.
+ */
+export function advertiseHref(position?: number): string {
+  const subject = position === undefined
+    ? 'Advertise on oRPC'
+    : `Advertise on oRPC (sponsor slot #${position})`
+  const body = [
+    'Hi,',
+    '',
+    position === undefined
+      ? 'I would like to advertise on orpc.dev.'
+      : `I would like to advertise on orpc.dev in sponsor slot #${position}.`,
+    '',
+    'Product name: ',
+    'Website: ',
+    'Logo URL: ',
+    'Tagline: ',
+  ].join('\n')
+
+  return `mailto:${ADVERTISE_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
 export interface Sponsor {
