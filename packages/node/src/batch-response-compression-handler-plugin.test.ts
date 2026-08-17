@@ -104,7 +104,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
    * Keep-alive frames hold the connection open while no subrequest has resolved, so a compressor
    * that buffered them would let the very connection they protect time out.
    */
-  it('keeps flushing keep-alive frames while the batch is idle', async () => {
+  it('keeps sending keep-alive frames while the batch is idle', async () => {
     const pending = promiseWithResolvers<string>()
 
     const handler = new RPCHandler({ pending: os.handler(() => pending.promise) }, {
@@ -163,11 +163,11 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     expect(JSON.stringify(decoded)).toContain(largeValue)
   })
 
-  // Both shapes measure their own size, the framed one on the blob and the json one on its bytes
+  // Each shape measures its own size, the binary one on the blob and the json one on its bytes
   it.each([
-    ['framed', '/blob'],
-    ['json', '/tiny'],
-  ] as const)('leaves a buffered %s batch below the threshold alone', async (_shape, url) => {
+    ['with a binary subresponse', '/blob'],
+    ['of json only', '/tiny'],
+  ] as const)('leaves a buffered batch %s below the threshold alone', async (_case, url) => {
     const handler = createHandler({ threshold: 10 * 1024 }, {
       ...router,
       tiny: os.handler(() => 'ok'),
@@ -183,7 +183,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
    * response reaches this plugin. It is compressed as the json the adapter would have sent anyway,
    * so whatever the array holds has to survive the round trip.
    */
-  it('compresses an array response that holds something other than messages', async () => {
+  it('compresses an array response without altering what it carries', async () => {
     const handler = new RPCHandler(router, {
       plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
       routingInterceptors: [async () => ({
@@ -239,7 +239,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
    * The misconfigured pair again, a client that batches against a handler without the batch plugin,
    * where an ordinary procedure response carries the batch header it was asked for.
    */
-  it('leaves a body that is neither framed nor an array alone', async () => {
+  it('leaves an ordinary response alone when the client asks for a batch', async () => {
     const handler = new RPCHandler(router, {
       plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
     })
@@ -253,19 +253,19 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     await expect(response!.text()).resolves.toContain(largeValue)
   })
 
-  it('leaves a batch content type that carries no bytes alone', async () => {
+  it('leaves a batch content type that is not a valid batch response alone', async () => {
     const handler = new RPCHandler(router, {
       plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
       routingInterceptors: [async () => ({
         matched: true,
-        response: { status: 200, headers: { 'content-type': BATCH_CONTENT_TYPE }, body: largeValue },
+        response: { status: 200, headers: { 'content-type': BATCH_CONTENT_TYPE }, body: 'invalid' },
       })],
     })
 
     const { response } = await handler.handle(createBatchRequest('streaming', ['/ping']))
 
     expect(response!.headers.get('content-encoding')).toBe(null)
-    await expect(response!.text()).resolves.toContain(largeValue)
+    await expect(response!.text()).resolves.toContain('invalid')
   })
 
   /**
@@ -292,7 +292,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
    * Reachable without the batch plugin registered, where a range request carrying the batch header
    * is answered by whatever else serves that content type.
    */
-  it('leaves a partial response alone, whose content-range would stop describing the body', async () => {
+  it('leaves a partial response alone', async () => {
     const contentRange = `bytes 0-${largeValue.length - 1}/${largeValue.length * 2}`
 
     const handler = new RPCHandler(router, {
@@ -334,10 +334,10 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     })
 
     it.each([
-      ['only an unsupported coding', { 'accept-encoding': 'br' }],
-      ['every configured coding rejected', { 'accept-encoding': 'gzip;q=0, deflate;q=0' }],
-      ['no accept-encoding at all', {}],
-    ])('does not compress when the client sends %s', async (_case, headers) => {
+      ['the client accepts only an unsupported coding', { 'accept-encoding': 'br' }],
+      ['the client rejects every configured coding', { 'accept-encoding': 'gzip;q=0, deflate;q=0' }],
+      ['the client sends no accept-encoding', {}],
+    ])('does not compress when %s', async (_case, headers) => {
       const { response } = await createHandler().handle(createBatchRequest('streaming', ['/ping'], headers))
 
       expect(response!.headers.get('content-encoding')).toBe(null)
@@ -404,7 +404,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     await expect(decompress(response!, 'gzip')).resolves.toContain(largeValue)
   })
 
-  it('stops a batch cleanly through the compressor when the client cancels mid-stream', async () => {
+  it('stops a batch cleanly when the client cancels mid-stream', async () => {
     const handler = createHandler({}, {
       fast: os.handler(() => largeValue),
       never: os.handler(({ signal }) => new Promise<string>((_, reject) => {
