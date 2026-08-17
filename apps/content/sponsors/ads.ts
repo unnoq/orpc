@@ -24,8 +24,8 @@ export interface AdSponsor {
   background?: { light: string, dark: string }
 }
 
-/** The grid is a fixed 12 cells; positions outside this range are a type error. */
-export const AD_POSITIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
+/** The grid is a fixed 6 cells; positions outside this range are a type error. */
+export const AD_POSITIONS = [1, 2, 3, 4, 5, 6] as const
 
 export type AdPosition = typeof AD_POSITIONS[number]
 
