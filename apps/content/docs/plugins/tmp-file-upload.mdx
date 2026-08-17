@@ -60,6 +60,10 @@ const uploadVideo = os
 Temporary files are removed when the request finishes. A streaming response body, an event iterator or a raw stream, keeps them alive until it completes. Any other response is transmitted after removal, so a response that embeds the upload itself, as a `File` or inside `FormData`, needs the content copied or the file moved first. A moved or removed file can no longer be read through its `File` instance.
 :::
 
+:::warning
+Node's [`fs.openAsBlob`](https://nodejs.org/api/fs.html#fsopenasblobpath-options), which backs `TmpFile`, has [known bugs](https://github.com/nodejs/node/issues/52585) with files over 2 GiB: `size` is truncated above 4 GiB and `slice()` is unreliable above 2 GiB, while whole-file reads like `stream()` stay correct. A handler that needs the size of, or random access into, such an upload should [stat](https://nodejs.org/api/fs.html#fspromisesstatpath-options) or read its `path` directly.
+:::
+
 ## Limiting Body Sizes
 
 Use `maxBodySize` to limit each kind of request body by what it actually costs. All three kinds are required together, so none is left unbounded by accident; set a kind to `Number.POSITIVE_INFINITY` to deliberately leave it unlimited. A body over its limit rejects with `PAYLOAD_TOO_LARGE`.

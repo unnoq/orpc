@@ -62,6 +62,13 @@ export interface TmpFileUploadHandlerPluginOptions {
  * A `File` whose content lives in a temporary file on disk and is read lazily,
  * so it can represent an upload far larger than available memory.
  *
+ * @remarks
+ * Node's `fs.openAsBlob`, which backs this class, has known bugs with files
+ * over 2 GiB ({@link https://github.com/nodejs/node/issues/52585}): `size` is
+ * truncated above 4 GiB and `slice()` is unreliable above 2 GiB, while
+ * whole-file reads like `stream()` stay correct. When size or random access
+ * matters for such a file, stat or read {@link path} directly.
+ *
  * @see {@link https://orpc.dev/docs/plugins/tmp-file-upload | Tmp File Upload Plugin}
  */
 export class TmpFile extends File {
