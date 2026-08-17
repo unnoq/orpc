@@ -35,9 +35,10 @@ const cells = grid
     {grid ? 'Sponsors' : 'Sponsor'}
   </p>
 
-  {/* One card per row on a phone, so the name and tagline keep the full width;
-      two-up from `sm` on. */}
-  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+  {/* One card per row until `md`, where the prose column reaches 673-700px and
+      a name and tagline still read side by side at ~340px. Below that the
+      column is 592px or less, which is too tight for two. */}
+  <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
     {
       cells.map(({ position, sponsor }) => (
         sponsor
