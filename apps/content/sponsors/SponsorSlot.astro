@@ -10,7 +10,7 @@
 // layout shift, and the cards still show without JS.
 import AdCard from './AdCard.astro'
 import AdvertiseCard from './AdvertiseCard.astro'
-import { adSlots, soldSponsors } from './data'
+import { adSlots, inlineAdSlots } from './ads'
 
 interface Props {
   grid?: boolean
@@ -20,10 +20,7 @@ const { grid = false } = Astro.props
 
 const INLINE_CELLS = 2
 
-const pool = soldSponsors()
-const cells = grid
-  ? adSlots()
-  : Array.from({ length: INLINE_CELLS }, (_, index) => ({ position: undefined, sponsor: pool[index] ?? null }))
+const cells = grid ? adSlots() : inlineAdSlots(INLINE_CELLS)
 ---
 
 {/* Always plural: even an inline slot carries two cells. */}

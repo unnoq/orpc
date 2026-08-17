@@ -1,13 +1,22 @@
 import type { AdSponsor } from './ads'
-import { soldSponsors, trackedHref } from './ads'
+import { soldSponsors, tintStyle } from './ads'
 
-// Imports ads.ts directly rather than data.ts so the sponsor wall's data never
-// reaches this bundle. Only the inline slots rotate; the grid is static and
-// carries no [data-sponsor-slot], so nothing here touches it.
+// Only the inline slots rotate. The grid is static and carries no
+// [data-sponsor-slot], so nothing here touches it.
 
-/** Rewrite a server-rendered card in place. Geometry is fixed, so nothing moves. */
+function setText(card: Element, selector: string, text: string): void {
+  const target = card.querySelector(selector)
+  if (target) {
+    target.textContent = text
+  }
+}
+
+/**
+ * Rewrite a server-rendered card in place, matching what AdCard.astro would
+ * have emitted for this sponsor. Geometry is fixed, so nothing moves.
+ */
 function apply(card: HTMLAnchorElement, sponsor: AdSponsor): void {
-  card.href = trackedHref(sponsor.href)
+  card.href = sponsor.href
   // The tagline truncates in the card, so it doubles as the hover tooltip.
   card.title = sponsor.description
 
@@ -15,27 +24,17 @@ function apply(card: HTMLAnchorElement, sponsor: AdSponsor): void {
   if (logo) {
     logo.src = sponsor.logo
   }
-  const name = card.querySelector('[data-sponsor-name]')
-  if (name) {
-    name.textContent = sponsor.name
-  }
-  const description = card.querySelector('[data-sponsor-desc]')
-  if (description) {
-    description.textContent = sponsor.description
-  }
+  setText(card, '[data-sponsor-name]', sponsor.name)
+  setText(card, '[data-sponsor-desc]', sponsor.description)
 
-  // Mirrors AdCard.astro's inline tint; theme.css picks the mode. Cleared when
-  // the incoming sponsor has none, or the outgoing one's colour would linger.
-  for (const [property, value] of [
-    ['--slot-bg', sponsor.background?.light],
-    ['--slot-bg-dark', sponsor.background?.dark],
-  ] as const) {
-    if (value === undefined) {
-      card.style.removeProperty(property)
-    }
-    else {
-      card.style.setProperty(property, value)
-    }
+  // Dropping the attribute rather than blanking it keeps an untinted sponsor
+  // from inheriting the outgoing one's colour.
+  const tint = tintStyle(sponsor)
+  if (tint === undefined) {
+    card.removeAttribute('style')
+  }
+  else {
+    card.setAttribute('style', tint)
   }
 }
 
@@ -63,10 +62,9 @@ function rotate(): void {
 
   for (const slot of document.querySelectorAll('[data-sponsor-slot]')) {
     const cards = slot.querySelectorAll<HTMLAnchorElement>('[data-sponsor-card]')
-    const picks = sample(pool, cards.length)
-    cards.forEach((card, index) => {
-      const sponsor = picks[index]
-      if (sponsor) {
+    sample(pool, cards.length).forEach((sponsor, index) => {
+      const card = cards[index]
+      if (card) {
         apply(card, sponsor)
       }
     })

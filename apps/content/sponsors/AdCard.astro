@@ -3,29 +3,22 @@
 // client.ts rewrite the fields in place, so the markup never changes shape —
 // hence the data-sponsor-* hooks.
 //
-// The brand tint arrives as inline custom properties rather than Tailwind
-// classes: the colours are per-sponsor data, so there is nothing to scan for,
-// and the light/dark pair is resolved by the .slot-card rules in theme.css.
-import type { AdSponsor } from './data'
-import { trackedHref } from './data'
+import type { AdSponsor } from './ads'
+import { tintStyle } from './ads'
 
 interface Props {
   sponsor: AdSponsor
 }
 
 const { sponsor } = Astro.props
-
-const tint = sponsor.background
-  ? `--slot-bg:${sponsor.background.light};--slot-bg-dark:${sponsor.background.dark}`
-  : undefined
 ---
 
 <a
   class="slot-card flex h-[76px] items-center gap-3 rounded-blume border border-border px-4 transition"
   data-sponsor-card
-  href={trackedHref(sponsor.href)}
+  href={sponsor.href}
   rel="sponsored noopener"
-  style={tint}
+  style={tintStyle(sponsor)}
   target="_blank"
   title={sponsor.description}
 >

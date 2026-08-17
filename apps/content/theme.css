@@ -906,3 +906,12 @@ p.slot-label {
 :root[data-theme='dark'] .slot-card:hover {
   background-image: linear-gradient(rgb(255 255 255 / 7%), rgb(255 255 255 / 7%));
 }
+
+/* An unsold cell has no tint of its own, so hover and focus give it the muted
+   surface. Stated here rather than as a `hover:bg-muted` utility because the
+   dark tint rule above outranks a lone hover class, which left dark mode --
+   the default theme -- with no fill at all. */
+a.slot-card.slot-empty:hover,
+a.slot-card.slot-empty:focus-visible {
+  background-color: var(--blume-muted);
+}

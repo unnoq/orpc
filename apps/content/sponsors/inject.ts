@@ -47,8 +47,8 @@ export function injectSlots(source: string): string {
   }
 
   // Splice bottom-up so earlier indices stay valid.
-  for (const [order, line] of [...insertBefore.entries()].reverse()) {
-    lines.splice(line, 0, '', order === 0 ? GRID_SLOT_TAG : SLOT_TAG, '')
+  for (let i = insertBefore.length - 1; i >= 0; i--) {
+    lines.splice(insertBefore[i]!, 0, '', i === 0 ? GRID_SLOT_TAG : SLOT_TAG, '')
   }
   if (insertBefore.length === 0 || words >= WORDS_PER_AD) {
     lines.push('', insertBefore.length === 0 ? GRID_SLOT_TAG : SLOT_TAG, '')
