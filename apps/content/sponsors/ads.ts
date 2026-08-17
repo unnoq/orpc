@@ -17,9 +17,11 @@ export interface AdSponsor {
   href: string
   /**
    * Optional brand tint behind the card. Both modes are required together so a
-   * sponsor never ships a colour that only works in one theme — keep them pale
-   * (light) and deep (dark) enough that --blume-foreground still reads on top.
-   * Omit for no tint.
+   * sponsor never ships a colour that only works in one theme. Aim for the
+   * lightness of Blume's muted surface (#f6f6f7 light, #2f343e dark) carrying
+   * a hint of the brand hue — roughly the brand mixed 6% into the page in
+   * light mode and 10% in dark — so the card reads as a surface rather than a
+   * banner and --blume-muted-foreground still clears AA on top. Omit for none.
    */
   background?: { light: string, dark: string }
 }
@@ -37,14 +39,14 @@ const slots: Partial<Record<AdPosition, AdSponsor>> = {
     description: 'The screenshot API for developers',
     logo: 'https://github.com/screenshotone.png',
     href: 'https://screenshotone.com?ref=orpc&utm_source=orpc&utm_medium=sponsor',
-    background: { light: '#f2effe', dark: '#2c2749' },
+    background: { light: '#f7f5ff', dark: '#303147' },
   },
   2: {
     name: 'MisskeyHQ',
     description: 'Decentralized microblogging SNS born on Earth',
     logo: 'https://github.com/MisskeyIO.png',
     href: 'https://misskey.io?ref=orpc&utm_source=orpc&utm_medium=sponsor',
-    background: { light: '#eff7e2', dark: '#28351a' },
+    background: { light: '#f8faf0', dark: '#313a2e' },
   },
 }
 
