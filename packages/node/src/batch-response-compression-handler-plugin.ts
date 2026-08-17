@@ -3,7 +3,6 @@ import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRout
 import type { StandardBodyHint, StandardHeaders } from '@standardserver/core'
 import { Duplex } from 'node:stream'
 import { constants, createDeflate, createDeflateRaw, createGzip } from 'node:zlib'
-import { BATCH_CONTENT_TYPE } from '@orpc/server/plugins'
 import { isNoTransformCacheControl, parseAcceptEncodingQualities, stringifyJSON, toArray, varyByAcceptEncoding } from '@orpc/shared'
 import { flattenStandardHeader } from '@standardserver/core'
 
@@ -139,39 +138,29 @@ export class BatchResponseCompressionHandlerPlugin<T extends Context> implements
           'standard-server': [],
         }
       }
-      else {
-        /**
-         * Every other batch body is the length-prefixed framing, which carries its content type on
-         * the blob when buffered, because the batch plugin builds it instead of the adapter. The
-         * blob wins, matching the adapters, which send its type in place of whatever the header says.
-         */
-        const contentType = body instanceof Blob
-          ? body.type
-          : flattenStandardHeader(headers['content-type'])
-
-        if (contentType?.split(';')[0]?.trim().toLowerCase() !== BATCH_CONTENT_TYPE) {
+      // Every other batch body is the length-prefixed framing, buffered into a blob or streamed
+      else if (body instanceof Blob) {
+        if (Number.isFinite(body.size) && body.size < this.threshold) {
           return result
         }
 
-        if (body instanceof Blob) {
-          if (Number.isFinite(body.size) && body.size < this.threshold) {
-            return result
-          }
-
-          stream = body.stream()
-        }
-        else if (body instanceof ReadableStream) {
-          stream = body
-        }
-        else {
-          return result
-        }
-
+        stream = body.stream()
         bodyHeaders = {
-          // A blob body is gone once it becomes a stream, so the type it carried is stated here
-          'content-type': contentType,
+          /**
+           * The blob is gone once it becomes a stream, so the type it carried is stated here. The
+           * batch plugin puts it there rather than in the headers, because it builds the body
+           * itself instead of leaving it to the adapter.
+           */
+          'content-type': body.type,
           'standard-server': 'octet-stream' satisfies StandardBodyHint,
         }
+      }
+      else if (body instanceof ReadableStream) {
+        stream = body
+        bodyHeaders = { 'standard-server': 'octet-stream' satisfies StandardBodyHint }
+      }
+      else {
+        return result
       }
 
       return {

@@ -253,7 +253,7 @@ describe('batchResponseCompressionHandlerPlugin', () => {
     await expect(response!.text()).resolves.toContain(largeValue)
   })
 
-  it('leaves a batch content type that is not a valid batch response alone', async () => {
+  it('leaves a batch response that carries neither bytes nor messages alone', async () => {
     const handler = new RPCHandler(router, {
       plugins: [new BatchResponseCompressionHandlerPlugin({ threshold: 0 })],
       routingInterceptors: [async () => ({
