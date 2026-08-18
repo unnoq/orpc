@@ -337,10 +337,10 @@ export default [
     "org": false
   },
   {
-    "name": "Stijn Timmer",
-    "login": "Stijn-Timmer",
-    "avatar": "https://avatars.githubusercontent.com/u/100147665?u=106b2c18e9c98a61861b4ee7fc100f5b9906a6c9&v=4",
-    "link": "https://github.com/Stijn-Timmer?ref=orpc",
+    "name": "IPV4Address",
+    "login": "IPV4Addressv4",
+    "avatar": "https://avatars.githubusercontent.com/u/100147665?u=176f2ad09630c8ce556fec161f9fe622ed08f60f&v=4",
+    "link": "https://github.com/IPV4Addressv4?ref=orpc",
     "tierTitle": "Past Sponsors",
     "tierLevel": 0,
     "org": false
