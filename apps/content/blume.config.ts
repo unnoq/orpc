@@ -17,13 +17,6 @@ export default defineConfig({
           'blog/**/*.{md,mdx}',
         ],
       },
-      {
-        type: 'github-releases',
-        prefix: 'changelog',
-        owner: 'middleapi',
-        repo: 'orpc',
-        prereleases: true,
-      },
     ],
   },
   github: {
@@ -48,17 +41,18 @@ export default defineConfig({
     tabs: [
       { label: 'Documentation', path: '/docs' },
       { label: 'Blog', path: '/blog', href: '/blog' },
-      { label: 'Changelog', path: '/changelog', href: '/changelog' },
       { label: 'Comparison', path: '/docs', href: '/docs/comparison' },
+      { label: 'From V1', path: '/docs', href: '/docs/migrations/from-v1' },
       {
         label: 'More',
         path: '',
         items: [
-          { label: 'V1 Documentation', path: 'https://v1.orpc.dev' },
+          { label: 'Releases', path: 'https://github.com/middleapi/orpc/releases' },
           { label: 'Discussions', path: 'https://github.com/middleapi/orpc/discussions' },
           { label: 'Sponsors', path: 'https://github.com/sponsors/dinwwwh' },
           { label: 'LLM Context', path: 'https://orpc.dev/llms.txt' },
           { label: 'LLM Context (Full)', path: 'https://orpc.dev/llms-full.txt' },
+          { label: 'V1 Documentation', path: 'https://v1.orpc.dev' },
         ],
       },
     ],
