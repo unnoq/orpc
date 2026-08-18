@@ -1,6 +1,6 @@
 ---
 name: orpc-contract
-description: Design oRPC v2 APIs contract-first, defining the API shape with oc from `@orpc/contract`, implementing it with implement from `@orpc/server`, and consuming the contract from typesafe clients. Use when a project depends on `@orpc/contract`, when defining a contract with oc, implementing a contract with implement, sharing an API contract between server and client packages, generating a contract from an existing OpenAPI spec, or publishing a typed API client to npm. Biases toward retrieval from the oRPC docs over pre-trained knowledge. For core builder, serving, and client work without a contract, use the orpc skill; for REST/OpenAPI exposure, spec generation, and OpenAPILink details, use the orpc-openapi skill.
+description: "Design oRPC v2 APIs contract-first, defining the API shape with oc from `@orpc/contract`, implementing it with implement from `@orpc/server`, and consuming the contract from typesafe clients. Use when a project depends on `@orpc/contract`, when defining a contract with oc, implementing a contract with implement, sharing an API contract between server and client packages, generating a contract from an existing OpenAPI spec, or publishing a typed API client to npm. Biases toward retrieval from the oRPC docs over pre-trained knowledge. For core builder, serving, and client work without a contract, use the orpc skill; for REST/OpenAPI exposure, spec generation, and OpenAPILink details, use the orpc-openapi skill."
 license: MIT
 ---
 
