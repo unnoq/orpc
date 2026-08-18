@@ -82,11 +82,13 @@ describe('ratelimit', () => {
 
   it('push result into handler plugin context if exists', async () => {
     const limiter = createLimiter(success)
-    const ctx = { results: [] }
-    await call(os.use(ratelimit({ limiter, key: 'k' })).handler(() => 'ok'), undefined, {
+    const ctx = { checks: [] }
+    const procedure = os.use(ratelimit({ limiter, key: 'k' })).handler(() => 'ok')
+    await call(procedure, undefined, {
       context: { [RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL]: ctx },
+      path: ['__path__'],
     })
-    expect(ctx).toHaveProperty('results', [success])
+    expect(ctx).toHaveProperty('checks', [{ path: ['__path__'], procedure, result: success }])
   })
 
   it('communicate with middleware context, and isolated', async () => {

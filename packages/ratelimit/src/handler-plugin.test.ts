@@ -15,12 +15,16 @@ describe('ratelimitHandlerPlugin', () => {
   it('adds rate limit headers to a successful response after a limit check', async () => {
     const reset = Date.now() + 60000
 
-    handlerFn.mockImplementationOnce(({ context }) => {
-      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].results.push({
-        success: true,
-        limit: 100,
-        remaining: 50,
-        reset,
+    handlerFn.mockImplementationOnce(({ context, path, procedure }) => {
+      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].checks.push({
+        path,
+        procedure,
+        result: {
+          success: true,
+          limit: 100,
+          remaining: 50,
+          reset,
+        },
       })
     })
 
@@ -35,12 +39,16 @@ describe('ratelimitHandlerPlugin', () => {
   it('adds retry-after when a request is rejected for exceeding the limit', async () => {
     const reset = Date.now() + 60000
 
-    handlerFn.mockImplementationOnce(({ context }) => {
-      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].results.push({
-        success: false,
-        limit: 100,
-        remaining: 50,
-        reset,
+    handlerFn.mockImplementationOnce(({ context, path, procedure }) => {
+      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].checks.push({
+        path,
+        procedure,
+        result: {
+          success: false,
+          limit: 100,
+          remaining: 50,
+          reset,
+        },
       })
 
       throw new ORPCError('TOO_MANY_REQUESTS')
@@ -66,35 +74,55 @@ describe('ratelimitHandlerPlugin', () => {
   it('uses the most restrictive limit when multiple checks run for one request', async () => {
     const reset = Date.now() + 60000
 
-    handlerFn.mockImplementationOnce(({ context }) => {
-      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].results.push({
-        success: false,
+    handlerFn.mockImplementationOnce(({ context, path, procedure }) => {
+      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].checks.push({
+        path,
+        procedure,
+        result: {
+          success: false,
+        },
       })
 
-      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].results.push({
-        success: false,
+      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].checks.push({
+        path,
+        procedure,
+        result: {
+          success: false,
+        },
       })
 
-      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].results.push({
-        success: false,
-        limit: 100,
-        remaining: 3,
-        reset,
+      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].checks.push({
+        path,
+        procedure,
+        result: {
+          success: false,
+          limit: 100,
+          remaining: 3,
+          reset,
+        },
       })
 
-      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].results.push({
-        success: false,
-        limit: 100,
-        remaining: 2,
-        reset,
+      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].checks.push({
+        path,
+        procedure,
+        result: {
+          success: false,
+          limit: 100,
+          remaining: 2,
+          reset,
+        },
       })
 
       // remaining is lowest but success: true so it still low priority to pick
-      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].results.push({
-        success: true,
-        limit: 100,
-        remaining: 1,
-        reset,
+      context[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL].checks.push({
+        path,
+        procedure,
+        result: {
+          success: true,
+          limit: 100,
+          remaining: 1,
+          reset,
+        },
       })
     })
 

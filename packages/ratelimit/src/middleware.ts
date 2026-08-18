@@ -78,7 +78,7 @@ export function ratelimit<
 
     const pluginContext = (middlewareOptions.context as RateLimitHandlerPluginContext)[RATELIMIT_HANDLER_PLUGIN_CONTEXT_SYMBOL]
     if (pluginContext) {
-      pluginContext.results.push(result)
+      pluginContext.checks.push({ path: middlewareOptions.path, procedure: middlewareOptions.procedure, result })
     }
 
     if (!result.success) {
