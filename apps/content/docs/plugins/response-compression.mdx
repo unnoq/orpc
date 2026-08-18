@@ -42,6 +42,10 @@ const handler = new RPCHandler(router, {
 The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or a custom one.
 :::
 
+:::tip
+A [batch](/docs/plugins/batch) response might be left uncompressed here, depending on the shape it takes. On Node.js, add the [Batch Response Compression Plugin](/docs/plugins/batch-response-compression) to fully cover them, when you know your batch responses are all compressible.
+:::
+
 ## Client
 
 Use `ResponseCompressionLinkPlugin` to advertise supported encodings via [Accept-Encoding header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept-Encoding) and automatically decompress response bodies based on the [Content-Encoding header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Encoding):

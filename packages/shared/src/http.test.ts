@@ -1,11 +1,13 @@
 import {
   isCompressibleContentType,
+  isNoTransformCacheControl,
   matchesHttpPath,
   matchesHttpPathPrefix,
   mergeHttpPath,
   normalizeHttpPath,
   parseAcceptEncodingQualities,
   pathToHttpPath,
+  varyByAcceptEncoding,
 } from './http'
 
 describe('pathToHttpPath', () => {
@@ -210,5 +212,39 @@ describe('parseAcceptEncodingQualities', () => {
   it('returns an empty map for a missing or empty header', () => {
     expect(parseAcceptEncodingQualities(undefined)).toEqual(new Map())
     expect(parseAcceptEncodingQualities('')).toEqual(new Map())
+  })
+})
+
+describe('varyByAcceptEncoding', () => {
+  it('adds the field when the header is missing', () => {
+    expect(varyByAcceptEncoding(undefined)).toBe('accept-encoding')
+  })
+
+  it('appends to an existing header', () => {
+    expect(varyByAcceptEncoding('origin')).toBe('origin, accept-encoding')
+  })
+
+  it('does not repeat a field that is already listed, whatever its case', () => {
+    expect(varyByAcceptEncoding('Origin, Accept-Encoding')).toBe('Origin, Accept-Encoding')
+  })
+
+  it('leaves a wildcard alone, because narrowing it would be a downgrade', () => {
+    expect(varyByAcceptEncoding('*')).toBe('*')
+  })
+})
+
+describe('isNoTransformCacheControl', () => {
+  it('detects the directive among others', () => {
+    expect(isNoTransformCacheControl('public, no-transform, max-age=60')).toBe(true)
+    expect(isNoTransformCacheControl('NO-TRANSFORM')).toBe(true)
+  })
+
+  it('returns false for a missing header or an unrelated directive', () => {
+    expect(isNoTransformCacheControl(undefined)).toBe(false)
+    expect(isNoTransformCacheControl('public, max-age=60')).toBe(false)
+  })
+
+  it('does not match a directive that merely contains the token', () => {
+    expect(isNoTransformCacheControl('no-transform-extension')).toBe(false)
   })
 })
