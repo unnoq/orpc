@@ -140,6 +140,7 @@ export default defineConfig({
     mcp: {
       enabled: true,
     },
+    skills: '../../skills',
   },
   deployment: {
     output: 'server',

@@ -84,6 +84,7 @@ export default antfu({
     'apps/content/examples/**',
     'playgrounds/**',
     'packages/*/playground/**',
+    'skills/**',
   ],
   rules: {
     'no-restricted-imports': 'off',
