@@ -50,10 +50,6 @@ const handler = new RPCHandler(router, {
 })
 ```
 
-:::info
-Batching is specific to the RPC protocol, so the `handler` is an [RPCHandler](/docs/rpc/handler). Either adapter serves it, the Node.js one above or the [Fetch](/docs/adapters/fetch-api) one, as long as it runs on Node.js, where `zlib` lives.
-:::
-
 :::warning
 The whole envelope is compressed, binary subresponses included. Leave this plugin off when your batches mostly carry images, video, or other already-compressed content: compressing it spends CPU for nothing and can make the response marginally larger.
 :::
@@ -69,7 +65,7 @@ No client setup is needed. Fetch implementations advertise the encodings they ac
 :::tip
 Register the [Response Compression Plugin](/docs/plugins/response-compression) alongside this one to cover everything else your handler serves. The two never compress the same response twice, whichever order they are registered in.
 :::
-
+G
 ## Learn More
 
 For implementation details, see the [source code](https://github.com/middleapi/orpc/blob/main/packages/node/src/batch-response-compression-handler-plugin.ts).
