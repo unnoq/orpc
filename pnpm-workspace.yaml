@@ -45,3 +45,5 @@ minimumReleaseAgeExclude:
   - '@standardserver/shared@0.7.1 || 0.8.0'
   - '@standardserver/aws-lambda@0.7.1 || 0.8.0'
   - '@standardserver/fastify@0.7.1 || 0.8.0'
+  - '@tanstack/ai-client@0.23.3'
+  - '@tanstack/ai@0.45.1'
