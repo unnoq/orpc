@@ -46,8 +46,6 @@ const streamingSSRPlugin: RouterUtilsPlugin<typeof client> = {
       ...options,
       streamedOptions: {
         ...options.streamedOptions,
-        // the server dehydrates streamed queries as an empty array,
-        // so initialData makes prefetching them optional
         initialData: [],
         refetchOnMount: 'always',
       },
