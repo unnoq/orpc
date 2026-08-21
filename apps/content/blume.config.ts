@@ -29,8 +29,10 @@ export default defineConfig({
     // Light mode darkens it so white accent text keeps AA contrast; dark
     // mode uses the true brand pink (its text flips dark in theme.css).
     accent: { light: 'oklch(0.58 0.19 359)', dark: '#ff6ca5' },
-    // Zed One Dark editor background; the rest of the palette lives in theme.css.
-    background: { dark: '#282c33' },
+    // Deep near-black canvas (tanstack.com-style layering; a whisper of blue so
+    // the github-dark Shiki palette and the brand pink sit naturally on it).
+    // The rest of the dark palette lives in theme.css.
+    background: { dark: '#111114' },
     fonts: {
       display: 'inter',
       body: 'inter',

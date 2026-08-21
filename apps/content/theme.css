@@ -24,18 +24,20 @@
 }
 
 :root[data-theme='dark'] {
-  /* Palette — dark (Zed One Dark values; page background lives in
-     blume.config.ts `theme`). Surfaces sit above the page, code blocks
-     recess below it like Zed's editor pane. */
-  --blume-foreground: #dce0e5;
+  /* Palette — dark (tanstack.com-style layering; page background lives in
+     blume.config.ts `theme`). A near-black canvas with low-contrast borders:
+     hover fills and the search box sit just above the page, code blocks
+     recess just below it, close to github-dark's native ground so the Shiki
+     tokens read as designed. */
+  --blume-foreground: #e3e5ea;
   /* Blume forces white accent text in dark mode; our accent there is the
      light brand pink (#ff6ca5), where white text fails contrast (2.6:1).
      Flip the text dark instead (7.5:1). */
   --blume-accent-foreground: oklch(0.145 0 0);
-  --blume-muted: #2f343e;
-  --blume-muted-foreground: #a9afbc;
-  --blume-border: #363c46;
-  --blume-code-background: #21252b;
+  --blume-muted: #1e2026;
+  --blume-muted-foreground: #9da3ae;
+  --blume-border: #26282f;
+  --blume-code-background: #0c0d10;
 }
 
 /* ---------------------------------------------------------------- */
@@ -137,6 +139,13 @@
 .prose :where(h3) {
   font-weight: 600;
   letter-spacing: -0.0125em;
+}
+
+/* On the near-black canvas the headings step up to near-white while body
+   text stays on the softer foreground, so the hierarchy reads at a glance
+   (the tanstack.com pattern). Light mode keeps one ink for both. */
+:root[data-theme='dark'] .prose :where(h1, h2, h3, h4) {
+  color: #f6f7f9;
 }
 
 /* Filled code blocks like the reference (not Blume's outline style) */

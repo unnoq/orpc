@@ -25,7 +25,7 @@ export interface AdSponsor {
   /**
    * Optional brand tint behind the card. Both modes are required together so a
    * sponsor never ships a colour that only works in one theme. Aim for the
-   * lightness of Blume's muted surface (#f6f6f7 light, #2f343e dark) carrying
+   * lightness of Blume's muted surface (#f6f6f7 light, #1e2026 dark) carrying
    * a hint of the brand hue — roughly the brand mixed 6% into the page in
    * light mode and 10% in dark — so the card reads as a surface rather than a
    * banner and --blume-muted-foreground still clears AA on top. Omit for none.
