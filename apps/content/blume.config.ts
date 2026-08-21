@@ -29,8 +29,9 @@ export default defineConfig({
     // Light mode darkens it so white accent text keeps AA contrast; dark
     // mode uses the true brand pink (its text flips dark in theme.css).
     accent: { light: 'oklch(0.58 0.19 359)', dark: '#ff6ca5' },
-    // Zed One Dark editor background; the rest of the palette lives in theme.css.
-    background: { dark: '#282c33' },
+    // Zed's dark editor/content ground (#282c33 is only its sidebar color);
+    // the rest of the palette lives in theme.css.
+    background: { dark: '#0d1016' },
     fonts: {
       display: 'inter',
       body: 'inter',
