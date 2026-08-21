@@ -858,6 +858,13 @@ describe('openAPIHandlerCodec', () => {
       expect(serializer.serialize).toHaveBeenNthCalledWith(2, secondError.toJSON())
     })
 
+    it('does not resolve error codes through Object.prototype', async () => {
+      const serializer = { serialize: vi.fn(), deserialize: vi.fn() } as any
+      const codec = new OpenAPIHandlerCodec({ procedure: os.handler(vi.fn()) }, { serializer })
+
+      expect((await codec.encodeError(new ORPCError('toString' as any))).status).toEqual(DEFAULT_ERROR_STATUS)
+    })
+
     it('can custom error status via errorStatuses option', () => {
       const serializer = {
         serialize: vi.fn().mockReturnValueOnce('__serialized_override__'),
