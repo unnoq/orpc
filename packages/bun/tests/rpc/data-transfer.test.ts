@@ -21,8 +21,12 @@ describe.each([
   }
   const client = createClientServer(router)
 
-  // TODO: fix blob content type problem
-  it.skipIf(adapter.includes('compression')).each(builtInRPCSupportDataTypes)('should support $name', async ({ value, expected }) => {
+  // TODO: fix blob content type problem when compression is enabled
+  const supportedDataTypes = adapter.includes('compression')
+    ? builtInRPCSupportDataTypes.filter(({ name }) => name !== 'blob')
+    : builtInRPCSupportDataTypes
+
+  it.each(supportedDataTypes)('should support $name', async ({ value, expected }) => {
     const actual = await client.ping(value)
 
     if (typeof expected === 'function') {
