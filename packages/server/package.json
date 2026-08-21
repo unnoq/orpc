@@ -4,7 +4,10 @@
   "version": "2.0.0-beta.29",
   "description": "Build typesafe APIs with oRPC: RPC and OpenAPI support, middleware, and adapters for Node.js, Bun, Deno, Fetch, Fastify, WebSocket, AWS Lambda, and more",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/dinwwwh",
+  "funding": [
+    "https://github.com/sponsors/dinwwwh",
+    "https://opencollective.com/middleapi"
+  ],
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",

@@ -4,7 +4,10 @@
   "version": "2.0.0-beta.29",
   "description": "Bun integration for oRPC: Redis-backed pub/sub and rate limiting using Bun's built-in Redis client",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/dinwwwh",
+  "funding": [
+    "https://github.com/sponsors/dinwwwh",
+    "https://opencollective.com/middleapi"
+  ],
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",

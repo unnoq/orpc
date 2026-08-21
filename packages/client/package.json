@@ -4,7 +4,10 @@
   "version": "2.0.0-beta.29",
   "description": "Consume oRPC and OpenAPI APIs with end-to-end type safety over HTTP, WebSocket, or message ports",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/dinwwwh",
+  "funding": [
+    "https://github.com/sponsors/dinwwwh",
+    "https://opencollective.com/middleapi"
+  ],
   "homepage": "https://orpc.dev",
   "repository": {
     "type": "git",

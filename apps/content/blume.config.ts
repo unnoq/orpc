@@ -49,7 +49,8 @@ export default defineConfig({
         items: [
           { label: 'Releases', path: 'https://github.com/middleapi/orpc/releases' },
           { label: 'Discussions', path: 'https://github.com/middleapi/orpc/discussions' },
-          { label: 'Sponsors', path: 'https://github.com/sponsors/dinwwwh' },
+          { label: 'GitHub Sponsors', path: 'https://github.com/sponsors/dinwwwh' },
+          { label: 'Open Collective', path: 'https://opencollective.com/middleapi' },
           { label: 'LLM Context', path: 'https://orpc.dev/llms.txt' },
           { label: 'LLM Context (Full)', path: 'https://orpc.dev/llms-full.txt' },
           { label: 'V1 Documentation', path: 'https://v1.orpc.dev' },

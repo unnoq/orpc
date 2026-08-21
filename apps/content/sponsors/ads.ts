@@ -33,20 +33,32 @@ export interface AdSponsor {
   background?: { light: string, dark: string }
 }
 
-/** The grid is a fixed 8 cells; positions outside this range are a type error. */
-export const AD_POSITIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const
+/**
+ * The grid starts at six cells and grows to fit the highest sold position,
+ * rounded up to an even count — it renders as two columns on `md`, so an odd
+ * total would leave a hole in the last row.
+ */
+const DEFAULT_SLOT_COUNT = 6
 
-export type AdPosition = typeof AD_POSITIONS[number]
+const soldPositions = slots
+  .map(({ position }) => position)
+  .filter(position => Number.isInteger(position) && position >= 1)
 
-function isAdPosition(position: number): position is AdPosition {
-  return (AD_POSITIONS as readonly number[]).includes(position)
-}
+const slotCount = Math.max(DEFAULT_SLOT_COUNT, ...soldPositions)
 
-// Keyed off the generated file; a position outside the grid is dropped rather
-// than crashing the build over a data typo upstream.
+export const AD_POSITIONS: readonly number[] = Array.from(
+  { length: slotCount + (slotCount % 2) },
+  (_, index) => index + 1,
+)
+
+export type AdPosition = number
+
+// Keyed off the generated file; a position that is not one of the grid's cells
+// (fractional, zero, negative) is dropped rather than crashing the build over
+// a data typo upstream.
 const inventory: Partial<Record<AdPosition, AdSponsor>> = {}
 for (const { position, ...sponsor } of slots) {
-  if (isAdPosition(position)) {
+  if (AD_POSITIONS.includes(position)) {
     inventory[position] = sponsor
   }
 }
