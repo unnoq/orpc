@@ -24,7 +24,7 @@ Then play with your app and open [http://localhost:16686](http://localhost:16686
 
 ## Sponsors
 
-Like what we build over at [middleapi](https://github.com/middleapi)? You can help keep it going through [GitHub Sponsors](https://github.com/sponsors/dinwwwh) or [Open Collective](https://opencollective.com/middleapi), or simply [keep it brewing](https://github.com/sponsors/dinwwwh/sponsorships?tier_id=475114) with a $5/month coffee. Every bit helps! 🚀
+Like what we build over at [middleapi](https://github.com/middleapi)? You can help keep it going through [GitHub Sponsors](https://github.com/sponsors/dinwwwh) or [Open Collective](https://opencollective.com/middleapi). Every bit helps! 🚀
 
 <table>
   <tr>
