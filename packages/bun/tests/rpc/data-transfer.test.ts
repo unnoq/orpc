@@ -21,7 +21,8 @@ describe.each([
   }
   const client = createClientServer(router)
 
-  // TODO: fix blob content type problem when compression is enabled
+  // TODO: related to https://github.com/oven-sh/bun/issues/32801 - Bun's blob()/formData() do not
+  // derive the type from the Content-Type header, so the blob type is lost after (de)compression
   const supportedDataTypes = adapter.includes('compression')
     ? builtInRPCSupportDataTypes.filter(({ name }) => name !== 'blob')
     : builtInRPCSupportDataTypes
