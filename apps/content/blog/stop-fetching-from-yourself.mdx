@@ -104,9 +104,13 @@ The branch runs at runtime, but bundling happens at build time. The `import { ha
 
 ## The `globalThis` Trick
 
-The fix is to make the server side of the wiring invisible to the bundler. The shared module never imports server code; it looks up a well-known global and falls back to the browser client:
+The fix is to keep the server side of the wiring out of the client bundle. The shared module imports server code only behind a build-time guard, then looks up a well-known global and falls back to the browser client:
 
 ```ts client.ts
+if (import.meta.env.SSR) {
+  await import('./client.server')
+}
+
 declare global {
   var $client: Client | undefined
 }
@@ -122,8 +126,6 @@ export const client: Client = globalThis.$client
 A separate server-only module creates the internal client and registers it:
 
 ```ts client.server.ts
-import 'server-only'
-
 import { handleApi } from './api'
 import { createClient } from './client'
 
@@ -133,12 +135,11 @@ globalThis.$client = createClient(
 )
 ```
 
-There is no import path from `client.ts` to `client.server.ts`, so the client bundle contains only the shared module. The link between the two exists purely at runtime, on the server, where both live in the same process. The [`server-only`](https://www.npmjs.com/package/server-only) marker turns any accidental client-side import into a build error instead of a leak.
+This time the guard is resolved at build time: in the client build the branch is statically dead, so the bundler drops it, module and all, and the client bundle contains only the shared module. Load order takes care of itself, since the import runs before the `client` export evaluates. And if registration is ever skipped, the fallback touches `window` on the server and throws immediately, instead of silently fetching from yourself again.
 
-Two details make this robust:
-
-- **Load order.** The server module must run before anything renders. In Next.js that means importing it in both [`instrumentation.ts`](https://nextjs.org/docs/app/guides/instrumentation) and the root layout; other frameworks have an equivalent server entry point.
-- **A loud failure mode.** If registration is ever skipped, the fallback touches `window` on the server and throws immediately, instead of silently fetching from yourself again.
+:::tip
+`import.meta.env.SSR` is statically replaced by Vite and by Next.js's Turbopack. On webpack builds, guard with `typeof window === 'undefined'` instead, which Next.js also replaces at build time.
+:::
 
 ## Skipping the Fetch Layer Entirely
 
@@ -148,6 +149,6 @@ Both are valid endpoints of the same idea. The fetch-based internal client keeps
 
 ## The Takeaway
 
-SSR data fetching has a default shape, HTTP to yourself, that exists only because it is the shortest code. The Fetch API's real gift to servers is that a handler is a callable function, and callable functions do not need sockets to be called. Wire the internal client through `globalThis` so the bundler never sees it, guard the server module with `server-only`, and the same one-line `import { client }` does the right thing everywhere.
+SSR data fetching has a default shape, HTTP to yourself, that exists only because it is the shortest code. The Fetch API's real gift to servers is that a handler is a callable function, and callable functions do not need sockets to be called. Wire the internal client through `globalThis`, guard the server import with a flag your bundler resolves at build time, and the same one-line `import { client }` does the right thing everywhere.
 
 If you use oRPC, this whole pattern is prepackaged: [Optimizing SSR](/docs/recipes/optimizing-ssr) shows both the internal [RPC Link](/docs/rpc/link) and the even leaner [server-side client](/docs/client/server-side), fully typed end to end. If you are building your own, steal the global.
