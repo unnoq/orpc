@@ -45,3 +45,53 @@ Astro's [CSRF protection](https://docs.astro.build/en/reference/configuration-re
 :::info
 The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or another custom handler.
 :::
+
+## Optimize SSR
+
+To reduce HTTP requests and improve latency during SSR, you can use a [server-side client](/docs/client/server-side) during SSR. Below is a quick setup, see [Optimizing SSR](/docs/recipes/optimizing-ssr) for more details.
+
+<CodeGroup>
+
+```ts title="src/lib/orpc.ts"
+import type { RouterClient } from '@orpc/server'
+import { createORPCClient } from '@orpc/client'
+import { RPCLink } from '@orpc/client/fetch'
+
+if (import.meta.env.SSR) {
+  await import('./orpc.server')
+}
+
+declare global {
+  var $client: RouterClient<typeof router> | undefined
+}
+
+const link = new RPCLink({
+  url: '/rpc',
+  origin: () => {
+    if (typeof window === 'undefined') {
+      throw new Error('This link is not allowed on the server side.')
+    }
+
+    return window.location.origin
+  },
+})
+
+/**
+ * Fall back to a browser client when no SSR client is registered.
+ */
+export const client: RouterClient<typeof router> = globalThis.$client ?? createORPCClient(link)
+```
+
+```ts title="src/lib/orpc.server.ts"
+import { createRouterClient } from '@orpc/server'
+
+globalThis.$client = createRouterClient(router, {
+  context: {} // Provide initial context if needed
+})
+```
+
+</CodeGroup>
+
+:::warning
+Guard the import with `import.meta.env.SSR`, which Vite replaces at build time, so the server module is stripped from client bundles. A `typeof window` check is not enough: the bundler would still emit your router as a publicly downloadable client chunk. Import the router in `orpc.ts` with `import type` as well: Astro's default `verbatimModuleSyntax` preserves a value import, which also pulls the router into the client bundle.
+:::

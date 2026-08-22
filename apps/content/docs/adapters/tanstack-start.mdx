@@ -51,7 +51,7 @@ Use `createIsomorphicFn` to configure the link with environment-specific setting
 ```ts
 import { RPCLink } from '@orpc/client/fetch'
 import { createIsomorphicFn } from '@tanstack/react-start'
-import { getRequestHeaders } from '@tanstack/react-start/server'
+import { getRequest, getRequestHeaders } from '@tanstack/react-start/server'
 
 const getClientLink = createIsomorphicFn()
   .client(() => new RPCLink({
@@ -59,7 +59,7 @@ const getClientLink = createIsomorphicFn()
   }))
   .server(() => new RPCLink({
     url: '/api/rpc',
-    origin: 'http://localhost:3000',
+    origin: () => new URL(getRequest().url).origin, // resolve from the incoming request
     headers: () => getRequestHeaders(),
   }))
 ```

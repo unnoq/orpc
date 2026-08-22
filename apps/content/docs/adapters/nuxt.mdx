@@ -63,10 +63,11 @@ import { RPCLink } from '@orpc/client/fetch'
 
 export default defineNuxtPlugin(() => {
   const event = useRequestEvent()
+  const requestURL = useRequestURL()
 
   const link = new RPCLink({
     url: '/rpc',
-    origin: typeof window === 'undefined' ? 'http://localhost:3000' : undefined, // defaults to the current origin in the browser
+    origin: typeof window === 'undefined' ? requestURL.origin : undefined, // defaults to the current origin in the browser
     headers: () => event?.headers ?? {},
   })
 

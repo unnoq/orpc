@@ -45,7 +45,7 @@ import { RPCLink } from '@orpc/client/message-port'
 
 const { port1: clientPort, port2: serverPort } = new MessageChannel()
 
-const worker = new Worker('some-worker.js')
+const worker = new Worker(new URL('./some-worker.js', import.meta.url))
 
 worker.postMessage(serverPort, [serverPort])
 

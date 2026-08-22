@@ -135,7 +135,7 @@ globalThis.$client = createClient(
 )
 ```
 
-Unlike the naive version, this conditional import is resolved at build time: the bundler drops the dead branch, module and all, so the client bundle contains only the shared module. Load order takes care of itself, since the import runs before the `client` export evaluates. And if registration is ever skipped, the fallback touches `window` on the server and throws immediately, instead of silently fetching from yourself again.
+This time the guard is resolved at build time: in the client build the branch is statically dead, so the bundler drops it, module and all, and the client bundle contains only the shared module. Load order takes care of itself, since the import runs before the `client` export evaluates. And if registration is ever skipped, the fallback touches `window` on the server and throws immediately, instead of silently fetching from yourself again.
 
 :::tip
 `import.meta.env.SSR` is statically replaced by Vite and by Next.js's Turbopack. On webpack builds, guard with `typeof window === 'undefined'` instead, which Next.js also replaces at build time.

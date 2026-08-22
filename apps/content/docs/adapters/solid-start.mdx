@@ -53,7 +53,7 @@ The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/
 
 ## Client
 
-On the client, use `getRequestEvent` to provide a headers function that works seamlessly with SSR. This enables usage in both server and browser environments.
+On the client, use `getRequestEvent` to resolve the request origin and forward headers during SSR. This enables usage in both server and browser environments.
 
 ```ts
 import { RPCLink } from '@orpc/client/fetch'
@@ -61,7 +61,11 @@ import { getRequestEvent } from 'solid-js/web'
 
 const link = new RPCLink({
   url: '/rpc',
-  origin: typeof window === 'undefined' ? 'http://localhost:3000' : undefined, // defaults to the current origin in the browser
+  // Resolve the origin from the incoming request during SSR; defaults to the current origin in the browser.
+  origin: () => {
+    const event = getRequestEvent()
+    return event ? new URL(event.request.url).origin : undefined
+  },
   headers: () => getRequestEvent()?.request.headers ?? {},
 })
 ```
