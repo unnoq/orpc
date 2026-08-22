@@ -91,7 +91,7 @@ const internalLink = new RPCLink({
   },
 })
 
-globalThis.$client = createORPCClient<RouterClient<typeof router>>(internalLink)
+globalThis.$client = createORPCClient(internalLink)
 ```
 
 </CodeGroup>
