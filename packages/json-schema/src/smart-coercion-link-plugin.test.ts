@@ -145,4 +145,17 @@ describe('smartCoercionLinkPlugin', () => {
       return true
     })
   })
+
+  it('leaves defined errors with prototype-named codes untouched', async () => {
+    const contract = oc.router({ users: { get: oc.errors({ FORBIDDEN: { data: z.object({ number: z.number() }) } }) } })
+    const plugin = new SmartCoercionLinkPlugin(contract)
+
+    const definedORPCError = new ORPCError('toString', { data: { number: '123' } })
+    ;(definedORPCError as any).defined = true
+
+    const interceptor = plugin.init({} as any).interceptors?.[0]
+    const next = vi.fn().mockThrowOnce(definedORPCError)
+
+    await expect(interceptor?.({ path: ['users', 'get'], next } as any)).rejects.toBe(definedORPCError)
+  })
 })
