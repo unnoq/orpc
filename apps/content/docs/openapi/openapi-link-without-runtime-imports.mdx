@@ -73,7 +73,3 @@ const link = new OpenAPILink({
 :::info
 unplugin-macros resolves the macro module with Node's module rules, so the relative import must include the real `.ts` extension. Bun works with or without it. Enable `allowImportingTsExtensions` in your `tsconfig.json` if TypeScript rejects the extension.
 :::
-
-:::warning
-The macro and everything it imports, including your router, run in Node or Bun while bundling. Keep these modules free of side effects such as connecting to a database, or your build will trigger them.
-:::
