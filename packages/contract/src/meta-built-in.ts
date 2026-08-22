@@ -18,7 +18,7 @@ export interface PathMetaPlugin<
  * `meta.path` records a procedure contract's path inside the root contract,
  * which is required for the contract client factory pattern.
  *
- * @see {@link https://orpc.dev/docs/contract/contract-client-factory | Contract Client Factory}
+ * @see {@link https://orpc.dev/docs/contract/client-factory | Contract Client Factory}
  */
 export const meta = {
   path<

@@ -6,7 +6,7 @@ import type { InferSchemaInput, InferSchemaOutput } from './schema'
 /**
  * A router contract: a single procedure contract or a nested record of them.
  *
- * @see {@link https://orpc.dev/docs/contract/contract-client-factory | Contract Client Factory}
+ * @see {@link https://orpc.dev/docs/contract/client-factory | Contract Client Factory}
  */
 export type RouterContract
   = | AnyProcedureContract
