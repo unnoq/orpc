@@ -9,6 +9,19 @@ import { BatchLinkPlugin, RetryLinkPlugin } from '@orpc/client/plugins'
 
 export interface ClientContext extends RetryLinkPluginContext {}
 
+if (typeof window === 'undefined') {
+  await import('./orpc.server')
+}
+
+declare global {
+  /**
+   * The SSR client registered by `orpc.server.ts`, calling procedures in-process instead of over HTTP.
+   *
+   * @see {@link https://orpc.dev/docs/recipes/optimizing-ssr | Optimizing SSR}
+   */
+  var $client: RouterClient<typeof router, ClientContext> | undefined
+}
+
 const link = new RPCLink({
   origin: typeof window !== 'undefined' ? undefined : 'http://localhost:3000',
   url: '/rpc',
@@ -31,7 +44,10 @@ const link = new RPCLink({
   },
 })
 
-export const client: RouterClient<typeof router, ClientContext> = createORPCClient(link)
+/**
+ * Fall back to a browser client when no SSR client is registered.
+ */
+export const client: RouterClient<typeof router, ClientContext> = globalThis.$client ?? createORPCClient(link)
 
 /**
  * Streamed and live queries dehydrate as static snapshots during SSR, so the
