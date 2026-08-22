@@ -17,8 +17,6 @@ export interface CORSHandlerPluginOptions<T extends Context> {
   /**
    * Configures the `Timing-Allow-Origin` header.
    * Can be a string, an array of allowed origins, or a function (optionally async) that returns the allowed origin(s).
-   *
-   * @default undefined
    */
   timingOrigin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string | undefined, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
@@ -32,29 +30,21 @@ export interface CORSHandlerPluginOptions<T extends Context> {
   /**
    * Configures the `Access-Control-Allow-Headers` header for preflight requests.
    * Falls back to the request's `Access-Control-Request-Headers` if not set.
-   *
-   * @default undefined
    */
   allowHeaders?: readonly string[]
 
   /**
    * Configures the `Access-Control-Max-Age` header (in seconds) for preflight requests.
-   *
-   * @default undefined
    */
   maxAge?: number
 
   /**
    * Configures the `Access-Control-Allow-Credentials` header.
-   *
-   * @default undefined
    */
   credentials?: boolean
 
   /**
    * Configures the `Access-Control-Expose-Headers` header.
-   *
-   * @default undefined
    */
   exposeHeaders?: readonly string[]
 }
