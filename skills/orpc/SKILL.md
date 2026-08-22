@@ -214,8 +214,8 @@ const safeClient = createSafeClient(orpc) // every call returns [error, data]
 - Contract-first: define contracts with `@orpc/contract`, implement with `implement` (covered in depth by the `orpc-contract` skill): [Contracts](https://v2.orpc.dev/docs/contract/procedure)
 - Plugins for handler and link: batch, CORS, dedupe, retry, compression, request limits, smart coercion, static files, timeout, tmp file upload, and more. Fetch a plugin's docs page before configuring it; option names are not guessable: [Plugins](https://v2.orpc.dev/docs/plugins/batch)
 - Integrations: [TanStack Query](https://v2.orpc.dev/docs/integrations/tanstack-query) (`createTanstackQueryUtils`), [SWR](https://v2.orpc.dev/docs/integrations/swr), [Pinia Colada](https://v2.orpc.dev/docs/integrations/pinia-colada), [Next.js](https://v2.orpc.dev/docs/integrations/next), [NestJS](https://v2.orpc.dev/docs/integrations/nest), [AI SDK](https://v2.orpc.dev/docs/integrations/ai-sdk), [OpenTelemetry](https://v2.orpc.dev/docs/integrations/opentelemetry)
-- Testing: `call` procedures directly; mock with `implement(router.planet.list).handler(() => [])`, and run the project's typecheck before declaring success, since end-to-end types are oRPC's first correctness signal: [Testing and Mocking](https://v2.orpc.dev/docs/advanced/testing-and-mocking)
-- Monorepos: TypeScript project references keep client types resolvable: [Monorepo Setup](https://v2.orpc.dev/docs/best-practices/monorepo-setup)
+- Testing: `call` procedures directly; mock with `implement(router.planet.list).handler(() => [])`, and run the project's typecheck before declaring success, since end-to-end types are oRPC's first correctness signal: [Testing and Mocking](https://v2.orpc.dev/docs/recipes/testing-and-mocking)
+- Monorepos: TypeScript project references keep client types resolvable: [Monorepo Setup](https://v2.orpc.dev/docs/recipes/monorepo-setup)
 - Migrating from tRPC or oRPC v1: use the `orpc-migrate` skill
 
 ## Full documentation
@@ -233,5 +233,5 @@ Doc map, all under `https://v2.orpc.dev/docs/`:
 - `client/*`: server- and client-side clients, error handling, `DynamicLink`
 - `adapters/*`: per-runtime serving quirks (fetch-api, node-http, aws-lambda, fastify, websocket, message-port, react-native)
 - `plugins/*`: twenty handler/link plugins; `helpers/*`: cookie, encryption, form-data, publisher, ratelimit, signing, base64url
-- `integrations/*`: framework glue; `best-practices/*` and `advanced/*`: guidance (testing, SSR, scaling, validation)
+- `integrations/*`: framework glue; `recipes/*`: guidance (testing, SSR, monorepos, validation)
 - `migrations/from-v1`, `migrations/from-trpc`: upgrades (use the `orpc-migrate` skill)
