@@ -126,6 +126,10 @@ import type { RouterClient } from '@orpc/server'
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 
+if (typeof window === 'undefined') {
+  await import('./orpc.server')
+}
+
 declare global {
   var $client: RouterClient<typeof router> | undefined
 }
@@ -148,8 +152,6 @@ export const client: RouterClient<typeof router> = globalThis.$client ?? createO
 ```
 
 ```ts title="lib/orpc.server.ts"
-import 'server-only'
-
 import { createRouterClient } from '@orpc/server'
 import { headers } from 'next/headers'
 
@@ -167,19 +169,8 @@ globalThis.$client = createRouterClient(router, {
 })
 ```
 
-```ts title="instrumentation.ts"
-export async function register() {
-  // Conditionally import if facing runtime compatibility issues
-  // if (process.env.NEXT_RUNTIME === "nodejs") {
-  await import('./lib/orpc.server')
-  // }
-}
-```
-
-```tsx title="app/layout.tsx"
-import '../lib/orpc.server' // for pre-rendering
-
-// Rest of the code
-```
-
 </CodeGroup>
+
+:::warning
+Next.js replaces `typeof window` at build time on both Turbopack and webpack, stripping the server module from client bundles. Do not add `import 'server-only'` to `orpc.server.ts` (the import legitimately stays in server layers, so the check would fail the build), and avoid `import.meta.env.SSR` (Turbopack only).
+:::
