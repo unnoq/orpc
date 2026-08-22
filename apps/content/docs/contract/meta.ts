@@ -6,6 +6,6 @@ export default defineMeta({
     'router',
     'implementation',
     'generate-from-openapi',
-    'scaling-large-projects',
+    'contract-client-factory',
   ],
 })

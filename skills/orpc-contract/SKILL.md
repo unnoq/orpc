@@ -92,7 +92,7 @@ const apiClient: JsonifiedClient<RouterContractClient<typeof contract>> = create
 - `JsonifiedClient` is required over `OpenAPILink` because OpenAPI serialization is one-way (a `Date` returns as a string); dropping it via Smart Coercion, plus `OpenAPILink` options and CORS caveats, are in the `orpc-openapi` skill.
 - Per-call client context is the second type parameter, `RouterContractClient<typeof contract, ClientContext>`, then `client.planet.find(input, { context: { token } })`; link options like `headers` accept functions of that context.
 - Export `RouterContractClient<typeof contract>` as a type from the server package so clients never import the contract module itself (still needed as a runtime value for `OpenAPILink`; ship the minified JSON below).
-- In very large codebases, skip the root client: pin each procedure with `.meta(meta.path([...]))` and build per-procedure clients with `createContractClientFactory` from `@orpc/contract` (`createContractJsonifiedClientFactory` from `@orpc/openapi` when the link needs `JsonifiedClient`); fetch `contract/scaling-large-projects` before adopting it.
+- In very large codebases, skip the root client: pin each procedure with `.meta(meta.path([...]))` and build per-procedure clients with `createContractClientFactory` from `@orpc/contract` (`createContractJsonifiedClientFactory` from `@orpc/openapi` when the link needs `JsonifiedClient`); fetch `contract/contract-client-factory` before adopting it.
 
 ## Ship the contract
 
@@ -156,4 +156,4 @@ Pages to fetch when you need details beyond this skill:
 
 - Contract: `contract/procedure`, `contract/router`, `contract/implementation`, `contract/generate-from-openapi`
 - Clients: `client/client-side`, `client/server-side`, `client/error-handling`, `openapi/link`
-- Workflows: `recipes/publish-client-to-npm`, `contract/scaling-large-projects`, `recipes/monorepo-setup`
+- Workflows: `recipes/publish-client-to-npm`, `contract/contract-client-factory`, `recipes/monorepo-setup`
