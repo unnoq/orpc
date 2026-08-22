@@ -99,7 +99,3 @@ globalThis.$client = serverClient
 ```
 
 </CodeGroup>
-
-:::warning
-Guard the import with `import.meta.env.SSR`, which Vite replaces at build time, so the server module is stripped from client bundles. A `typeof window` check is not enough: the server module stays in the client module graph, and SvelteKit fails the build rather than bundle it.
-:::

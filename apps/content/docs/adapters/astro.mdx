@@ -91,7 +91,3 @@ globalThis.$client = createRouterClient(router, {
 ```
 
 </CodeGroup>
-
-:::warning
-Guard the import with `import.meta.env.SSR`, which Vite replaces at build time, so the server module is stripped from client bundles. A `typeof window` check is not enough: the bundler would still emit your router as a publicly downloadable client chunk. Import the router in `orpc.ts` with `import type` as well: Astro's default `verbatimModuleSyntax` preserves a value import, which also pulls the router into the client bundle.
-:::
