@@ -81,10 +81,6 @@ import type { RouterClient } from '@orpc/server'
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 
-if (typeof window === 'undefined') {
-  await import('./orpc.server')
-}
-
 declare global {
   var $client: RouterClient<typeof router> | undefined
 }
@@ -132,4 +128,13 @@ globalThis.$client = createRouterClient(router, {
 })
 ```
 
+```tsx title="src/entry-server.tsx"
+import './lib/orpc.server'
+// ...
+```
+
 </CodeGroup>
+
+:::warning
+Import `orpc.server.ts` only from server entry points like `src/entry-server.tsx`. A `typeof window` check inside `orpc.ts` is not enough: the bundler still emits the dynamically imported module, including your router, as a publicly downloadable client chunk.
+:::
