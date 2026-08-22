@@ -1,5 +1,6 @@
-import { ORPCError } from '@orpc/client'
+import { ORPCError, RPCSerializer } from '@orpc/client'
 import { AbortError, ORPC_NAME, sleep } from '@orpc/shared'
+import { ErrorEvent } from '@standardserver/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LOGGER_CONTEXT_SYMBOL } from './context'
 import { EvlogHandlerPlugin } from './handler-plugin'
@@ -297,6 +298,32 @@ describe('evlogHandlerPlugin', () => {
     expect(logger.error).toHaveBeenCalledWith('iterator-failure')
     expect(finish).toHaveBeenCalledWith({ status: 200 })
     expect(logger.error).toHaveBeenCalledBefore(finish)
+  })
+
+  it('does not log ErrorEvent from response body iterators', async () => {
+    const plugin = new EvlogHandlerPlugin()
+    const { routing } = getPluginHooks(plugin)
+    const { finish, logger } = mockIntegration()
+
+    async function* source() {
+      throw new ORPCError('UNAUTHORIZED')
+    }
+
+    const result = await routing({
+      next: vi.fn().mockResolvedValue({
+        matched: true,
+        response: {
+          status: 200,
+          body: new RPCSerializer().serialize(source()),
+        },
+      }),
+      context: {},
+      request: createRequest('/iterable-error-event'),
+    })
+
+    await expect(collectIterator(result.response.body as AsyncIterable<unknown>)).rejects.toBeInstanceOf(ErrorEvent)
+    expect(logger.error).not.toHaveBeenCalled()
+    expect(finish).toHaveBeenCalledWith({ status: 200 })
   })
 
   it('wraps matched readable streams and finishes after they close', async () => {

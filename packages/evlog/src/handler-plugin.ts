@@ -5,7 +5,7 @@ import type { RequestLogger } from 'evlog'
 import type { BaseEvlogOptions, FrameworkIntegrationHelpers, FrameworkIntegrationSpec } from 'evlog/toolkit'
 import { ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { isAbortError, isAsyncIteratorObject, ORPC_NAME, override, sleep, toArray, wrapReadableStream } from '@orpc/shared'
-import { flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
+import { ErrorEvent, flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
 import { defineFrameworkIntegration } from 'evlog/toolkit'
 import { getLogger, LOGGER_CONTEXT_SYMBOL } from './context'
 
@@ -99,10 +99,13 @@ export class EvlogHandlerPlugin<T extends Context> implements StandardHandlerPlu
                   runWith,
                   onError: (error) => {
                     /**
-                     * Any error here is internal (interceptor/framework), not business logic.
-                     * Indicates unexpected handler failure.
+                     * Errors here are internal (interceptor/framework) failures,
+                     * except `ErrorEvent`: a business error the protocol delivers
+                     * inside the event stream, already logged by the client interceptor.
                      */
-                    logger.error(toErrorOrString(error))
+                    if (!(error instanceof ErrorEvent)) {
+                      logger.error(toErrorOrString(error))
+                    }
                   },
                   onFinish: async () => {
                     await sleep(0) // dealing with "log.error() called after the wide event was emitted"
