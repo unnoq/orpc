@@ -9,7 +9,7 @@ import { BatchLinkPlugin, RetryLinkPlugin } from '@orpc/client/plugins'
 
 export interface ClientContext extends RetryLinkPluginContext {}
 
-if (typeof window === 'undefined') {
+if (import.meta.env.SSR) {
   await import('./orpc.server')
 }
 

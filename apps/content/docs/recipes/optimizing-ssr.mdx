@@ -46,7 +46,7 @@ import type { RouterClient } from '@orpc/server'
 import { RPCLink } from '@orpc/client/fetch'
 import { createORPCClient } from '@orpc/client'
 
-if (typeof window === 'undefined') {
+if (import.meta.env.SSR) {
   await import('./orpc.server')
 }
 
@@ -97,10 +97,10 @@ globalThis.$client = createORPCClient(internalLink)
 
 </CodeGroup>
 
-The `typeof window` guard is resolved at build time: Next.js replaces it during bundling, so the client bundle never contains `orpc.server.ts`. With this setup, importing `client` from `lib/orpc.ts` uses the internal-link client during SSR and the remote client in the browser.
+The `import.meta.env.SSR` guard is resolved at build time, so the client bundle never contains `orpc.server.ts`. On webpack builds, guard with `typeof window === 'undefined'` instead, which Next.js also replaces at build time. With this setup, importing `client` from `lib/orpc.ts` uses the internal-link client during SSR and the remote client in the browser.
 
 :::tip
-On Vite-based frameworks, guard the import with `import.meta.env.SSR` instead. See the [Next.js](/docs/adapters/next#optimize-ssr), [Nuxt](/docs/adapters/nuxt#optimize-ssr), [SolidStart](/docs/adapters/solid-start#optimize-ssr), [SvelteKit](/docs/adapters/svelte-kit#optimize-ssr), and [TanStack Start](/docs/adapters/tanstack-start#optimize-ssr) adapter pages for framework-specific setups.
+See the [Next.js](/docs/adapters/next#optimize-ssr), [Nuxt](/docs/adapters/nuxt#optimize-ssr), [SolidStart](/docs/adapters/solid-start#optimize-ssr), [SvelteKit](/docs/adapters/svelte-kit#optimize-ssr), and [TanStack Start](/docs/adapters/tanstack-start#optimize-ssr) adapter pages for framework-specific setups.
 :::
 
 ## Using Server-Side Client Directly

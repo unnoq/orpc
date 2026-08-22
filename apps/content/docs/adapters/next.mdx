@@ -126,7 +126,7 @@ import type { RouterClient } from '@orpc/server'
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 
-if (typeof window === 'undefined') {
+if (import.meta.env.SSR) {
   await import('./orpc.server')
 }
 
@@ -172,5 +172,5 @@ globalThis.$client = createRouterClient(router, {
 </CodeGroup>
 
 :::warning
-Next.js replaces `typeof window` at build time and strips the server module from client bundles. Do not add `import 'server-only'` to `orpc.server.ts`: it would fail the build.
+`import.meta.env.SSR` requires [Turbopack](https://nextjs.org/docs/app/api-reference/turbopack), the default bundler since Next.js 16. On webpack builds, guard with `typeof window === 'undefined'` instead, which Next.js also replaces at build time. Either way, do not add `import 'server-only'` to `orpc.server.ts`: it would fail the build.
 :::

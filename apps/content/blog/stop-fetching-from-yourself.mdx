@@ -107,7 +107,7 @@ The branch runs at runtime, but bundling happens at build time. The `import { ha
 The fix is to make the server side of the wiring invisible to the bundler. The shared module never imports server code; it looks up a well-known global and falls back to the browser client:
 
 ```ts client.ts
-if (typeof window === 'undefined') {
+if (import.meta.env.SSR) {
   await import('./client.server')
 }
 
@@ -138,7 +138,7 @@ globalThis.$client = createClient(
 Unlike the naive version, this conditional import is resolved at build time: the bundler drops the dead branch, module and all, so the client bundle contains only the shared module. Load order takes care of itself, since the import runs before the `client` export evaluates. And if registration is ever skipped, the fallback touches `window` on the server and throws immediately, instead of silently fetching from yourself again.
 
 :::tip
-`typeof window` works in Next.js because the compiler replaces it per bundle. On Vite-based frameworks (SvelteKit, SolidStart, Nuxt, ...), guard with `import.meta.env.SSR` instead.
+`import.meta.env.SSR` is statically replaced by Vite and by Next.js's Turbopack. On webpack builds, guard with `typeof window === 'undefined'` instead, which Next.js also replaces at build time.
 :::
 
 ## Skipping the Fetch Layer Entirely
