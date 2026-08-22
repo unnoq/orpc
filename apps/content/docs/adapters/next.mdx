@@ -172,5 +172,5 @@ globalThis.$client = createRouterClient(router, {
 </CodeGroup>
 
 :::warning
-Next.js replaces `typeof window` at build time on both Turbopack and webpack, stripping the server module from client bundles. Do not add `import 'server-only'` to `orpc.server.ts` (the import legitimately stays in server layers, so the check would fail the build), and avoid `import.meta.env.SSR` (Turbopack only).
+Next.js replaces `typeof window` at build time and strips the server module from client bundles. Do not add `import 'server-only'` to `orpc.server.ts`: it would fail the build.
 :::
