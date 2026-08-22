@@ -51,6 +51,7 @@ declare global {
 }
 
 const link = new RPCLink({
+  url: '/rpc', // must match the prefix your HTTP handler is mounted at
   origin: () => {
     if (typeof window === 'undefined') {
       throw new Error('This link is not allowed on the server side.')
@@ -90,7 +91,7 @@ const internalLink = new RPCLink({
   },
 })
 
-globalThis.$client = createORPCClient(internalLink)
+globalThis.$client = createORPCClient<RouterClient<typeof router>>(internalLink)
 ```
 
 </CodeGroup>
