@@ -16,7 +16,7 @@ export default [
     }
   },
   {
-    "position": 2,
+    "position": 4,
     "name": "MisskeyHQ",
     "description": "Decentralized microblogging SNS born on Earth",
     "logo": "https://github.com/MisskeyIO.png",
