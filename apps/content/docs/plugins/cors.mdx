@@ -40,10 +40,7 @@ The `origin` and `timingOrigin` options also accept a function (optionally async
 const handler = new RPCHandler(router, {
   plugins: [
     new CORSHandlerPlugin({
-      origin: async (origin, { context }) => {
-        const tenant = await context.getTenant()
-        return tenant ? origin : null
-      },
+      origin: async (origin, { context }) => await context.tenant ? origin : null,
     }),
   ],
 })
