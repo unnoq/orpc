@@ -81,6 +81,10 @@ import type { RouterClient } from '@orpc/server'
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 
+if (import.meta.env.SSR) {
+  await import('./orpc.server')
+}
+
 declare global {
   var $client: RouterClient<typeof router> | undefined
 }
@@ -128,13 +132,8 @@ globalThis.$client = createRouterClient(router, {
 })
 ```
 
-```tsx title="src/entry-server.tsx"
-import './lib/orpc.server'
-// ...
-```
-
 </CodeGroup>
 
 :::warning
-Import `orpc.server.ts` only from server entry points like `src/entry-server.tsx`. A `typeof window` check inside `orpc.ts` is not enough: the bundler still emits the dynamically imported module, including your router, as a publicly downloadable client chunk.
+Guard the import with `import.meta.env.SSR`, which Vite replaces at build time, so the server module is stripped from client bundles. A `typeof window` check is not enough: the bundler would still emit your router as a publicly downloadable client chunk.
 :::

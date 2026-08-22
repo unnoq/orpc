@@ -53,6 +53,10 @@ import type { RouterClient } from '@orpc/server'
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 
+if (import.meta.env.SSR) {
+  await import('./orpc.server')
+}
+
 declare global {
   var $client: RouterClient<typeof router> | undefined
 }
@@ -94,9 +98,8 @@ const serverClient: RouterClient<typeof router> = createORPCClient(link)
 globalThis.$client = serverClient
 ```
 
-```ts title="src/hooks.server.ts"
-import './lib/orpc.server'
-// ...
-```
-
 </CodeGroup>
+
+:::warning
+Guard the import with `import.meta.env.SSR`, which Vite replaces at build time, so the server module is stripped from client bundles. A `typeof window` check is not enough: the server module stays in the client module graph, and SvelteKit fails the build rather than bundle it.
+:::
