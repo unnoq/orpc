@@ -276,7 +276,7 @@ const result = await call(
 ```
 
 :::info[Automatic Deduplication]
-When the same `limiter` and `key` combination is used multiple times in a single request chain, the `ratelimit` middleware performs the rate limit check only once. This behavior follows the [Dedupe Middleware Best Practice](/docs/best-practices/dedupe-middleware). To disable deduplication, set `dedupe: false`.
+When the same `limiter` and `key` combination is used multiple times in a single request chain, the `ratelimit` middleware performs the rate limit check only once. This behavior follows the [Dedupe Middleware Best Practice](/docs/recipes/dedupe-middleware). To disable deduplication, set `dedupe: false`.
 :::
 
 :::tip[Conditional Limiter]

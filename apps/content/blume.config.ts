@@ -39,6 +39,9 @@ export default defineConfig({
   },
   lastModified: true,
   navigation: {
+    sidebar: {
+      display: 'group',
+    },
     tabs: [
       { label: 'Documentation', path: '/docs' },
       { label: 'Blog', path: '/blog', href: '/blog' },

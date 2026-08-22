@@ -179,7 +179,7 @@ Three things happen here:
 The same client works on the server and in the browser. The `typeof window` checks only pick the right origin and headers for each side.
 
 :::info
-Calling your own HTTP endpoint during SSR works fine for this tutorial, but it does a needless network round trip inside one process. Once things click, see [Optimizing SSR](/docs/best-practices/optimizing-ssr) for calling the router directly in-process, with zero HTTP involved.
+Calling your own HTTP endpoint during SSR works fine for this tutorial, but it does a needless network round trip inside one process. Once things click, see [Optimizing SSR](/docs/recipes/optimizing-ssr) for calling the router directly in-process, with zero HTTP involved.
 :::
 
 ## A Query Client That Survives SSR
@@ -537,7 +537,7 @@ You now have the complete architecture: typed procedures, one catch-all route ha
 npx giget gh:middleapi/orpc/playgrounds/next orpc-next-playground
 ```
 
-- **Skip HTTP during SSR** with the in-process client from the [Optimizing SSR](/docs/best-practices/optimizing-ssr) guide.
+- **Skip HTTP during SSR** with the in-process client from the [Optimizing SSR](/docs/recipes/optimizing-ssr) guide.
 - **Add mutations and cache invalidation** with the [TanStack Query integration](/docs/integrations/tanstack-query) docs.
 - **Use server functions and form actions** through the dedicated [Next.js integration](/docs/integrations/next).
 - **Resume streams reliably** after disconnects with [event metadata and last event IDs](/docs/async-iterator-object#last-event-id--event-metadata).

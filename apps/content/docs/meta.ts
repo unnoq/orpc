@@ -23,8 +23,7 @@ export default defineMeta({
     'plugins',
     'helpers',
     'integrations',
-    'best-practices',
-    'advanced',
+    'recipes',
     'migrations',
   ],
 })

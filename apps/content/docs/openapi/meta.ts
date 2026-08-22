@@ -11,5 +11,6 @@ export default defineMeta({
     'link',
     'specification',
     'scalar',
+    'expanding-type-support-for-openapi-link',
   ],
 })

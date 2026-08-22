@@ -150,4 +150,4 @@ Both are valid endpoints of the same idea. The fetch-based internal client keeps
 
 SSR data fetching has a default shape, HTTP to yourself, that exists only because it is the shortest code. The Fetch API's real gift to servers is that a handler is a callable function, and callable functions do not need sockets to be called. Wire the internal client through `globalThis` so the bundler never sees it, guard the server module with `server-only`, and the same one-line `import { client }` does the right thing everywhere.
 
-If you use oRPC, this whole pattern is prepackaged: [Optimizing SSR](/docs/best-practices/optimizing-ssr) shows both the internal [RPC Link](/docs/rpc/link) and the even leaner [server-side client](/docs/client/server-side), fully typed end to end. If you are building your own, steal the global.
+If you use oRPC, this whole pattern is prepackaged: [Optimizing SSR](/docs/recipes/optimizing-ssr) shows both the internal [RPC Link](/docs/rpc/link) and the even leaner [server-side client](/docs/client/server-side), fully typed end to end. If you are building your own, steal the global.
