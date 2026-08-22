@@ -104,7 +104,7 @@ The branch runs at runtime, but bundling happens at build time. The `import { ha
 
 ## The `globalThis` Trick
 
-The fix is to make the server side of the wiring invisible to the bundler. The shared module never imports server code; it looks up a well-known global and falls back to the browser client:
+The fix is to keep the server side of the wiring out of the client bundle. The shared module imports server code only behind a build-time guard, then looks up a well-known global and falls back to the browser client:
 
 ```ts client.ts
 if (import.meta.env.SSR) {
