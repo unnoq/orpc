@@ -233,5 +233,5 @@ Doc map, all under `https://v2.orpc.dev/docs/`:
 - `client/*`: server- and client-side clients, error handling, `DynamicLink`
 - `adapters/*`: per-runtime serving quirks (fetch-api, node-http, aws-lambda, fastify, websocket, message-port, react-native)
 - `plugins/*`: twenty handler/link plugins; `helpers/*`: cookie, encryption, form-data, publisher, ratelimit, signing, base64url
-- `integrations/*`: framework glue; `best-practices/*` and `advanced/*`: guidance (testing, SSR, scaling, validation)
+- `integrations/*`: framework glue; `recipes/*`: guidance (testing, SSR, monorepos, validation)
 - `migrations/from-v1`, `migrations/from-trpc`: upgrades (use the `orpc-migrate` skill)

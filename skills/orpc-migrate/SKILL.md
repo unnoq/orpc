@@ -103,7 +103,7 @@ Most v1 names still compile through deprecated aliases (strike-through hints, no
    - Option renames, scoped: handler `rootInterceptors` to `routingInterceptors` (handler `clientInterceptors` still exists, unchanged); link `clientInterceptors` to `transportInterceptors`; on both, `adapterInterceptors` is renamed after the adapter, e.g. `fetchInterceptors` on the fetch adapter. Flat `eventIterator*` options moved under the adapter's request/response mapping: `toFetchResponse.eventStream` on the fetch handler, `sendStandardResponse.eventStream` on Node, `toFetchRequest.eventStream` on the link.
 3. **Audit silent behavior changes** (compile fine, behave differently):
    - **Wire format changed:** a v1 link cannot talk to a v2 server, in either direction. Deploy the upgraded server and clients together.
-   - **Automatic middleware deduplication removed:** middleware applied at both router and procedure level now runs twice, with no warning. Guard shared middleware with the context-flag pattern from the dedupe-middleware best practice.
+   - **Automatic middleware deduplication removed:** middleware applied at both router and procedure level now runs twice, with no warning. Guard shared middleware with the context-flag pattern from the dedupe-middleware recipe.
    - **Batch Plugin `exclude` became `filter` with the opposite meaning.** Usually delete `exclude`; if skipping is still needed, negate the predicate.
    - **`RPCHandler` rejects GET by default** (`allowMethods` defaults to POST/PUT/PATCH/DELETE). Simplest fix: stop sending GET from the link; only allow GET deliberately, with CSRF protection.
    - **Handler `filter` takes positional arguments now;** the v1 destructured form still type-checks but reads wrong values.
