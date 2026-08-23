@@ -5,7 +5,7 @@ sidebar:
   label: "Expo"
 ---
 
-[Expo](https://expo.dev/) is the supported way to run oRPC in a React Native app. It installs the browser APIs oRPC depends on, which bare React Native does not provide, so a plain Expo project needs no polyfill and no Metro configuration.
+[Expo](https://expo.dev/) is the supported way to run oRPC in a React Native app. It installs the browser APIs oRPC depends on, which bare React Native does not provide, so JSON calls, [event iterators](/docs/async-iterator-object), and streamed downloads work in a plain Expo project with no polyfill and no Metro configuration. [Binary data](#feature-support) needs one extra package.
 
 Two of those matter most:
 
@@ -71,26 +71,85 @@ const link = new RPCLink({
 
 :::warning
 Set `binaryType` to `'arraybuffer'` and never `'blob'`. React Native's `Blob` has no `arrayBuffer()`, `text()`, or `stream()` method, so oRPC cannot read the bytes back out of a blob message. Every binary frame is also base64-encoded to cross the native bridge, so prefer many small messages over one large payload.
+
+Sending or receiving a `File` or `Blob` over this link additionally needs the [Blob polyfill](#blob-polyfill).
 :::
 
 ## Feature Support
 
-Measured against Expo SDK 56 and later, with the default `expo/fetch` global.
+oRPC treats binary data two different ways, and the difference decides what works on Expo:
 
-| Feature | Fetch Link | WebSocket Link |
-| --- | --- | --- |
-| JSON, `Date`, `Map`, `Set`, `URL`, and the rest of the [RPC Serializer](/docs/rpc/serializer) types | Yes | Yes |
-| [`File` and `Blob`](/docs/binary-data#file-and-blob) upload and download | Yes | Yes |
-| [`ReadableStream<Uint8Array>`](/docs/binary-data#readablestreamuint8array) download | Yes | Yes |
-| [Event iterators](/docs/async-iterator-object) | Yes | Yes |
-| `ReadableStream` upload | Buffered, see below | Yes |
+- **Root level**, where a `File` or `Blob` is the entire input or output. oRPC sends it as the raw body, with no multipart involved.
+- **Nested**, where a `File` or `Blob` sits inside an object or array. oRPC packs it into a `FormData`, which travels as `multipart/form-data`.
 
-- **Uploads are buffered, not streamed.** `expo/fetch` accepts a `ReadableStream` request body but drains it into a single buffer before the request starts, so a large upload is held in memory rather than streamed. Downloads stream properly.
-- **`Blob` is not spec-compliant.** React Native's `Blob` lacks `arrayBuffer()`, `text()`, and `stream()`, and `new Blob([arrayBuffer])` throws. oRPC passes blobs straight to `expo/fetch` on the normal upload path, so this rarely surfaces, but it is why blob-mode WebSocket messages and the [Batch plugin](/docs/plugins/batch) cannot read binary payloads.
+Expo can *send* multipart but cannot *parse* it, so nested downloads never work. Everything else depends on whether you install the [Blob polyfill](#blob-polyfill).
 
-:::tip
-If you need a type oRPC cannot carry on Expo, extend the [RPC JSON Serializer](/docs/rpc/serializer) to encode it as `base64`.
+| Feature | Fetch | Fetch + polyfill | WebSocket | WebSocket + polyfill |
+| --- | --- | --- | --- | --- |
+| JSON and the other [RPC Serializer](/docs/rpc/serializer) types | Yes | Yes | Yes | Yes |
+| [Event iterators](/docs/async-iterator-object) | Yes | Yes | Yes | Yes |
+| [`ReadableStream<Uint8Array>`](/docs/binary-data#readablestreamuint8array) download | Yes | Yes | Yes | Yes |
+| `ReadableStream` upload | Buffered | Buffered | Streamed | Streamed |
+| Root-level [`File` or `Blob`](/docs/binary-data#file-and-blob) upload | Yes | Yes | No | Yes |
+| Root-level `File` or `Blob` download | No | Yes | No | Yes |
+| Nested `File` or `Blob` upload | No | Yes | No | No |
+| Nested `File` or `Blob` download | No | No | No | No |
+
+Two things are worth knowing beyond the table:
+
+- **`expo/fetch` buffers uploads.** It accepts a `ReadableStream` request body but drains it into one buffer before the request starts, so a large upload sits in memory. Downloads stream properly. The WebSocket link has no such limit: every chunk is its own frame, sent immediately, so uploads genuinely stream. It is the one place the WebSocket link beats fetch.
+- **The WebSocket link is weaker for binary.** Expo replaces the global `fetch`, but not `Response`. The WebSocket link decodes bodies through `new Response(...)`, so it always runs React Native's implementation rather than Expo's, and cannot read a binary body at all without the polyfill.
+
+### Blob Polyfill
+
+React Native's `Blob` has no `arrayBuffer()`, `text()`, `bytes()`, or `stream()`, and `new Blob([arrayBuffer])` throws, so oRPC cannot read bytes back out of a downloaded blob. [`expo-blob`](https://www.npmjs.com/package/expo-blob) is Expo's spec-compliant implementation and fixes every case in the table above except nested downloads.
+
+```package-install
+npx expo install expo-blob
+```
+
+It exports only `Blob`, so declare `File` yourself and install both as globals from your entry file, before any oRPC import:
+
+```ts title="polyfill.ts"
+import { Blob, type BlobPart } from 'expo-blob'
+
+class File extends Blob {
+  name: string
+  lastModified: number
+  webkitRelativePath = ''
+
+  constructor(fileBits: BlobPart[] | Iterable<BlobPart>, fileName: string, options?: FilePropertyBag) {
+    super(fileBits, options)
+
+    this.name = String(fileName)
+    this.lastModified = options?.lastModified ?? Date.now()
+  }
+
+  override toString(): string {
+    return '[object File]'
+  }
+}
+
+Object.assign(globalThis, { Blob, File })
+```
+
+:::warning
+`File` must extend the same class you install as `globalThis.Blob`, because oRPC classifies binary values with `instanceof Blob`. Keep `name` an own writable property, as above, so Expo's `FormData` can set a filename on it.
+
+Replacing the global `Blob` also affects code outside oRPC: `URL.createObjectURL`, `FileReader`, `xhr.responseType = 'blob'`, and `WebSocket` with `binaryType = 'blob'` all still produce React Native blobs, which are no longer `instanceof Blob`.
 :::
+
+### Why nested downloads never work
+
+Neither `Response` available on Expo native can parse `multipart/form-data`. Both `expo/fetch` and React Native only implement the `application/x-www-form-urlencoded` branch of `Response.formData()`, so a multipart response never decodes back into fields. Sending multipart is fine, which is why nested uploads work once the polyfill is in place but nested downloads do not.
+
+Until Expo ships a multipart parser, keep binary data at the root of a procedure's input or output rather than nested inside an object, or extend the [RPC JSON Serializer](/docs/rpc/serializer) to carry it as `base64`.
+
+### Platforms
+
+The table was measured on Android. Every code path behind it is shared JavaScript with no platform variants, so iOS behaves the same. Expo web is unaffected throughout, because it delegates to the browser's own `fetch` and `Response`.
+
+One iOS-specific risk is worth testing if you hold a stream open for a long time: Android sets no timeout on the underlying connection, while iOS goes through `URLSession`, whose default idle timeout is 60 seconds. A long-idle event iterator may drop on iOS and not on Android.
 
 ## Playground
 
