@@ -380,7 +380,7 @@ function flattenJsonUnionSchemaInternal(
     const resolved = resolveJsonSchemaRootLocalRef(schema)
 
     if (resolved !== schema) {
-      const result = flattenJsonUnionSchemaInternal(resolved, resolvingRefs.add(schema.$ref))
+      const result = flattenJsonUnionSchemaInternal(resolved, new Set(resolvingRefs).add(schema.$ref))
       if (result.length > 1) {
         return result
       }
