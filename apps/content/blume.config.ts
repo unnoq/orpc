@@ -79,7 +79,6 @@ export default defineConfig({
   /** v1 URLs Google still indexes, pointed at their v2 counterparts. */
   redirects: [
     { from: '/docs/adapters/http', to: '/docs/adapters/fetch-api' },
-    { from: '/docs/adapters/remix', to: '/docs/adapters/react-router' },
 
     { from: '/docs/contract-first/define-contract', to: '/docs/contract/procedure' },
     { from: '/docs/contract-first/implement-contract', to: '/docs/contract/implementation' },
