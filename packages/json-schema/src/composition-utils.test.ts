@@ -839,6 +839,38 @@ describe('flattenJsonUnionSchema', () => {
     ])
   })
 
+  it('flattens every sibling branch that references the same $defs entry', () => {
+    const schema = {
+      $defs: { Shared: { type: 'string' } },
+      anyOf: [
+        { $ref: '#/$defs/Shared', minLength: 2 },
+        { $ref: '#/$defs/Shared', maxLength: 5 },
+      ],
+    } satisfies JsonSchema
+
+    expect(flattenJsonUnionSchema(schema)).toEqual([
+      { $defs: schema.$defs, $ref: '#/$defs/Shared', minLength: 2 },
+      { $defs: schema.$defs, $ref: '#/$defs/Shared', maxLength: 5 },
+    ])
+  })
+
+  it('flattens every sibling branch that references the same union $defs entry', () => {
+    const schema = {
+      $defs: { Shared: { anyOf: [{ type: 'number' }, { type: 'boolean' }] } },
+      anyOf: [
+        { $ref: '#/$defs/Shared', description: 'first' },
+        { $ref: '#/$defs/Shared', description: 'second' },
+      ],
+    } satisfies JsonSchema
+
+    expect(flattenJsonUnionSchema(schema)).toEqual([
+      { $defs: schema.$defs, description: 'first', type: 'number' },
+      { $defs: schema.$defs, description: 'first', type: 'boolean' },
+      { $defs: schema.$defs, description: 'second', type: 'number' },
+      { $defs: schema.$defs, description: 'second', type: 'boolean' },
+    ])
+  })
+
   it('flattens transitive local $ref union branches', () => {
     const schema = {
       $defs: {
@@ -879,6 +911,23 @@ describe('flattenJsonUnionSchema', () => {
       { $defs: schema.$defs, type: 'number' },
       { $defs: schema.$defs, type: 'boolean' },
       { $defs: schema.$defs, type: 'string' },
+    ])
+  })
+
+  it('flattening mutually recursive union $ref branches', () => {
+    const schema = {
+      $defs: {
+        A: { anyOf: [{ $ref: '#/$defs/B' }, { type: 'string' }] },
+        B: { anyOf: [{ $ref: '#/$defs/A' }, { type: 'number' }] },
+      },
+      anyOf: [{ $ref: '#/$defs/A' }, { $ref: '#/$defs/B' }],
+    } satisfies JsonSchema
+
+    expect(flattenJsonUnionSchema(schema)).toEqual([
+      { $defs: schema.$defs, $ref: '#/$defs/B' },
+      { $defs: schema.$defs, type: 'string' },
+      { $defs: schema.$defs, $ref: '#/$defs/A' },
+      { $defs: schema.$defs, type: 'number' },
     ])
   })
 
