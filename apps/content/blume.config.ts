@@ -76,6 +76,62 @@ export default defineConfig({
       },
     },
   },
+  /** v1 URLs Google still indexes, pointed at their v2 counterparts. */
+  redirects: [
+    { from: '/docs/adapters/http', to: '/docs/adapters/fetch-api' },
+    { from: '/docs/adapters/remix', to: '/docs/adapters/react-router' },
+
+    { from: '/docs/contract-first/define-contract', to: '/docs/contract/procedure' },
+    { from: '/docs/contract-first/implement-contract', to: '/docs/contract/implementation' },
+    { from: '/docs/contract-first/router-to-contract', to: '/docs/contract/router' },
+    { from: '/docs/advanced/scaling-large-projects', to: '/docs/contract/client-factory' },
+    { from: '/docs/openapi/openapi-to-contract', to: '/docs/contract/generate-from-openapi' },
+
+    { from: '/docs/advanced/exceeds-the-maximum-length-problem', to: '/docs/recipes/exceeds-the-maximum-length-problem' },
+    { from: '/docs/advanced/publish-client-to-npm', to: '/docs/recipes/publish-client-to-npm' },
+    { from: '/docs/advanced/testing-mocking', to: '/docs/recipes/testing-and-mocking' },
+    { from: '/docs/advanced/validation-errors', to: '/docs/recipes/validation-customization' },
+    { from: '/docs/openapi/advanced/disabling-output-validation', to: '/docs/recipes/validation-customization' },
+    { from: '/docs/best-practices/dedupe-middleware', to: '/docs/recipes/dedupe-middleware' },
+    { from: '/docs/best-practices/monorepo-setup', to: '/docs/recipes/monorepo-setup' },
+    { from: '/docs/best-practices/no-throw-literal', to: '/docs/recipes/no-throw-literal' },
+    { from: '/docs/best-practices/optimize-ssr', to: '/docs/recipes/optimizing-ssr' },
+
+    { from: '/docs/rpc-handler', to: '/docs/rpc/handler' },
+    { from: '/docs/client/rpc-link', to: '/docs/rpc/link' },
+    { from: '/docs/advanced/rpc-protocol', to: '/docs/rpc/protocol' },
+    { from: '/docs/advanced/rpc-json-serializer', to: '/docs/rpc/serializer' },
+
+    { from: '/docs/openapi/getting-started', to: '/docs/openapi/routing' },
+    { from: '/docs/openapi/openapi-handler', to: '/docs/openapi/handler' },
+    { from: '/docs/openapi/error-handling', to: '/docs/openapi/handler' },
+    { from: '/docs/openapi/advanced/customizing-error-response', to: '/docs/openapi/handler' },
+    { from: '/docs/openapi/client/openapi-link', to: '/docs/openapi/link' },
+    { from: '/docs/openapi/openapi-specification', to: '/docs/openapi/specification' },
+    { from: '/docs/openapi/advanced/openapi-json-serializer', to: '/docs/openapi/serializer' },
+    { from: '/docs/openapi/input-output-structure', to: '/docs/openapi/input-and-output-mapping' },
+    { from: '/docs/openapi/advanced/expanding-type-support-for-openapi-link', to: '/docs/openapi/expanding-type-support-for-link' },
+
+    { from: '/docs/event-iterator', to: '/docs/async-iterator-object' },
+    { from: '/docs/client/event-iterator', to: '/docs/client/async-iterator-object' },
+    { from: '/docs/file-upload-download', to: '/docs/binary-data' },
+
+    { from: '/docs/plugins/batch-requests', to: '/docs/plugins/batch' },
+    { from: '/docs/plugins/dedupe-requests', to: '/docs/plugins/dedupe' },
+    { from: '/docs/plugins/client-retry', to: '/docs/plugins/retry' },
+    { from: '/docs/plugins/rethrow-handler', to: '/docs/plugins/rethrow' },
+    { from: '/docs/plugins/body-limit', to: '/docs/plugins/request-limit' },
+    { from: '/docs/plugins/compression', to: '/docs/plugins/response-compression' },
+    { from: '/docs/plugins/body-compression', to: '/docs/plugins/response-compression' },
+    { from: '/docs/openapi/plugins/openapi-reference', to: '/docs/plugins/openapi-reference' },
+    { from: '/docs/openapi/plugins/smart-coercion', to: '/docs/plugins/smart-coercion' },
+    { from: '/docs/plugins/hibernation', to: '/docs/integrations/hibernation' },
+
+    { from: '/docs/integrations/react-swr', to: '/docs/integrations/swr' },
+    { from: '/docs/openapi/integrations/implement-contract-in-nest', to: '/docs/integrations/nest' },
+    { from: '/docs/openapi/integrations/trpc', to: '/docs/integrations/trpc' },
+    { from: '/docs/server-action', to: '/docs/integrations/next' },
+  ],
   export: true,
   integrations: [
     {
