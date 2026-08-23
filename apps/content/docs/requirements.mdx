@@ -1,0 +1,93 @@
+---
+title: "Runtime Requirements"
+description: "oRPC is built on ES2022 and a small set of standard Web APIs. This page lists exactly what it needs and the minimum Node.js, Deno, Bun, browser, Android, and iOS versions that provide it."
+sidebar:
+  label: "Requirements"
+  icon: cpu
+---
+
+oRPC has no runtime-specific core. Every package is written against the JavaScript language and standard Web APIs, and anything runtime-specific lives in an [adapter](/docs/adapters/fetch-api). If a runtime provides the features below, oRPC runs on it.
+
+## Overview
+
+| Runtime | Minimum | Recommended |
+| --- | --- | --- |
+| Node.js | 18 | 22+ |
+| Deno | 1.13 | 2.0+ |
+| Bun | 1.0 | 1.3+ |
+| Chrome | 93 | — |
+| Firefox | 102 | — |
+| Safari | 15.4 | — |
+| Android WebView | 93 | — |
+| iOS WebView (WKWebView) | 15.4 | — |
+
+Browsers update themselves, so there is nothing to recommend beyond the minimum. Edge and Chrome on Android match Chrome, Samsung Internet needs 17.0, and Safari on iOS matches iOS WebView. Cloudflare Workers, Deno Deploy, and Vercel Edge Functions have no floor. [React Native](#react-native) is not a web view and needs a polyfill.
+
+Some optional features need more: compression needs Firefox 113 and Safari 16.4, the server-side WebSocket adapter needs Node.js 22, and `Blob` or `File` payloads need Node.js 20.
+
+## Language Level
+
+oRPC is written and type-checked against **ES2022**, and the published bundles are not compiled down any further.
+
+Available from Node 16.9 · Deno 1.13 · Bun 1.0 · Chrome 93 · Firefox 92 · Safari 15.4 · Android WebView 93 · iOS WebView 15.4.
+
+:::info
+These numbers cover the ES2022 features oRPC actually uses. Full ES2022 support is not required, and asking for it would raise the bar a lot: Safari only finished [top-level await](https://webkit.org/b/242740) in version 27, and oRPC never uses it.
+:::
+
+:::warning
+If you build for anything older than ES2022, your bundler has to compile `@orpc/*` along with your own code. Most bundlers skip `node_modules` by default.
+:::
+
+## Web APIs
+
+Beyond ES2022, oRPC uses the APIs below. Each one is [Baseline Widely available](https://web.dev/baseline), meaning every major browser has shipped it for at least 30 months.
+
+| API | Needed when | Widely available since | Available from |
+| --- | --- | --- | --- |
+| [`TransformStream`](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) | Always | Dec 2024 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 67 · Firefox 102 · Safari 14.1 · Android WebView 67 · iOS WebView 14.5 |
+| [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) | Always | Dec 2024 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 43 · Firefox 65 · Safari 10.1 · Android WebView 43 · iOS WebView 10.3 |
+| [`AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) | Always | Sep 2021 | Node 14.17 · Deno 1.0 · Bun 1.0 · Chrome 66 · Firefox 57 · Safari 12.1 · Android WebView 66 · iOS WebView 12.2 |
+| [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) | Cancellation, and merging signals in the [Dedupe plugin](/docs/plugins/dedupe) | Sep 2021 | Node 14.17 · Deno 1.0 · Bun 1.0 · Chrome 66 · Firefox 57 · Safari 11.1 · Android WebView 66 · iOS WebView 11.3 |
+| [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob) | Always | Jul 2022 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 5 · Firefox 4 · Safari 6 · Android WebView 4.4 · iOS WebView 6 |
+| [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) | Always | Jan 2018 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 5 · Firefox 4 · Safari 5 · Android WebView 3 · iOS WebView 5 |
+| [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) | Always | Jan 2018 | Node 10 · Deno 1.0 · Bun 1.0 · Chrome 32 · Firefox 19 · Safari 7 · Android WebView 4.4 · iOS WebView 7 |
+| [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) | Always | Jan 2018 | Node 10 · Deno 1.0 · Bun 1.0 · Chrome 49 · Firefox 29 · Safari 10.1 · Android WebView 49 · iOS WebView 10.3 |
+| [`TextEncoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder) | [AWS Lambda](/docs/adapters/aws-lambda), [WebSocket](/docs/adapters/websocket), and [Message Port](/docs/adapters/message-port) adapters, and the [Batch plugin](/docs/plugins/batch) | Jul 2022 | Node 11 · Deno 1.0 · Bun 1.0 · Chrome 38 · Firefox 18 · Safari 10.1 · Android WebView 38 · iOS WebView 10.3 |
+| [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch) | [Fetch adapter](/docs/adapters/fetch-api) | Sep 2019 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 42 · Firefox 39 · Safari 10.1 · Android WebView 42 · iOS WebView 10.3 |
+| [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) | [Fetch adapter](/docs/adapters/fetch-api) | Sep 2019 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 42 · Firefox 39 · Safari 10.1 · Android WebView 42 · iOS WebView 10.3 |
+| [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) | [Fetch adapter](/docs/adapters/fetch-api) | Sep 2019 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 42 · Firefox 39 · Safari 10.1 · Android WebView 42 · iOS WebView 10.3 |
+| [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) | [Fetch adapter](/docs/adapters/fetch-api), plus any adapter that encodes or decodes `FormData` | Sep 2019 | Node 18 · Deno 1.0 · Bun 1.0 · Chrome 42 · Firefox 39 · Safari 10.1 · Android WebView 42 · iOS WebView 10.3 |
+| [`TextDecoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder) | [Node.js](/docs/adapters/node-http), [Fastify](/docs/adapters/fastify), [AWS Lambda](/docs/adapters/aws-lambda), [WebSocket](/docs/adapters/websocket), and [Message Port](/docs/adapters/message-port) adapters | Jul 2022 | Node 11 · Deno 1.0 · Bun 1.0 · Chrome 38 · Firefox 19 · Safari 10.1 · Android WebView 38 · iOS WebView 10.3 |
+| [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) | [WebSocket adapter](/docs/adapters/websocket) | Jan 2018 | Node 22 · Deno 1.4 · Bun 1.0 · Chrome 5 · Firefox 11 · Safari 5 · Android WebView 4.4 · iOS WebView 4.2 |
+| [`MessagePort`](https://developer.mozilla.org/en-US/docs/Web/API/MessagePort) | [Message Port adapter](/docs/adapters/message-port) | Mar 2018 | Node 15 · Deno 1.12 · Bun 1.0 · Chrome 2 · Firefox 41 · Safari 5 · Android WebView 4.4 · iOS WebView 4.2 |
+| [`File`](https://developer.mozilla.org/en-US/docs/Web/API/File) | Sending or receiving a [`Blob` or `File`](/docs/binary-data#file-and-blob) | Jul 2022 | Node 20 · Deno 1.0 · Bun 1.0 · Chrome 13 · Firefox 7 · Safari 4 · Android WebView 4.4 · iOS WebView 3.2 |
+| [`CompressionStream`](https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream) | [Compression plugins](/docs/plugins/request-compression) | Nov 2025 | Node 18 · Deno 1.19 · Bun 1.3.3 · Chrome 80 · Firefox 113 · Safari 16.4 · Android WebView 80 · iOS WebView 16.4 |
+| [`DecompressionStream`](https://developer.mozilla.org/en-US/docs/Web/API/DecompressionStream) | [Compression plugins](/docs/plugins/response-compression) | Nov 2025 | Node 18 · Deno 1.19 · Bun 1.3.3 · Chrome 80 · Firefox 113 · Safari 16.4 · Android WebView 80 · iOS WebView 16.4 |
+| [`crypto.subtle`](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/subtle) | [Encryption](/docs/helpers/encryption) and [Signing](/docs/helpers/signing) helpers | Jan 2018 | Node 15 · Deno 1.11 · Bun 1.0 · Chrome 37 · Firefox 34 · Safari 11 · Android WebView 37 · iOS WebView 11 |
+| [`crypto.getRandomValues()`](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) | [Encryption](/docs/helpers/encryption) and [Signing](/docs/helpers/signing) helpers | Jan 2018 | Node 15 · Deno 1.0 · Bun 1.0 · Chrome 11 · Firefox 21 · Safari 5 · Android WebView 4.4 · iOS WebView 5 |
+| [`atob()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/atob) | [Base64url](/docs/helpers/base64url) helper | Mar 2019 | Node 16 · Deno 1.0 · Bun 1.0 · Chrome 4 · Firefox 1 · Safari 3 · Android WebView 4.4 · iOS WebView 1 |
+| [`btoa()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa) | [Base64url](/docs/helpers/base64url) helper | Mar 2019 | Node 16 · Deno 1.0 · Bun 1.0 · Chrome 4 · Firefox 1 · Safari 3 · Android WebView 4.4 · iOS WebView 1 |
+
+Version numbers come from [MDN's browser compatibility data](https://github.com/mdn/browser-compat-data). A few rows need more explanation:
+
+- **`TransformStream` must exist before you import oRPC.** oRPC declares its [event stream](/docs/async-iterator-object) decoder as a class that extends `TransformStream` at module scope, so a runtime without it fails on `import '@orpc/client'` with `ReferenceError: TransformStream is not defined`, before any of your code runs. This is what sets the Firefox minimum at 102.
+- **`Response` is not only for the Fetch adapter.** It is the standard way to read and write multipart bodies, so oRPC uses `new Response(form)` to encode `FormData` and `.formData()` to decode it. That makes `Response` a requirement for the Node.js, Fastify, AWS Lambda, WebSocket, and Message Port adapters too, even though none of them speak the Fetch API. `Request` is not part of that path. The AWS Lambda adapter also needs Node's `Buffer`.
+- **A plain `Blob` is enough to require `File`.** oRPC reads `File.name` to build the `Content-Disposition` header, and builds a `File` when parsing an upload. [`ReadableStream`](/docs/binary-data#readablestreamuint8array) payloads do not need it.
+- **`Blob`, `File`, `URL`, and `FormData`** are handled the same way by the [RPC Serializer](/docs/rpc/serializer) and the [OpenAPI Serializer](/docs/openapi/serializer).
+
+## React Native
+
+React Native does not run in a web view. It runs JavaScript in [Hermes](https://github.com/facebook/hermes), which does not provide the browser APIs above, so the WebView numbers do not apply to it.
+
+Two things need attention:
+
+- **Web Streams are missing.** Hermes has no `TransformStream`, so importing oRPC throws `ReferenceError: TransformStream is not defined` before any of your code runs. [Expo](https://docs.expo.dev/versions/latest/sdk/expo/) has installed `ReadableStream`, `WritableStream`, and `TransformStream` as native globals since [SDK 53](https://expo.dev/changelog/sdk-53), which fixes it. On bare React Native, add a polyfill such as [web-streams-polyfill](https://github.com/MattiasBuelens/web-streams-polyfill) or [react-native-polyfill-globals](https://github.com/acostalima/react-native-polyfill-globals) and load it from your entry file, before importing oRPC.
+- **ES2022 is fine on current versions.** Hermes still [documents itself as ES6 plus selected later additions](https://github.com/facebook/hermes/blob/main/doc/Features.md), but it has shipped every ES2022 builtin oRPC uses since React Native 0.72, which is far below any supported Expo SDK. Metro compiles syntax, not builtins, so on older React Native `.at()` is the one to polyfill.
+- **Some globals are missing entirely.** There is no `crypto` global on native at any Expo SDK, and React Native's `Blob` lacks `arrayBuffer()`, `text()`, and `stream()`, which is why binary payloads have to travel as `ArrayBuffer` rather than blobs.
+
+After startup, React Native's built-in `fetch` still does not support streaming, which limits [binary data](/docs/binary-data) and [event iterators](/docs/async-iterator-object) rather than oRPC itself. [Expo](https://expo.dev/) solves both problems: it provides the Web Streams globals and, from SDK 56, installs the streaming `expo/fetch` as the global `fetch`. See the [Expo Adapter](/docs/adapters/expo) for setup.
+
+## Edge Runtimes
+
+Cloudflare Workers, Deno Deploy, and Vercel Edge Functions all track current V8 and ship every Web API oRPC uses, so no version floor applies. Use the [Fetch Adapter](/docs/adapters/fetch-api) on all three.

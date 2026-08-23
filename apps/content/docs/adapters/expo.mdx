@@ -1,0 +1,103 @@
+---
+title: "Expo Adapter"
+description: "Use oRPC in an Expo app over fetch or WebSocket, including streaming support, binary data, and the SDK versions each feature needs."
+sidebar:
+  label: "Expo"
+---
+
+[Expo](https://expo.dev/) is the supported way to run oRPC in a React Native app. It installs the browser APIs oRPC depends on, which bare React Native does not provide, so a plain Expo project needs no polyfill and no Metro configuration.
+
+Two of those matter most:
+
+- **Web Streams.** oRPC extends `TransformStream` at module scope, so the global must exist before oRPC is imported. Expo installs `ReadableStream`, `WritableStream`, and `TransformStream` as native globals from [SDK 53](https://github.com/expo/expo/pull/36407). Without them, `import '@orpc/client'` throws `ReferenceError: TransformStream is not defined`.
+- **A streaming `fetch`.** React Native's built-in `fetch` is an `XMLHttpRequest` polyfill with no `response.body`, which rules out [event iterators](/docs/async-iterator-object) and streamed downloads. [`expo/fetch`](https://docs.expo.dev/versions/latest/sdk/expo/#fetch) is native-backed and streams properly. From **SDK 56** it replaces the global `fetch` on Android and iOS, so there is nothing to wire up.
+
+:::tip
+Use **SDK 56 or later** to get everything working out of the box. SDK 53 to 55 work too, but you must pass `expo/fetch` to the link yourself, as shown [below](#expo-sdk-53-to-55).
+:::
+
+## Fetch Link
+
+```ts title="utils/orpc.ts"
+import { RPCLink } from '@orpc/client/fetch'
+
+export const link = new RPCLink({
+  origin: process.env.EXPO_PUBLIC_SERVER_URL,
+  url: '/rpc',
+  headers: async ({ context }) => ({
+    'x-api-key': context?.something ?? '',
+  }),
+})
+```
+
+:::info
+The `link` can be any supported oRPC link, such as [RPCLink](/docs/rpc/link), [OpenAPILink](/docs/openapi/link), or a custom one. For examples of creating a typesafe client, see [RPC Link](/docs/rpc/link#typesafe-clients).
+:::
+
+### Expo SDK 53 to 55
+
+On these versions the global `fetch` is still React Native's non-streaming polyfill, so pass `expo/fetch` to the link explicitly. Everything else stays the same.
+
+```ts
+import { fetch as expoFetch } from 'expo/fetch'
+import { RPCLink } from '@orpc/client/fetch'
+
+const link = new RPCLink({
+  origin: process.env.EXPO_PUBLIC_SERVER_URL,
+  url: '/rpc',
+  fetch: (url, init) => expoFetch(url, init),
+})
+```
+
+:::warning
+On SDK 56 and later you can opt back out of `expo/fetch` by setting `EXPO_PUBLIC_USE_RN_FETCH=1`. Doing so restores React Native's `XMLHttpRequest` polyfill and silently disables streaming, so event iterators and streamed responses stop working.
+:::
+
+## WebSocket Link
+
+Expo inherits React Native's `WebSocket`, which is backed by OkHttp on Android and SocketRocket on iOS and handles binary frames in both directions.
+
+```ts
+import { RPCLink } from '@orpc/client/websocket'
+
+const link = new RPCLink({
+  connect: () => {
+    const ws = new WebSocket('ws://localhost:3000')
+    ws.binaryType = 'arraybuffer'
+    return ws
+  },
+})
+```
+
+:::warning
+Set `binaryType` to `'arraybuffer'` and never `'blob'`. React Native's `Blob` has no `arrayBuffer()`, `text()`, or `stream()` method, so oRPC cannot read the bytes back out of a blob message. Every binary frame is also base64-encoded to cross the native bridge, so prefer many small messages over one large payload.
+:::
+
+## Feature Support
+
+Measured against Expo SDK 56 and later, with the default `expo/fetch` global.
+
+| Feature | Fetch Link | WebSocket Link |
+| --- | --- | --- |
+| JSON, `Date`, `Map`, `Set`, `URL`, and the rest of the [RPC Serializer](/docs/rpc/serializer) types | Yes | Yes |
+| [`File` and `Blob`](/docs/binary-data#file-and-blob) upload and download | Yes | Yes |
+| [`ReadableStream<Uint8Array>`](/docs/binary-data#readablestreamuint8array) download | Yes | Yes |
+| [Event iterators](/docs/async-iterator-object) | Yes | Yes |
+| `ReadableStream` upload | Buffered, see below | Yes |
+
+- **Uploads are buffered, not streamed.** `expo/fetch` accepts a `ReadableStream` request body but drains it into a single buffer before the request starts, so a large upload is held in memory rather than streamed. Downloads stream properly.
+- **`Blob` is not spec-compliant.** React Native's `Blob` lacks `arrayBuffer()`, `text()`, and `stream()`, and `new Blob([arrayBuffer])` throws. oRPC passes blobs straight to `expo/fetch` on the normal upload path, so this rarely surfaces, but it is why blob-mode WebSocket messages and the [Batch plugin](/docs/plugins/batch) cannot read binary payloads.
+
+:::tip
+If you need a type oRPC cannot carry on Expo, extend the [RPC JSON Serializer](/docs/rpc/serializer) to encode it as `base64`.
+:::
+
+## Playground
+
+A complete Expo app wired to an oRPC server, with runnable upload and download tests for every case in the table above:
+
+[Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc-expo-playground) · [View Source](https://github.com/middleapi/orpc-expo-playground)
+
+## Bare React Native
+
+oRPC does not support bare React Native out of the box. Without Expo you get no Web Streams globals, so `import '@orpc/client'` throws before your code runs, and no streaming `fetch`. You can get close by adding [web-streams-polyfill](https://github.com/MattiasBuelens/web-streams-polyfill) and loading it from your entry file before any oRPC import, but event iterators and streamed downloads will still not work over the built-in `fetch`. See [Requirements](/docs/requirements#react-native) for the full list of APIs oRPC needs.
