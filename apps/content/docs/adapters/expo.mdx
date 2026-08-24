@@ -150,7 +150,7 @@ Writing multipart works, but only on the fetch link, where `expo/fetch` does the
 | Fetch | Works with the [Blob polyfill](#blob-polyfill) | Fails |
 | WebSocket | Fails | Fails |
 
-**The easy fix is to avoid multipart.** Keep files at the root of a procedure's input or output instead of inside an object. Or extend the [RPC JSON Serializer](/docs/rpc/serializer) to carry binary as `base64`. Its handlers are synchronous, so that covers in-memory values like `Uint8Array`, not `File` or `Blob`.
+**The easy fix is to avoid multipart.** Keep files at the root of a procedure's input or output instead of inside an object. Or extend the [RPC JSON Serializer](/docs/rpc/serializer) to carry binary as `base64`.
 
 **The full fix is a `Response` that handles multipart.** For the WebSocket link, replace `globalThis.Response` with one that can both write and read it. For the fetch link only reading is missing, so extend the response that `expo/fetch` returns.
 
