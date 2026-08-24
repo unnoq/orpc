@@ -136,7 +136,7 @@ Object.assign(globalThis, { Blob, File })
 :::warning
 `File` must extend the same class you install as `globalThis.Blob`, because oRPC classifies binary values with `instanceof Blob`. Keep `name` an own writable property, as above, so Expo's `FormData` can set a filename on it.
 
-Replacing the global `Blob` also affects code outside oRPC: `URL.createObjectURL`, `FileReader`, `xhr.responseType = 'blob'`, and `WebSocket` with `binaryType = 'blob'` all still produce React Native blobs, which are no longer `instanceof Blob`.
+Replacing the global `Blob` also affects code outside oRPC. `xhr.responseType = 'blob'` and `WebSocket` with `binaryType = 'blob'` still produce React Native blobs, which are no longer `instanceof Blob`. `URL.createObjectURL` and `FileReader` go the other way: they read React Native's internal blob data, so they throw when handed a polyfilled one.
 :::
 
 ### Why nested binary fails
