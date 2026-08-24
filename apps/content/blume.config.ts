@@ -7,6 +7,11 @@ export default defineConfig({
   title: 'oRPC',
   description: 'Build APIs that are typesafe end to end, with OpenAPI included',
   logo: '/logo.svg',
+  banner: {
+    content: 'You are reading the v2 docs, currently in beta.',
+    link: { href: 'https://v1.orpc.dev', text: 'V1 docs' },
+    dismissible: true,
+  },
   content: {
     sources: [
       {
