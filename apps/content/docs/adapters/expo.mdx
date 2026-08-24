@@ -169,12 +169,6 @@ const link = new RPCLink({
 
 oRPC does not ship such a polyfill, and neither `expo/fetch` nor React Native provides one, so you would be bringing your own.
 
-### Platforms
-
-The table was measured on Android. Every code path behind it is shared JavaScript with no platform variants, so iOS behaves the same. Expo web is unaffected throughout, because it delegates to the browser's own `fetch` and `Response`.
-
-One iOS-specific risk is worth testing if you hold a stream open for a long time: Android sets no timeout on the underlying connection, while iOS goes through `URLSession`, whose default idle timeout is 60 seconds. A long-idle `AsyncIteratorObject` may drop on iOS and not on Android.
-
 ## Playground
 
 A complete Expo app wired to an oRPC server, with runnable upload and download tests for every case in the table above:
