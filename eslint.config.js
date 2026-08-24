@@ -69,12 +69,21 @@ export default antfu({
     'pnpm/json-enforce-catalog': 'off',
   },
 }, {
+  files: ['packages/*/src/**'],
+  rules: {
+    'no-restricted-globals': ['error', {
+      name: 'AbortSignal',
+      message: 'AbortSignal is not a global in every runtime, read it only behind a typeof guard',
+    }],
+  },
+}, {
   files: ['**/*.test.ts', '**/*.test.tsx', '**/*.test-d.ts', '**/*.test-d.tsx', 'apps/content/shared/**', 'playgrounds/**', 'packages/*/playground/**'],
   rules: {
     'unused-imports/no-unused-vars': 'off',
     'antfu/no-top-level-await': 'off',
     'no-alert': 'off',
     'ban/ban': 'off',
+    'no-restricted-globals': 'off',
   },
 }, {
   files: [
