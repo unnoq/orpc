@@ -154,12 +154,6 @@ Writing multipart works, but only on the fetch link, where `expo/fetch` does the
 
 **The full fix is a `Response` that handles multipart.** For the WebSocket link, replace `globalThis.Response` with one that can both write and read it. For the fetch link only reading is missing, so extend the response that `expo/fetch` returns.
 
-## Playground
-
-A complete Expo app wired to an oRPC server, with runnable upload and download tests for every case in the table above:
-
-[Open in StackBlitz](https://stackblitz.com/github/middleapi/orpc-expo-playground) · [View Source](https://github.com/middleapi/orpc-expo-playground)
-
 ## Bare React Native
 
 oRPC does not support bare React Native out of the box. Without Expo you get no Web Streams globals, so `import '@orpc/client'` throws before your code runs, and no streaming `fetch`. You can get close by adding [web-streams-polyfill](https://github.com/MattiasBuelens/web-streams-polyfill) and loading it from your entry file before any oRPC import, but `AsyncIteratorObject` and streamed downloads will still not work over the built-in `fetch`. React Native 0.78 is also a hard floor: oRPC uses a class static initialization block, Metro does not transpile it, and older Hermes cannot parse it. See [Requirements](/docs/requirements#react-native) for the full list of APIs oRPC needs.
