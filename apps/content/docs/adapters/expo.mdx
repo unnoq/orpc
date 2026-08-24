@@ -5,7 +5,7 @@ sidebar:
   label: "Expo"
 ---
 
-[Expo](https://expo.dev/) is the supported way to run oRPC in a React Native app. It installs the browser APIs oRPC depends on, which bare React Native does not provide, so JSON calls, [AsyncIteratorObject](/docs/async-iterator-object), and streamed downloads work in a plain Expo project with no polyfill and no Metro configuration. [Binary data](#feature-support) needs one extra package.
+[Expo](https://expo.dev/) is the supported way to run oRPC in a React Native app. It installs the browser APIs oRPC depends on, which bare React Native does not provide, so JSON calls, [AsyncIteratorObject](/docs/async-iterator-object), and streamed downloads work in a plain Expo project with no polyfill and no Metro configuration. [Some `File` and `Blob` cases](#feature-support) need one extra package.
 
 Two of those matter most:
 
