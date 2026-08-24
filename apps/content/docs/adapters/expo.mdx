@@ -87,9 +87,9 @@ Expo never parses multipart, and the WebSocket link cannot even produce it, whic
 | Feature | Fetch | Fetch + polyfill | WebSocket | WebSocket + polyfill |
 | --- | --- | --- | --- | --- |
 | [AsyncIteratorObject](/docs/async-iterator-object) download | Yes | Yes | Yes | Yes |
-| `AsyncIteratorObject` upload | Buffered | Buffered | Streamed | Streamed |
+| `AsyncIteratorObject` upload | Buffered | Buffered | Yes | Yes |
 | [`ReadableStream<Uint8Array>`](/docs/binary-data#readablestreamuint8array) download | Yes | Yes | Yes | Yes |
-| `ReadableStream` upload | Buffered | Buffered | Streamed | Streamed |
+| `ReadableStream` upload | Buffered | Buffered | Yes | Yes |
 | Root-level [`File` or `Blob`](/docs/binary-data#file-and-blob) download | No | Yes | No | Yes |
 | Root-level `File` or `Blob` upload | Yes | Yes | No | Yes |
 | Nested `File` or `Blob` download | No | No | No | No |
