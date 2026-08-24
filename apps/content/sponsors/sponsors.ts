@@ -410,9 +410,9 @@ export default [
   },
   {
     "name": "Ryuz",
-    "login": "yzuyr",
+    "login": "ryuzdev",
     "avatar": "https://avatars.githubusercontent.com/u/196539378?u=d38374588d219b6748b16406982f6559411466d4&v=4",
-    "link": "https://github.com/yzuyr?ref=middleapi&utm_source=middleapi&utm_medium=sponsor",
+    "link": "https://github.com/ryuzdev?ref=middleapi&utm_source=middleapi&utm_medium=sponsor",
     "rel": "sponsored",
     "tierTitle": "Past Sponsor",
     "tierLevel": 0
