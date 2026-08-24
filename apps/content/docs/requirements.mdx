@@ -71,7 +71,7 @@ Beyond ES2022, oRPC uses the APIs below. Each one is [Baseline Widely available]
 
 Version numbers come from [MDN's browser compatibility data](https://github.com/mdn/browser-compat-data). A few rows need more explanation:
 
-- **`TransformStream` must exist before you import oRPC.** oRPC declares its [event stream](/docs/async-iterator-object) decoder as a class that extends `TransformStream` at module scope, so a runtime without it fails on `import '@orpc/client'` with `ReferenceError: TransformStream is not defined`, before any of your code runs. This is what sets the Firefox minimum at 102.
+- **`TransformStream` must exist before you import oRPC.** oRPC declares its [AsyncIteratorObject](/docs/async-iterator-object) decoder as a class that extends `TransformStream` at module scope, so a runtime without it fails on `import '@orpc/client'` with `ReferenceError: TransformStream is not defined`, before any of your code runs. This is what sets the Firefox minimum at 102.
 - **`Response` is not only for the Fetch adapter.** It is the standard way to read and write multipart bodies, so oRPC uses `new Response(form)` to encode `FormData` and `.formData()` to decode it. That makes `Response` a requirement for the Node.js, Fastify, AWS Lambda, WebSocket, and Message Port adapters too, even though none of them speak the Fetch API. `Request` is not part of that path. The AWS Lambda adapter also needs Node's `Buffer`.
 - **A plain `Blob` is enough to require `File`.** oRPC reads `File.name` to build the `Content-Disposition` header, and builds a `File` when parsing an upload. [`ReadableStream`](/docs/binary-data#readablestreamuint8array) payloads do not need it.
 - **`Blob`, `File`, `URL`, and `FormData`** are handled the same way by the [RPC Serializer](/docs/rpc/serializer) and the [OpenAPI Serializer](/docs/openapi/serializer).
@@ -86,7 +86,7 @@ Two things need attention:
 - **ES2022 is fine on current versions.** Hermes still [documents itself as ES6 plus selected later additions](https://github.com/facebook/hermes/blob/main/doc/Features.md), but it has shipped every ES2022 builtin oRPC uses since React Native 0.72, which is far below any supported Expo SDK. Metro compiles syntax, not builtins, so on older React Native `.at()` is the one to polyfill.
 - **Some globals are missing entirely.** There is no `crypto` global on native at any Expo SDK, and React Native's `Blob` lacks `arrayBuffer()`, `text()`, and `stream()`, which is why binary payloads have to travel as `ArrayBuffer` rather than blobs.
 
-After startup, React Native's built-in `fetch` still does not support streaming, which limits [binary data](/docs/binary-data) and [event iterators](/docs/async-iterator-object) rather than oRPC itself. [Expo](https://expo.dev/) solves both problems: it provides the Web Streams globals and, from SDK 56, installs the streaming `expo/fetch` as the global `fetch`. See the [Expo Adapter](/docs/adapters/expo) for setup.
+After startup, React Native's built-in `fetch` still does not support streaming, which limits [binary data](/docs/binary-data) and [AsyncIteratorObject](/docs/async-iterator-object) rather than oRPC itself. [Expo](https://expo.dev/) solves both problems: it provides the Web Streams globals and, from SDK 56, installs the streaming `expo/fetch` as the global `fetch`. See the [Expo Adapter](/docs/adapters/expo) for setup.
 
 ## Edge Runtimes
 

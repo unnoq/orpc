@@ -5,12 +5,12 @@ sidebar:
   label: "Expo"
 ---
 
-[Expo](https://expo.dev/) is the supported way to run oRPC in a React Native app. It installs the browser APIs oRPC depends on, which bare React Native does not provide, so JSON calls, [event iterators](/docs/async-iterator-object), and streamed downloads work in a plain Expo project with no polyfill and no Metro configuration. [Binary data](#feature-support) needs one extra package.
+[Expo](https://expo.dev/) is the supported way to run oRPC in a React Native app. It installs the browser APIs oRPC depends on, which bare React Native does not provide, so JSON calls, [AsyncIteratorObject](/docs/async-iterator-object), and streamed downloads work in a plain Expo project with no polyfill and no Metro configuration. [Binary data](#feature-support) needs one extra package.
 
 Two of those matter most:
 
 - **Web Streams.** oRPC extends `TransformStream` at module scope, so the global must exist before oRPC is imported. Expo installs `ReadableStream`, `WritableStream`, and `TransformStream` as native globals from [SDK 53](https://github.com/expo/expo/pull/36407). Without them, `import '@orpc/client'` throws `ReferenceError: TransformStream is not defined`.
-- **A streaming `fetch`.** React Native's built-in `fetch` is an `XMLHttpRequest` polyfill with no `response.body`, which rules out [event iterators](/docs/async-iterator-object) and streamed downloads. [`expo/fetch`](https://docs.expo.dev/versions/latest/sdk/expo/#fetch) is native-backed and streams properly. From **SDK 56** it replaces the global `fetch` on Android and iOS, so there is nothing to wire up.
+- **A streaming `fetch`.** React Native's built-in `fetch` is an `XMLHttpRequest` polyfill with no `response.body`, which rules out [AsyncIteratorObject](/docs/async-iterator-object) and streamed downloads. [`expo/fetch`](https://docs.expo.dev/versions/latest/sdk/expo/#fetch) is native-backed and streams properly. From **SDK 56** it replaces the global `fetch` on Android and iOS, so there is nothing to wire up.
 
 :::tip
 Use **SDK 56 or later** to get everything working out of the box. SDK 53 to 55 work too, but you must pass `expo/fetch` to the link yourself, as shown [below](#expo-sdk-53-to-55).
@@ -50,7 +50,7 @@ const link = new RPCLink({
 ```
 
 :::warning
-On SDK 56 and later you can opt back out of `expo/fetch` by setting `EXPO_PUBLIC_USE_RN_FETCH=1`. Doing so restores React Native's `XMLHttpRequest` polyfill and silently disables streaming, so event iterators and streamed responses stop working.
+On SDK 56 and later you can opt back out of `expo/fetch` by setting `EXPO_PUBLIC_USE_RN_FETCH=1`. Doing so restores React Native's `XMLHttpRequest` polyfill and silently disables streaming, so `AsyncIteratorObject` and streamed responses stop working.
 :::
 
 ## WebSocket Link
@@ -86,7 +86,7 @@ Expo never parses multipart, and the WebSocket link cannot even produce it, whic
 
 | Feature | Fetch | Fetch + polyfill | WebSocket | WebSocket + polyfill |
 | --- | --- | --- | --- | --- |
-| [Event iterators](/docs/async-iterator-object) | Yes | Yes | Yes | Yes |
+| [AsyncIteratorObject](/docs/async-iterator-object) | Yes | Yes | Yes | Yes |
 | [`ReadableStream<Uint8Array>`](/docs/binary-data#readablestreamuint8array) download | Yes | Yes | Yes | Yes |
 | `ReadableStream` upload | Buffered | Buffered | Streamed | Streamed |
 | Root-level [`File` or `Blob`](/docs/binary-data#file-and-blob) upload | Yes | Yes | No | Yes |
@@ -153,7 +153,7 @@ Until Expo ships a multipart parser, keep binary data at the root of a procedure
 
 The table was measured on Android. Every code path behind it is shared JavaScript with no platform variants, so iOS behaves the same. Expo web is unaffected throughout, because it delegates to the browser's own `fetch` and `Response`.
 
-One iOS-specific risk is worth testing if you hold a stream open for a long time: Android sets no timeout on the underlying connection, while iOS goes through `URLSession`, whose default idle timeout is 60 seconds. A long-idle event iterator may drop on iOS and not on Android.
+One iOS-specific risk is worth testing if you hold a stream open for a long time: Android sets no timeout on the underlying connection, while iOS goes through `URLSession`, whose default idle timeout is 60 seconds. A long-idle `AsyncIteratorObject` may drop on iOS and not on Android.
 
 ## Playground
 
@@ -163,4 +163,4 @@ A complete Expo app wired to an oRPC server, with runnable upload and download t
 
 ## Bare React Native
 
-oRPC does not support bare React Native out of the box. Without Expo you get no Web Streams globals, so `import '@orpc/client'` throws before your code runs, and no streaming `fetch`. You can get close by adding [web-streams-polyfill](https://github.com/MattiasBuelens/web-streams-polyfill) and loading it from your entry file before any oRPC import, but event iterators and streamed downloads will still not work over the built-in `fetch`. See [Requirements](/docs/requirements#react-native) for the full list of APIs oRPC needs.
+oRPC does not support bare React Native out of the box. Without Expo you get no Web Streams globals, so `import '@orpc/client'` throws before your code runs, and no streaming `fetch`. You can get close by adding [web-streams-polyfill](https://github.com/MattiasBuelens/web-streams-polyfill) and loading it from your entry file before any oRPC import, but `AsyncIteratorObject` and streamed downloads will still not work over the built-in `fetch`. See [Requirements](/docs/requirements#react-native) for the full list of APIs oRPC needs.
