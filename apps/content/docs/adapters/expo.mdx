@@ -148,7 +148,26 @@ The two links hit that differently:
 - The **fetch link** encodes multipart through `expo/fetch`, which is correct, and decodes it through `Response.formData()`, which is not. So nested uploads work once the polyfill is in place, and nested downloads do not.
 - The **WebSocket link** both encodes and decodes through the global `Response`, which Expo leaves as React Native's. That implementation cannot read a `FormData` body as a blob either, so nested binary fails in both directions.
 
-Until Expo ships a multipart parser, keep binary data at the root of a procedure's input or output rather than nested inside an object, or extend the [RPC JSON Serializer](/docs/rpc/serializer) to carry it as `base64`.
+The cheap way around it is to avoid multipart: keep binary data at the root of a procedure's input or output rather than nested inside an object, or extend the [RPC JSON Serializer](/docs/rpc/serializer) to carry it as `base64`.
+
+For full support, supply a `Response` that does parse `multipart/form-data`. Each link needs it in a different place:
+
+- The **WebSocket link** builds `new Response(...)` from the global, so installing a spec-compliant implementation as `globalThis.Response` fixes both directions.
+- The **fetch link** decodes whatever object `expo/fetch` returned, so a global polyfill never reaches it. Re-wrap the response in the link's `fetch` option instead:
+
+```ts
+// SpecResponse is any Response implementation whose formData() handles multipart
+const link = new RPCLink({
+  origin: process.env.EXPO_PUBLIC_SERVER_URL,
+  url: '/rpc',
+  fetch: async (url, init) => {
+    const res = await fetch(url, init)
+    return new SpecResponse(res.body, { status: res.status, headers: res.headers })
+  },
+})
+```
+
+oRPC does not ship such a polyfill, and neither `expo/fetch` nor React Native provides one, so you would be bringing your own.
 
 ### Platforms
 
