@@ -5,6 +5,7 @@ export default defineMeta({
     'getting-started',
     'contract-first',
     'comparison',
+    'requirements',
     'ecosystem',
     'playgrounds',
     'api-reference',
