@@ -15,13 +15,14 @@ oRPC's core abstractions are written against the JavaScript language and standar
 | Node.js | 18 | 22+ |
 | Deno | 1.14 | 2.0+ |
 | Bun | 1.0 | 1.3.3+ |
+| Cloudflare Workers | Any | — |
 | Chrome | 94 | — |
 | Firefox | 102 | — |
 | Safari | 16.4 | — |
 | Android WebView | 94 | — |
 | iOS WebView (WKWebView) | 16.4 | — |
 
-Browsers update themselves, so there is nothing to recommend beyond the minimum. Edge and Chrome on Android match Chrome, Samsung Internet needs 17.0, and Safari on iOS matches iOS WebView. Cloudflare Workers, Deno Deploy, and Vercel Edge Functions have no floor. [React Native](#react-native) is not a web view and needs a polyfill.
+Browsers update themselves, so there is nothing to recommend beyond the minimum. Edge and Chrome on Android match Chrome, Samsung Internet needs 17.0, and Safari on iOS matches iOS WebView. Cloudflare Workers tracks current V8 and ships every Web API oRPC uses; use the [Fetch Adapter](/docs/adapters/fetch-api) there. Deno Deploy and Vercel Edge Functions have no floor either, for the same reason. [React Native](#react-native) is not a web view and needs a polyfill.
 
 Some optional features need more: compression needs Deno 1.19, Bun 1.3.3, and Firefox 113; [AsyncIteratorObject](/docs/async-iterator-object) needs Firefox 105 and Bun 1.1.23; `Blob` or `File` payloads need Node.js 20; and the [Encryption](/docs/helpers/encryption), [Signing](/docs/helpers/signing), and [Pino](/docs/integrations/pino) integrations need Node.js 19 for a bare `crypto` global.
 
@@ -88,7 +89,3 @@ Two things need attention:
 - **Some globals are missing entirely.** There is no `crypto` global on native at any Expo SDK, and React Native's `Blob` lacks `arrayBuffer()`, `text()`, and `stream()`, which is why binary payloads have to travel as `ArrayBuffer` rather than blobs.
 
 After startup, React Native's built-in `fetch` still does not support streaming, which limits [binary data](/docs/binary-data) and [AsyncIteratorObject](/docs/async-iterator-object) rather than oRPC itself. [Expo](https://expo.dev/) solves both problems: it provides the Web Streams globals and, from SDK 56, installs the streaming `expo/fetch` as the global `fetch`. See the [Expo Adapter](/docs/adapters/expo) for setup.
-
-## Edge Runtimes
-
-Cloudflare Workers, Deno Deploy, and Vercel Edge Functions all track current V8 and ship every Web API oRPC uses, so no version floor applies. Use the [Fetch Adapter](/docs/adapters/fetch-api) on all three.
