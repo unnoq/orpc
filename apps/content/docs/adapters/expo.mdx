@@ -141,22 +141,21 @@ Replacing the global `Blob` also affects code outside oRPC: `URL.createObjectURL
 
 ### Why nested binary fails
 
-Neither `Response` implementation on Expo native parses `multipart/form-data`. Both `expo/fetch` and React Native implement only the `application/x-www-form-urlencoded` branch of `Response.formData()`, so a multipart body never decodes back into fields.
+A nested `File` or `Blob` is packed into a `FormData` and sent as `multipart/form-data`. Reading it back needs `Response.formData()`, and no `Response` on Expo can do that. Both `expo/fetch` and React Native handle only the simpler `application/x-www-form-urlencoded` format.
 
-The two links hit that differently:
+Writing multipart works, but only on the fetch link, where `expo/fetch` does the encoding. The WebSocket link uses `Response` to write it too, so that link fails in both directions.
 
-- The **fetch link** encodes multipart through `expo/fetch`, which is correct, and decodes it through `Response.formData()`, which is not. So nested uploads work once the polyfill is in place, and nested downloads do not.
-- The **WebSocket link** both encodes and decodes through the global `Response`, which Expo leaves as React Native's. That implementation cannot read a `FormData` body as a blob either, so nested binary fails in both directions.
+| Link | Nested upload | Nested download |
+| --- | --- | --- |
+| Fetch | Works with the [Blob polyfill](#blob-polyfill) | Fails |
+| WebSocket | Fails | Fails |
 
-The cheap way around it is to avoid multipart: keep binary data at the root of a procedure's input or output rather than nested inside an object, or extend the [RPC JSON Serializer](/docs/rpc/serializer) to carry it as `base64`.
+**The easy fix is to avoid multipart.** Keep files at the root of a procedure's input or output instead of inside an object, or extend the [RPC JSON Serializer](/docs/rpc/serializer) to send them as `base64`.
 
-For full support, supply a `Response` that does parse `multipart/form-data`. Each link needs it in a different place:
-
-- The **WebSocket link** builds `new Response(...)` from the global, so installing a spec-compliant implementation as `globalThis.Response` fixes both directions.
-- The **fetch link** decodes whatever object `expo/fetch` returned, so a global polyfill never reaches it. Re-wrap the response in the link's `fetch` option instead:
+**The full fix is a `Response` that reads multipart.** The WebSocket link takes one from `globalThis.Response`. The fetch link does not, because it reads whatever object `expo/fetch` returned, so wrap that yourself:
 
 ```ts
-// SpecResponse is any Response implementation whose formData() handles multipart
+// SpecResponse: any Response whose formData() reads multipart
 const link = new RPCLink({
   origin: process.env.EXPO_PUBLIC_SERVER_URL,
   url: '/rpc',
@@ -167,7 +166,7 @@ const link = new RPCLink({
 })
 ```
 
-oRPC does not ship such a polyfill, and neither `expo/fetch` nor React Native provides one, so you would be bringing your own.
+Neither Expo nor oRPC ships one, so you would bring your own.
 
 ## Playground
 
