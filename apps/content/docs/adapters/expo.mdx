@@ -82,7 +82,7 @@ oRPC treats binary data two different ways, and the difference decides what work
 - **Root level**, where a `File` or `Blob` is the entire input or output. oRPC sends it as the raw body, with no multipart involved.
 - **Nested**, where a `File` or `Blob` sits inside an object or array. oRPC packs it into a `FormData`, which travels as `multipart/form-data`.
 
-Expo can *send* multipart but cannot *parse* it, so nested downloads never work. Everything else depends on whether you install the [Blob polyfill](#blob-polyfill).
+Expo never parses multipart, and the WebSocket link cannot even produce it, which is why every nested row below fails somewhere. Everything else depends on whether you install the [Blob polyfill](#blob-polyfill).
 
 | Feature | Fetch | Fetch + polyfill | WebSocket | WebSocket + polyfill |
 | --- | --- | --- | --- | --- |
@@ -97,11 +97,11 @@ Expo can *send* multipart but cannot *parse* it, so nested downloads never work.
 Two things are worth knowing beyond the table:
 
 - **`expo/fetch` buffers uploads.** It accepts a `ReadableStream` request body but drains it into one buffer before the request starts, so a large upload sits in memory. Downloads stream properly. The WebSocket link has no such limit: every chunk is its own frame, sent immediately, so uploads genuinely stream. It is the one place the WebSocket link beats fetch.
-- **The WebSocket link is weaker for binary.** Expo replaces the global `fetch`, but not `Response`. The WebSocket link decodes bodies through `new Response(...)`, so it always runs React Native's implementation rather than Expo's, and cannot read a binary body at all without the polyfill.
+- **The WebSocket link handles nested binary worse.** It runs `FormData` through the global `Response` in both directions, and Expo leaves that as React Native's implementation, which can neither read a `FormData` body as a blob nor parse a multipart one. The fetch link only has the decode half of that problem.
 
 ### Blob Polyfill
 
-React Native's `Blob` has no `arrayBuffer()`, `text()`, `bytes()`, or `stream()`, and `new Blob([arrayBuffer])` throws, so oRPC cannot read bytes back out of a downloaded blob. [`expo-blob`](https://www.npmjs.com/package/expo-blob) is Expo's spec-compliant implementation and fixes every case in the table above except nested downloads.
+React Native's `Blob` has no `arrayBuffer()`, `text()`, `bytes()`, or `stream()`, and `new Blob([arrayBuffer])` throws, so oRPC cannot read bytes back out of a downloaded blob. [`expo-blob`](https://www.npmjs.com/package/expo-blob) is Expo's spec-compliant implementation. It fixes every root-level case in the table above, plus nested uploads on the fetch link.
 
 ```package-install
 npx expo install expo-blob
@@ -138,9 +138,14 @@ Object.assign(globalThis, { Blob, File })
 Replacing the global `Blob` also affects code outside oRPC: `URL.createObjectURL`, `FileReader`, `xhr.responseType = 'blob'`, and `WebSocket` with `binaryType = 'blob'` all still produce React Native blobs, which are no longer `instanceof Blob`.
 :::
 
-### Why nested downloads never work
+### Why nested binary fails
 
-Neither `Response` available on Expo native can parse `multipart/form-data`. Both `expo/fetch` and React Native only implement the `application/x-www-form-urlencoded` branch of `Response.formData()`, so a multipart response never decodes back into fields. Sending multipart is fine, which is why nested uploads work once the polyfill is in place but nested downloads do not.
+Neither `Response` implementation on Expo native parses `multipart/form-data`. Both `expo/fetch` and React Native implement only the `application/x-www-form-urlencoded` branch of `Response.formData()`, so a multipart body never decodes back into fields.
+
+The two links hit that differently:
+
+- The **fetch link** encodes multipart through `expo/fetch`, which is correct, and decodes it through `Response.formData()`, which is not. So nested uploads work once the polyfill is in place, and nested downloads do not.
+- The **WebSocket link** both encodes and decodes through the global `Response`, which Expo leaves as React Native's. That implementation cannot read a `FormData` body as a blob either, so nested binary fails in both directions.
 
 Until Expo ships a multipart parser, keep binary data at the root of a procedure's input or output rather than nested inside an object, or extend the [RPC JSON Serializer](/docs/rpc/serializer) to carry it as `base64`.
 
