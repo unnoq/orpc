@@ -71,7 +71,15 @@ export default antfu({
 }, {
   files: ['packages/*/src/**'],
   rules: {
+    // a scoped block replaces the base rule rather than extending it,
+    // so the first two names repeat what @antfu/eslint-config already bans
     'no-restricted-globals': ['error', {
+      name: 'global',
+      message: 'Use `globalThis` instead.',
+    }, {
+      name: 'self',
+      message: 'Use `globalThis` instead.',
+    }, {
       name: 'AbortSignal',
       message: 'AbortSignal is not a global in every runtime, read it only behind a typeof guard',
     }],
