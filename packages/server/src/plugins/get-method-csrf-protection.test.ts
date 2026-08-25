@@ -235,7 +235,7 @@ describe('getMethodCsrfProtectionHandlerPlugin', () => {
         expect(deletePlanet).not.toHaveBeenCalled()
       })
 
-      it('allows sub-requests of a cross-site fetch batch, where browsers withhold SameSite=Lax cookies', async () => {
+      it('allows sub-requests of a cross-site fetch batch', async () => {
         const { response } = await createBatchRequest(
           createHandler([new BatchHandlerPlugin()]),
           { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' },
