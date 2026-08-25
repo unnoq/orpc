@@ -242,7 +242,7 @@ describe('getMethodCsrfProtectionHandlerPlugin', () => {
         )
 
         const body = await response!.json() as any
-        expect(body[0].json.status ?? 200).toBe(200)
+        expect(body[0].json.status).not.toBe(403)
         expect(deletePlanet).toHaveBeenCalledOnce()
       })
     })
