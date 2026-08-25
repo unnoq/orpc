@@ -82,8 +82,8 @@ export class OpenAPIHandlerCodecCore<T extends Context> {
 
       if (isPlainObject(data)) {
         return {
-          ...params,
           ...data,
+          ...params,
         }
       }
 

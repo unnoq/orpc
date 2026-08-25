@@ -110,6 +110,25 @@ describe('openAPIHandlerCodec', () => {
         expect(resolveBody).not.toHaveBeenCalled()
       })
 
+      it('gives path params precedence over conflicting query params', async () => {
+        const procedure = os
+          .meta(openapi({ method: 'GET', path: '/{id}' }))
+          .handler(vi.fn())
+        const codec = new OpenAPIHandlerCodec(procedure)
+
+        const result = await codec.resolveProcedure(createRequest({
+          method: 'GET',
+          url: '/42?id=99&q=hello',
+        }), options as any)
+
+        expect(result).toBeDefined()
+
+        await expect(result!.decodeInput()).resolves.toEqual({
+          id: '42',
+          q: 'hello',
+        })
+      })
+
       it('returns query directly when there are no path params', async () => {
         const procedure = os
           .meta(openapi({ method: 'GET', path: '/status' }))
@@ -233,6 +252,30 @@ describe('openAPIHandlerCodec', () => {
 
         expect(resolveBody).toHaveBeenCalledOnce()
         expect(resolveBody).toHaveBeenCalledWith('url-search-params')
+      })
+
+      it('gives path params precedence over conflicting body properties', async () => {
+        const procedure = os
+          .meta(openapi({ method: 'POST', path: '/{id}', requestBodyHint: 'url-search-params' }))
+          .handler(vi.fn())
+        const codec = new OpenAPIHandlerCodec(procedure)
+        const resolveBody = vi.fn().mockResolvedValueOnce(new URLSearchParams([
+          ['id', '99'],
+          ['title', 'hello'],
+        ]))
+
+        const result = await codec.resolveProcedure(createRequest({
+          method: 'POST',
+          url: '/24',
+          resolveBody,
+        }), options as any)
+
+        expect(result).toBeDefined()
+
+        await expect(result!.decodeInput()).resolves.toEqual({
+          id: '24',
+          title: 'hello',
+        })
       })
 
       it('returns a primitive body as-is when it cannot be merged with path params', async () => {
