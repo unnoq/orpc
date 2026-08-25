@@ -174,7 +174,7 @@ describe('getMethodCsrfProtectionHandlerPlugin', () => {
     })
 
     it.each([
-      ['a cross-site fetch, which carries no SameSite=Lax cookie', { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' }],
+      ['a cross-site fetch, where browsers withhold SameSite=Lax cookies', { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' }],
       ['a same-site fetch from a sibling subdomain', { 'sec-fetch-site': 'same-site', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' }],
       ['a same-origin navigation', { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'document' }],
       ['a non-browser client', {}],
@@ -235,7 +235,7 @@ describe('getMethodCsrfProtectionHandlerPlugin', () => {
         expect(deletePlanet).not.toHaveBeenCalled()
       })
 
-      it('allows sub-requests of a cross-site fetch batch, which carries no SameSite=Lax cookie', async () => {
+      it('allows sub-requests of a cross-site fetch batch, where browsers withhold SameSite=Lax cookies', async () => {
         const { response } = await createBatchRequest(
           createHandler([new BatchHandlerPlugin()]),
           { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' },
