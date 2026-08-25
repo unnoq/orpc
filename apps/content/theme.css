@@ -309,15 +309,22 @@ main#blume-content {
    the aside lets the card's `order-1` + `mt-auto` pin it to the bottom of the
    rail without owning RootLayout. The card's sticky wrapper owns the bottom
    spacing instead of the aside's pb-10, so the card rests at the same offset
-   whether the rail scrolls (stuck at bottom-0) or not (mt-auto). */
-aside[data-blume-toc] {
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 0;
-}
+   whether the rail scrolls (stuck at bottom-0) or not (mt-auto).
 
-aside[data-blume-toc] > * {
-  flex: none;
+   Scoped to xl, the tier Blume reveals the rail at: `aside[data-blume-toc]`
+   outranks the `hidden` utility that hides it below xl, so an unscoped
+   `display` here would leak the rail onto every narrower viewport as an
+   extra grid row under the nav column. */
+@media (min-width: 80rem) {
+  aside[data-blume-toc] {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+  }
+
+  aside[data-blume-toc] > * {
+    flex: none;
+  }
 }
 
 /* Blume tints `:::tip` blocks with the accent color, which here is the brand
