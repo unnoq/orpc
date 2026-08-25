@@ -69,8 +69,14 @@ export default defineConfig({
   },
   analytics: {
     posthog: {
+      /** Reverse proxy on our own domain, so ad blockers don't drop events. */
+      host: 'https://poho.orpc.dev',
       key: 'phc_YHeqjC9tR604AHH45kQi63fT4aBvpsS7zAaCxntBzZm',
     },
+    scripts: [
+      /** A reverse proxy requires `ui_host`, and Blume has no option for it. */
+      { content: 'posthog.set_config({ ui_host: "https://us.posthog.com" })' },
+    ],
   },
 
   seo: {
