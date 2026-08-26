@@ -175,6 +175,15 @@ export default [
     "tierLevel": 2
   },
   {
+    "name": "Orestis Ioannou",
+    "login": "guest-ac41de3b",
+    "avatar": "https://images.opencollective.com/guest-ac41de3b/avatar/460.png",
+    "link": "https://opencollective.com/guest-ac41de3b?ref=middleapi&utm_source=middleapi&utm_medium=sponsor",
+    "rel": "sponsored",
+    "tierTitle": "Sponsor",
+    "tierLevel": 2
+  },
+  {
     "name": "David Walsh",
     "login": "rhinodavid",
     "avatar": "https://avatars.githubusercontent.com/u/5778036?u=b5521f07d2f88c3db2a0dae62b5f2f8357214af0&v=4",
