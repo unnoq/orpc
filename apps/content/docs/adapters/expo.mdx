@@ -9,7 +9,7 @@ sidebar:
 
 Two of those matter most:
 
-- **Web Streams.** oRPC extends `TransformStream` at module scope, so the global must exist before oRPC is imported. Expo installs `ReadableStream`, `WritableStream`, and `TransformStream` as native globals from [SDK 53](https://github.com/expo/expo/pull/36407). Without them, `import '@orpc/client'` throws `ReferenceError: TransformStream is not defined`.
+- **Web Streams.** oRPC needs `ReadableStream` for every procedure call and `TransformStream` for [AsyncIteratorObject](/docs/async-iterator-object); without them every call throws `ReferenceError: ReadableStream is not defined`. Expo installs `ReadableStream`, `WritableStream`, and `TransformStream` as native globals from [SDK 53](https://github.com/expo/expo/pull/36407).
 - **A streaming `fetch`.** React Native's built-in `fetch` is an `XMLHttpRequest` polyfill with no `response.body`, which rules out [AsyncIteratorObject](/docs/async-iterator-object) and streamed downloads. [`expo/fetch`](https://docs.expo.dev/versions/latest/sdk/expo/#fetch) is native-backed and streams properly. From **SDK 56** it replaces the global `fetch` on Android and iOS, so there is nothing to wire up.
 
 :::tip
@@ -108,7 +108,7 @@ React Native's `Blob` has no `arrayBuffer()`, `text()`, `bytes()`, or `stream()`
 npx expo install expo-blob
 ```
 
-It exports only `Blob`, so declare `File` yourself and install both as globals from your entry file, before any oRPC import:
+It exports only `Blob`, so declare `File` yourself and install both as globals from your entry file:
 
 ```ts title="polyfill.ts"
 import { Blob, type BlobPart } from 'expo-blob'
@@ -156,4 +156,4 @@ Writing multipart works, but only on the fetch link, where `expo/fetch` does the
 
 ## Bare React Native
 
-oRPC does not support bare React Native out of the box. Without Expo you get no Web Streams globals, so `import '@orpc/client'` throws before your code runs, and no streaming `fetch`. You can get close by adding [web-streams-polyfill](https://github.com/MattiasBuelens/web-streams-polyfill) and loading it from your entry file before any oRPC import, but `AsyncIteratorObject` and streamed downloads will still not work over the built-in `fetch`. React Native 0.78 is also a hard floor: oRPC uses a class static initialization block, Metro does not transpile it, and older Hermes cannot parse it. See [Requirements](/docs/requirements#react-native) for the full list of APIs oRPC needs.
+oRPC does not support bare React Native out of the box. Without Expo you get neither the Web Streams globals oRPC needs nor a streaming `fetch`. You can get close by adding [web-streams-polyfill](https://github.com/MattiasBuelens/web-streams-polyfill) and loading it from your entry file, but `AsyncIteratorObject` and streamed downloads will still not work over the built-in `fetch`. React Native 0.78 is also a hard floor: oRPC uses a class static initialization block, Metro does not transpile it, and older Hermes cannot parse it. See [Requirements](/docs/requirements#react-native) for the full list of APIs oRPC needs.
