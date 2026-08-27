@@ -211,6 +211,7 @@ async function executeProcedureInternal(procedure: AnyProcedure, options: Proced
     input: unknown,
   ): Promise<{ output: unknown, context: Record<any, any> }> => {
     let currentInput = input
+    let middlewareInput = input
 
     const startInputIndex = midIndex === 0
       ? 0
@@ -234,6 +235,10 @@ async function executeProcedureInternal(procedure: AnyProcedure, options: Proced
 
         currentInput = i !== 0 ? mergeTwoLevels(currentInput, validated) : validated
       }
+
+      middlewareInput = endInputIndex > 0 && endInputIndex < inputSchemas.length
+        ? mergeTwoLevels(options.input, currentInput)
+        : currentInput
     }
 
     let currentOutput: unknown
@@ -262,7 +267,7 @@ async function executeProcedureInternal(procedure: AnyProcedure, options: Proced
             },
             lastEventId: options.lastEventId,
           },
-          currentInput,
+          middlewareInput,
           middlewareDone,
         )
       })
