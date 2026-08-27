@@ -1,0 +1,190 @@
+---
+title: "Nuxt Integration"
+description: "Use oRPC inside Nuxt with a dedicated module, server route helpers, and typesafe useAsyncData utilities."
+sidebar:
+  label: "Nuxt"
+---
+
+[Nuxt](https://nuxt.com/) is a popular Vue.js framework for building full-stack applications. `@orpc/nuxt` provides a Nuxt module, a server route helper for [Nitro/H3](https://nuxt.com/docs/guide/directory-structure/server), and utilities for typesafe data fetching with [`useAsyncData`](https://nuxt.com/docs/api/composables/use-async-data).
+
+:::info
+If you prefer wiring oRPC into Nuxt manually without an extra package, see the [Nuxt Adapter](/docs/adapters/nuxt) guide instead.
+:::
+
+## Installation
+
+```package-install
+npm install @orpc/nuxt@beta
+```
+
+## Setup
+
+Register the module in your Nuxt config. It auto-imports `defineORPCEventHandler` in server code and `createNuxtUtils` in app code, so the imports shown in the examples below become optional.
+
+```ts title="nuxt.config.ts"
+export default defineNuxtConfig({
+  modules: ['@orpc/nuxt'],
+})
+```
+
+## Server Routes
+
+Use `defineORPCEventHandler` to serve an oRPC handler from a [server route](https://nuxt.com/docs/guide/directory-structure/server#server-routes). Requests that do not match any procedure resolve with a `404 Not Found` response.
+
+<CodeGroup>
+
+```ts title="server/routes/rpc/[...].ts"
+import { onError } from '@orpc/server'
+import { RPCHandler } from '@orpc/server/fetch'
+import { defineORPCEventHandler } from '@orpc/nuxt/h3'
+
+const handler = new RPCHandler(router, {
+  interceptors: [
+    onError((error) => {
+      console.error(error)
+    }),
+  ],
+})
+
+export default defineORPCEventHandler(handler, {
+  prefix: '/rpc',
+  context: event => ({}), // Provide initial context if needed, can be async
+})
+```
+
+```ts title="server/routes/rpc/index.ts"
+export { default } from './[...]'
+```
+
+</CodeGroup>
+
+:::info
+The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/handler), [OpenAPIHandler](/docs/openapi/handler), or another custom handler.
+:::
+
+## Client Utils
+
+Before you begin, set up either a [server-side client](/docs/client/server-side) or a [client-side client](/docs/client/client-side), typically inside a [Nuxt Plugin](https://nuxt.com/docs/guide/directory-structure/plugins) as shown in the [Nuxt Adapter](/docs/adapters/nuxt#client) guide. Then create the utils from it with `createNuxtUtils`:
+
+```ts title="app/plugins/orpc.ts"
+import { createNuxtUtils } from '@orpc/nuxt/client'
+
+export default defineNuxtPlugin(() => {
+  const client: RouterClient<typeof router> = createORPCClient(link)
+
+  return {
+    provide: {
+      orpc: createNuxtUtils(client),
+    },
+  }
+})
+```
+
+<Expandable title="Avoiding Key Conflicts?">
+
+You can avoid key conflicts by passing a unique prefix when creating your utils:
+
+```ts
+const userORPC = createNuxtUtils(userClient, {
+  prefix: 'user'
+})
+
+const postORPC = createNuxtUtils(postClient, {
+  prefix: 'post'
+})
+```
+
+</Expandable>
+
+## Data Fetching
+
+Use `.asyncDataArgs` to generate the key and handler arguments for `useAsyncData` or `useLazyAsyncData`, and spread them into the composable:
+
+```vue
+<script setup lang="ts">
+const { $orpc } = useNuxtApp()
+
+const { data, error, status } = await useAsyncData(
+  ...$orpc.planet.find.asyncDataArgs({ input: { id: 123 } }),
+)
+</script>
+```
+
+The input can be a plain value, a `ref`, or a getter. The generated key is reactive, so `useAsyncData` automatically refetches when the input changes:
+
+```vue
+<script setup lang="ts">
+const route = useRoute()
+const { $orpc } = useNuxtApp()
+
+const { data: planet } = await useAsyncData(
+  ...$orpc.planet.find.asyncDataArgs({
+    input: () => ({ id: Number(route.params.id) }),
+    context: { cache: true }, // Provide client context if needed
+  }),
+)
+</script>
+```
+
+You can still pass regular `useAsyncData` options after the spread arguments:
+
+```ts
+const { data } = await useAsyncData(
+  ...$orpc.planet.list.asyncDataArgs({ input: { cursor: 0 } }),
+  { lazy: true, watch: false },
+)
+```
+
+## Operation Key
+
+Nuxt requires `useAsyncData` keys to be plain strings, so `@orpc/nuxt` serializes a structured key with `JSON.stringify`. Use `.key` to generate the exact key of an operation, for example to access its cached payload. Keys are stable: the same input always produces the same key, regardless of property order.
+
+```ts
+const key = $orpc.planet.find.key({ input: { id: 123 } })
+
+const { data } = useNuxtData(key)
+```
+
+## Refreshing Data
+
+Use `.key` with [`refreshNuxtData`](https://nuxt.com/docs/api/utils/refresh-nuxt-data) to refetch a specific operation, and `.matcher` with [`clearNuxtData`](https://nuxt.com/docs/api/utils/clear-nuxt-data) to invalidate multiple operations at once:
+
+```ts
+await refreshNuxtData($orpc.planet.find.key({ input: { id: 123 } })) // refresh specific planet data
+
+clearNuxtData($orpc.matcher()) // clear all orpc data
+clearNuxtData($orpc.planet.matcher()) // clear all planet data
+clearNuxtData($orpc.planet.find.matcher({ input: { id: 123 }, strategy: 'exact' })) // clear specific planet data
+```
+
+## Calling Clients
+
+Use `.call` to call a procedure client directly. It's an alias for corresponding procedure client, useful for mutations and event handlers:
+
+```ts
+const planet = await $orpc.planet.find.call({ id: 123 })
+```
+
+## Operation Context
+
+When clients are invoked through the Nuxt integration, an **operation context** is automatically added to the [client context](/docs/rpc/link#client-context). This context can be used to configure the request behavior, like setting the HTTP method.
+
+```ts
+import {
+  NUXT_OPERATION_CONTEXT_SYMBOL,
+  NuxtOperationContext,
+} from '@orpc/nuxt/client'
+
+interface ClientContext extends NuxtOperationContext {
+}
+
+const link = new RPCLink<ClientContext>({
+  method: ({ context }, path) => {
+    if (context[NUXT_OPERATION_CONTEXT_SYMBOL]?.type === 'asyncData') {
+      return 'GET'
+    }
+
+    return 'POST'
+  },
+})
+```

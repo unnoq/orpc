@@ -1,0 +1,81 @@
+{
+  "name": "@orpc/nuxt",
+  "type": "module",
+  "version": "2.0.0-beta.31",
+  "description": "Nuxt integration for oRPC: server route helpers and typesafe useAsyncData utilities",
+  "license": "MIT",
+  "funding": [
+    "https://github.com/sponsors/dinwwwh",
+    "https://opencollective.com/middleapi"
+  ],
+  "homepage": "https://orpc.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/middleapi/orpc.git",
+    "directory": "packages/nuxt"
+  },
+  "keywords": [
+    "orpc",
+    "nuxt",
+    "nuxt-module",
+    "nitro",
+    "h3",
+    "vue",
+    "ssr",
+    "data-fetching",
+    "rpc",
+    "typescript",
+    "typesafe"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
+        "types": "./dist/index.d.mts",
+        "import": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "./h3": {
+        "types": "./dist/h3/index.d.mts",
+        "import": "./dist/h3/index.mjs",
+        "default": "./dist/h3/index.mjs"
+      },
+      "./client": {
+        "types": "./dist/client/index.d.mts",
+        "import": "./dist/client/index.mjs",
+        "default": "./dist/client/index.mjs"
+      }
+    }
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/index.ts",
+    "./h3": "./src/h3/index.ts",
+    "./client": "./src/client/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "type:check": "tsc -b"
+  },
+  "peerDependencies": {
+    "h3": ">=1.8.0",
+    "vue": ">=3.5.17"
+  },
+  "dependencies": {
+    "@nuxt/kit": "^4.5.2",
+    "@orpc/client": "workspace:*",
+    "@orpc/server": "workspace:*",
+    "@orpc/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/supertest": "^7.2.0",
+    "h3": "^1.15.11",
+    "supertest": "^7.2.2",
+    "vue": "^3.5.41",
+    "zod": "^4.4.3"
+  }
+}
