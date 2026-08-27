@@ -346,10 +346,10 @@ export default [
     "tierLevel": 0
   },
   {
-    "name": "IPV4Address",
-    "login": "IPV4Addressv4",
-    "avatar": "https://avatars.githubusercontent.com/u/100147665?u=176f2ad09630c8ce556fec161f9fe622ed08f60f&v=4",
-    "link": "https://github.com/IPV4Addressv4?ref=middleapi&utm_source=middleapi&utm_medium=sponsor",
+    "name": "IPv4Addr",
+    "login": "IPv4Addr",
+    "avatar": "https://avatars.githubusercontent.com/u/100147665?u=59996b72f69bb53063cb7e9ff8b8f898616cd94d&v=4",
+    "link": "https://github.com/IPv4Addr?ref=middleapi&utm_source=middleapi&utm_medium=sponsor",
     "rel": "sponsored",
     "tierTitle": "Past Sponsor",
     "tierLevel": 0
