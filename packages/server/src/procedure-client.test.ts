@@ -628,7 +628,7 @@ describe('createProcedureClient', () => {
     })
 
     it('gives middleware between schemas the not-yet-validated rest of the input, validated fields win', async () => {
-      const beforeMid = vi.fn(({ next }) => next())
+      const beforeMid = vi.fn(({ next }, _input: unknown) => next())
       const betweenMid = vi.fn(({ next }) => next())
       const afterMid = vi.fn(({ next }) => next())
 
