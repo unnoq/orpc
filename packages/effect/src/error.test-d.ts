@@ -59,7 +59,7 @@ describe('catchORPCError', () => {
     expectTypeOf(recovered).toEqualTypeOf<Effect.Effect<'output' | 'recovered', Error, Service1>>()
   })
 
-  it('treats every non-ORPCError failure type as possibly hiding an ORPCError', () => {
+  it('treats failure types that can hold an ORPCError as possibly hiding one', () => {
     const withTypeError = {} as Effect.Effect<'output', ORPCError<'NOT_FOUND', { id: string }> | TypeError>
 
     void withTypeError.pipe(catchORPCError((error) => {
@@ -67,11 +67,21 @@ describe('catchORPCError', () => {
       expectTypeOf(error.data).toEqualTypeOf<unknown>()
       return Effect.succeed('recovered' as const)
     }))
+  })
 
-    const withString = {} as Effect.Effect<'output', 'boom'>
+  it('does not treat failure types that cannot hold an ORPCError as hidden', () => {
+    const withString = {} as Effect.Effect<'output', ORPCError<'NOT_FOUND', { id: string }> | 'boom'>
 
     void withString.pipe(catchORPCError((error) => {
-      expectTypeOf(error).toEqualTypeOf<ORPCError<ORPCErrorCode, unknown>>()
+      expectTypeOf(error).toEqualTypeOf<ORPCError<'NOT_FOUND', { id: string }>>()
+      expectTypeOf(error.data).toEqualTypeOf<{ id: string }>()
+      return Effect.succeed('recovered' as const)
+    }))
+
+    const onlyString = {} as Effect.Effect<'output', 'boom'>
+
+    void onlyString.pipe(catchORPCError((error) => {
+      expectTypeOf(error).toEqualTypeOf<never>()
       return Effect.succeed('recovered' as const)
     }))
   })
@@ -157,6 +167,19 @@ describe('catchORPCErrorCode', () => {
       return Effect.succeed('recovered' as const)
     }))
   })
+
+  it('keeps data typed and codes restricted when the channel cannot hold hidden ORPCErrors', () => {
+    const withString = {} as Effect.Effect<'output', ORPCError<'NOT_FOUND', { id: string }> | 'boom'>
+
+    void withString.pipe(catchORPCErrorCode('NOT_FOUND', (error) => {
+      expectTypeOf(error).toEqualTypeOf<ORPCError<'NOT_FOUND', { id: string }>>()
+      expectTypeOf(error.data).toEqualTypeOf<{ id: string }>()
+      return Effect.succeed('recovered' as const)
+    }))
+
+    // @ts-expect-error - BAD_GATEWAY is not present and the channel cannot hold hidden ORPCErrors
+    void withString.pipe(catchORPCErrorCode('BAD_GATEWAY', () => Effect.succeed('recovered')))
+  })
 })
 
 describe('catchORPCErrorCodes', () => {
@@ -207,5 +230,20 @@ describe('catchORPCErrorCodes', () => {
     }))
 
     expectTypeOf(recovered).toEqualTypeOf<Effect.Effect<'output' | 'nf' | 'cf', Error, Service1>>()
+  })
+
+  it('keeps data typed and keys restricted when the channel cannot hold hidden ORPCErrors', () => {
+    const withString = {} as Effect.Effect<'output', ORPCError<'NOT_FOUND', { id: string }> | 'boom'>
+
+    void withString.pipe(catchORPCErrorCodes({
+      NOT_FOUND: (error) => {
+        expectTypeOf(error).toEqualTypeOf<ORPCError<'NOT_FOUND', { id: string }>>()
+        expectTypeOf(error.data).toEqualTypeOf<{ id: string }>()
+        return Effect.succeed('recovered' as const)
+      },
+    }))
+
+    // @ts-expect-error - BAD_GATEWAY is not present and the channel cannot hold hidden ORPCErrors
+    void withString.pipe(catchORPCErrorCodes({ BAD_GATEWAY: () => Effect.succeed('recovered') }))
   })
 })
