@@ -27,12 +27,10 @@ export interface RequestCompressionLinkPluginOptions<T extends ClientContext> {
 
   /**
    * Determines whether a request with the given Content-Type should be compressed.
-   * Only consulted for binary transfers (streams, files, and file form-data parts);
-   * other body types are serialized with fixed, known-compressible content types.
+   * Only consulted for binary transfers (streams, files, and file form-data parts).
    * Also receives the transport interceptor options for per-request decisions.
-   * Overrides the built-in check, which covers common text-based formats.
    *
-   * @default isCompressibleContentType
+   * @default isCompressibleContentType (covers common text-based formats)
    */
   isCompressibleContentType?: (contentType: string | null | undefined, options: StandardLinkTransportInterceptorOptions<T>) => boolean
 }
