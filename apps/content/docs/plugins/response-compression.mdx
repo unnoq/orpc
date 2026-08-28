@@ -33,17 +33,6 @@ const handler = new RPCHandler(router, {
        * @default 1024 (1KB)
        */
       threshold: 1024,
-
-      /**
-       * Determines whether a response with the given Content-Type should be compressed.
-       * Only consulted for binary transfers (streams, files, and file form-data parts);
-       * other body types are serialized with fixed, known-compressible content types.
-       * Also receives the routing interceptor options for per-request decisions.
-       * Overrides the built-in check, which covers common text-based formats.
-       */
-      isCompressibleContentType: (contentType, { request }) => {
-        return /^application\/x-custom-format(?:[;\s]|$)/i.test(contentType ?? '') && request.headers['x-no-compression'] === undefined
-      },
     }),
   ],
 })
@@ -56,6 +45,31 @@ The `handler` can be any supported oRPC handler, such as [RPCHandler](/docs/rpc/
 :::tip
 A [batch](/docs/plugins/batch) response might be left uncompressed here, depending on the shape it takes. On Node.js, add the [Batch Response Compression Plugin](/docs/plugins/batch-response-compression) to fully cover them, when you know your batch responses are all compressible.
 :::
+
+### Customize Compressible Content Types
+
+For binary transfers (streams, files, and file form-data parts), the plugin only compresses when the Content-Type is known to benefit from it. Other body types are serialized with fixed, known-compressible content types, so no check is needed:
+
+```ts handler
+import { ResponseCompressionHandlerPlugin } from '@orpc/server/plugins'
+
+const handler = new RPCHandler(router, {
+  plugins: [
+    new ResponseCompressionHandlerPlugin({
+      /**
+       * Determines whether a response with the given Content-Type should be compressed.
+       * Only consulted for binary transfers (streams, files, and file form-data parts).
+       * Also receives the routing interceptor options for per-request decisions.
+       *
+       * @default isCompressibleContentType (covers common text-based formats)
+       */
+      isCompressibleContentType: (contentType, { request }) => {
+        return /^application\/x-custom-format(?:[;\s]|$)/i.test(contentType ?? '') && request.headers['x-no-compression'] === undefined
+      },
+    }),
+  ],
+})
+```
 
 ## Client
 

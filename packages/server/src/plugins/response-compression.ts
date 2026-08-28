@@ -33,6 +33,8 @@ export interface ResponseCompressionHandlerPluginOptions<T extends Context> {
    * other body types are serialized with fixed, known-compressible content types.
    * Also receives the routing interceptor options for per-request decisions.
    * Overrides the built-in check, which covers common text-based formats.
+   *
+   * @default isCompressibleContentType
    */
   isCompressibleContentType?: (contentType: string | null | undefined, options: StandardHandlerRoutingInterceptorOptions<T>) => boolean
 }

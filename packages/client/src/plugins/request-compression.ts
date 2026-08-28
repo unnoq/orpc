@@ -31,6 +31,8 @@ export interface RequestCompressionLinkPluginOptions<T extends ClientContext> {
    * other body types are serialized with fixed, known-compressible content types.
    * Also receives the transport interceptor options for per-request decisions.
    * Overrides the built-in check, which covers common text-based formats.
+   *
+   * @default isCompressibleContentType
    */
   isCompressibleContentType?: (contentType: string | null | undefined, options: StandardLinkTransportInterceptorOptions<T>) => boolean
 }
