@@ -122,4 +122,18 @@ describe('createEffectClient', () => {
     expect((effectClient as any)[Symbol('test')]).toEqual(undefined)
     expect((effectClient.nested as any)[Symbol('test')]).toEqual(undefined)
   })
+
+  it('not recursive on unwrap keys', async () => {
+    const anyClient = effectClient as any
+
+    expect(anyClient.then).toBeUndefined()
+    expect(await anyClient).toBe(effectClient)
+    expect(anyClient.bind).toBe(anyClient.bind)
+    expect(anyClient.valueOf).toBe(anyClient.valueOf)
+    expect(anyClient.toString).toBe(anyClient.toString)
+    expect(anyClient.toJSON).toBeUndefined()
+
+    expect(anyClient.nested.then).toBeUndefined()
+    expect(await anyClient.nested).toBe(anyClient.nested)
+  })
 })
