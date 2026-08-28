@@ -209,7 +209,7 @@ All utilities support data-first `catchORPCError(program, handler)` and data-las
 
 ## Client Calls
 
-`createEffectClient` wraps a [client](/docs/client/client-side) so every procedure returns a lazy Effect instead of a promise, ready to `yield*` inside Effect generators. The output becomes the success value, and errors land in the error channel with their original types preserved, ready for utilities like `catchORPCErrorCodes`:
+`createEffectClient` wraps any oRPC client, whether [server-side](/docs/client/server-side) or [client-side](/docs/client/client-side), so every procedure returns a lazy Effect instead of a promise, ready to `yield*` inside Effect generators. The output becomes the success value, and errors land in the error channel with their original types preserved, ready for utilities like `catchORPCErrorCodes`:
 
 ```ts
 import { catchORPCErrorCodes, createEffectClient } from '@orpc/experimental-effect'
