@@ -1,5 +1,4 @@
-import type { AnyNestedClient, Client, ClientContext, ClientOptions, ClientRest } from '@orpc/client'
-import type { PromiseWithError } from '@orpc/shared'
+import type { AnyNestedClient, Client, ClientContext, ClientRest } from '@orpc/client'
 import { RECURSIVE_CLIENT_UNWRAP_KEYS, resolveClientRest } from '@orpc/client'
 import { anyAbortSignal, isTypescriptObject } from '@orpc/shared'
 import { Effect } from 'effect'
@@ -8,11 +7,10 @@ function callAsEffect<TClientContext extends ClientContext, TInput, TOutput, TEr
   client: Client<TClientContext, TInput, TOutput, TError>,
   ...rest: ClientRest<TClientContext, TInput>
 ): Effect.Effect<TOutput, TError> {
-  const call = client as (input: TInput, options: ClientOptions<ClientContext>) => PromiseWithError<TOutput, TError>
-  const [input, options] = resolveClientRest<TClientContext, TInput>(rest)
+  const [input, options] = resolveClientRest(rest)
 
   return Effect.tryPromise({
-    try: signal => call(input, {
+    try: signal => client(input, {
       ...options,
       signal: anyAbortSignal([options.signal, signal]),
     }),
@@ -38,7 +36,7 @@ export type EffectClient<T extends AnyNestedClient>
 export function createEffectClient<T extends AnyNestedClient>(client: T): EffectClient<T> {
   const cache = new Map<string, EffectClient<AnyNestedClient>>()
 
-  const proxy = new Proxy((...rest: any[]) => callAsEffect(client as Client<ClientContext, unknown, unknown, unknown>, ...rest as [unknown]), {
+  const proxy = new Proxy((...rest: any[]) => callAsEffect(client as Client<ClientContext, unknown, unknown, unknown>, ...rest), {
     get(target, prop) {
       if (typeof prop !== 'string' || RECURSIVE_CLIENT_UNWRAP_KEYS.has(prop)) {
         return Reflect.get(target, prop)

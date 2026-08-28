@@ -201,8 +201,6 @@ const handled = program.pipe(
 )
 ```
 
-Failure types like `Error` can also hold `ORPCError` instances at runtime. When the error channel contains such types, these utilities accept any code and handlers also receive those hidden errors, so their `data` widens to `unknown`. On the client, combine with [isInferableError](/docs/client/error-handling#using-safe-and-isinferableerror) when you need fully typed data.
-
 :::info
 All utilities support data-first `catchORPCError(program, handler)` and data-last `program.pipe(catchORPCError(handler))` styles.
 :::
