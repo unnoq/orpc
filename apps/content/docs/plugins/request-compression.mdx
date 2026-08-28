@@ -30,7 +30,18 @@ const link = new RPCLink({
        *
        * @default 1024 (1KB)
        */
-      threshold: 1024
+      threshold: 1024,
+
+      /**
+       * Determines whether a request with the given Content-Type should be compressed.
+       * Only consulted for binary transfers (streams, files, and file form-data parts);
+       * other body types are serialized with fixed, known-compressible content types.
+       * Also receives the transport interceptor options for per-request decisions.
+       * Overrides the built-in check, which covers common text-based formats.
+       */
+      isCompressibleContentType: (contentType, { path }) => {
+        return /^application\/x-custom-format(?:[;\s]|$)/i.test(contentType ?? '') && path[0] !== 'uploads'
+      },
     }),
   ],
 })
