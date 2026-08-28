@@ -63,6 +63,7 @@
     "effect": ">=4.0.0-beta.90"
   },
   "dependencies": {
+    "@orpc/client": "workspace:*",
     "@orpc/contract": "workspace:*",
     "@orpc/json-schema": "workspace:*",
     "@orpc/server": "workspace:*",
