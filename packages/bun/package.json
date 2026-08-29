@@ -41,7 +41,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
+    "prepack": "unbuild",
     "type:check": "tsc -b",
     "test": "bun --env-file=../../.env test",
     "test:coverage": "bun --env-file=../../.env test --coverage"
