@@ -304,7 +304,7 @@ export default [
     "name": "Kelly Peilin Chan",
     "login": "mr-kelly",
     "avatar": "https://avatars.githubusercontent.com/u/520852?u=6b0f7105f694e7b5cacf410a3f04c7044b469dc8&v=4",
-    "link": "https://bika.ai/?ref=middleapi&utm_source=middleapi&utm_medium=sponsor",
+    "link": "https://kellychan.im/?ref=middleapi&utm_source=middleapi&utm_medium=sponsor",
     "rel": "sponsored",
     "tierTitle": "Backer",
     "tierLevel": 1
