@@ -1,4 +1,4 @@
-it('exports EffectSchemaToJsonSchemaConverter, handlerGen, toStandardSchema, catchORPCError, catchORPCErrorCode, catchORPCErrorCodes', async () => {
+it('exports', async () => {
   await expect(import('./index')).resolves.toMatchObject({
     handlerGen: expect.any(Function),
     EffectSchemaToJsonSchemaConverter: expect.any(Function),
@@ -6,5 +6,6 @@ it('exports EffectSchemaToJsonSchemaConverter, handlerGen, toStandardSchema, cat
     catchORPCError: expect.any(Function),
     catchORPCErrorCode: expect.any(Function),
     catchORPCErrorCodes: expect.any(Function),
+    createEffectClient: expect.any(Function),
   })
 })
