@@ -55,6 +55,6 @@
   "devDependencies": {
     "@ark/schema": "^0.56.0",
     "arktype": "^2.2.1",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   }
 }

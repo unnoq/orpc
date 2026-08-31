@@ -46,13 +46,13 @@
     "type:check": "tsc -b"
   },
   "peerDependencies": {
-    "zod": ">=4.3.5"
+    "zod": ">=4.5.0"
   },
   "dependencies": {
     "@orpc/json-schema": "workspace:*",
     "json-schema-typed": "^8.0.2"
   },
   "devDependencies": {
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   }
 }
