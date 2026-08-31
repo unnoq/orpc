@@ -7,7 +7,7 @@ A playground for exploring [oRPC](https://orpc.dev) with [NestJS](https://nestjs
 Start the development server:
 
 ```bash
-npm run preview
+npm run dev
 ```
 
 - Visit [http://localhost:3000](http://localhost:3000) to explore the OpenAPI client.
