@@ -53,6 +53,6 @@
   "devDependencies": {
     "@orpc/openapi": "workspace:*",
     "msw": "^2.15.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   }
 }
