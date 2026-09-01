@@ -132,6 +132,8 @@ describe('createEffectClient', () => {
     expect(anyClient.valueOf).toBe(anyClient.valueOf)
     expect(anyClient.toString).toBe(anyClient.toString)
     expect(anyClient.toJSON).toBeUndefined()
+    expect(anyClient.call).toBe(Function.prototype.call)
+    expect(anyClient.apply).toBe(Function.prototype.apply)
 
     expect(anyClient.nested.then).toBeUndefined()
     expect(await anyClient.nested).toBe(anyClient.nested)

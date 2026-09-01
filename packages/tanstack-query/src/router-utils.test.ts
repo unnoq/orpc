@@ -266,7 +266,9 @@ describe('createRouterUtils', () => {
     const utils = createRouterUtils(client) as any
     expect(utils.undefined).toBe(undefined)
     const call = utils.route.call
+    expect(call).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.call)
     expect(call.bind).toBe(call.bind)
     expect(call[Symbol('undefined')]).toBeUndefined()
+    expect(utils.route.apply).toBeUndefined()
   })
 })

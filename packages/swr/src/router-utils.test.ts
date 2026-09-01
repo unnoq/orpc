@@ -112,4 +112,12 @@ describe('createRouterUtils', () => {
       delete client.then
     }
   })
+
+  it('resolves call/apply from the utils instead of recursing', () => {
+    const utils = createRouterUtils(client) as any
+
+    expect(utils.call).toBe(vi.mocked(ProcedureUtils).mock.results[0]?.value.call)
+    expect(utils.apply).toBeUndefined()
+    expect(ProcedureUtils).toHaveBeenCalledTimes(1) // only the root utils
+  })
 })
