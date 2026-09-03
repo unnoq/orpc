@@ -87,7 +87,14 @@ export class OpenAPIHandlerCodecCore<T extends Context> {
         }
       }
 
-      // data can be Blob, AsyncIteratorObject, ReadableStream, ...
+      if (isBinaryRequestBody(data)) {
+        return {
+          body: data,
+          ...params,
+        }
+      }
+
+      // primitives and arrays stay as-is (cannot field-merge)
       return data
     }
 
@@ -273,6 +280,11 @@ export class OpenAPIHandlerCodec<T extends Context> extends OpenAPIHandlerCodecC
       decodeInput: () => this.decodeInput(matched, request),
     }
   }
+}
+
+function isBinaryRequestBody(data: unknown): boolean {
+  return (typeof Blob === 'function' && data instanceof Blob)
+    || (typeof ReadableStream === 'function' && data instanceof ReadableStream)
 }
 
 function isValidDetailedOutput(output: unknown): output is { status?: number, body?: unknown, headers?: object } {

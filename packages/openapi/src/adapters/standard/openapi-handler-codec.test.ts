@@ -357,6 +357,90 @@ describe('openAPIHandlerCodec', () => {
 
         await expect(result!.decodeInput()).resolves.toEqual(['first', 'second'])
       })
+
+      it('merges path params when the body is a Blob', async () => {
+        const blob = new Blob(['raw-bytes'])
+        const serializer = {
+          serialize: vi.fn(),
+          deserialize: vi.fn()
+            .mockReturnValueOnce(undefined)
+            .mockReturnValueOnce(blob),
+        } as any
+
+        const codec = new OpenAPIHandlerCodec(
+          os.meta(openapi({ method: 'POST', path: '/{id}' })).handler(vi.fn()),
+          { serializer },
+        )
+        const resolveBody = vi.fn().mockResolvedValueOnce(blob)
+
+        const result = await codec.resolveProcedure(createRequest({
+          method: 'POST',
+          url: '/24',
+          resolveBody,
+        }), options as any)
+
+        expect(result).toBeDefined()
+
+        await expect(result!.decodeInput()).resolves.toEqual({
+          id: '24',
+          body: blob,
+        })
+      })
+
+      it('returns a Blob body as-is when there are no path params', async () => {
+        const blob = new Blob(['raw-bytes'])
+        const serializer = {
+          serialize: vi.fn(),
+          deserialize: vi.fn()
+            .mockReturnValueOnce(undefined)
+            .mockReturnValueOnce(blob),
+        } as any
+
+        const codec = new OpenAPIHandlerCodec(
+          os.meta(openapi({ method: 'POST', path: '/submit' })).handler(vi.fn()),
+          { serializer },
+        )
+        const resolveBody = vi.fn().mockResolvedValueOnce(blob)
+
+        const result = await codec.resolveProcedure(createRequest({
+          method: 'POST',
+          url: '/submit',
+          resolveBody,
+        }), options as any)
+
+        expect(result).toBeDefined()
+
+        await expect(result!.decodeInput()).resolves.toBe(blob)
+      })
+
+      it('merges path params when the body is a ReadableStream', async () => {
+        const stream = new ReadableStream()
+        const serializer = {
+          serialize: vi.fn(),
+          deserialize: vi.fn()
+            .mockReturnValueOnce(undefined)
+            .mockReturnValueOnce(stream),
+        } as any
+
+        const codec = new OpenAPIHandlerCodec(
+          os.meta(openapi({ method: 'POST', path: '/{id}' })).handler(vi.fn()),
+          { serializer },
+        )
+        const resolveBody = vi.fn().mockResolvedValueOnce(stream)
+
+        const result = await codec.resolveProcedure(createRequest({
+          method: 'POST',
+          url: '/24',
+          resolveBody,
+        }), options as any)
+
+        expect(result).toBeDefined()
+
+        await expect(result!.decodeInput()).resolves.toEqual({
+          id: '24',
+          body: stream,
+        })
+      })
     })
 
     describe('detailed input', () => {

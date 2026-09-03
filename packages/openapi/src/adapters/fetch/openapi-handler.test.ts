@@ -70,4 +70,30 @@ describe('openapiHandler', () => {
     expect(response!.status).toBe(200)
     return expect(response!.text()).resolves.toBe('intercepted')
   })
+
+  it('keeps path params when the request body is a binary stream', async () => {
+    const handler = new OpenAPIHandler({
+      upload: os
+        .meta(openapi({ method: 'POST', path: '/items/{id}' }))
+        .handler(({ input }) => ({
+          id: (input as { id: string }).id,
+          hasBody: Boolean((input as { body: unknown }).body),
+        })),
+    })
+
+    const { matched, response } = await handler.handle(
+      new Request('https://example.com/items/42', {
+        method: 'POST',
+        headers: { 'content-type': 'application/octet-stream' },
+        body: new Blob(['raw-bytes'], { type: 'application/octet-stream' }),
+      }),
+    )
+
+    expect(matched).toBe(true)
+    expect(response!.status).toBe(200)
+    await expect(response!.json()).resolves.toEqual({
+      id: '42',
+      hasBody: true,
+    })
+  })
 })
