@@ -1,7 +1,7 @@
 import type { ErrorMap } from '@orpc/contract'
 import type { Context, Middleware, MiddlewareDone, MiddlewareNextOptions, MiddlewareOptions, MiddlewareResult, ORPCErrorConstructorMap } from '@orpc/server'
 import type { MaybeOptionalOptions } from '@orpc/shared'
-import type { WithEffectContext } from './context'
+import type { InferEffectServices, WithEffectContext } from './context'
 import { Effect, Context as EffectContext } from 'effect'
 import { runPromise } from './runtime'
 
@@ -24,11 +24,7 @@ export interface MiddlewareGen<
   TOutContext extends Context,
   TInput,
   TOutput,
-  TYield extends Effect.Effect<
-    any,
-    any,
-    TInContext extends WithEffectContext<infer S> ? S : never
-  >,
+  TYield extends Effect.Effect<any, any, InferEffectServices<TInContext>>,
   TErrorConstructorMap extends ORPCErrorConstructorMap<any>,
 > {
   (
@@ -57,11 +53,7 @@ export function middlewareGen<
   TInput,
   TOutput,
   TErrorMap extends ErrorMap,
-  TYield extends Effect.Effect<
-    any,
-    any,
-    TInContext extends WithEffectContext<infer S> ? S : never
-  >,
+  TYield extends Effect.Effect<any, any, InferEffectServices<TInContext>>,
   TOutContext extends Context = object,
 >(
   middleware: MiddlewareGen<TInContext, TOutContext, TInput, TOutput, TYield, ORPCErrorConstructorMap<TErrorMap>>,
