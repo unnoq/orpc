@@ -8,7 +8,7 @@ import type { FunctionTool } from './tool-meta'
 import { getAsyncIteratorObjectSchemaDetails } from '@orpc/contract'
 import { combineJsonSchemasWithComposition } from '@orpc/json-schema'
 import { call, Procedure } from '@orpc/server'
-import { isPlainObject, mergeTwoLevels, ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
+import { isAsyncGeneratorFunction, isPlainObject, mergeTwoLevels, ORPC_NAME, resolveMaybeOptionalOptions, toArray } from '@orpc/shared'
 import { tool } from 'ai'
 import { getAiSdkToolMeta } from './tool-meta'
 
@@ -275,12 +275,17 @@ export function createToolFactory<TInitialContext extends Context = object>(
       disableInputValidation: true,
     })
 
+    /**
+     * Output schemas are the source of truth, but an `async function*` handler always
+     * returns an async iterator, so it streams even without an `asyncIteratorObject` schema.
+     */
     const isIteratorOutput = getIteratorYieldSchemas(toArray(procedure['~orpc'].outputSchemas)) !== undefined
+      || isAsyncGeneratorFunction(procedure['~orpc'].handler)
 
     return implementTool(procedure, {
       ...toolOptions as any,
       /**
-       * For `asyncIteratorObject` outputs, the tool streams each event as a
+       * For async iterator outputs, the tool streams each event as a
        * [preliminary result](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preliminary-tool-results),
        * and the last event becomes the final result.
        */

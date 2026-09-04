@@ -158,4 +158,17 @@ describe('createToolFactory', () => {
 
     expectTypeOf<InferToolOutput<typeof tool>>().toEqualTypeOf<{ status: string }>()
   })
+
+  it('infer output as yield type for async generator handlers without an output schema', () => {
+    const procedure = os
+      .input(z.object({ location: z.string() }))
+      .handler(async function* () {
+        yield { status: 'building' }
+        return { url: 'https://example.com' }
+      })
+
+    const tool = createToolFactory()(procedure)
+
+    expectTypeOf<InferToolOutput<typeof tool>>().toEqualTypeOf<{ status: string }>()
+  })
 })

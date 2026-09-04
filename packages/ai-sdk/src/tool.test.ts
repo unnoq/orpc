@@ -448,5 +448,59 @@ describe('createToolFactory', () => {
       await expect(iterator.next()).resolves.toEqual({ done: false, value: { message: 'one' } })
       await expect(iterator.next()).rejects.toThrow('AsyncIteratorObject validation failed')
     })
+
+    it('streams events when the handler is an async generator without an output schema', async () => {
+      const procedure = os
+        .input(inputSchema)
+        .handler(async function* ({ input }) {
+          yield { message: `one ${input.name}` }
+          yield { message: `two ${input.name}` }
+          return { count: 2 }
+        })
+
+      const tool = createToolFactory()(procedure)
+
+      expect(tool.outputSchema).toBeUndefined()
+
+      const outputs: unknown[] = []
+      for await (const output of (tool as any).execute({ name: 'Alice' }, { abortSignal })) {
+        outputs.push(output)
+      }
+
+      expect(outputs).toEqual([{ message: 'one Alice' }, { message: 'two Alice' }])
+    })
+
+    it('streams events when the handler is an async generator and the output schema is not asyncIteratorObject', async () => {
+      const procedure = os
+        .input(inputSchema)
+        .output(type<AsyncIteratorObject<{ message: string }>>())
+        .handler(async function* () {
+          yield { message: 'one' }
+          yield { message: 'two' }
+        })
+
+      const tool = createToolFactory()(procedure)
+
+      const outputs: unknown[] = []
+      for await (const output of (tool as any).execute({ name: 'Alice' }, { abortSignal })) {
+        outputs.push(output)
+      }
+
+      expect(outputs).toEqual([{ message: 'one' }, { message: 'two' }])
+    })
+
+    it('does not stream when a non-generator handler returns an async iterator without an asyncIteratorObject schema', async () => {
+      const procedure = os
+        .input(inputSchema)
+        .handler(async () => (async function* () {
+          yield { message: 'one' }
+        })())
+
+      const tool = createToolFactory()(procedure)
+
+      const output = await (tool as any).execute({ name: 'Alice' }, { abortSignal })
+
+      expect(output[Symbol.asyncIterator]).toBeTypeOf('function')
+    })
   })
 })
