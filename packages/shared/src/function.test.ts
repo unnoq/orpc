@@ -1,4 +1,4 @@
-import { defer, once, tryOrUndefined } from './function'
+import { defer, isAsyncGeneratorFunction, once, tryOrUndefined } from './function'
 
 it('once', () => {
   const fn = vi.fn(() => ({}))
@@ -64,5 +64,27 @@ describe('tryOrUndefined', () => {
     expect(tryOrUndefined(() => 0)).toBe(0)
     expect(tryOrUndefined(() => '')).toBe('')
     expect(tryOrUndefined(() => null)).toBeNull()
+  })
+})
+
+describe('isAsyncGeneratorFunction', () => {
+  it('returns true for async generator functions', () => {
+    async function* gen() {}
+
+    expect(isAsyncGeneratorFunction(gen)).toBe(true)
+    expect(isAsyncGeneratorFunction(gen.bind(null))).toBe(true)
+    expect(isAsyncGeneratorFunction(async function* () {})).toBe(true)
+    expect(isAsyncGeneratorFunction({ async* method() {} }.method)).toBe(true)
+  })
+
+  it('returns false for anything else', () => {
+    expect(isAsyncGeneratorFunction(function* () {})).toBe(false)
+    expect(isAsyncGeneratorFunction(async () => {})).toBe(false)
+    expect(isAsyncGeneratorFunction(() => {})).toBe(false)
+    expect(isAsyncGeneratorFunction(class {})).toBe(false)
+    expect(isAsyncGeneratorFunction((async function* () {})())).toBe(false)
+    expect(isAsyncGeneratorFunction({})).toBe(false)
+    expect(isAsyncGeneratorFunction(null)).toBe(false)
+    expect(isAsyncGeneratorFunction(undefined)).toBe(false)
   })
 })

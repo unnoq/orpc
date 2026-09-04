@@ -1,5 +1,14 @@
 export type AnyFunction = (...args: any[]) => any
 
+const AsyncGeneratorFunction = Object.getPrototypeOf(async function* () {}).constructor
+
+/**
+ * Checks whether a value is an async generator function (`async function*`).
+ */
+export function isAsyncGeneratorFunction(value: unknown): value is (...args: any[]) => AsyncGenerator {
+  return value instanceof AsyncGeneratorFunction
+}
+
 export function once<T>(fn: () => T): () => T {
   let cached: { result: T } | undefined
 
