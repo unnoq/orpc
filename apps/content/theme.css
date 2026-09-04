@@ -149,11 +149,11 @@
    layout, stretching the page sideways and adding thousands of pixels
    of phantom height below the content on narrow viewports. Keep them
    out of layout entirely until their trigger is hovered. */
-.prose .twoslash-hover:not(:hover):not(.twoslash-open) :is(.twoslash-popup-container, .twoslash-mobile-bridge) {
+.prose .twoslash-hover:not(:hover):not(.twoslash-open) :is(.twoslash-popup-container, .twoslash-bridge) {
   display: none;
 }
 
-/* Touch has no hover: twoslash-mobile.ts pins .twoslash-open on the
+/* Touch has no hover: twoslash-popups.ts pins .twoslash-open on the
    tapped token (cleared by tapping elsewhere). Mirror the :hover reveal
    the shiki stylesheet keys on (opacity 0 / pointer-events none
    otherwise). */
@@ -162,17 +162,76 @@
   pointer-events: auto;
 }
 
+/* Touch scrolling dismisses the placed popup (twoslash-popups.ts sets
+   .twoslash-dismissed, the next placement lifts it). display, not
+   opacity: the popup must also disappear in browsers whose sticky
+   tap-:hover would otherwise keep the reveal alive, and the bridge
+   must go with it so the stale fixed strip can't swallow a tap. */
+.prose .twoslash-hover.twoslash-dismissed :is(.twoslash-popup-container, .twoslash-bridge) {
+  display: none;
+}
+
 main#blume-content {
   overflow-x: clip;
 }
 
+/* Blume keeps twoslash blocks `overflow: visible` so absolutely positioned
+   popups can escape them, which leaves long lines nowhere to go: Blume only
+   wraps them below 640px, so on wider screens they run straight past the
+   block. The popups here are fixed instead (below) and escape any scroller,
+   so twoslash code scrolls horizontally like every other block. Scrolling
+   the inner code keeps the header bar and copy button static, matching
+   Blume's own pattern for regular blocks, which also carry the horizontal
+   padding on the code element. */
+.prose pre.twoslash {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.prose pre.twoslash > code {
+  display: block;
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  padding: 0 1.25rem 0.375rem;
+  scrollbar-color: var(--blume-border) transparent;
+  scrollbar-width: thin;
+}
+
+/* Fixed positioning escapes the code scroller above, and sizes the popup
+   readably: anchored to a tiny inline token, an absolute popup squeezes
+   into an unreadable sliver over the code on narrow screens.
+   twoslash-popups.ts anchors it next to the token on reveal (below it, or
+   above when the token sits near the bottom of the screen) and bridges the
+   gap with a real element so the pointer can cross into the popup; the
+   viewport centering here is only the first-frame fallback until the
+   script can measure the popup's width. */
 .prose .twoslash-popup-container {
+  position: fixed;
+  inset: auto auto auto 50%;
+  /* Replaces twoslash's transform: translateY(1.1em) — the margin below
+     keeps the fixed math exact — and centers horizontally. Centering
+     must live on transform, not the translate property: the production
+     build lowers translate into transform, which would survive the
+     script's inline override and drag the placed popup half a width
+     off-screen. */
+  transform: translateX(-50%);
+  z-index: 60;
+  margin: 0.375rem 0 0;
   /* max-content, not shrink-to-fit: sized against the tiny token span,
      shrink-to-fit collapses a wrappable popup to its narrowest content.
      With the cap as max-width, only signatures that genuinely exceed it
      wrap, at the full cap width. */
   width: max-content;
-  max-width: min(85vw, 34rem);
+  max-width: min(100vw - 1.5rem, 34rem);
+  /* Oversized popups scroll internally; the script tightens the cap to the
+     space actually left beside the token. */
+  max-height: 45dvh;
+  overflow-y: auto;
+  scrollbar-color: var(--blume-border) transparent;
+  scrollbar-width: thin;
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.25);
 }
 
 /* Wrap popup code: signatures emitted as one long line would otherwise
@@ -180,124 +239,6 @@ main#blume-content {
 .prose .twoslash-popup-container :is(pre, code) {
   white-space: pre-wrap;
   overflow-wrap: break-word;
-}
-
-/* Desktop: push the popup down from twoslash's translateY(1.1em) (nearly
-   on top of the token) and bridge the resulting hover gap with a ::before
-   strip, so the pointer can reach the popup without leaving the :hover
-   target — leaving it hides the popup instantly via the display:none rule
-   above. Scoped to .twoslash-hover so persisted-query popups keep their
-   own offset; on mobile widths twoslash-mobile.ts bridges with a real
-   element instead (the popup scrolls internally there, which would clip a
-   ::before hanging outside its box). */
-@media (width > 48rem) {
-  .prose .twoslash-hover .twoslash-popup-container {
-    /* The dead gap the 2em shift leaves between the code line and the
-       popup (~0.54em); the bridge and flip rules below must all agree on
-       it, or the hover seam reopens. */
-    --twoslash-gap: 0.55em;
-
-    transform: translateY(2em);
-    /* Cap oversized popups; the internal scrolling lives on the children
-       below. */
-    max-height: min(45vh, 28rem);
-  }
-
-  .prose .twoslash-hover .twoslash-popup-container::before {
-    content: '';
-    position: absolute;
-    /* The gap plus 1px into the line's lower half-leading so rounding
-       can't reopen a seam. Any taller and it overlaps the code line,
-       trapping sideways movement between neighboring hover tokens. */
-    top: calc(-1px - var(--twoslash-gap));
-    left: 0;
-    right: 0;
-    height: calc(var(--twoslash-gap) + 1px);
-  }
-
-  /* Flip: twoslash-mobile.ts sets .twoslash-flip on the hover when the
-     popup can't fit under a token near the viewport bottom. Anchor the
-     popup the same gap above the token (the hover span is position:
-     relative) and hang the bridge off its bottom edge instead, 1px into
-     the line's upper half-leading — same seam logic as below. */
-  .prose .twoslash-hover.twoslash-flip .twoslash-popup-container {
-    top: auto;
-    bottom: calc(100% + var(--twoslash-gap));
-    transform: none;
-  }
-
-  .prose .twoslash-hover.twoslash-flip .twoslash-popup-container::before {
-    top: auto;
-    bottom: calc(-1px - var(--twoslash-gap));
-  }
-
-  /* The internal scrolling for the max-height cap above. It must live on
-     the flex children, not the container: the container anchors two
-     elements hanging outside its box — the ::before hover bridge and the
-     popup arrow — and container-level overflow would clip both, closing
-     the popup the moment the pointer crosses the gap. */
-  .prose .twoslash-hover .twoslash-popup-container > * {
-    min-height: 0;
-    overflow-y: auto;
-    scrollbar-color: var(--blume-border) transparent;
-    scrollbar-width: thin;
-  }
-}
-
-/* On narrow screens the popup is anchored to a tiny inline token and
-   squeezes into an unreadable sliver over the code. Fix it and size it
-   readably instead — fixed positioning escapes the code scroller below.
-   twoslash-mobile.ts anchors it next to the token on reveal; the
-   viewport centering here is only the first-frame fallback until the
-   script can measure the popup's width. */
-@media (max-width: 48rem) {
-  /* Scrolling dismisses the placed popup (twoslash-mobile.ts sets
-     .twoslash-dismissed, the next placement lifts it). display, not
-     opacity: the popup must also disappear in browsers whose sticky
-     tap-:hover would otherwise keep the reveal alive, and the bridge
-     must go with it so the stale fixed strip can't swallow a tap. */
-  .prose .twoslash-hover.twoslash-dismissed :is(.twoslash-popup-container, .twoslash-mobile-bridge) {
-    display: none;
-  }
-
-  .prose .twoslash-popup-container {
-    position: fixed;
-    inset: auto auto auto 50%;
-    /* Replaces twoslash's transform: translateY(1.1em) — the margin below
-       keeps the fixed math exact — and centers horizontally. Centering
-       must live on transform, not the translate property: the production
-       build lowers translate into transform, which would survive the
-       script's inline override and drag the placed popup half a width
-       off-screen. */
-    transform: translateX(-50%);
-    z-index: 60;
-    margin: 0.375rem 0 0;
-    max-width: calc(100vw - 1.5rem);
-    max-height: 45dvh;
-    overflow-y: auto;
-    border-radius: 0.5rem;
-    box-shadow: 0 8px 30px rgb(0 0 0 / 0.25);
-  }
-
-  /* Blume wraps twoslash lines on mobile because its anchored popups
-     can't escape a scroll container — the fixed bottom sheet above can,
-     so twoslash code scrolls horizontally like every other block
-     (scrolling the inner code keeps the header bar and copy button
-     static, matching Blume's own pattern). */
-  .prose pre.twoslash {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .prose pre.twoslash > code {
-    display: block;
-    overflow-x: auto;
-    white-space: pre;
-    overflow-wrap: normal;
-    padding: 0 1.25rem 0.375rem;
-    scrollbar-color: var(--blume-border) transparent;
-    scrollbar-width: thin;
-  }
 }
 
 /* ---------------------------------------------------------------- */

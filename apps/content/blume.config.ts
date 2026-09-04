@@ -164,12 +164,12 @@ export default defineConfig({
       },
     },
     {
-      // Keeps mobile twoslash popups inside the viewport (theme.css anchors
-      // them below the hovered token; this nudges bottom-of-screen ones up).
-      name: 'twoslash-mobile',
+      // Anchors twoslash popups next to their token and keeps them inside
+      // the viewport (theme.css fixes them so they escape the code scroller).
+      name: 'twoslash-popups',
       hooks: {
         'astro:config:setup': ({ injectScript }) => {
-          const clientPath = fileURLToPath(new URL('./components/blume/twoslash-mobile.ts', import.meta.url))
+          const clientPath = fileURLToPath(new URL('./components/blume/twoslash-popups.ts', import.meta.url))
           injectScript('page', `import '${clientPath.replaceAll('\\', '\\\\').replaceAll('\'', '\\\'')}'`)
         },
       },
