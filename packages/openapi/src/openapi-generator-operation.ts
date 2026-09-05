@@ -221,13 +221,8 @@ function renderPathParameters(
       )
     }
 
-    if (entry[2]) {
-      throw new OpenAPIGeneratorError(
-        `dynamic param "${name}" is optional in the input schema.\n`
-        + `  OpenAPI requires path params to be required. Make "${name}" required.`,
-      )
-    }
-
+    // The route only matches when the segment is present, so the param is always required
+    // in the document even when the schema marks it optional.
     const style = paramsStyles?.[name]
     const parameter: Exclude<OpenAPIOperationObject['parameters'], undefined>[number] = {
       in: 'path',
