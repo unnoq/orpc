@@ -130,7 +130,7 @@ export async function runWithSpan<T>(
   const tracer = getOpenTelemetryConfig()?.tracer
 
   if (!tracer) {
-    return fn()
+    return await fn()
   }
 
   if (typeof options === 'string') {
@@ -165,7 +165,7 @@ export async function runInSpanContext<T>(
   const otelConfig = getOpenTelemetryConfig()
 
   if (!span || !otelConfig) {
-    return fn()
+    return await fn()
   }
 
   const ctx = otelConfig.trace.setSpan(otelConfig.context.active(), span)
