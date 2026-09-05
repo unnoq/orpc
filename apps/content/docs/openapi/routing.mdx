@@ -37,6 +37,8 @@ const getPlanet = os
   .input(z.object({ id: z.string() }))
 ```
 
+Path parameters are always documented as required, even when the schema field is optional, because the route only matches when the segment is present.
+
 For catch-all path segments that may include `/`, use `{+name}`:
 
 ```ts

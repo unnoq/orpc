@@ -221,8 +221,7 @@ function renderPathParameters(
       )
     }
 
-    // The route only matches when the segment is present, so the param is always required
-    // in the document even when the schema marks it optional.
+    // Always required, even when the schema marks it optional: the route only matches when the segment is present.
     const style = paramsStyles?.[name]
     const parameter: Exclude<OpenAPIOperationObject['parameters'], undefined>[number] = {
       in: 'path',
