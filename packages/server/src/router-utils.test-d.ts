@@ -6,9 +6,9 @@ import type { AugmentedRouter, AugmentedRouterWithMiddlewares, UnlaziedRouter } 
 
 describe('AugmentedRouter', () => {
   const router = {
-    ping: {} as Procedure<{ i: 1 }, { c: 2 }, Schema<number>, Schema<string>, { E1: { message: string } }, never>,
+    ping: {} as Procedure<{ i: 1 }, { c: 2 }, Schema<number>, Schema<string>, { E1: { message: string } }>,
     nested: {
-      pong: {} as Procedure<{ i: 1 }, object, Schema<number>, Schema<string>, object, never>,
+      pong: {} as Procedure<{ i: 1 }, object, Schema<number>, Schema<string>, object>,
     },
   }
 
@@ -21,8 +21,7 @@ describe('AugmentedRouter', () => {
         { c: 2 },
         Schema<number>,
         Schema<string>,
-        MergedErrorMap<ErrorMap, { E1: { message: string } }>,
-        never
+        MergedErrorMap<ErrorMap, { E1: { message: string } }>
       >
     >()
   })
@@ -36,8 +35,7 @@ describe('AugmentedRouter', () => {
         { c: 2 },
         Schema<number>,
         Schema<string>,
-        MergedErrorMap<ErrorMap, { E1: { message: string } }>,
-        never
+        MergedErrorMap<ErrorMap, { E1: { message: string } }>
       >
       nested: {
         pong: Procedure<
@@ -45,8 +43,7 @@ describe('AugmentedRouter', () => {
           object,
           Schema<number>,
           Schema<string>,
-          MergedErrorMap<ErrorMap, object>,
-          never
+          MergedErrorMap<ErrorMap, object>
         >
       }
     }>()
@@ -66,8 +63,7 @@ describe('AugmentedRouter', () => {
           { c: 2 },
           Schema<number>,
           Schema<string>,
-          MergedErrorMap<ErrorMap, { E1: { message: string } }>,
-          never
+          MergedErrorMap<ErrorMap, { E1: { message: string } }>
         >
         nested: {
           pong: Procedure<
@@ -75,8 +71,7 @@ describe('AugmentedRouter', () => {
             object,
             Schema<number>,
             Schema<string>,
-            MergedErrorMap<ErrorMap, object>,
-            never
+            MergedErrorMap<ErrorMap, object>
           >
         }
       }>
@@ -86,9 +81,9 @@ describe('AugmentedRouter', () => {
 
 describe('AugmentedRouterWithMiddlewares', () => {
   const router = {
-    ping: {} as Procedure<{ i: 1 }, { c: 2 }, Schema<number>, Schema<string>, { E1: { message: string } }, never>,
+    ping: {} as Procedure<{ i: 1 }, { c: 2 }, Schema<number>, Schema<string>, { E1: { message: string } }>,
     nested: {
-      pong: {} as Procedure<{ i: 1 }, object, Schema<number>, Schema<string>, object, never>,
+      pong: {} as Procedure<{ i: 1 }, object, Schema<number>, Schema<string>, object>,
     },
   }
 
@@ -103,8 +98,7 @@ describe('AugmentedRouterWithMiddlewares', () => {
         { c: 2 },
         Schema<number>,
         Schema<string>,
-        MergedErrorMap<ErrorMap, { E1: { message: string } }>,
-        never
+        MergedErrorMap<ErrorMap, { E1: { message: string } }>
       >
     >()
   })
@@ -120,8 +114,7 @@ describe('AugmentedRouterWithMiddlewares', () => {
         { c: 2 },
         Schema<number>,
         Schema<string>,
-        MergedErrorMap<ErrorMap, { E1: { message: string } }>,
-        never
+        MergedErrorMap<ErrorMap, { E1: { message: string } }>
       >
       nested: {
         pong: Procedure<
@@ -129,8 +122,7 @@ describe('AugmentedRouterWithMiddlewares', () => {
           object,
           Schema<number>,
           Schema<string>,
-          MergedErrorMap<ErrorMap, object>,
-          never
+          MergedErrorMap<ErrorMap, object>
         >
       }
     }>()
@@ -152,8 +144,7 @@ describe('AugmentedRouterWithMiddlewares', () => {
           { c: 2 },
           Schema<number>,
           Schema<string>,
-          MergedErrorMap<ErrorMap, { E1: { message: string } }>,
-          never
+          MergedErrorMap<ErrorMap, { E1: { message: string } }>
         >
         nested: {
           pong: Procedure<
@@ -161,8 +152,7 @@ describe('AugmentedRouterWithMiddlewares', () => {
             object,
             Schema<number>,
             Schema<string>,
-            MergedErrorMap<ErrorMap, object>,
-            never
+            MergedErrorMap<ErrorMap, object>
           >
         }
       }>
@@ -171,8 +161,8 @@ describe('AugmentedRouterWithMiddlewares', () => {
 })
 
 it('UnlaziedRouter', () => {
-  const ping = {} as Procedure<{ i: 1 }, { c: 2 }, Schema<number>, Schema<string>, { E1: { message: string } }, never>
-  const pong = {} as Procedure<{ i: 1 }, object, Schema<number>, Schema<string>, object, never>
+  const ping = {} as Procedure<{ i: 1 }, { c: 2 }, Schema<number>, Schema<string>, { E1: { message: string } }>
+  const pong = {} as Procedure<{ i: 1 }, object, Schema<number>, Schema<string>, object>
 
   const router = {
     ping,

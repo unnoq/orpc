@@ -25,27 +25,31 @@ class Service2 extends Context.Service<
 >()('Service2') {}
 
 describe('handlerGen', () => {
-  it('works with native Effect syntax, and treat return/yield ORPCError as inferable', async () => {
+  it('works with native Effect syntax, and throws failed ORPCError as-is', async () => {
     await expect(
       call(os.handler(handlerGen(function* () {
         return 'output'
       }))),
     ).resolves.toEqual('output')
 
-    const inferableError = new ORPCError('__TEST__')
-    ;(inferableError as any).inferable = true
+    const error = new ORPCError('__TEST__')
 
     await expect(
       call(os.handler(handlerGen(function* () {
-        return new ORPCError('__TEST__')
+        yield* Effect.fail(error)
       }))),
-    ).rejects.toThrow(inferableError)
+    ).rejects.toBe(error)
+    expect(error.defined).toBe(false)
+  })
+
+  it('treats returned ORPCError as a regular output', async () => {
+    const error = new ORPCError('__TEST__')
 
     await expect(
       call(os.handler(handlerGen(function* () {
-        yield* Effect.fail(new ORPCError('__TEST__'))
+        return error
       }))),
-    ).rejects.toThrow(inferableError)
+    ).resolves.toBe(error)
   })
 
   it('throw original errors without fiber failure error wrapper', async () => {
@@ -159,7 +163,7 @@ describe('handlerGen', () => {
     expect(wrappedSignal).toBe(signal)
   })
 
-  it('wraps after succeedOnORPCError so wrap-thrown ORPCErrors stay non-inferable', async () => {
+  it('throws ORPCError failures from wrap as-is', async () => {
     const error = new ORPCError('__TEST__')
 
     const procedure = os
@@ -178,8 +182,6 @@ describe('handlerGen', () => {
         },
       },
     )).rejects.toBe(error)
-
-    expect(error.inferable).toBe(false)
     expect(error.defined).toBe(false)
   })
 })

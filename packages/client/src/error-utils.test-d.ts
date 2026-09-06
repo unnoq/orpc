@@ -1,11 +1,11 @@
 import type { ORPCError } from './error'
-import { isInferableError } from './error-utils'
+import { isDefinedError } from './error-utils'
 
-describe('isInferableError', () => {
+describe('isDefinedError', () => {
   it('normal', () => {
     const error = { } as ORPCError<'BAD_REQUEST', { id: number }> | ORPCError<'CONFLICT', unknown> | Error
 
-    if (isInferableError(error)) {
+    if (isDefinedError(error)) {
       expectTypeOf<typeof error>().toEqualTypeOf<ORPCError<'BAD_REQUEST', { id: number }> | ORPCError<'CONFLICT', unknown>>()
 
       if (error.code === 'BAD_REQUEST') {
@@ -20,7 +20,7 @@ describe('isInferableError', () => {
   it('with any types', () => {
     const error: any = {}
 
-    if (isInferableError(error)) {
+    if (isDefinedError(error)) {
       expectTypeOf<typeof error>().toEqualTypeOf<any>()
     }
     else {
@@ -32,7 +32,7 @@ describe('isInferableError', () => {
   it('with unknown type', () => {
     const error: unknown = {}
 
-    if (isInferableError(error)) {
+    if (isDefinedError(error)) {
       // @ts-expect-error FIX: should be unknown or any
       expectTypeOf<typeof error>().toEqualTypeOf<unknown>()
     }

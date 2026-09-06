@@ -1,6 +1,6 @@
 import type { Client, ClientContext, ORPCError } from '@orpc/client'
 import type { EffectClient } from './client'
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 import { Effect } from 'effect'
 import { createEffectClient } from './client'
 import { catchORPCErrorCodes } from './error'
@@ -44,7 +44,7 @@ describe('createEffectClient', () => {
     expectTypeOf(effectClient).toEqualTypeOf<EffectClient<typeof client>>()
   })
 
-  it('data is unknown when catching by code, because the error may be a hidden non-inferable ORPCError', () => {
+  it('data is unknown when catching by code, because the error may be a hidden ORPCError', () => {
     const recovered = effectClient.ping('test').pipe(
       catchORPCErrorCodes({
         BAD_GATEWAY: (error) => {
@@ -61,9 +61,9 @@ describe('createEffectClient', () => {
     >()
   })
 
-  it('combines isInferableError with code narrowing for typesafe error data', () => {
+  it('combines isDefinedError with code narrowing for typesafe error data', () => {
     const recovered = effectClient.ping('test').pipe(
-      Effect.catchIf(isInferableError, (error) => {
+      Effect.catchIf(isDefinedError, (error) => {
         expectTypeOf(error).toEqualTypeOf<
           ORPCError<'BAD_GATEWAY', { val: string }> | ORPCError<'NOT_FOUND', { id: number }>
         >()

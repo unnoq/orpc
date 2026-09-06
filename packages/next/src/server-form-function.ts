@@ -1,4 +1,4 @@
-import type { AnyORPCError, AnySchema, Context, ErrorMap, Lazyable, Procedure, ProcedureClientOptions } from '@orpc/server'
+import type { AnySchema, Context, ErrorMap, Lazyable, Procedure, ProcedureClientOptions } from '@orpc/server'
 import type { MaybeOptionalOptions } from '@orpc/shared'
 import { BracketNotationSerializer } from '@orpc/openapi'
 import { createProcedureClient } from '@orpc/server'
@@ -13,22 +13,19 @@ export function createServerFormFunction<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
 >(
   procedure: Lazyable<Procedure<
     TInitialContext,
     any,
     TInputSchema,
     TOutputSchema,
-    TErrorMap,
-    TReturnedError
+    TErrorMap
   >>,
   ...rest: MaybeOptionalOptions<
     ProcedureClientOptions<
       TInitialContext,
       TOutputSchema,
       TErrorMap,
-      TReturnedError,
       object
     >
   >

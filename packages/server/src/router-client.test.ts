@@ -1,4 +1,3 @@
-import { ORPCError } from '@orpc/client'
 import z from 'zod'
 import { os } from './builder'
 import * as ProcedureClientModule from './procedure-client'
@@ -22,13 +21,7 @@ const schema2 = z.object({ schema2: z.number().transform(n => `${n}`) })
 const schema3 = z.object({ schema3: z.boolean().transform(n => `${n}`) })
 
 const router = {
-  ping: os.input(schema1).output(schema2).handler(() => {
-    if (Math.random() > 0.5) {
-      return new ORPCError('CODE', { data: 'data' })
-    }
-
-    return ({ schema2: 1 })
-  }),
+  ping: os.input(schema1).output(schema2).handler(() => ({ schema2: 1 })),
   nested: os.router({
     pong: os.input(schema3).output(schema2).errors(errorMap).handler(() => ({ schema2: 2 })),
   }),

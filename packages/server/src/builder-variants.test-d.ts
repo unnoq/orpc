@@ -190,13 +190,12 @@ describe('BuilderWithMiddlewares', () => {
           { extra: boolean },
           Schema<void, unknown>,
           Schema<string>,
-          typeof errorMap,
-          never
+          typeof errorMap
         >
       >()
     })
 
-    it('return ORPCError', () => {
+    it('treats returned ORPCError as output', () => {
       expectTypeOf(builder.handler(async () => {
         if (Math.random() > 0.5) {
           return new ORPCError('BAD_REQUEST', { data: 'data' })
@@ -208,9 +207,8 @@ describe('BuilderWithMiddlewares', () => {
           { auth: boolean },
           { extra: boolean },
           Schema<void, unknown>,
-          Schema<'out'>,
-          typeof errorMap,
-          ORPCError<'BAD_REQUEST', string>
+          Schema<'out' | ORPCError<'BAD_REQUEST', string>>,
+          typeof errorMap
         >
       >()
     })
@@ -218,8 +216,8 @@ describe('BuilderWithMiddlewares', () => {
 
   it('.router', () => {
     const router = {
-      ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
-      ping2: {} as Procedure<{ auth: boolean, extra: boolean, something?: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
+      ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
+      ping2: {} as Procedure<{ auth: boolean, extra: boolean, something?: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
     }
 
     expectTypeOf(builder.router(router)).toEqualTypeOf<
@@ -228,16 +226,16 @@ describe('BuilderWithMiddlewares', () => {
 
     builder.router({
       // @ts-expect-error - extra is invalid
-      ping: {} as Procedure<{ auth: boolean, extra: 'invalid' }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
+      ping: {} as Procedure<{ auth: boolean, extra: 'invalid' }, object, Schema<void, unknown>, Schema<unknown>, object>,
       // @ts-expect-error - something is required but missing in builder
-      ping2: {} as Procedure<{ auth: boolean, something: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
+      ping2: {} as Procedure<{ auth: boolean, something: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
     })
   })
 
   it('.lazy', () => {
     const router = {
-      ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
-      ping2: {} as Procedure<{ auth: boolean, extra: boolean, something?: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
+      ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
+      ping2: {} as Procedure<{ auth: boolean, extra: boolean, something?: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
     }
 
     expectTypeOf(builder.lazy(async () => ({ default: router }))).toEqualTypeOf<
@@ -247,8 +245,8 @@ describe('BuilderWithMiddlewares', () => {
     // @ts-expect-error - extra is invalid and something is required but missing in builder
     builder.lazy(async () => ({
       default: {
-        ping: {} as Procedure<{ auth: boolean, extra: 'invalid' }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
-        ping2: {} as Procedure<{ auth: boolean, something: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
+        ping: {} as Procedure<{ auth: boolean, extra: 'invalid' }, object, Schema<void, unknown>, Schema<unknown>, object>,
+        ping2: {} as Procedure<{ auth: boolean, something: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
       },
     }))
   })
@@ -395,13 +393,12 @@ describe('BuilderWithInput', () => {
           { extra: boolean },
           typeof schema1,
           Schema<string>,
-          typeof errorMap,
-          never
+          typeof errorMap
         >
       >()
     })
 
-    it('return ORPCError', () => {
+    it('treats returned ORPCError as output', () => {
       expectTypeOf(builder.handler(async ({ input }) => {
         expectTypeOf(input).toEqualTypeOf<{ schema1: string }>()
         if (Math.random() > 0.5) {
@@ -414,9 +411,8 @@ describe('BuilderWithInput', () => {
           { auth: boolean },
           { extra: boolean },
           typeof schema1,
-          Schema<'out'>,
-          typeof errorMap,
-          ORPCError<'BAD_REQUEST', string>
+          Schema<'out' | ORPCError<'BAD_REQUEST', string>>,
+          typeof errorMap
         >
       >()
     })
@@ -566,8 +562,7 @@ describe('BuilderWithOutput', () => {
           { extra: boolean },
           Schema<void, unknown>,
           typeof schema2,
-          typeof errorMap,
-          never
+          typeof errorMap
         >
       >()
 
@@ -577,23 +572,15 @@ describe('BuilderWithOutput', () => {
       })
     })
 
-    it('return ORPCError', () => {
-      expectTypeOf(builder.handler(async () => {
+    it('does not allow returning ORPCError', () => {
+      // @ts-expect-error - ORPCError is not a valid output
+      void builder.handler(async () => {
         if (Math.random() > 0.5) {
           return new ORPCError('BAD_REQUEST', { data: 'data' })
         }
 
         return { schema2: 123 }
-      })).toEqualTypeOf<
-        DecoratedProcedure<
-          { auth: boolean },
-          { extra: boolean },
-          Schema<void, unknown>,
-          typeof schema2,
-          typeof errorMap,
-          ORPCError<'BAD_REQUEST', string>
-        >
-      >()
+      })
     })
   })
 })
@@ -752,8 +739,7 @@ describe('BuilderWithInputOutput', () => {
           { extra: boolean },
           typeof schema1,
           typeof schema2,
-          typeof errorMap,
-          never
+          typeof errorMap
         >
       >()
 
@@ -761,25 +747,15 @@ describe('BuilderWithInputOutput', () => {
       builder.handler(() => 'invalid')
     })
 
-    it('return ORPCError', () => {
-      const procedure = builder.handler(async ({ input }) => {
+    it('does not allow returning ORPCError', () => {
+      // @ts-expect-error - ORPCError is not a valid output
+      void builder.handler(async ({ input }) => {
         if (Math.random() > 0.5) {
           return new ORPCError('BAD_REQUEST', { data: 'data' })
         }
 
         return { schema2: 123 }
       })
-
-      expectTypeOf(procedure).toEqualTypeOf<
-        DecoratedProcedure<
-          { auth: boolean },
-          { extra: boolean },
-          typeof schema1,
-          typeof schema2,
-          typeof errorMap,
-          ORPCError<'BAD_REQUEST', string>
-        >
-      >()
     })
   })
 })

@@ -69,11 +69,11 @@ export const findPlanet = os
   })
 ` },
       { file: 'client.ts', lang: 'ts', code: `
-import { isInferableError, safe } from '@orpc/client'
+import { isDefinedError, safe } from '@orpc/client'
 
 const [error, planet] = await safe(client.planet.find({ id: 1 }))
 
-if (isInferableError(error) && error.code === 'RATE_LIMIT') {
+if (isDefinedError(error) && error.code === 'RATE_LIMIT') {
   error.data.retryAfter // number, straight from the schema
 }
 else if (error) {
@@ -331,7 +331,7 @@ import { findPlanetAction } from './actions'
 export async function find(id: number) {
   const [error, planet] = await findPlanetAction({ id })
 
-  if (error?.inferable && error.code === 'NOT_FOUND') {
+  if (error?.defined && error.code === 'NOT_FOUND') {
     // a declared failure, serialized and typed, no try/catch
   }
   else if (error) {

@@ -1,4 +1,3 @@
-import type { AnyORPCError } from '@orpc/client'
 import type { AnySchema, ErrorMap, ORPCErrorConstructorMap, ProcedureContractDefinition } from '@orpc/contract'
 import type { Promisable } from '@orpc/shared'
 import type { Context } from './context'
@@ -14,7 +13,7 @@ export interface ProcedureHandlerOptions<
   context: TCurrentContext
   input: TInput
   path: string[]
-  procedure: Procedure<Context, Context, AnySchema, AnySchema, ErrorMap, any>
+  procedure: Procedure<Context, Context, AnySchema, AnySchema, ErrorMap>
   signal?: AbortSignal | undefined
   lastEventId?: string | undefined
   errors: TErrorConstructorMap
@@ -82,22 +81,9 @@ export interface ProcedureDefinition<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
 > extends ProcedureContractDefinition<TInputSchema, TOutputSchema, TErrorMap>, ProcedureConfig {
   __TInitialContext?: (type: TInitialContext) => unknown
   __TInjectedContext?: (type: TInjectedContext) => unknown
-  __TReturnedError?: () => TReturnedError
-
-  /**
-   * When enabled, errors returned (not thrown) by the handler are passed through as-is,
-   * rather than being transformed into inferrable errors.
-   *
-   * This is intended for the contract-first approach, where the procedure adheres to an
-   * external contract and returned errors should not affect the inferred contract types.
-   *
-   * @default false
-   */
-  opaqueReturnedErrors?: boolean | undefined
 
   orderedMiddlewares: OrderedMiddleware[]
   handler: ProcedureHandler<any, any, any, any>
@@ -109,11 +95,10 @@ export class Procedure<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
 > {
-  '~orpc': ProcedureDefinition<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
+  '~orpc': ProcedureDefinition<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
 
-  constructor(def: ProcedureDefinition<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>) {
+  constructor(def: ProcedureDefinition<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>) {
     this['~orpc'] = def
   }
 
@@ -139,4 +124,4 @@ export class Procedure<
   }
 }
 
-export type AnyProcedure = Procedure<any, any, any, any, any, any>
+export type AnyProcedure = Procedure<any, any, any, any, any>

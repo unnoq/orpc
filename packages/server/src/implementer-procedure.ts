@@ -1,4 +1,3 @@
-import type { AnyORPCError } from '@orpc/client'
 import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, ORPCErrorConstructorMap } from '@orpc/contract'
 import type { IntersectPick } from '@orpc/shared'
 import type { BuilderDefinition } from './builder'
@@ -53,7 +52,7 @@ export class ProcedureImplementer<
     handler: ProcedureHandler<
       MergedContext<TInitialContext, TInjectedContext>,
       InferSchemaOutput<TInputSchema>,
-      AnyORPCError | InferSchemaInput<TOutputSchema>,
+      InferSchemaInput<TOutputSchema>,
       ORPCErrorConstructorMap<TErrorMap>
     >,
   ): ImplementedProcedure<
@@ -66,14 +65,6 @@ export class ProcedureImplementer<
     return new ImplementedProcedure({
       ...this['~orpc'],
       handler,
-      /**
-       * When enabled, errors returned (not thrown) by the handler are passed through as-is,
-       * rather than being transformed into inferrable errors.
-       *
-       * This is intended for the contract-first approach, where the procedure adheres to an
-       * external contract and returned errors should not affect the inferred contract types.
-       */
-      opaqueReturnedErrors: true,
     })
   }
 }
@@ -84,7 +75,7 @@ export class ImplementedProcedure<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-> extends Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, never> {
+> extends Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap> {
   use<
     $OutContext extends IntersectPick<MergedContext<TInitialContext, TInjectedContext>, $OutContext>,
     $InContext extends Context = MergedContext<TInitialContext, TInjectedContext>,

@@ -5,14 +5,14 @@ const planets = await orpc.planet.list({
   cursor: 1,
 })
 
-const [error, planet, inferableError] = await safe(orpc.planet.update({
+const [error, planet, definedError] = await safe(orpc.planet.update({
   id: 'some-id',
   name: 'Earth',
   description: 'The planet Earth',
 }))
 
 if (error) {
-  if (inferableError) {
+  if (definedError) {
     const code = error.code
     //    ^    typesafe
   }

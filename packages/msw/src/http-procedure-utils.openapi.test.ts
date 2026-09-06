@@ -1,6 +1,6 @@
 import type { RouterContractClient } from '@orpc/contract'
 import type { JsonifiedClient } from '@orpc/openapi'
-import { createORPCClient, isInferableError, ORPCError } from '@orpc/client'
+import { createORPCClient, isDefinedError, ORPCError } from '@orpc/client'
 import { oc } from '@orpc/contract'
 import { openapi } from '@orpc/openapi'
 import { OpenAPIHandler, OpenAPILink } from '@orpc/openapi/fetch'
@@ -84,7 +84,7 @@ it('responds with defined errors', async () => {
   }
   catch (error) {
     expect(error).toBeInstanceOf(ORPCError)
-    expect(isInferableError(error)).toBe(true)
+    expect(isDefinedError(error)).toBe(true)
     expect((error as any).code).toBe('NOT_FOUND')
     expect((error as any).message).toBe('Planet not found')
     expect((error as any).data).toEqual({ id: 42 })

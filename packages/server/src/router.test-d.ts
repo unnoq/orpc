@@ -43,8 +43,7 @@ describe('contractedRouter', () => {
         any,
         typeof inputSchema,
         Schema<unknown>,
-        object,
-        never
+        object
       >>
     >()
 
@@ -55,8 +54,7 @@ describe('contractedRouter', () => {
         any,
         Schema<void, unknown>,
         typeof outputSchema,
-        MergedErrorMap<object, typeof errorMap>,
-        never
+        MergedErrorMap<object, typeof errorMap>
       >>
     >()
 
@@ -74,8 +72,7 @@ describe('contractedRouter', () => {
         any,
         typeof inputSchema,
         Schema<unknown>,
-        object,
-        never
+        object
       >
     >()
   })
@@ -85,15 +82,13 @@ describe('infer utilities', () => {
   type Schema1 = Schema<{ input: number }, { output: string }>
   type Schema2 = Schema<{ input: string }, { output: number }>
   type Schema3 = Schema<{ value: boolean }>
-  type ReturnedPongError = ORPCError<'FORBIDDEN', { reason: string }>
-  type ReturnedNestedPongError = ORPCError<'CONFLICT', { entityId: string }>
 
   const router = {
-    ping: {} as Procedure<{ init1?: boolean }, object, Schema1, Schema2, { AUTH: { message: string } }, never>,
-    pong: {} as Procedure<{ init2?: boolean }, { extra: true }, Schema2, Schema<unknown>, object, never>,
+    ping: {} as Procedure<{ init1?: boolean }, object, Schema1, Schema2, { AUTH: { message: string } }>,
+    pong: {} as Procedure<{ init2?: boolean }, { extra: true }, Schema2, Schema<unknown>, object>,
     nested: {
-      ping: {} as Procedure<{ init3?: boolean }, object, Schema1, Schema3, { AUTH: { message: string } }, never>,
-      pong: {} as Procedure<{ init4?: boolean }, { extra: true }, Schema3, Schema<unknown>, object, never>,
+      ping: {} as Procedure<{ init3?: boolean }, object, Schema1, Schema3, { AUTH: { message: string } }>,
+      pong: {} as Procedure<{ init4?: boolean }, { extra: true }, Schema3, Schema<unknown>, object>,
     },
   }
 
@@ -140,11 +135,11 @@ describe('infer utilities', () => {
   })
 
   const errorRouter = {
-    ping: {} as Procedure<{ init1?: boolean }, object, Schema1, Schema2, { AUTH: { message: string } }, never>,
-    pong: {} as Procedure<{ init2?: boolean }, { extra: true }, Schema2, Schema<unknown>, object, ReturnedPongError>,
+    ping: {} as Procedure<{ init1?: boolean }, object, Schema1, Schema2, { AUTH: { message: string } }>,
+    pong: {} as Procedure<{ init2?: boolean }, { extra: true }, Schema2, Schema<unknown>, object>,
     nested: {
-      ping: {} as Procedure<{ init3?: boolean }, object, Schema1, Schema3, { RATE_LIMITED: { data: Schema<unknown, { retryAfter: number }> } }, never>,
-      pong: {} as Procedure<{ init4?: boolean }, { extra: true }, Schema3, Schema<unknown>, object, ReturnedNestedPongError>,
+      ping: {} as Procedure<{ init3?: boolean }, object, Schema1, Schema3, { RATE_LIMITED: { data: Schema<unknown, { retryAfter: number }> } }>,
+      pong: {} as Procedure<{ init4?: boolean }, { extra: true }, Schema3, Schema<unknown>, object>,
     },
   }
 
@@ -152,17 +147,15 @@ describe('infer utilities', () => {
     type Errors = InferRouterErrors<typeof errorRouter>
 
     expectTypeOf<Errors['ping']>().toEqualTypeOf<ORPCError<'AUTH', unknown> | ThrowableError>()
-    expectTypeOf<Errors['pong']>().toEqualTypeOf<ReturnedPongError | ThrowableError>()
+    expectTypeOf<Errors['pong']>().toEqualTypeOf<ThrowableError>()
     expectTypeOf<Errors['nested']['ping']>().toEqualTypeOf<ORPCError<'RATE_LIMITED', { retryAfter: number }> | ThrowableError>()
-    expectTypeOf<Errors['nested']['pong']>().toEqualTypeOf<ReturnedNestedPongError | ThrowableError>()
+    expectTypeOf<Errors['nested']['pong']>().toEqualTypeOf<ThrowableError>()
   })
 
   it('InferRouterError', () => {
     expectTypeOf<InferRouterError<typeof errorRouter>>().toEqualTypeOf<
       | ORPCError<'AUTH', unknown>
-      | ReturnedPongError
       | ORPCError<'RATE_LIMITED', { retryAfter: number }>
-      | ReturnedNestedPongError
       | ThrowableError
     >()
   })

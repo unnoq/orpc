@@ -1,4 +1,3 @@
-import type { AnyORPCError } from '@orpc/client'
 import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, MergedErrorMap, MetaPlugin } from '@orpc/contract'
 import type { IntersectPick } from '@orpc/shared'
 import type { Context, MergedContext, MergedInitialContext } from './context'
@@ -12,11 +11,10 @@ export class DecoratedProcedure<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
-> extends Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError> {
+> extends Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap> {
   meta(
     ...plugins: MetaPlugin<TInputSchema, TOutputSchema, TErrorMap>[]
-  ): DecoratedProcedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError> {
+  ): DecoratedProcedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap> {
     const [meta, metaPlugins] = resolveMetaPlugins(this['~orpc'].meta, this['~orpc'].metaPlugins, plugins)
 
     return new DecoratedProcedure({
@@ -33,8 +31,7 @@ export class DecoratedProcedure<
     TInjectedContext,
     TInputSchema,
     TOutputSchema,
-    MergedErrorMap<TErrorMap, T>,
-    TReturnedError
+    MergedErrorMap<TErrorMap, T>
   > {
     let procedure = new DecoratedProcedure({
       ...this['~orpc'],
@@ -66,8 +63,7 @@ export class DecoratedProcedure<
     MergedContext<TInjectedContext, $OutContext>,
     TInputSchema,
     TOutputSchema,
-    MergedErrorMap<$ErrorMap, TErrorMap>,
-    TReturnedError
+    MergedErrorMap<$ErrorMap, TErrorMap>
   > {
     // Since middleware executes before the handler, we use `IntersectPick` to ensure
     // that the middleware's output context ($OutContext) is compatible with the

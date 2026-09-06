@@ -14,11 +14,9 @@ describe('ORPCError', () => {
     const _error23: ORPCError<'CODE', 'required'> = new ORPCError('CODE', { data: 'invalid' })
   })
 
-  it('not allow write .defined and .inferable properties', () => {
+  it('not allow write .defined property', () => {
     const error = new ORPCError('CODE')
     // @ts-expect-error - not allow write
     error.defined = true as any
-    // @ts-expect-error - not allow write
-    error.inferable = true as any
   })
 })

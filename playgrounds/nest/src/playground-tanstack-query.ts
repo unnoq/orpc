@@ -1,4 +1,4 @@
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { orpc } from './lib/orpc'
 
@@ -15,7 +15,7 @@ const query = useInfiniteQuery(
 const mutation = useMutation(
   orpc.planet.update.mutationOptions({
     onError(error) {
-      if (isInferableError(error)) {
+      if (isDefinedError(error)) {
         const code = error.code
         //    ^    typesafe
       }

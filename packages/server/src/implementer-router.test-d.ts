@@ -1,4 +1,3 @@
-import type { ORPCError } from '@orpc/client'
 import type { InferRouterContractErrorMap, ORPCErrorConstructorMap, ProcedureContract, Schema } from '@orpc/contract'
 import type { MergedContext, MergedInitialContext } from './context'
 import type { ProcedureImplementer } from './implementer-procedure'
@@ -232,19 +231,19 @@ describe('RouterImplementer', () => {
   describe('.router', () => {
     it('works', () => {
       const router = {
-        ping: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema2, typeof errorMap, never>,
+        ping: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema2, typeof errorMap>,
         nested: {
-          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
         },
 
-        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema3, object, never>,
-        middleware: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema1, object, never>,
+        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema3, object>,
+        middleware: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema1, object>,
         router: {
-          router: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object, never>,
+          router: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object>,
         },
         lazy: new Lazy({
           loader: () => Promise.resolve({ default: {
-            lazy: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object, never>,
+            lazy: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object>,
           } }),
           meta: {},
         }),
@@ -256,18 +255,15 @@ describe('RouterImplementer', () => {
 
       implementer.router({
         // @ts-expect-error - error map is conflict
-        ping: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }, never>,
+        ping: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }>,
 
         nested: {
           // @ts-expect-error - input schema is conflict
-          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object, never>,
+          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object>,
         },
 
         // @ts-expect-error - output schema is conflict
-        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema1, object, never>,
-
-        // @ts-expect-error - contract first does not support return ORPC Error
-        middleware: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema1, object, ORPCError<'CODE', 'data'>>,
+        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema1, object>,
 
         // @ts-expect-error - missing procedures
         router: {},
@@ -281,7 +277,7 @@ describe('RouterImplementer', () => {
 
     it('deep access', () => {
       const router = {
-        pong: {} as Procedure<{ anything: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+        pong: {} as Procedure<{ anything: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
       }
 
       const implemented = implementer.nested.router(router)
@@ -296,7 +292,7 @@ describe('RouterImplementer', () => {
 
     it('conflict method', () => {
       const router = {
-        router: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object, never>,
+        router: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object>,
       }
 
       const implemented = implementer.router.router(router)
@@ -305,7 +301,7 @@ describe('RouterImplementer', () => {
 
       implementer.router.router({
         // @ts-expect-error - input schema is conflict
-        router: {} as Procedure<{ anything: boolean }, object, Schema<'invalid'>, typeof schema2, object, never>,
+        router: {} as Procedure<{ anything: boolean }, object, Schema<'invalid'>, typeof schema2, object>,
       })
     })
   })
@@ -313,19 +309,19 @@ describe('RouterImplementer', () => {
   describe('.lazy', () => {
     it('works', () => {
       const router = {
-        ping: {} as Procedure<{ anything: boolean, extra: boolean }, object, typeof schema1, typeof schema2, typeof errorMap, never>,
+        ping: {} as Procedure<{ anything: boolean, extra: boolean }, object, typeof schema1, typeof schema2, typeof errorMap>,
         nested: {
-          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
         },
 
-        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema3, object, never>,
-        middleware: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema1, object, never>,
+        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema3, object>,
+        middleware: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema1, object>,
         router: {
-          router: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object, never>,
+          router: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object>,
         },
         lazy: new Lazy({
           loader: () => Promise.resolve({ default: {
-            lazy: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object, never>,
+            lazy: {} as Procedure<{ anything: boolean }, object, typeof schema2, typeof schema2, object>,
           } }),
           meta: {},
         }),
@@ -337,15 +333,15 @@ describe('RouterImplementer', () => {
 
       // @ts-expect-error - invalid loader
       implementer.lazy(() => Promise.resolve({ default: {
-        ping: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }, never>,
+        ping: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }>,
 
         nested: {
-          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object, never>,
+          pong: {} as Procedure<{ anything: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object>,
         },
 
-        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema1, object, never>,
+        use: {} as Procedure<{ anything: boolean }, object, typeof schema3, typeof schema1, object>,
 
-        middleware: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema1, object, ORPCError<'CODE', 'data'>>,
+        middleware: {} as Procedure<{ anything: boolean }, object, typeof schema1, typeof schema1, object>,
 
         router: {},
 
@@ -358,7 +354,7 @@ describe('RouterImplementer', () => {
 
     it('deep access', () => {
       const router = {
-        pong: {} as Procedure<{ anything: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+        pong: {} as Procedure<{ anything: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
       }
 
       const implemented = implementer.nested.lazy(() => Promise.resolve({ default: router }))
@@ -373,7 +369,7 @@ describe('RouterImplementer', () => {
 
     it('conflict method', () => {
       const router = {
-        lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object, never>,
+        lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object>,
       }
 
       const implemented = implementer.lazy.lazy(() => Promise.resolve({ default: router }))
@@ -382,7 +378,7 @@ describe('RouterImplementer', () => {
 
       // @ts-expect-error - input schema is conflict
       implementer.lazy.lazy(() => Promise.resolve({ default: {
-        lazy: {} as Procedure<{ anything: boolean }, object, Schema<'invalid'>, typeof schema2, object, never>,
+        lazy: {} as Procedure<{ anything: boolean }, object, Schema<'invalid'>, typeof schema2, object>,
       } }))
     })
   })
@@ -594,19 +590,19 @@ describe('RouterImplementerWithMiddlewares', () => {
   describe('.router', () => {
     it('works', () => {
       const router = {
-        ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, typeof schema1, typeof schema2, typeof errorMap, never>,
+        ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, typeof schema1, typeof schema2, typeof errorMap>,
         nested: {
-          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
         },
 
-        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema3, object, never>,
-        middleware: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema1, object, never>,
+        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema3, object>,
+        middleware: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema1, object>,
         router: {
-          router: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object, never>,
+          router: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object>,
         },
         lazy: new Lazy({
           loader: () => Promise.resolve({ default: {
-            lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object, never>,
+            lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object>,
           } }),
           meta: {},
         }),
@@ -625,25 +621,22 @@ describe('RouterImplementerWithMiddlewares', () => {
 
       implementer.router({
         // @ts-expect-error - error map is conflict
-        ping: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }, never>,
+        ping: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }>,
 
         nested: {
           // @ts-expect-error - input schema is conflict
-          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object, never>,
+          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object>,
         },
 
         // @ts-expect-error - output schema is conflict
-        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema1, object, never>,
-
-        // @ts-expect-error - contract first does not support return ORPC Error
-        middleware: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema1, object, ORPCError<'CODE', 'data'>>,
+        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema1, object>,
 
         // @ts-expect-error - missing procedures
         router: {},
         // @ts-expect-error - context is conflict
         lazy: new Lazy({
           loader: () => Promise.resolve({ default: {
-            lazy: {} as Procedure<{ auth: 'invalid' }, object, typeof schema2, typeof schema2, object, never>,
+            lazy: {} as Procedure<{ auth: 'invalid' }, object, typeof schema2, typeof schema2, object>,
           } }),
           meta: {},
         }),
@@ -652,7 +645,7 @@ describe('RouterImplementerWithMiddlewares', () => {
 
     it('deep access', () => {
       const router = {
-        pong: {} as Procedure<{ auth: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+        pong: {} as Procedure<{ auth: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
       }
 
       const implemented = implementer.nested.router(router)
@@ -674,7 +667,7 @@ describe('RouterImplementerWithMiddlewares', () => {
 
     it('conflict method', () => {
       const router = {
-        router: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object, never>,
+        router: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object>,
       }
 
       const implemented = implementer.router.router(router)
@@ -690,7 +683,7 @@ describe('RouterImplementerWithMiddlewares', () => {
 
       implementer.router.router({
         // @ts-expect-error - input schema is conflict
-        router: {} as Procedure<{ auth: boolean }, object, Schema<'invalid'>, typeof schema2, object, never>,
+        router: {} as Procedure<{ auth: boolean }, object, Schema<'invalid'>, typeof schema2, object>,
       })
     })
   })
@@ -698,19 +691,19 @@ describe('RouterImplementerWithMiddlewares', () => {
   describe('.lazy', () => {
     it('works', () => {
       const router = {
-        ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, typeof schema1, typeof schema2, typeof errorMap, never>,
+        ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, typeof schema1, typeof schema2, typeof errorMap>,
         nested: {
-          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
         },
 
-        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema3, object, never>,
-        middleware: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema1, object, never>,
+        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema3, object>,
+        middleware: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema1, object>,
         router: {
-          router: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object, never>,
+          router: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object>,
         },
         lazy: new Lazy({
           loader: () => Promise.resolve({ default: {
-            lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object, never>,
+            lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object>,
           } }),
           meta: {},
         }),
@@ -731,21 +724,21 @@ describe('RouterImplementerWithMiddlewares', () => {
 
       // @ts-expect-error - invalid loader
       implementer.lazy(() => Promise.resolve({ default: {
-        ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }, never>,
+        ping: {} as Procedure<{ auth: boolean, extra: boolean }, object, typeof schema1, typeof schema2, { BASE: { data: typeof schema1 } }>,
 
         nested: {
-          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object, never>,
+          pong: {} as Procedure<{ auth: boolean, optional?: boolean }, { anything: boolean }, Schema<'invalid'>, typeof schema1, object>,
         },
 
-        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema1, object, never>,
+        use: {} as Procedure<{ auth: boolean }, object, typeof schema3, typeof schema1, object>,
 
-        middleware: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema1, object, ORPCError<'CODE', 'data'>>,
+        middleware: {} as Procedure<{ auth: boolean }, object, typeof schema1, typeof schema1, object>,
 
         router: {},
 
         lazy: new Lazy({
           loader: () => Promise.resolve({ default: {
-            lazy: {} as Procedure<{ auth: 'invalid' }, object, typeof schema2, typeof schema2, object, never>,
+            lazy: {} as Procedure<{ auth: 'invalid' }, object, typeof schema2, typeof schema2, object>,
           } }),
           meta: {},
         }),
@@ -754,7 +747,7 @@ describe('RouterImplementerWithMiddlewares', () => {
 
     it('deep access', () => {
       const router = {
-        pong: {} as Procedure<{ auth: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object, never>,
+        pong: {} as Procedure<{ auth: boolean, something?: boolean }, { anything: boolean }, typeof schema2, typeof schema1, object>,
       }
 
       const implemented = implementer.nested.lazy(() => Promise.resolve({ default: router }))
@@ -778,7 +771,7 @@ describe('RouterImplementerWithMiddlewares', () => {
 
     it('conflict procedure/router names with implementer methods', () => {
       const router = {
-        lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object, never>,
+        lazy: {} as Procedure<{ auth: boolean }, object, typeof schema2, typeof schema2, object>,
       }
 
       const implemented = implementer.lazy.lazy(() => Promise.resolve({ default: router }))
@@ -787,7 +780,7 @@ describe('RouterImplementerWithMiddlewares', () => {
 
       // @ts-expect-error - input schema is conflict
       implementer.lazy.lazy(() => Promise.resolve({ default: {
-        lazy: {} as Procedure<{ anything: boolean }, object, Schema<'invalid'>, typeof schema2, object, never>,
+        lazy: {} as Procedure<{ anything: boolean }, object, Schema<'invalid'>, typeof schema2, object>,
       } }))
     })
   })

@@ -15,7 +15,7 @@ Pretrained oRPC knowledge describes v1 and is often wrong for v2 (routing moved 
 Package map:
 
 - `@orpc/server`: the `os` builder, routers, middleware, `RPCHandler`, server-side clients (`call`, `createRouterClient`), `implement` for mocks
-- `@orpc/client`: `createORPCClient`, `RPCLink`, `safe`, `createSafeClient`, `isInferableError`
+- `@orpc/client`: `createORPCClient`, `RPCLink`, `safe`, `createSafeClient`, `isDefinedError`
 - `@orpc/contract`: contract-first API definitions implemented separately from their logic (see the `orpc-contract` skill)
 - `@orpc/openapi`: `OpenAPIHandler`, `OpenAPILink`, OpenAPI 3.1 spec generation
 - Integration packages such as `@orpc/tanstack-query` and `@orpc/nest`
@@ -194,10 +194,10 @@ const planet = await orpc.planet.find({ id: 1 })
 Client error handling: plain `try/catch` works, but `safe` preserves typed error inference:
 
 ```ts
-import { createSafeClient, isInferableError, safe } from '@orpc/client'
+import { createSafeClient, isDefinedError, safe } from '@orpc/client'
 
 const [error, data] = await safe(orpc.planet.find({ id: 1 }))
-if (isInferableError(error)) {
+if (isDefinedError(error)) {
   console.log(error.code, error.data) // typed from the procedure's .errors
 }
 else if (error) {

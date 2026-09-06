@@ -38,9 +38,6 @@ describe('handlerGen', () => {
         yield* Effect.fail({ _tags: 'e', non_exists_in_ORPCError: 'abc' })
 
         yield* Effect.fail(new ORPCError('CONFLICT', { data: 1 }))
-        if (Math.random() < 0.5) {
-          return new ORPCError('GATEWAY_TIMEOUT', { data: '1' })
-        }
 
         return true
       }))
@@ -50,9 +47,8 @@ describe('handlerGen', () => {
         DefaultInitialContext & object,
         object,
         InitialInputSchema,
-        Schema<true>,
-        Record<never, never>,
-        ORPCError<'GATEWAY_TIMEOUT', string> | ORPCError<'CONFLICT', number>
+        Schema<boolean>,
+        Record<never, never>
       >
     >()
   })
@@ -72,9 +68,6 @@ describe('handlerGen', () => {
         // use error that has properties that ORPCError doesn't have.
         yield* Effect.fail({ _tags: 'e', non_exists_in_ORPCError: 'abc' })
         yield* Effect.fail(new ORPCError('CONFLICT', { data: 1 }))
-        if (Math.random() < 0.5) {
-          return new ORPCError('GATEWAY_TIMEOUT', { data: '1' })
-        }
 
         return { schema2: 123 }
       }))
@@ -85,8 +78,7 @@ describe('handlerGen', () => {
         Omit<object, 'extra'> & { extra: boolean },
         typeof schema1,
         typeof schema2,
-        typeof errorMap,
-        ORPCError<'GATEWAY_TIMEOUT', string> | ORPCError<'CONFLICT', number>
+        typeof errorMap
       >
     >()
 

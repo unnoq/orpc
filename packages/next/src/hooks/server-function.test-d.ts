@@ -60,9 +60,9 @@ describe('useServerFunction', () => {
         async ({ input, next }) => {
           expectTypeOf(input).toEqualTypeOf<{ input: number } | undefined>()
 
-          const [error, data, inferableError] = await safe(next())
+          const [error, data, definedError] = await safe(next())
 
-          if (inferableError) {
+          if (definedError) {
             expectTypeOf(error).toEqualTypeOf<ORPCError<'BASE', { output: string }> | ORPCError<'OVERRIDE', unknown>>()
           }
 
@@ -82,9 +82,9 @@ describe('useServerFunction', () => {
         async ({ input, next }) => {
           expectTypeOf(input).toEqualTypeOf<{ input: number } | undefined>()
 
-          const [error, data, inferableError] = await safe(next())
+          const [error, data, definedError] = await safe(next())
 
-          if (inferableError) {
+          if (definedError) {
             expectTypeOf(error).toEqualTypeOf<ORPCError<'BASE', { output: string }> | ORPCError<'OVERRIDE', unknown>>()
           }
 
@@ -101,9 +101,9 @@ describe('useServerFunction', () => {
   })
 
   it('output & error', async () => {
-    const [error, data, inferableError] = await state.execute({ input: 123 })
+    const [error, data, definedError] = await state.execute({ input: 123 })
 
-    if (inferableError) {
+    if (definedError) {
       expectTypeOf(error).toEqualTypeOf<ORPCError<'BASE', { output: string }> | ORPCError<'OVERRIDE', unknown>>()
     }
 

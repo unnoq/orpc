@@ -33,11 +33,6 @@ export class ResponseValidationLinkPlugin<T extends ClientContext> implements St
           }
           catch (error) {
             if (error instanceof ORPCError) {
-              /**
-               * Even if the error is inferable (returned), we still need to apply `reconcileError`.
-               * Defined errors take priority over inferable errors.
-               * `reconcileError` attempts to mark the error as defined, or keeps it inferable if that's not possible.
-               */
               throw await reconcileORPCError(procedure['~orpc'].errorMap, error)
             }
 

@@ -18,7 +18,7 @@ catch (error) {
 }
 ```
 
-## Using `safe` and `isInferableError`
+## Using `safe` and `isDefinedError`
 
 When working with [Typesafe Errors](/docs/error-handling#typesafe-errors), use `safe` to preserve error type inference. It behaves like `try/catch`, but returns the typesafe result instead of throwing.
 
@@ -26,7 +26,7 @@ When working with [Typesafe Errors](/docs/error-handling#typesafe-errors), use `
 import { call, os } from '@orpc/server'
 import * as z from 'zod'
 // ---cut---
-import { isInferableError, safe } from '@orpc/client'
+import { isDefinedError, safe } from '@orpc/client'
 
 const exampleProcedure = os
   .input(z.object({ id: z.string() }))
@@ -39,15 +39,15 @@ const exampleProcedure = os
     throw errors.RATE_LIMIT_EXCEEDED({ data: { retryAfter: 1000 } })
   })
 
-// or { error, data, inferableError }
-const [error, data, inferableError] = await safe(
+// or { error, data, definedError }
+const [error, data, definedError] = await safe(
   call(exampleProcedure, { id: '123' })
 )
 
-if (isInferableError(error)) { // or inferableError
-  // handle inferable error
+if (isDefinedError(error)) { // or definedError
+  // handle defined error
 
-  // or inferableError.data.retryAfter
+  // or definedError.data.retryAfter
   console.log(error.data.retryAfter)
 }
 else if (error) {
@@ -62,10 +62,10 @@ else {
 :::info
 `safe` supports both tuple and object forms:
 
-- `[error, data, inferableError]`
-- `{ error, data, inferableError }`
+- `[error, data, definedError]`
+- `{ error, data, definedError }`
 
-`inferableError` is the same value as `error` when `isInferableError(error)` returns `true`; otherwise it is `null`.
+`definedError` is the same value as `error` when `isDefinedError(error)` returns `true`; otherwise it is `null`.
 :::
 
 ## Safe Client

@@ -1,4 +1,4 @@
-import { isInferableError, ORPCError } from '@orpc/client'
+import { isDefinedError, ORPCError } from '@orpc/client'
 import { useInfiniteQuery, useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { defineComponent, ref } from 'vue'
 import { createPiniaColadaUtils, PINIA_COLADA_OPERATION_CONTEXT_SYMBOL } from '../src'
@@ -32,7 +32,7 @@ it('case: with useQuery', async () => {
   // I don't know why but we should put error case in the top of the test or it will fail by `Unhandled Rejection`
   vi.mocked(router.nested.ping['~orpc'].handler).mockRejectedValueOnce(new ORPCError('OVERRIDE'))
   await vi.waitFor(
-    () => expect(mounted.vm.query.error.value).toSatisfy((e: any) => isInferableError(e) && e.code === 'OVERRIDE'),
+    () => expect(mounted.vm.query.error.value).toSatisfy((e: any) => isDefinedError(e) && e.code === 'OVERRIDE'),
   )
 
   mounted.vm.queryCache.invalidateQueries({ key: orpc.ping.key() })
@@ -78,7 +78,7 @@ it('case: with streamed/useQuery', async () => {
   // I don't know why but we should put error case in the top of the test or it will fail by `Unhandled Rejection`
   vi.mocked(router.stream['~orpc'].handler).mockRejectedValueOnce(new ORPCError('OVERRIDE'))
   await vi.waitFor(
-    () => expect(mounted.vm.query.error.value).toSatisfy((e: any) => isInferableError(e) && e.code === 'OVERRIDE'),
+    () => expect(mounted.vm.query.error.value).toSatisfy((e: any) => isDefinedError(e) && e.code === 'OVERRIDE'),
   )
 
   // next fetch streams chunk by chunk, gated so intermediate states are observable
@@ -146,7 +146,7 @@ it('case: with live/useQuery', async () => {
   // I don't know why but we should put error case in the top of the test or it will fail by `Unhandled Rejection`
   vi.mocked(router.stream['~orpc'].handler).mockRejectedValueOnce(new ORPCError('OVERRIDE'))
   await vi.waitFor(
-    () => expect(mounted.vm.query.error.value).toSatisfy((e: any) => isInferableError(e) && e.code === 'OVERRIDE'),
+    () => expect(mounted.vm.query.error.value).toSatisfy((e: any) => isDefinedError(e) && e.code === 'OVERRIDE'),
   )
 
   // next fetch streams chunk by chunk, gated so intermediate states are observable
@@ -241,7 +241,7 @@ it('case: with useMutation', async () => {
 
   await vi.waitFor(() => {
     expect((mounted.vm.mutation as any).error.value).toBeInstanceOf(ORPCError)
-    expect((mounted.vm.mutation as any).error.value).toSatisfy(isInferableError)
+    expect((mounted.vm.mutation as any).error.value).toSatisfy(isDefinedError)
     expect((mounted.vm.mutation as any).error.value.code).toEqual('OVERRIDE')
   })
 })

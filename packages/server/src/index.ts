@@ -47,7 +47,6 @@ export {
   cloneORPCError,
   COMMON_ERROR_STATUS_MAP,
   isDefinedError,
-  isInferableError,
   ORPCError,
   RPCJsonSerializer,
   RPCSerializer,

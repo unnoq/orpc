@@ -19,8 +19,8 @@ import { getRouter } from './router-utils'
  * @see {@link https://orpc.dev/docs/client/client-side#creating-a-client | Client-Side Clients - Creating a Client}
  */
 export type RouterClient<TRouter extends AnyRouter, TClientContext extends ClientContext = object>
-  = TRouter extends Procedure<any, any, infer $InputSchema, infer $OutputSchema, infer $ErrorMap, infer $ReturnedError>
-    ? ProcedureClient<TClientContext, $InputSchema, $OutputSchema, $ErrorMap, $ReturnedError>
+  = TRouter extends Procedure<any, any, infer $InputSchema, infer $OutputSchema, infer $ErrorMap>
+    ? ProcedureClient<TClientContext, $InputSchema, $OutputSchema, $ErrorMap>
     : {
         [K in keyof TRouter]: TRouter[K] extends Lazyable<infer U extends AnyRouter> ? RouterClient<U, TClientContext> : never
       }
@@ -38,7 +38,6 @@ export function createRouterClient<T extends AnyRouter, TClientContext extends C
       InferRouterInitialContext<T>,
       Schema<unknown>,
       ErrorMap,
-      any,
       TClientContext
     >
   >

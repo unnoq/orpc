@@ -59,7 +59,7 @@ Special Next.js errors such as [redirect](https://nextjs.org/docs/app/api-refere
 
 ### Typesafe Errors
 
-[Typesafe errors](/docs/error-handling#typesafe-errors) are supported as well. Because errors are serialized before they reach the client, use the `inferable` field to distinguish errors.
+[Typesafe errors](/docs/error-handling#typesafe-errors) are supported as well. Because errors are serialized before they reach the client, use the `defined` field to distinguish errors.
 
 <CodeGroup>
 
@@ -73,7 +73,7 @@ export default function Page() {
     const [error, message] = await serverFunction()
 
     if (error) {
-      if (error.inferable) {
+      if (error.defined) {
         // handle typesafe error
       }
       else {
@@ -165,7 +165,7 @@ This integration also includes React hooks for server functions. `useServerFunct
 ```tsx useServerFunction
 'use client'
 
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 import {
   getIssueMessage,
   onErrorDeferred,
@@ -177,7 +177,7 @@ export function MyComponent() {
   const { execute, data, error, status } = useServerFunction(serverFunction, {
     interceptors: [
       onErrorDeferred((error) => {
-        if (isInferableError(error)) {
+        if (isDefinedError(error)) {
           console.error(error.data)
           //                   ^ Typed error data
         }
@@ -244,7 +244,7 @@ Besides hooks, this integration also re-exports [form-data helpers](/docs/helper
 :::
 
 :::info
-You can use [`safe` and `isInferableError`](/docs/client/error-handling#using-safe-and-isinferableerror) together for typesafe error handling in interceptors.
+You can use [`safe` and `isDefinedError`](/docs/client/error-handling#using-safe-and-isdefinederror) together for typesafe error handling in interceptors.
 :::
 
 ## Server Form Functions

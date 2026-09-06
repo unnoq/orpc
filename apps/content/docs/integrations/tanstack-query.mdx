@@ -266,7 +266,7 @@ When you configure `queryKey`, it also affects `.queryOptions` because it is use
 Interceptors let you wrap `queryFn` and `mutationFn` calls. Unlike [default options](#default-options), which can be overridden by per-call options, interceptors always run for every query and mutation.
 
 ```ts
-import { isInferableError, safe } from '@orpc/client'
+import { isDefinedError, safe } from '@orpc/client'
 
 const orpc = createTanstackQueryUtils(client, {
   queryInterceptors: [],
@@ -278,7 +278,7 @@ const orpc = createTanstackQueryUtils(client, {
       const [error, data] = await safe(next())
 
       if (error) {
-        if (isInferableError(error)) {
+        if (isDefinedError(error)) {
           // handle typesafe errors
         }
 
@@ -305,7 +305,7 @@ const orpc = createTanstackQueryUtils(client, {
 ```
 
 :::info
-You can use [`safe` and `isInferableError`](/docs/client/error-handling#using-safe-and-isinferableerror) together for typesafe error handling in interceptors.
+You can use [`safe` and `isDefinedError`](/docs/client/error-handling#using-safe-and-isdefinederror) together for typesafe error handling in interceptors.
 :::
 
 ## Plugins
@@ -462,14 +462,14 @@ const link = new RPCLink<ClientContext>({
 
 ## Typesafe Error Handling
 
-Use the built-in `isInferableError` helper to handle [typesafe errors](/docs/error-handling#typesafe-errors) in queries and mutations.
+Use the built-in `isDefinedError` helper to handle [typesafe errors](/docs/error-handling#typesafe-errors) in queries and mutations.
 
 ```ts
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 
 const mutation = useMutation(orpc.planet.create.mutationOptions({
   onError: (error) => {
-    if (isInferableError(error)) {
+    if (isDefinedError(error)) {
       // Handle typesafe errors here
     }
   }
@@ -477,7 +477,7 @@ const mutation = useMutation(orpc.planet.create.mutationOptions({
 
 mutation.mutate({ name: 'Earth' })
 
-if (mutation.error && isInferableError(mutation.error)) {
+if (mutation.error && isDefinedError(mutation.error)) {
   // Handle the typesafe errors here
 }
 ```

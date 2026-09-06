@@ -1,4 +1,3 @@
-import type { AnyORPCError } from '@orpc/client'
 import type { AnySchema, ErrorMap } from '@orpc/contract'
 import type { Context } from '@orpc/server'
 import type { OpenAPIMeta } from '../meta'
@@ -90,9 +89,8 @@ declare module '@orpc/server' {
     TInputSchema extends AnySchema,
     TOutputSchema extends AnySchema,
     TErrorMap extends ErrorMap,
-    TReturnedError extends AnyORPCError,
   > {
-    route(meta: OpenAPIMeta): DecoratedProcedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
+    route(meta: OpenAPIMeta): DecoratedProcedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
   }
 }
 

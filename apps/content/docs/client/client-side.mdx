@@ -83,7 +83,7 @@ const output = await client.someProcedure(input, {
 Interceptors let you wrap client calls. They are similar to interceptors in links, but are more typesafe because the exact input, output, and error types of each client are known. You can provide per-client interceptors with `scoped`.
 
 ```ts
-import { isInferableError, safe } from '@orpc/client'
+import { isDefinedError, safe } from '@orpc/client'
 
 const client: RouterClient<typeof router, ClientContext> = createORPCClient(link, {
   interceptors: [
@@ -91,7 +91,7 @@ const client: RouterClient<typeof router, ClientContext> = createORPCClient(link
       const [error, data] = await safe(next())
 
       if (error) {
-        if (isInferableError(error)) {
+        if (isDefinedError(error)) {
           // handle typesafe errors
         }
 
@@ -116,7 +116,7 @@ const client: RouterClient<typeof router, ClientContext> = createORPCClient(link
 ```
 
 :::info
-You can use [`safe` and `isInferableError`](/docs/client/error-handling#using-safe-and-isinferableerror) together for typesafe error handling in interceptors.
+You can use [`safe` and `isDefinedError`](/docs/client/error-handling#using-safe-and-isdefinederror) together for typesafe error handling in interceptors.
 :::
 
 ## Merging Clients

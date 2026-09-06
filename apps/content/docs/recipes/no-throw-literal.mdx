@@ -26,7 +26,7 @@ declare module '@orpc/server' { // or '@orpc/contract', or '@orpc/client'
 ```
 
 :::info
-Avoid using `any` or `unknown` for `ThrowableError` because doing so prevents the client from inferring [typesafe errors](/docs/client/error-handling#using-safe-and-isinferableerror). Instead, use `null | undefined | {}` (equivalent to `unknown`) for stricter error type inference.
+Avoid using `any` or `unknown` for `ThrowableError` because doing so prevents the client from inferring [typesafe errors](/docs/client/error-handling#using-safe-and-isdefinederror). Instead, use `null | undefined | {}` (equivalent to `unknown`) for stricter error type inference.
 :::
 
 :::warning
@@ -36,7 +36,7 @@ If `ThrowableError` is configured as `null | undefined | {}`, check `isSuccess` 
 const { error, data, isSuccess } = await safe(client('input'))
 
 if (!isSuccess) {
-  if (isInferableError(error)) {
+  if (isDefinedError(error)) {
     // handle typesafe errors
   }
 

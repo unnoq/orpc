@@ -1,4 +1,4 @@
-import type { Client, ORPCError, ThrowableError } from '@orpc/client'
+import type { Client, ThrowableError } from '@orpc/client'
 import type { ORPCErrorFromErrorMap } from '@orpc/contract'
 import type { ProcedureClient } from './procedure-client'
 import z from 'zod'
@@ -19,15 +19,14 @@ it('ProcedureClient', () => {
       { cache?: boolean },
       typeof schema1,
       typeof schema2,
-      typeof errorMap,
-      ORPCError<'CODE', string>
+      typeof errorMap
     >
   >().toEqualTypeOf<
     Client<
       { cache?: boolean },
       { schema1: number },
       { schema2: string },
-      ORPCErrorFromErrorMap<typeof errorMap> | ORPCError<'CODE', string> | ThrowableError
+      ORPCErrorFromErrorMap<typeof errorMap> | ThrowableError
     >
   >()
 })

@@ -26,7 +26,7 @@ describe('createServerFormFunctionable', () => {
       ),
     ).toEqualTypeOf<
       & ServerFormFunction
-      & Procedure<{ auth: boolean }, object, typeof schema1, typeof schema2, typeof errorMap, never>
+      & Procedure<{ auth: boolean }, object, typeof schema1, typeof schema2, typeof errorMap>
     >()
   })
 

@@ -122,22 +122,15 @@ describe('ProcedureImplementer', () => {
       })
     })
 
-    it('allow return ORPCError', () => {
-      const procedure = implementer.handler(async ({ errors, context }, input) => {
+    it('does not allow returning ORPCError', () => {
+      // @ts-expect-error - ORPCError is not a valid output
+      void implementer.handler(async ({ errors, context }, input) => {
         if (Math.random() > 0.5) {
           return new ORPCError('CODE')
         }
 
         return '123'
       })
-
-      expectTypeOf(procedure).toEqualTypeOf<ImplementedProcedure<
-        { auth: boolean },
-        { user: string },
-        Schema<number, string>,
-        Schema<string, number>,
-        typeof errorMap
-      >>()
     })
   })
 })

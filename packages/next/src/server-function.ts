@@ -1,4 +1,4 @@
-import type { AnyORPCError, AnyORPCErrorJSON, AnySchema, Context, ErrorMap, InferSchemaInput, InferSchemaOutput, Lazyable, ORPCError, ORPCErrorCode, ORPCErrorFromErrorMap, ORPCErrorJSON, Procedure, ProcedureClientOptions, ThrowableError } from '@orpc/server'
+import type { AnyORPCErrorJSON, AnySchema, Context, ErrorMap, InferSchemaInput, InferSchemaOutput, Lazyable, ORPCError, ORPCErrorCode, ORPCErrorFromErrorMap, ORPCErrorJSON, Procedure, ProcedureClientOptions, ThrowableError } from '@orpc/server'
 import type { MaybeOptionalOptions } from '@orpc/shared'
 import { createProcedureClient, toORPCError } from '@orpc/server'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
@@ -6,11 +6,11 @@ import { unstable_rethrow } from 'next/navigation'
 
 export type ServerFunctionORPCErrorJSON<T>
   = T extends ORPCError<infer U, infer V>
-    ? ORPCErrorJSON<U, V> & { inferable: true }
-    : ORPCErrorJSON<ORPCErrorCode, unknown> & { inferable: false }
+    ? ORPCErrorJSON<U, V> & { defined: true }
+    : ORPCErrorJSON<ORPCErrorCode, unknown> & { defined: false }
 
 export type ServerFunctionError<T extends AnyORPCErrorJSON>
-  = T extends ORPCErrorJSON<infer U, infer V> & { inferable: true }
+  = T extends ORPCErrorJSON<infer U, infer V> & { defined: true }
     ? ORPCError<U, V>
     : ThrowableError
 
@@ -28,11 +28,10 @@ export type ProcedureServerFunction<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedORPCError extends AnyORPCError,
 > = ServerFunction<
   InferSchemaInput<TInputSchema>,
   InferSchemaOutput<TOutputSchema>,
-  ServerFunctionORPCErrorJSON<ORPCErrorFromErrorMap<TErrorMap> | TReturnedORPCError | ThrowableError>
+  ServerFunctionORPCErrorJSON<ORPCErrorFromErrorMap<TErrorMap> | ThrowableError>
 >
 
 /**
@@ -51,26 +50,23 @@ export function createServerFunction<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
 >(
   procedure: Lazyable<Procedure<
     TInitialContext,
     any,
     TInputSchema,
     TOutputSchema,
-    TErrorMap,
-    TReturnedError
+    TErrorMap
   >>,
   ...rest: MaybeOptionalOptions<
     ProcedureClientOptions<
       TInitialContext,
       TOutputSchema,
       TErrorMap,
-      TReturnedError,
       object
     >
   >
-): ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap, TReturnedError> {
+): ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap> {
   const options = resolveMaybeOptionalOptions(rest)
   const client = createProcedureClient(procedure, options)
 
@@ -83,7 +79,7 @@ export function createServerFunction<
       unstable_rethrow(error)
 
       return [
-        toORPCError(error).toJSON() as ServerFunctionORPCErrorJSON<ORPCErrorFromErrorMap<TErrorMap> | TReturnedError | ThrowableError>,
+        toORPCError(error).toJSON() as ServerFunctionORPCErrorJSON<ORPCErrorFromErrorMap<TErrorMap> | ThrowableError>,
         undefined,
       ]
     }

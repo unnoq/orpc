@@ -36,7 +36,7 @@ const example = os
 
 ## Typesafe Errors
 
-For end-to-end type safety, define your errors with `.errors` or [return `ORPCError`](#returning-an-orpcerror). This lets the client infer each error's shape and handle it safely. You can use any [Standard Schema](https://standardschema.dev/schema#what-schema-libraries-implement-the-spec) library to validate error data.
+For end-to-end type safety, define your errors with `.errors`. This lets the client infer each error's shape and handle it safely. You can use any [Standard Schema](https://standardschema.dev/schema#what-schema-libraries-implement-the-spec) library to validate error data.
 
 :::danger
 `message` and `data` are sent to the client. Do not include sensitive information in either field.
@@ -104,32 +104,6 @@ const exampleProcedure = os
     throw new ORPCError('BAD_REQUEST')
   })
 ```
-
-### Returning an `ORPCError`
-
-As an alternative to `.errors`, you can return an `ORPCError` directly from your handler or middleware to achieve end-to-end type safety.
-
-:::warning
-When [implementing a contract](/docs/contract/implementation), returning an `ORPCError` is equivalent to throwing one.
-:::
-
-```ts
-const exampleProcedure = os
-  .handler(async ({ errors }) => {
-    if (reachRateLimit) {
-      return new ORPCError('RATE_LIMITED', {
-        message: 'You are being rate limited',
-        data: { retryAfter: 60 }
-      })
-    }
-
-    return 'Success'
-  })
-```
-
-:::danger
-`message` and `data` are sent to the client. Do not include sensitive information in either field.
-:::
 
 ## Error Factory
 
