@@ -112,57 +112,6 @@ describe('openAPIGenerator operation builders', () => {
       })
     })
 
-    it('renders a compact path param as required even when the schema marks it optional', () => {
-      const { ctx, operation } = createContext()
-      const path = '/planets/{id}' as const
-
-      buildRequest(ctx, operation, testDef({
-        inputs: [testSchema({
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            name: { type: 'string' },
-          },
-          required: ['name'],
-        })],
-      }), { method: 'POST', path }, getDynamicPathParams(path))
-
-      expect(operation.parameters).toEqual([
-        { in: 'path', required: true, name: 'id', schema: { type: 'string' } },
-      ])
-      expect(operation.requestBody).toEqual({
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              properties: { name: { type: 'string' } },
-              required: ['name'],
-            },
-          },
-        },
-      })
-    })
-
-    it('renders a detailed path param as required even when the schema marks it optional', () => {
-      const { ctx, operation } = createContext()
-      const path = '/planets/{id}' as const
-
-      buildRequest(ctx, operation, testDef({
-        inputs: [testSchema({
-          type: 'object',
-          properties: {
-            params: { type: 'object', properties: { id: { type: 'string' } } },
-          },
-        })],
-      }), { inputStructure: 'detailed', path }, getDynamicPathParams(path))
-
-      expect(operation.parameters).toEqual([
-        { in: 'path', required: true, name: 'id', schema: { type: 'string' } },
-      ])
-      expect(operation.requestBody).toBeUndefined()
-    })
-
     it('maps compact path params and keeps the remaining fields in the body', () => {
       const { ctx, operation } = createContext()
       const path = '/planets/{id}' as const
@@ -476,6 +425,13 @@ describe('openAPIGenerator operation builders', () => {
         meta: { path: '/planets/{id}' as const },
         path: '/planets/{id}' as const,
         message: 'Schema keys:  (none)',
+      },
+      {
+        name: 'a dynamic param is optional in the input schema',
+        inputs: [testSchema({ type: 'object', properties: { id: { type: 'string' } } })],
+        meta: { path: '/planets/{id}' as const },
+        path: '/planets/{id}' as const,
+        message: 'dynamic param "id" is optional in the input schema',
       },
     ])('throws when $name', ({ inputs, meta, path, message }) => {
       const { ctx, operation } = createContext()
