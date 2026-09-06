@@ -11,6 +11,7 @@ export default defineMeta({
     'message-port',
     'astro',
     'browser',
+    'cloudflare-workers',
     'electron',
     'elysia',
     'expo',

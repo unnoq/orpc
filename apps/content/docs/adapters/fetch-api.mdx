@@ -1,6 +1,6 @@
 ---
 title: "Fetch API Adapter"
-description: "Use oRPC with the Fetch API on both servers and clients, in runtimes such as Bun, Deno, and Cloudflare Workers."
+description: "Use oRPC with the Fetch API on both servers and clients, in runtimes such as Bun and Deno."
 sidebar:
   label: "Fetch API"
 ---
@@ -80,12 +80,6 @@ The actual usage of `fetch` depends on the runtime environment or library you us
 Bun.serve({
   fetch,
 })
-```
-
-```ts title="Cloudflare Workers"
-export default {
-  fetch,
-}
 ```
 
 ```ts Deno
