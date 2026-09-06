@@ -17,8 +17,8 @@ export type SafeClient<T extends AnyNestedClient>
  * @example
  * ```ts
  * const safeClient = createSafeClient(client)
- * const { error, data, inferrableError, isSuccess } = await safeClient.doSomething({ id: '123' })
- * // or const [error, data, inferrableError, isSuccess] = await safeClient.doSomething({ id: '123' })
+ * const { error, data, definedError, isSuccess } = await safeClient.doSomething({ id: '123' })
+ * // or const [error, data, definedError, isSuccess] = await safeClient.doSomething({ id: '123' })
  * ```
  *
  * @see {@link https://orpc.dev/docs/client/error-handling#safe-client | Client Error Handling - Safe Client}
