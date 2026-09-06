@@ -226,33 +226,12 @@ describe('openAPIGenerator e2e: crud api', () => {
     }))
   })
 
-  it('documents an optional path param as required since the route only matches when it is present', async () => {
-    const doc = await generator.generate({
-      find: oc
-        .meta(openapi({ method: 'GET', path: '/planets/{id}' }))
-        .input(z.object({ id: z.string().optional(), includeArchived: z.boolean().optional() })),
-    })
-
-    expect(doc.paths?.['/planets/{id}']?.get).toEqual(expect.objectContaining({
-      parameters: [
-        { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        {
-          name: 'includeArchived',
-          in: 'query',
-          allowEmptyValue: true,
-          allowReserved: true,
-          schema: { type: 'boolean' },
-        },
-      ],
-    }))
-  })
-
   it('rejects invalid contracts with one aggregated error listing every procedure', async () => {
     const error = await generator.generate({
-      // path params must exist in the input schema
+      // path params must be required
       find: oc
         .meta(openapi({ method: 'GET', path: '/planets/{id}' }))
-        .input(z.object({ name: z.string() })),
+        .input(z.object({ id: z.string().optional() })),
       // GET inputs must be objects
       list: oc.meta(openapi({ method: 'GET' })).input(z.string()),
     }).then(
@@ -261,7 +240,7 @@ describe('openAPIGenerator e2e: crud api', () => {
     )
 
     expect(error.message).toContain('Procedure at find:')
-    expect(error.message).toContain('is missing from the input schema')
+    expect(error.message).toContain('is optional in the input schema')
     expect(error.message).toContain('Procedure at list:')
     expect(error.message).toContain('method is GET but the input schema is not an object')
   })
