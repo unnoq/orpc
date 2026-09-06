@@ -33,12 +33,12 @@ export {
   sleep,
   stringifyJSON,
   toArray,
-} from '@standardserver/shared'
+} from '@standard-server/shared'
 
 export type {
   AsyncCleanupFn,
   AsyncIteratorClassNextFn,
-} from '@standardserver/shared'
+} from '@standard-server/shared'
 
 export type {
   Arrayable,

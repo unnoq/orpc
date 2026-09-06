@@ -1,5 +1,5 @@
 import type { Publisher } from '../src'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
 import { Redis } from '@upstash/redis'
 import { createClient } from 'redis'
 import { RedisPublisher } from '../src/adapters/redis'

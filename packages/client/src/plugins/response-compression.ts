@@ -1,8 +1,8 @@
 import type { StandardLinkOptions, StandardLinkPlugin, StandardLinkTransportInterceptor } from '../adapters/standard'
 import type { ClientContext } from '../types'
 import { toArray } from '@orpc/shared'
-import { flattenStandardHeader } from '@standardserver/core'
-import { toFetchHeaders, toStandardBody } from '@standardserver/fetch'
+import { flattenStandardHeader } from '@standard-server/core'
+import { toFetchHeaders, toStandardBody } from '@standard-server/fetch'
 
 export interface ResponseCompressionLinkPluginOptions<_T extends ClientContext> {
   /**

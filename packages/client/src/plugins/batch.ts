@@ -1,11 +1,11 @@
 import type { InterceptorOptions, Promisable, Value } from '@orpc/shared'
-import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardUrl } from '@standardserver/core'
-import type { ClientPeerSendMessage } from '@standardserver/peer'
+import type { StandardHeaders, StandardLazyResponse, StandardRequest, StandardUrl } from '@standard-server/core'
+import type { ClientPeerSendMessage } from '@standard-server/peer'
 import type { StandardLinkOptions, StandardLinkPlugin, StandardLinkTransportInterceptor, StandardLinkTransportInterceptorOptions } from '../adapters/standard'
 import type { ClientContext } from '../types'
 import { defer, isAsyncIteratorObject, loadBytes, once, splitInHalf, stringifyJSON, toArray, value } from '@orpc/shared'
-import { parseStandardUrl } from '@standardserver/core'
-import { ClientPeer, decodePeerMessage, isServerPeerSendMessage } from '@standardserver/peer'
+import { parseStandardUrl } from '@standard-server/core'
+import { ClientPeer, decodePeerMessage, isServerPeerSendMessage } from '@standard-server/peer'
 
 export type BatchLinkPluginMode = 'streaming' | 'buffered'
 

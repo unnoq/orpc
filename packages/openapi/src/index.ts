@@ -15,4 +15,4 @@ export {
 
 export type {
   StandardBodyHint,
-} from '@standardserver/core'
+} from '@standard-server/core'

@@ -1,6 +1,6 @@
 import type { AnyORPCError } from '@orpc/client'
 import { ORPCError } from '@orpc/client'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
 import * as z from 'zod'
 import { ValidationError } from './error'
 import { asyncIteratorObject, getAsyncIteratorObjectSchemaDetails } from './schema-built-in'

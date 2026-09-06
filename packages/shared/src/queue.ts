@@ -1,4 +1,4 @@
-import { AbortError } from '@standardserver/shared'
+import { AbortError } from '@standard-server/shared'
 
 export interface AsyncIdQueueCloseOptions {
   id?: string

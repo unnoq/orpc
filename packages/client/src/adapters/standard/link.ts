@@ -1,5 +1,5 @@
 import type { Interceptor } from '@orpc/shared'
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
 import type { ClientContext, ClientLink, ClientOptions } from '../../types'
 import type { StandardLinkCodec } from './codec'
 import type { StandardLinkPlugin } from './plugin'

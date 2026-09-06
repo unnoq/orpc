@@ -1,11 +1,11 @@
 import type { PublisherOptions, PublisherSubscribeListenerOptions } from '@orpc/publisher'
 import type { Promisable, ThrowableError } from '@orpc/shared'
-import type { EventMeta } from '@standardserver/core'
+import type { EventMeta } from '@standard-server/core'
 import type { RedisClient } from 'bun'
 import { RPCSerializer } from '@orpc/client'
 import { Publisher } from '@orpc/publisher'
 import { once, parseEmptyableJSON, stringifyJSON } from '@orpc/shared'
-import { getEventMeta, unwrapEvent, withEventMeta } from '@standardserver/core'
+import { getEventMeta, unwrapEvent, withEventMeta } from '@standard-server/core'
 
 export interface BunRedisPublisherOptions extends PublisherOptions {
   /**

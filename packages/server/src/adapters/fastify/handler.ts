@@ -1,10 +1,10 @@
 import type { Interceptor, MaybeOptionalOptions } from '@orpc/shared'
-import type { AnyFastifyReply, AnyFastifyRequest, SendStandardResponseOptions } from '@standardserver/fastify'
+import type { AnyFastifyReply, AnyFastifyRequest, SendStandardResponseOptions } from '@standard-server/fastify'
 import type { Context } from '../../context'
 import type { FriendlyStandardHandlerHandleOptions, StandardHandler, StandardHandlerHandleOptions } from '../standard'
 import type { FastifyHandlerPlugin } from './plugin'
 import { intercept, resolveMaybeOptionalOptions } from '@orpc/shared'
-import { sendStandardResponse, toStandardLazyRequest } from '@standardserver/fastify'
+import { sendStandardResponse, toStandardLazyRequest } from '@standard-server/fastify'
 import { resolveFriendlyStandardHandlerHandleOptions } from '../standard'
 import { CompositeFastifyHandlerPlugin } from './plugin'
 

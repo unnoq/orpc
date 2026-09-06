@@ -1,4 +1,4 @@
-import type { StandardLazyRequest } from '@standardserver/core'
+import type { StandardLazyRequest } from '@standard-server/core'
 import { ORPCError } from '@orpc/client'
 import { DEFAULT_ERROR_STATUS, os } from '@orpc/server'
 import { openapi } from '../../meta'

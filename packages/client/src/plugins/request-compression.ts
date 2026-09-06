@@ -1,8 +1,8 @@
-import type { StandardBodyHint } from '@standardserver/core'
+import type { StandardBodyHint } from '@standard-server/core'
 import type { StandardLinkOptions, StandardLinkPlugin, StandardLinkTransportInterceptor, StandardLinkTransportInterceptorOptions } from '../adapters/standard'
 import type { ClientContext } from '../types'
 import { isAsyncIteratorObject, isCompressibleContentType, stringifyJSON, toArray } from '@orpc/shared'
-import { flattenStandardHeader, generateContentDisposition } from '@standardserver/core'
+import { flattenStandardHeader, generateContentDisposition } from '@standard-server/core'
 
 // Rough UTF-8 estimate. Mostly ASCII text stays close to 1 byte/char;
 // occasional multi-byte characters increase the average.

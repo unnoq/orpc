@@ -1,6 +1,6 @@
 import type { AnyORPCError } from '@orpc/client'
 import type { Promisable } from '@orpc/shared'
-import type { StandardLazyRequest, StandardResponse } from '@standardserver/core'
+import type { StandardLazyRequest, StandardResponse } from '@standard-server/core'
 import type { Context } from '../../context'
 import type { AnyProcedure } from '../../procedure'
 import type { StandardHandlerHandleOptions } from './handler'

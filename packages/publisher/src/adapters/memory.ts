@@ -1,6 +1,6 @@
 import type { PublisherOptions, PublisherSubscribeListenerOptions } from '../publisher'
 import { compareSequentialIds, once, SequentialIdGenerator } from '@orpc/shared'
-import { getEventMeta, unwrapEvent, withEventMeta } from '@standardserver/core'
+import { getEventMeta, unwrapEvent, withEventMeta } from '@standard-server/core'
 import { Publisher } from '../publisher'
 
 export interface MemoryPublisherOptions extends PublisherOptions {

@@ -1,7 +1,7 @@
 import type { RPCJsonSerializerHandler } from '@orpc/client'
 import { ORPCError, RPCSerializer } from '@orpc/client'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
-import { encodePeerMessage } from '@standardserver/peer'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
+import { encodePeerMessage } from '@standard-server/peer'
 import { encodeHibernationRPCEvent } from './encode-event'
 
 class Planet {

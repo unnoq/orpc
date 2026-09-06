@@ -1,4 +1,4 @@
-import { toFetchBody } from '@standardserver/fetch'
+import { toFetchBody } from '@standard-server/fetch'
 import { createORPCClient } from '../../client'
 import { RPCLink } from './rpc-link'
 
@@ -11,7 +11,7 @@ vi.mock('@orpc/shared', async (loadOrigin) => {
   }
 })
 
-vi.mock('@standardserver/fetch', async (loadOrigin) => {
+vi.mock('@standard-server/fetch', async (loadOrigin) => {
   const origin = await loadOrigin() as any
 
   return {

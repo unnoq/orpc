@@ -1,5 +1,5 @@
 import { os } from '@orpc/server'
-import { AsyncIteratorClass, sleep } from '@standardserver/shared'
+import { AsyncIteratorClass, sleep } from '@standard-server/shared'
 import { z } from 'zod'
 import { createCompressionCrosswsClientServerTest } from './__shared__/client-server.compression-crossws'
 import { createCompressionHonoFetchClientServerTest } from './__shared__/client-server.compression-hono-fetch'

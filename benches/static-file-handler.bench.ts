@@ -1,4 +1,4 @@
-import type { StandardLazyRequest } from '@standardserver/core'
+import type { StandardLazyRequest } from '@standard-server/core'
 import { Buffer } from 'node:buffer'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

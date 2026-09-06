@@ -1,9 +1,9 @@
-import type { StandardBody } from '@standardserver/core'
+import type { StandardBody } from '@standard-server/core'
 import type { BracketNotationSerializerOptions } from './bracket-notation'
 import type { OpenAPIJsonSerializerOptions } from './openapi-json-serializer'
 import { createORPCErrorFromJson, isORPCErrorJson, toORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { isAsyncIteratorObject } from '@orpc/shared'
-import { ErrorEvent } from '@standardserver/core'
+import { ErrorEvent } from '@standard-server/core'
 import { BracketNotationSerializer } from './bracket-notation'
 import { OpenAPIJsonSerializer } from './openapi-json-serializer'
 

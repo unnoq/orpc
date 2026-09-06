@@ -1,6 +1,6 @@
 import { RPCSerializer } from '@orpc/client'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
-import { sleep } from '@standardserver/shared'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
+import { sleep } from '@standard-server/shared'
 import { reset } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

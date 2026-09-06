@@ -1,10 +1,10 @@
 import type { ThrowableError } from '@orpc/shared'
-import type { EventMeta } from '@standardserver/core'
+import type { EventMeta } from '@standard-server/core'
 import type { Redis } from '@upstash/redis'
 import type { PublisherOptions, PublisherSubscribeListenerOptions } from '../publisher'
 import { RPCSerializer } from '@orpc/client'
 import { once } from '@orpc/shared'
-import { getEventMeta, unwrapEvent, withEventMeta } from '@standardserver/core'
+import { getEventMeta, unwrapEvent, withEventMeta } from '@standard-server/core'
 import { Publisher } from '../publisher'
 
 export interface UpstashPublisherOptions extends PublisherOptions {

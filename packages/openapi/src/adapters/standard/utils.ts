@@ -1,4 +1,4 @@
-import type { StandardHeaders } from '@standardserver/core'
+import type { StandardHeaders } from '@standard-server/core'
 import type { OpenAPISerializer } from '../../openapi-serializer'
 import { isTypescriptObject, NullProtoObj } from '@orpc/shared'
 

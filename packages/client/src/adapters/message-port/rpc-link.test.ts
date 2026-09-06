@@ -1,5 +1,5 @@
 import { sleep } from '@orpc/shared'
-import { decodePeerMessage, encodePeerMessage } from '@standardserver/peer'
+import { decodePeerMessage, encodePeerMessage } from '@standard-server/peer'
 import { createORPCClient } from '../../client'
 import { RPCLink } from './rpc-link'
 

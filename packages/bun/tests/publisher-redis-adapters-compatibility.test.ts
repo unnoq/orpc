@@ -1,6 +1,6 @@
 import type { Publisher } from '@orpc/publisher'
 import { RedisPublisher } from '@orpc/publisher/redis'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
 import { RedisClient } from 'bun'
 import { afterAll, describe, expect, it, vi } from 'bun:test'
 import { createClient } from 'redis'

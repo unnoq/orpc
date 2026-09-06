@@ -1,7 +1,7 @@
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
 import type { StandardLinkCodec, StandardLinkTransport } from '../adapters/standard'
 import { sleep } from '@orpc/shared'
-import { encodePeerMessage } from '@standardserver/peer'
+import { encodePeerMessage } from '@standard-server/peer'
 import { StandardLink } from '../adapters/standard'
 import { BatchLinkPlugin } from './batch'
 

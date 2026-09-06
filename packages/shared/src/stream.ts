@@ -1,7 +1,7 @@
 import type { Promisable } from 'type-fest'
 import type { StartSpanOptions } from './opentelemetry'
 import type { ThrowableError } from './types'
-import { AsyncIteratorClass } from '@standardserver/shared'
+import { AsyncIteratorClass } from '@standard-server/shared'
 import { once } from './function'
 import { isPlainObject } from './object'
 import { recordSpanError, runInSpanContext, startSpan } from './opentelemetry'

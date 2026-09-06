@@ -1,5 +1,5 @@
 import type { AwsLambdaHandlerPlugin } from '@orpc/server/aws-lambda'
-import type { APIGatewayProxyEventV2, AwsLambdaGlobal, HttpResponseStream } from '@standardserver/aws-lambda'
+import type { APIGatewayProxyEventV2, AwsLambdaGlobal, HttpResponseStream } from '@standard-server/aws-lambda'
 import { Buffer } from 'node:buffer'
 import { Writable } from 'node:stream'
 import { os } from '@orpc/server'

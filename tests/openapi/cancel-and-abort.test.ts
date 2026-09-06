@@ -1,6 +1,6 @@
 import { openapi } from '@orpc/openapi'
 import { os } from '@orpc/server'
-import { AsyncIteratorClass, sleep } from '@standardserver/shared'
+import { AsyncIteratorClass, sleep } from '@standard-server/shared'
 import { z } from 'zod'
 import { createHonoFetchClientServerTest } from './__shared__/client-server.hono-fetch'
 import { createNodeHttpClientServerTest } from './__shared__/client-server.node-http'

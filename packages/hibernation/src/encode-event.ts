@@ -1,8 +1,8 @@
 import type { Public } from '@orpc/shared'
-import type { EncodePeerMessageOptions, PeerEventStreamMessage } from '@standardserver/peer'
+import type { EncodePeerMessageOptions, PeerEventStreamMessage } from '@standard-server/peer'
 import { RPCSerializer, toORPCError } from '@orpc/client'
-import { unwrapEvent } from '@standardserver/core'
-import { encodePeerMessage } from '@standardserver/peer'
+import { unwrapEvent } from '@standard-server/core'
+import { encodePeerMessage } from '@standard-server/peer'
 
 export interface EncodeHibernationRPCEventOptions {
   /**

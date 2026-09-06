@@ -1,11 +1,11 @@
 import type { Context, ErrorMap, ProcedureClientInterceptor, Schema } from '@orpc/server'
 import type { StandardHandlerInterceptor, StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
-import type { StandardRequest } from '@standardserver/core'
+import type { StandardRequest } from '@standard-server/core'
 import type { LogLevel, RequestLogger } from 'evlog'
 import type { BaseEvlogOptions, FrameworkIntegrationHelpers, FrameworkIntegrationSpec } from 'evlog/toolkit'
 import { ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { isAbortError, isAsyncIteratorObject, ORPC_NAME, override, sleep, toArray, wrapReadableStream } from '@orpc/shared'
-import { ErrorEvent, flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
+import { ErrorEvent, flattenStandardHeader, parseStandardUrl } from '@standard-server/core'
 import { defineFrameworkIntegration } from 'evlog/toolkit'
 import { getLogger, LOGGER_CONTEXT_SYMBOL } from './context'
 

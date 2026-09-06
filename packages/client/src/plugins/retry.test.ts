@@ -1,7 +1,7 @@
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
 import type { StandardLinkCodec, StandardLinkTransport } from '../adapters/standard'
 import type { RetryLinkPluginContext } from './retry'
-import { withEventMeta } from '@standardserver/core'
+import { withEventMeta } from '@standard-server/core'
 import { StandardLink } from '../adapters/standard'
 import { RetryLinkPlugin } from './retry'
 

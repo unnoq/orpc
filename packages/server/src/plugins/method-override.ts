@@ -1,8 +1,8 @@
-import type { StandardMethod, StandardUrl } from '@standardserver/core'
+import type { StandardMethod, StandardUrl } from '@standard-server/core'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '../adapters/standard'
 import type { Context } from '../context'
 import { toArray } from '@orpc/shared'
-import { parseStandardUrl } from '@standardserver/core'
+import { parseStandardUrl } from '@standard-server/core'
 
 export interface MethodOverrideHandlerPluginOptions {
   /**

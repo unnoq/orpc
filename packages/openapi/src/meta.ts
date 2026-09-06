@@ -1,7 +1,7 @@
 import type { AnyProcedureContract, AnySchema, ErrorMap, MetaPlugin } from '@orpc/contract'
 import type { Lazy } from '@orpc/server'
 import type { Value } from '@orpc/shared'
-import type { StandardBodyHint } from '@standardserver/core'
+import type { StandardBodyHint } from '@standard-server/core'
 import type { OpenAPIOperationObject } from './types'
 import { mergeHttpPath } from '@orpc/shared'
 

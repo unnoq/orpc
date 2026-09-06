@@ -1,6 +1,6 @@
 import type { StandardHandlerOptions, StandardHandlerPlugin } from '../adapters/standard'
 import { toArray } from '@orpc/shared'
-import { toFetchHeaders } from '@standardserver/fetch'
+import { toFetchHeaders } from '@standard-server/fetch'
 
 /**
  * The context shape into which the Request Headers Plugin injects `reqHeaders`.

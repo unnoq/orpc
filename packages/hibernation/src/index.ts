@@ -15,11 +15,11 @@ export {
    * @see {@link https://orpc.dev/docs/integrations/hibernation | Hibernation Integration}
    */
   HibernationAsyncIteratorClass,
-} from '@standardserver/peer'
+} from '@standard-server/peer'
 export {
   /**
    * @deprecated Use `HibernationAsyncIteratorClass` instead.
    */
   HibernationAsyncIteratorClass as HibernationEventIterator,
-} from '@standardserver/peer'
-export type { HibernationAsyncIteratorClassCallback } from '@standardserver/peer'
+} from '@standard-server/peer'
+export type { HibernationAsyncIteratorClassCallback } from '@standard-server/peer'

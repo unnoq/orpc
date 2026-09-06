@@ -1,6 +1,6 @@
 import { ORPCError } from '@orpc/client'
 import { isAsyncIteratorObject } from '@orpc/shared'
-import { ErrorEvent } from '@standardserver/core'
+import { ErrorEvent } from '@standard-server/core'
 import { OpenAPISerializer } from './openapi-serializer'
 
 describe('openAPISerializer', () => {

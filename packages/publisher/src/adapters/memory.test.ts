@@ -1,4 +1,4 @@
-import { getEventMeta, withEventMeta } from '@standardserver/core'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
 import { MemoryPublisher } from './memory'
 
 type TestEvents = {

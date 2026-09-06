@@ -1,5 +1,5 @@
 import type { Promisable, Value } from '@orpc/shared'
-import type { StandardLazyRequest, StandardResponse } from '@standardserver/core'
+import type { StandardLazyRequest, StandardResponse } from '@standard-server/core'
 import type { Context } from '../../context'
 import type { StandardHandler, StandardHandlerHandleOptions } from '../standard'
 import { value } from '@orpc/shared'

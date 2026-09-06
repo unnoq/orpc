@@ -1,10 +1,10 @@
 import type { Interceptor, MaybeOptionalOptions } from '@orpc/shared'
-import type { NodeHttpRequest, NodeHttpResponse, SendStandardResponseOptions } from '@standardserver/node'
+import type { NodeHttpRequest, NodeHttpResponse, SendStandardResponseOptions } from '@standard-server/node'
 import type { Context } from '../../context'
 import type { FriendlyStandardHandlerHandleOptions, StandardHandler, StandardHandlerHandleOptions } from '../standard'
 import type { NodeHttpHandlerPlugin } from './plugin'
 import { intercept, resolveMaybeOptionalOptions } from '@orpc/shared'
-import { sendStandardResponse, toStandardLazyRequest } from '@standardserver/node'
+import { sendStandardResponse, toStandardLazyRequest } from '@standard-server/node'
 import { resolveFriendlyStandardHandlerHandleOptions } from '../standard'
 import { CompositeNodeHttpHandlerPlugin } from './plugin'
 

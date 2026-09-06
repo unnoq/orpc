@@ -1,5 +1,5 @@
 import { ORPCError, os } from '@orpc/server'
-import { sleep } from '@standardserver/shared'
+import { sleep } from '@standard-server/shared'
 import { z } from 'zod'
 import { createCompressionHonoFetchBatchClientServerTest } from './__shared__/client-server.compression-hono-fetch'
 import { createCompressionNodeHttpBatchClientServerTest } from './__shared__/client-server.compression-node-http'

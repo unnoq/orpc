@@ -1,11 +1,11 @@
 import type { Interceptor, Promisable, Value } from '@orpc/shared'
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
-import type { ToFetchBodyOptions } from '@standardserver/fetch'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
+import type { ToFetchBodyOptions } from '@standard-server/fetch'
 import type { ClientContext, ClientOptions } from '../../types'
 import type { StandardLinkTransport } from '../standard'
 import type { FetchLinkTransportPlugin } from './plugin'
 import { intercept, once, value } from '@orpc/shared'
-import { toFetchBody, toFetchHeaders, toStandardLazyResponse } from '@standardserver/fetch'
+import { toFetchBody, toFetchHeaders, toStandardLazyResponse } from '@standard-server/fetch'
 import { CompositeFetchLinkTransportPlugin } from './plugin'
 
 const GET_SUPPORTED_DUPLEX_MODE = once(() => {

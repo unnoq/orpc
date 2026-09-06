@@ -1,4 +1,4 @@
-import { decodePeerMessage, encodePeerMessage } from '@standardserver/peer'
+import { decodePeerMessage, encodePeerMessage } from '@standard-server/peer'
 import { os } from '../../builder'
 import { experimental_RPCHandler as RPCHandler } from './rpc-handler'
 

@@ -1,9 +1,9 @@
 import type { Promisable, Value } from '@orpc/shared'
-import type { StandardHeaders } from '@standardserver/core'
+import type { StandardHeaders } from '@standard-server/core'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor, StandardHandlerRoutingInterceptorOptions } from '../adapters/standard'
 import type { Context } from '../context'
 import { toArray, value } from '@orpc/shared'
-import { flattenStandardHeader } from '@standardserver/core'
+import { flattenStandardHeader } from '@standard-server/core'
 
 export interface CORSHandlerPluginOptions<T extends Context> {
   /**

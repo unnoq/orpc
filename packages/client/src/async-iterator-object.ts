@@ -1,6 +1,6 @@
 import type { AsyncIteratorClass, WrapAsyncIteratorOptions } from '@orpc/shared'
 import { isTypescriptObject, wrapAsyncIterator } from '@orpc/shared'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
 
 export function wrapAsyncIteratorPreservingEventMeta<TYield, TReturn, TMappedYield = TYield, TMappedReturn = TReturn>(
   iterator: AsyncIterator<TYield, TReturn>,
