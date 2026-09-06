@@ -1,4 +1,4 @@
-import type { StandardUrl } from '@standardserver/core'
+import type { StandardUrl } from '@standard-server/core'
 import { MalformedResponseError, ORPCError } from '../../error'
 import { RPCSerializer } from '../../rpc-serializer'
 import { RPCLinkCodec } from './rpc-link-codec'

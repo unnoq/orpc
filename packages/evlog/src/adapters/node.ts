@@ -1,4 +1,4 @@
-import type { StandardRequest } from '@standardserver/core'
+import type { StandardRequest } from '@standard-server/core'
 import type { RequestLogger } from 'evlog'
 import type { FrameworkIntegrationSpec } from 'evlog/toolkit'
 import { createLoggerStorage as baseCreateLoggerStorage } from 'evlog/toolkit'

@@ -1,10 +1,10 @@
 import type { Promisable } from '@orpc/shared'
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
-import type { DecodePeerMessageOptions, EncodePeerMessageOptions } from '@standardserver/peer'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
+import type { DecodePeerMessageOptions, EncodePeerMessageOptions } from '@standard-server/peer'
 import type { ClientContext, ClientOptions } from '../../types'
 import type { StandardLinkTransport } from '../standard'
 import { AbortError, loadBytes, promiseWithResolvers, runWithSignal, sequential, sleep, toStringOrBytes } from '@orpc/shared'
-import { ClientPeer, decodePeerMessage, encodePeerMessage, isServerPeerSendMessage } from '@standardserver/peer'
+import { ClientPeer, decodePeerMessage, encodePeerMessage, isServerPeerSendMessage } from '@standard-server/peer'
 
 /**
  * Some env maybe not available WebSocket global, like node 20

@@ -1,5 +1,5 @@
 import type { Writable } from '@orpc/shared'
-import type { StandardResponse } from '@standardserver/core'
+import type { StandardResponse } from '@standard-server/core'
 import type { AnyORPCError, MalformedResponseErrorOptions, ORPCErrorCode, ORPCErrorJSON } from './error'
 import { isPlainObject } from '@orpc/shared'
 import { COMMON_ERROR_STATUS_MAP, MalformedResponseError, ORPCError } from './error'

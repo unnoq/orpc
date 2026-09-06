@@ -1,10 +1,10 @@
 import type { Interceptor, MaybeOptionalOptions } from '@orpc/shared'
-import type { AnyAPIGatewayProxyEvent, HttpResponseStream, SendStandardResponseOptions } from '@standardserver/aws-lambda'
+import type { AnyAPIGatewayProxyEvent, HttpResponseStream, SendStandardResponseOptions } from '@standard-server/aws-lambda'
 import type { Context } from '../../context'
 import type { FriendlyStandardHandlerHandleOptions, StandardHandler, StandardHandlerHandleOptions } from '../standard'
 import type { AwsLambdaHandlerPlugin } from './plugin'
 import { intercept, resolveMaybeOptionalOptions } from '@orpc/shared'
-import { sendStandardResponse, toStandardLazyRequest } from '@standardserver/aws-lambda'
+import { sendStandardResponse, toStandardLazyRequest } from '@standard-server/aws-lambda'
 import { resolveFriendlyStandardHandlerHandleOptions } from '../standard'
 import { CompositeAwsLambdaHandlerPlugin } from './plugin'
 

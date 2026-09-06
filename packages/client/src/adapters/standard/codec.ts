@@ -1,5 +1,5 @@
 import type { Promisable } from '@orpc/shared'
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
 import type { AnyORPCError } from '../../error'
 import type { ClientContext, ClientOptions } from '../../types'
 

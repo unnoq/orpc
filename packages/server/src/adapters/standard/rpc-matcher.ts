@@ -1,6 +1,6 @@
 import type { AnyProcedureContract } from '@orpc/contract'
 import type { Value } from '@orpc/shared'
-import type { StandardMethod } from '@standardserver/core'
+import type { StandardMethod } from '@standard-server/core'
 import type { AnyProcedure } from '../../procedure'
 import type { AnyRouter } from '../../router'
 import type { WalkProcedureContractsLazyResult } from '../../router-utils'

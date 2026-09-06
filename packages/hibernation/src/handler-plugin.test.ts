@@ -1,7 +1,7 @@
 import { os } from '@orpc/server'
 import { RPCHandlerCodec, StandardHandler } from '@orpc/server/standard'
 import { RPCHandler } from '@orpc/server/websocket'
-import { decodePeerMessage, encodePeerMessage, HibernationAsyncIteratorClass } from '@standardserver/peer'
+import { decodePeerMessage, encodePeerMessage, HibernationAsyncIteratorClass } from '@standard-server/peer'
 import { encodeHibernationRPCEvent } from './encode-event'
 import { HibernationHandlerPlugin } from './handler-plugin'
 

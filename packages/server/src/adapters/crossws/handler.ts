@@ -1,11 +1,11 @@
 import type { MaybeOptionalOptions } from '@orpc/shared'
-import type { DecodePeerMessageOptions, EncodePeerMessageOptions } from '@standardserver/peer'
+import type { DecodePeerMessageOptions, EncodePeerMessageOptions } from '@standard-server/peer'
 import type { Message, Peer } from 'crossws'
 import type { Context } from '../../context'
 import type { StandardHandler } from '../standard'
 import type { StandardPeerRequestHandlerOptions } from '../standard-peer'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
-import { decodePeerMessage, encodePeerMessage, isClientPeerSendMessage, ServerPeer } from '@standardserver/peer'
+import { decodePeerMessage, encodePeerMessage, isClientPeerSendMessage, ServerPeer } from '@standard-server/peer'
 import { createStandardPeerRequestHandler } from '../standard-peer'
 
 export type CrosswsPeerLike = Pick<Peer, 'send'>

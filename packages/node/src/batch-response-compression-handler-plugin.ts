@@ -1,10 +1,10 @@
 import type { Context } from '@orpc/server'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
-import type { StandardBodyHint, StandardHeaders } from '@standardserver/core'
+import type { StandardBodyHint, StandardHeaders } from '@standard-server/core'
 import { Duplex } from 'node:stream'
 import { constants, createDeflate, createDeflateRaw, createGzip } from 'node:zlib'
 import { isNoTransformCacheControl, parseAcceptEncodingQualities, stringifyJSON, toArray, varyByAcceptEncoding } from '@orpc/shared'
-import { flattenStandardHeader } from '@standardserver/core'
+import { flattenStandardHeader } from '@standard-server/core'
 
 export interface BatchResponseCompressionHandlerPluginOptions {
   /**

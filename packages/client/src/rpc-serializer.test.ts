@@ -1,5 +1,5 @@
 import { isAsyncIteratorObject, parseEmptyableJSON } from '@orpc/shared'
-import { ErrorEvent, getEventMeta, withEventMeta } from '@standardserver/core'
+import { ErrorEvent, getEventMeta, withEventMeta } from '@standard-server/core'
 import { builtInRPCSupportDataTypes } from '../../../tests/rpc/__shared__/built-in-support-data-types'
 import { ORPCError } from './error'
 import { RPCSerializer } from './rpc-serializer'

@@ -1,6 +1,6 @@
 import type { Promisable } from 'type-fest'
 import type { PromiseWithError, ThrowableError } from './types'
-import { isAsyncIteratorObject } from '@standardserver/shared'
+import { isAsyncIteratorObject } from '@standard-server/shared'
 import { wrapAsyncIterator } from './iterator'
 import { override } from './proxy'
 import { wrapReadableStream } from './stream'

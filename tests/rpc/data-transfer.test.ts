@@ -1,5 +1,5 @@
 import { os } from '@orpc/server'
-import { sleep } from '@standardserver/shared'
+import { sleep } from '@standard-server/shared'
 import { z } from 'zod'
 import { builtInRPCSupportDataTypes } from './__shared__/built-in-support-data-types'
 import { Person } from './__shared__/client-server'

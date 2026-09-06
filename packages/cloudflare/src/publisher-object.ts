@@ -1,4 +1,4 @@
-import type { EventMeta } from '@standardserver/core'
+import type { EventMeta } from '@standard-server/core'
 import { stringifyJSON } from '@orpc/shared'
 import { DurableObject } from 'cloudflare:workers'
 

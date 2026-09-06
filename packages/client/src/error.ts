@@ -1,5 +1,5 @@
 import type { MaybeOptionalOptions, Registry } from '@orpc/shared'
-import type { StandardResponse } from '@standardserver/core'
+import type { StandardResponse } from '@standard-server/core'
 import { getConstructors, resolveMaybeOptionalOptions } from '@orpc/shared'
 
 /**

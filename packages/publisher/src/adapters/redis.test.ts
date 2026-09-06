@@ -2,7 +2,7 @@ import type { RedisClientType } from 'redis'
 import type { RedisPublisherOptions } from './redis'
 import { RPCSerializer } from '@orpc/client'
 import { getOrBind, promiseWithResolvers, sleep } from '@orpc/shared'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
 import { createClient } from 'redis'
 import { RedisPublisher } from './redis'
 

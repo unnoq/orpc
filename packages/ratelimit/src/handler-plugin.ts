@@ -1,6 +1,6 @@
 import type { AnyProcedure, Context } from '@orpc/server'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
-import type { StandardHeaders } from '@standardserver/core'
+import type { StandardHeaders } from '@standard-server/core'
 import type { RateLimitResult } from './types'
 import { toArray } from '@orpc/shared'
 

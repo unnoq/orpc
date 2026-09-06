@@ -1,4 +1,4 @@
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
 import type { StandardLinkCodec, StandardLinkTransport } from '../adapters/standard'
 import { AbortError } from '@orpc/shared'
 import { StandardLink } from '../adapters/standard'

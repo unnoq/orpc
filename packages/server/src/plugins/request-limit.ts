@@ -2,8 +2,8 @@ import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRout
 import type { Context } from '../context'
 import { ORPCError } from '@orpc/client'
 import { toArray } from '@orpc/shared'
-import { flattenStandardHeader } from '@standardserver/core'
-import { toFetchHeaders, toStandardBody } from '@standardserver/fetch'
+import { flattenStandardHeader } from '@standard-server/core'
+import { toFetchHeaders, toStandardBody } from '@standard-server/fetch'
 
 export interface RequestLimitHandlerPluginOptions {
   /**

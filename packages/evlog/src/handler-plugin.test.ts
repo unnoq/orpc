@@ -1,6 +1,6 @@
 import { ORPCError, RPCSerializer } from '@orpc/client'
 import { AbortError, ORPC_NAME, sleep } from '@orpc/shared'
-import { ErrorEvent } from '@standardserver/core'
+import { ErrorEvent } from '@standard-server/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LOGGER_CONTEXT_SYMBOL } from './context'
 import { EvlogHandlerPlugin } from './handler-plugin'

@@ -1,7 +1,7 @@
 import type { BunRedisPublisherOptions } from './redis-publisher'
 import { RPCSerializer } from '@orpc/client'
 import { getOrBind, promiseWithResolvers, sleep } from '@orpc/shared'
-import { getEventMeta, withEventMeta } from '@standardserver/core'
+import { getEventMeta, withEventMeta } from '@standard-server/core'
 import { RedisClient } from 'bun'
 import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'bun:test'
 import { waitFor } from '../tests/__shared__/utils'

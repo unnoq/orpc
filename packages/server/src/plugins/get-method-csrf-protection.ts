@@ -2,7 +2,7 @@ import type { StandardHandlerInterceptor, StandardHandlerInterceptorOptions, Sta
 import type { Context } from '../context'
 import { ORPCError } from '@orpc/client'
 import { toArray } from '@orpc/shared'
-import { flattenStandardHeader } from '@standardserver/core'
+import { flattenStandardHeader } from '@standard-server/core'
 
 /**
  * Adds Cross-Site Request Forgery (CSRF) protection that makes the safe `GET` method as

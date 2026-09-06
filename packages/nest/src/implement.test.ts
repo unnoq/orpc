@@ -419,7 +419,7 @@ describe('routing', () => {
   })
 })
 
-describe('response status, headers and body should follow standardserver', () => {
+describe('response status, headers and body should follow standard-server', () => {
   const contract = oc.meta(openapi({ outputStructure: 'detailed', path: '/response' }))
 
   const handler = vi.fn(() => ({}))

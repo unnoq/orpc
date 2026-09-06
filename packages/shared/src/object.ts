@@ -1,5 +1,5 @@
 import type { AnyFunction } from './function'
-import { getOrBind, isTypescriptObject } from '@standardserver/shared'
+import { getOrBind, isTypescriptObject } from '@standard-server/shared'
 
 export type Segment = string | number
 

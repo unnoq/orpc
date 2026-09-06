@@ -1,4 +1,4 @@
-import { sleep } from '@standardserver/shared'
+import { sleep } from '@standard-server/shared'
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

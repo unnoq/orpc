@@ -2,7 +2,7 @@ import type { Promisable, Value } from '@orpc/shared'
 import type { StandardLinkInterceptor, StandardLinkInterceptorOptions, StandardLinkOptions, StandardLinkPlugin } from '../adapters/standard'
 import type { ClientContext } from '../types'
 import { AsyncIteratorClass, isAsyncIteratorObject, override, sleep, toArray, value } from '@orpc/shared'
-import { getEventMeta } from '@standardserver/core'
+import { getEventMeta } from '@standard-server/core'
 
 export interface RetryLinkPluginAttemptOptions<T extends RetryLinkPluginContext> extends StandardLinkInterceptorOptions<T> {
   /**

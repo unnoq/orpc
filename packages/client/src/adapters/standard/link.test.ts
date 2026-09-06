@@ -1,4 +1,4 @@
-import type { StandardLazyResponse, StandardRequest } from '@standardserver/core'
+import type { StandardLazyResponse, StandardRequest } from '@standard-server/core'
 import type { StandardLinkCodec } from './codec'
 import type { StandardLinkTransport } from './transport'
 import { isAsyncIteratorObject } from '@orpc/shared'

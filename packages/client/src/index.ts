@@ -79,7 +79,7 @@ export type {
   StandardRequest,
   StandardResponse,
   StandardUrl,
-} from '@standardserver/core'
+} from '@standard-server/core'
 
 export {
   ErrorEvent,
@@ -92,4 +92,4 @@ export {
   getEventMeta,
   unwrapEvent,
   withEventMeta,
-} from '@standardserver/core'
+} from '@standard-server/core'

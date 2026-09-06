@@ -4,7 +4,7 @@ import type { Logger } from 'pino'
 import type { LoggerContext } from './context'
 import { ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { isAbortError, isAsyncIteratorObject, ORPC_NAME, override, toArray, wrapReadableStream } from '@orpc/shared'
-import { flattenStandardHeader } from '@standardserver/core'
+import { flattenStandardHeader } from '@standard-server/core'
 import pino from 'pino'
 import { getLogger, LOGGER_CONTEXT_SYMBOL } from './context'
 

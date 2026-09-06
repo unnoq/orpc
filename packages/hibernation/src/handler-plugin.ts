@@ -1,7 +1,7 @@
 import type { Context, ErrorMap, ProcedureClientInterceptor, Schema } from '@orpc/server'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
 import { toArray } from '@orpc/shared'
-import { HibernationAsyncIteratorClass } from '@standardserver/peer'
+import { HibernationAsyncIteratorClass } from '@standard-server/peer'
 
 /**
  * A handler plugin that enables the Hibernation APIs, allowing procedures

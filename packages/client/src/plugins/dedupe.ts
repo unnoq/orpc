@@ -1,5 +1,5 @@
 import type { InterceptorOptions, Value } from '@orpc/shared'
-import type { StandardBody, StandardLazyResponse, StandardRequest } from '@standardserver/core'
+import type { StandardBody, StandardLazyResponse, StandardRequest } from '@standard-server/core'
 import type { StandardLinkOptions, StandardLinkPlugin, StandardLinkTransportInterceptor, StandardLinkTransportInterceptorOptions } from '../adapters/standard'
 import type { ClientContext } from '../types'
 import { allAbortSignal, defer, isAsyncIteratorObject, replicateAsyncIterator, replicateReadableStream, stringifyJSON, toArray, value } from '@orpc/shared'

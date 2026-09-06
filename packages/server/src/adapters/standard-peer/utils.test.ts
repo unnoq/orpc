@@ -1,4 +1,4 @@
-import type { StandardLazyRequest } from '@standardserver/core'
+import type { StandardLazyRequest } from '@standard-server/core'
 import { createStandardPeerRequestHandler } from './utils'
 
 beforeEach(() => {

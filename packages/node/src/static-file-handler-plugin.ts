@@ -1,13 +1,13 @@
 import type { Context } from '@orpc/server'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor } from '@orpc/server/standard'
-import type { StandardHeaders, StandardLazyRequest, StandardResponse } from '@standardserver/core'
+import type { StandardHeaders, StandardLazyRequest, StandardResponse } from '@standard-server/core'
 import type { Stats } from 'node:fs'
 import { createReadStream } from 'node:fs'
 import { realpath, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { getOpenTelemetryConfig, isCompressibleContentType, matchesHttpPathPrefix, mergeHttpPath, parseAcceptEncodingQualities, toArray, tryDecodeURIComponent } from '@orpc/shared'
-import { flattenStandardHeader, parseStandardUrl } from '@standardserver/core'
-import { toWebReadableStream } from '@standardserver/node'
+import { flattenStandardHeader, parseStandardUrl } from '@standard-server/core'
+import { toWebReadableStream } from '@standard-server/node'
 import mime from 'mime'
 
 /**

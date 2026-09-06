@@ -3,7 +3,7 @@ import type { Public } from '@orpc/shared'
 import { RPCSerializer } from '@orpc/client'
 import { Publisher } from '@orpc/publisher'
 import { isTypescriptObject, stringifyJSON } from '@orpc/shared'
-import { unwrapEvent, withEventMeta } from '@standardserver/core'
+import { unwrapEvent, withEventMeta } from '@standard-server/core'
 
 export interface DurablePublisherOptions extends PublisherOptions {
   /**

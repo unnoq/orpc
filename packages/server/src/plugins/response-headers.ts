@@ -1,7 +1,7 @@
 import type { StandardHandlerOptions, StandardHandlerPlugin } from '../adapters/standard'
 import { toArray } from '@orpc/shared'
-import { mergeStandardHeaders } from '@standardserver/core'
-import { toStandardHeaders } from '@standardserver/fetch'
+import { mergeStandardHeaders } from '@standard-server/core'
+import { toStandardHeaders } from '@standard-server/fetch'
 
 /**
  * The context shape into which the Response Headers Plugin injects `resHeaders`.
