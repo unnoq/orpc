@@ -1,6 +1,6 @@
 import type { AsyncIteratorClass } from '@orpc/client'
 import type { InfiniteData } from '@tanstack/react-query'
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 import { useInfiniteQuery, useMutation, useQueries, useQuery, useSuspenseInfiniteQuery, useSuspenseQueries, useSuspenseQuery } from '@tanstack/react-query'
 import { client, orpc, queryClient } from './__shared__/orpc'
 
@@ -25,7 +25,7 @@ it('.queryKey', () => {
 
   expectTypeOf(state?.data).toEqualTypeOf<{ output: string } | undefined>()
 
-  if (isInferableError(state?.error) && state.error.code === 'STATIC_ERROR') {
+  if (isDefinedError(state?.error) && state.error.code === 'STATIC_ERROR') {
     expectTypeOf(state.error.data).toEqualTypeOf<{ static: string }>()
   }
 })
@@ -35,7 +35,7 @@ describe('.queryOptions', () => {
     const query = useQuery(orpc.static.queryOptions({
       input: { input: 123 },
       retry(failureCount, error) {
-        if (isInferableError(error) && error.code === 'STATIC_ERROR') {
+        if (isDefinedError(error) && error.code === 'STATIC_ERROR') {
           expectTypeOf(error.data).toEqualTypeOf<{ static: string }>()
         }
 
@@ -43,7 +43,7 @@ describe('.queryOptions', () => {
       },
     }))
 
-    if (query.status === 'error' && isInferableError(query.error) && query.error.code === 'STATIC_ERROR') {
+    if (query.status === 'error' && isDefinedError(query.error) && query.error.code === 'STATIC_ERROR') {
       expectTypeOf(query.error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -71,7 +71,7 @@ describe('.queryOptions', () => {
     const query = useSuspenseQuery(orpc.static.queryOptions({
       input: { input: 123 },
       retry(failureCount, error) {
-        if (isInferableError(error) && error.code === 'STATIC_ERROR') {
+        if (isDefinedError(error) && error.code === 'STATIC_ERROR') {
           expectTypeOf(error.data).toEqualTypeOf<{ static: string }>()
         }
 
@@ -79,7 +79,7 @@ describe('.queryOptions', () => {
       },
     }))
 
-    if (query.status === 'error' && isInferableError(query.error) && query.error.code === 'STATIC_ERROR') {
+    if (query.status === 'error' && isDefinedError(query.error) && query.error.code === 'STATIC_ERROR') {
       expectTypeOf(query.error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -108,7 +108,7 @@ describe('.queryOptions', () => {
           input: { input: 123 },
           select: data => ({ mapped: data }),
           retry(failureCount, error) {
-            if (isInferableError(error) && error.code === 'STATIC_ERROR') {
+            if (isDefinedError(error) && error.code === 'STATIC_ERROR') {
               expectTypeOf(error.data).toEqualTypeOf<{ static: string }>()
             }
 
@@ -121,7 +121,7 @@ describe('.queryOptions', () => {
       ],
     })
 
-    if (queries[0].status === 'error' && isInferableError(queries[0].error) && queries[0].error.code === 'STATIC_ERROR') {
+    if (queries[0].status === 'error' && isDefinedError(queries[0].error) && queries[0].error.code === 'STATIC_ERROR') {
       expectTypeOf(queries[0].error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -129,7 +129,7 @@ describe('.queryOptions', () => {
       expectTypeOf(queries[0].data.mapped).toEqualTypeOf<{ output: string }>()
     }
 
-    if (queries[1].status === 'error' && isInferableError(queries[1].error) && queries[1].error.code === 'STREAM_ERROR') {
+    if (queries[1].status === 'error' && isDefinedError(queries[1].error) && queries[1].error.code === 'STREAM_ERROR') {
       expectTypeOf(queries[1].error.data).toEqualTypeOf<{ stream: string }>()
     }
 
@@ -145,7 +145,7 @@ describe('.queryOptions', () => {
           input: { input: 123 },
           select: data => ({ mapped: data }),
           retry(failureCount, error) {
-            if (isInferableError(error) && error.code === 'STATIC_ERROR') {
+            if (isDefinedError(error) && error.code === 'STATIC_ERROR') {
               expectTypeOf(error.data).toEqualTypeOf<{ static: string }>()
             }
 
@@ -158,13 +158,13 @@ describe('.queryOptions', () => {
       ],
     })
 
-    if (queries[0].status === 'error' && isInferableError(queries[0].error) && queries[0].error.code === 'STATIC_ERROR') {
+    if (queries[0].status === 'error' && isDefinedError(queries[0].error) && queries[0].error.code === 'STATIC_ERROR') {
       expectTypeOf(queries[0].error.data).toEqualTypeOf<{ static: string }>()
     }
 
     expectTypeOf(queries[0].data.mapped).toEqualTypeOf<{ output: string }>()
 
-    if (queries[0].status === 'error' && isInferableError(queries[0].error) && queries[0].error.code === 'STATIC_ERROR') {
+    if (queries[0].status === 'error' && isDefinedError(queries[0].error) && queries[0].error.code === 'STATIC_ERROR') {
       expectTypeOf(queries[0].error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -185,7 +185,7 @@ it('.streamedKey', () => {
 
   expectTypeOf(state?.data).toEqualTypeOf<{ output: string }[] | undefined>()
 
-  if (isInferableError(state?.error) && state.error.code === 'STREAM_ERROR') {
+  if (isDefinedError(state?.error) && state.error.code === 'STREAM_ERROR') {
     expectTypeOf(state.error.data).toEqualTypeOf<{ stream: string }>()
   }
 })
@@ -195,7 +195,7 @@ describe('.streamedOptions', () => {
     const query = useQuery(orpc.stream.streamedOptions({
       input: { input: 123 },
       retry(failureCount, error) {
-        if (isInferableError(error) && error.code === 'STREAM_ERROR') {
+        if (isDefinedError(error) && error.code === 'STREAM_ERROR') {
           expectTypeOf(error.data).toEqualTypeOf<{ stream: string }>()
         }
 
@@ -203,7 +203,7 @@ describe('.streamedOptions', () => {
       },
     }))
 
-    if (query.status === 'error' && isInferableError(query.error) && query.error.code === 'STREAM_ERROR') {
+    if (query.status === 'error' && isDefinedError(query.error) && query.error.code === 'STREAM_ERROR') {
       expectTypeOf(query.error.data).toEqualTypeOf<{ stream: string }>()
     }
 
@@ -231,7 +231,7 @@ describe('.streamedOptions', () => {
     const query = useSuspenseQuery(orpc.stream.streamedOptions({
       input: { input: 123 },
       retry(failureCount, error) {
-        if (isInferableError(error) && error.code === 'STREAM_ERROR') {
+        if (isDefinedError(error) && error.code === 'STREAM_ERROR') {
           expectTypeOf(error.data).toEqualTypeOf<{ stream: string }>()
         }
 
@@ -239,7 +239,7 @@ describe('.streamedOptions', () => {
       },
     }))
 
-    if (query.status === 'error' && isInferableError(query.error) && query.error.code === 'STREAM_ERROR') {
+    if (query.status === 'error' && isDefinedError(query.error) && query.error.code === 'STREAM_ERROR') {
       expectTypeOf(query.error.data).toEqualTypeOf<{ stream: string }>()
     }
 
@@ -268,7 +268,7 @@ describe('.streamedOptions', () => {
           input: { input: 123 },
           select: data => ({ mapped: data }),
           retry(failureCount, error) {
-            if (isInferableError(error) && error.code === 'STREAM_ERROR') {
+            if (isDefinedError(error) && error.code === 'STREAM_ERROR') {
               expectTypeOf(error.data).toEqualTypeOf<{ stream: string }>()
             }
 
@@ -282,7 +282,7 @@ describe('.streamedOptions', () => {
       ],
     })
 
-    if (queries[0].status === 'error' && isInferableError(queries[0].error) && queries[0].error.code === 'STREAM_ERROR') {
+    if (queries[0].status === 'error' && isDefinedError(queries[0].error) && queries[0].error.code === 'STREAM_ERROR') {
       expectTypeOf(queries[0].error.data).toEqualTypeOf<{ stream: string }>()
     }
 
@@ -290,7 +290,7 @@ describe('.streamedOptions', () => {
       expectTypeOf(queries[0].data.mapped).toEqualTypeOf<{ output: string }[]>()
     }
 
-    if (queries[1].status === 'error' && isInferableError(queries[1].error) && queries[1].error.code === 'STATIC_ERROR') {
+    if (queries[1].status === 'error' && isDefinedError(queries[1].error) && queries[1].error.code === 'STATIC_ERROR') {
       expectTypeOf(queries[1].error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -306,7 +306,7 @@ describe('.streamedOptions', () => {
           input: { input: 123 },
           select: data => ({ mapped: data }),
           retry(failureCount, error) {
-            if (isInferableError(error) && error.code === 'STREAM_ERROR') {
+            if (isDefinedError(error) && error.code === 'STREAM_ERROR') {
               expectTypeOf(error.data).toEqualTypeOf<{ stream: string }>()
             }
 
@@ -320,13 +320,13 @@ describe('.streamedOptions', () => {
       ],
     })
 
-    if (queries[0].status === 'error' && isInferableError(queries[0].error) && queries[0].error.code === 'STREAM_ERROR') {
+    if (queries[0].status === 'error' && isDefinedError(queries[0].error) && queries[0].error.code === 'STREAM_ERROR') {
       expectTypeOf(queries[0].error.data).toEqualTypeOf<{ stream: string }>()
     }
 
     expectTypeOf(queries[0].data.mapped).toEqualTypeOf<{ output: string }[]>()
 
-    if (queries[1].status === 'error' && isInferableError(queries[1].error) && queries[1].error.code === 'STATIC_ERROR') {
+    if (queries[1].status === 'error' && isDefinedError(queries[1].error) && queries[1].error.code === 'STATIC_ERROR') {
       expectTypeOf(queries[1].error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -350,7 +350,7 @@ it('.infiniteKey', () => {
 
   expectTypeOf(state?.data).toEqualTypeOf<InfiniteData<{ output: string }, number> | undefined>()
 
-  if (isInferableError(state?.error) && state.error.code === 'STATIC_ERROR') {
+  if (isDefinedError(state?.error) && state.error.code === 'STATIC_ERROR') {
     expectTypeOf(state.error.data).toEqualTypeOf<{ static: string }>()
   }
 })
@@ -362,7 +362,7 @@ describe('.infiniteOptions', () => {
       getNextPageParam: () => 2,
       initialPageParam: 2,
       retry(failureCount, error) {
-        if (isInferableError(error) && error.code === 'STATIC_ERROR') {
+        if (isDefinedError(error) && error.code === 'STATIC_ERROR') {
           expectTypeOf(error.data).toEqualTypeOf<{ static: string }>()
         }
 
@@ -370,7 +370,7 @@ describe('.infiniteOptions', () => {
       },
     }))
 
-    if (query.status === 'error' && isInferableError(query.error) && query.error.code === 'STATIC_ERROR') {
+    if (query.status === 'error' && isDefinedError(query.error) && query.error.code === 'STATIC_ERROR') {
       expectTypeOf(query.error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -404,7 +404,7 @@ describe('.infiniteOptions', () => {
       getNextPageParam: () => 2,
       initialPageParam: 2,
       retry(failureCount, error) {
-        if (isInferableError(error) && error.code === 'STATIC_ERROR') {
+        if (isDefinedError(error) && error.code === 'STATIC_ERROR') {
           expectTypeOf(error.data).toEqualTypeOf<{ static: string }>()
         }
 
@@ -412,7 +412,7 @@ describe('.infiniteOptions', () => {
       },
     }))
 
-    if (query.status === 'error' && isInferableError(query.error) && query.error.code === 'STATIC_ERROR') {
+    if (query.status === 'error' && isDefinedError(query.error) && query.error.code === 'STATIC_ERROR') {
       expectTypeOf(query.error.data).toEqualTypeOf<{ static: string }>()
     }
 
@@ -459,7 +459,7 @@ describe('.mutationOptions', () => {
         return { customContext: true }
       },
       onError(error, variables, context) {
-        if (isInferableError(error) && error.code === 'STATIC_ERROR') {
+        if (isDefinedError(error) && error.code === 'STATIC_ERROR') {
           expectTypeOf(error.data).toEqualTypeOf<{ static: string }>()
         }
 
@@ -468,7 +468,7 @@ describe('.mutationOptions', () => {
       },
     }))
 
-    if (mutation.status === 'error' && isInferableError(mutation.error) && mutation.error.code === 'STATIC_ERROR') {
+    if (mutation.status === 'error' && isDefinedError(mutation.error) && mutation.error.code === 'STATIC_ERROR') {
       expectTypeOf(mutation.error.data).toEqualTypeOf<{ static: string }>()
     }
 

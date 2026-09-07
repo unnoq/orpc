@@ -1,11 +1,11 @@
-import type { AnyORPCError, Client, ClientContext } from '@orpc/client'
+import type { Client, ClientContext } from '@orpc/client'
 import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, ORPCErrorConstructorMap, ORPCErrorFromErrorMap } from '@orpc/contract'
-import type { Interceptor, MaybeOptionalOptions, Promisable, PromiseWithError, ThrowableError, Value, Writable } from '@orpc/shared'
+import type { Interceptor, MaybeOptionalOptions, Promisable, PromiseWithError, ThrowableError, Value } from '@orpc/shared'
 import type { Context } from './context'
 import type { Lazyable } from './lazy'
 import type { MiddlewareDone } from './middleware'
 import type { AnyProcedure, Procedure, ProcedureHandlerOptions } from './procedure'
-import { cloneORPCError, ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
+import { ORPCError, wrapAsyncIteratorPreservingEventMeta } from '@orpc/client'
 import { createORPCErrorConstructorMap, reconcileORPCError, ValidationError } from '@orpc/contract'
 import { intercept, isAsyncIteratorObject, isPlainObject, mergeTwoLevels, override, resolveMaybeOptionalOptions, runWithSpan, toArray, traceAsyncIterator, traceReadableStream, value } from '@orpc/shared'
 import { unlazy } from './lazy'
@@ -15,31 +15,29 @@ export type ProcedureClient<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedORPCError extends AnyORPCError,
 > = Client<
   TClientContext,
   InferSchemaInput<TInputSchema>,
   InferSchemaOutput<TOutputSchema>,
-  ORPCErrorFromErrorMap<TErrorMap> | TReturnedORPCError | ThrowableError
+  ORPCErrorFromErrorMap<TErrorMap> | ThrowableError
 >
 
 export interface ProcedureClientInterceptorOptions<TInitialContext extends Context, TErrorMap extends ErrorMap> extends ProcedureHandlerOptions<TInitialContext, unknown, ORPCErrorConstructorMap<TErrorMap>> {
 }
-export type ProcedureClientInterceptor<TInitialContext extends Context, TOutputSchema extends AnySchema, TErrorMap extends ErrorMap, TReturnedError extends AnyORPCError> = Interceptor<
+export type ProcedureClientInterceptor<TInitialContext extends Context, TOutputSchema extends AnySchema, TErrorMap extends ErrorMap> = Interceptor<
   ProcedureClientInterceptorOptions<TInitialContext, TErrorMap>,
-  PromiseWithError<InferSchemaOutput<TOutputSchema>, ORPCErrorFromErrorMap<TErrorMap> | TReturnedError | ThrowableError>
+  PromiseWithError<InferSchemaOutput<TOutputSchema>, ORPCErrorFromErrorMap<TErrorMap> | ThrowableError>
 >
 
 export type ProcedureClientOptions<
   TInitialContext extends Context,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
   TClientContext extends ClientContext,
 >
   = & {
     path?: string[]
-    interceptors?: ProcedureClientInterceptor<TInitialContext, TOutputSchema, TErrorMap, TReturnedError>[]
+    interceptors?: ProcedureClientInterceptor<TInitialContext, TOutputSchema, TErrorMap>[]
   }
   & (
     object extends TInitialContext
@@ -52,20 +50,18 @@ export function createProcedureClient<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
   TClientContext extends ClientContext = object,
 >(
-  lazyableProcedure: Lazyable<Procedure<TInitialContext, any, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>>,
+  lazyableProcedure: Lazyable<Procedure<TInitialContext, any, TInputSchema, TOutputSchema, TErrorMap>>,
   ...rest: MaybeOptionalOptions<
     ProcedureClientOptions<
       TInitialContext,
       TOutputSchema,
       TErrorMap,
-      TReturnedError,
       TClientContext
     >
   >
-): ProcedureClient<TClientContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError> {
+): ProcedureClient<TClientContext, TInputSchema, TOutputSchema, TErrorMap> {
   const options = resolveMaybeOptionalOptions(rest)
 
   return async (...[input, callerOptions]) => {
@@ -135,11 +131,6 @@ export function createProcedureClient<
       return output
     }
     catch (e) {
-      /**
-       * Even if the error is inferable (returned), we still need to apply `reconcileError`.
-       * Defined errors take priority over inferable errors.
-       * `reconcileError` attempts to mark the error as defined, or keeps it inferable if that's not possible.
-       */
       throw await reconcileError(e as ThrowableError)
     }
   }
@@ -280,23 +271,6 @@ async function executeProcedureInternal(procedure: AnyProcedure, options: Proced
         'handler',
         () => procedure['~orpc'].handler({ ...options, context, input: currentInput }, currentInput),
       )
-
-      if (currentOutput instanceof ORPCError) {
-        if (procedure['~orpc'].opaqueReturnedErrors) {
-          throw currentOutput
-        }
-
-        if (currentOutput.inferable && !currentOutput.defined) {
-          throw currentOutput
-        }
-
-        const error = cloneORPCError(currentOutput)
-
-        ;(error.defined as Writable<typeof error.defined>) = false
-        ;(error.inferable as Writable<typeof error.inferable>) = true
-
-        throw error
-      }
     }
 
     const startOutputIndex = midIndex === 0

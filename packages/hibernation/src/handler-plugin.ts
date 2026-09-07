@@ -51,7 +51,7 @@ export class HibernationHandlerPlugin<T extends Context> implements StandardHand
       }
     }
 
-    const clientInterceptor: ProcedureClientInterceptor<T, Schema<unknown>, ErrorMap, any> = async (options) => {
+    const clientInterceptor: ProcedureClientInterceptor<T, Schema<unknown>, ErrorMap> = async (options) => {
       const pluginContext = options.context[this.CONTEXT_SYMBOL] as PluginContext | undefined
 
       if (!pluginContext) {

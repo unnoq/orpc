@@ -1,4 +1,4 @@
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 import { useInfiniteQuery, useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { computed } from 'vue'
 import { client, orpc } from './__shared__/orpc'
@@ -25,7 +25,7 @@ describe('.queryOptions', () => {
       input: { input: 123 },
     }))
 
-    if (isInferableError(query.error.value) && query.error.value.code === 'OVERRIDE') {
+    if (isDefinedError(query.error.value) && query.error.value.code === 'OVERRIDE') {
       expectTypeOf(query.error.value.data).toEqualTypeOf<unknown>()
     }
 
@@ -99,13 +99,13 @@ describe('.mutationOptions', () => {
   it('useMutation', async () => {
     const mutation = useMutation(orpc.ping.mutationOptions({
       onError(error, variables) {
-        if (isInferableError(error) && error.code === 'BASE') {
+        if (isDefinedError(error) && error.code === 'BASE') {
           expectTypeOf(error.data).toEqualTypeOf<{ output: string }>()
         }
       },
     }))
 
-    if (isInferableError(mutation.error.value) && mutation.error.value.code === 'OVERRIDE') {
+    if (isDefinedError(mutation.error.value) && mutation.error.value.code === 'OVERRIDE') {
       expectTypeOf(mutation.error.value.data).toEqualTypeOf<unknown>()
     }
 

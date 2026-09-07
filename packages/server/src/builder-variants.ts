@@ -1,4 +1,3 @@
-import type { AnyORPCError } from '@orpc/client'
 import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, InitialInputSchema, InitialOutputSchema, MergedErrorMap, MergedSchema, MetaPlugin, ORPCErrorConstructorMap, Schema } from '@orpc/contract'
 import type { IntersectPick } from '@orpc/shared'
 import type { BuilderDefinition } from './builder'
@@ -124,9 +123,8 @@ export interface BuilderWithMiddlewares<
     TInitialContext,
     TInjectedContext,
     InitialInputSchema,
-    Schema<Exclude<T, AnyORPCError>>,
-    TErrorMap,
-    Extract<T, AnyORPCError>
+    Schema<T>,
+    TErrorMap
   >
 
   /**
@@ -238,9 +236,8 @@ export interface BuilderWithInput<
     TInitialContext,
     TInjectedContext,
     TInputSchema,
-    Schema<Exclude<T, AnyORPCError>>,
-    TErrorMap,
-    Extract<T, AnyORPCError>
+    Schema<T>,
+    TErrorMap
   >
 }
 
@@ -326,9 +323,9 @@ export interface BuilderWithOutput<
    *
    * @see {@link https://orpc.dev/docs/procedure | Procedure}
    */
-  'handler'<T extends InferSchemaInput<TOutputSchema> | AnyORPCError>(
+  'handler'<T extends InferSchemaInput<TOutputSchema>>(
     handler: ProcedureHandler<MergedContext<TInitialContext, TInjectedContext>, InferSchemaOutput<InitialInputSchema>, T, ORPCErrorConstructorMap<TErrorMap>>,
-  ): DecoratedProcedure<TInitialContext, TInjectedContext, InitialInputSchema, TOutputSchema, TErrorMap, Extract<T, AnyORPCError>>
+  ): DecoratedProcedure<TInitialContext, TInjectedContext, InitialInputSchema, TOutputSchema, TErrorMap>
 }
 
 /**
@@ -415,7 +412,7 @@ export interface BuilderWithInputOutput<
    *
    * @see {@link https://orpc.dev/docs/procedure | Procedure}
    */
-  'handler'<T extends InferSchemaInput<TOutputSchema> | AnyORPCError>(
+  'handler'<T extends InferSchemaInput<TOutputSchema>>(
     handler: ProcedureHandler<MergedContext<TInitialContext, TInjectedContext>, InferSchemaOutput<TInputSchema>, T, ORPCErrorConstructorMap<TErrorMap>>,
-  ): DecoratedProcedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, Extract<T, AnyORPCError>>
+  ): DecoratedProcedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
 }

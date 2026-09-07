@@ -1,8 +1,8 @@
 import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, InitialInputSchema, Schema } from '@orpc/contract'
-import type { AnyORPCError, Context, DecoratedProcedure, ImplementedProcedure, MergedContext, ORPCErrorConstructorMap } from '@orpc/server'
+import type { Context, DecoratedProcedure, ImplementedProcedure, MergedContext, ORPCErrorConstructorMap } from '@orpc/server'
 import type { Effect } from 'effect'
 import type { InferEffectServices } from '../context'
-import type { HandlerGen, InferYieldError } from '../handler'
+import type { HandlerGen } from '../handler'
 import { Builder, ProcedureImplementer } from '@orpc/server'
 import { handlerGen } from '../handler'
 
@@ -26,9 +26,8 @@ declare module '@orpc/server' {
       TInitialContext,
       object,
       InitialInputSchema,
-      Schema<Exclude<TReturn, AnyORPCError>>,
-      TErrorMap,
-      Extract<TReturn | InferYieldError<TYield>, AnyORPCError>
+      Schema<TReturn>,
+      TErrorMap
     >
   }
 
@@ -52,9 +51,8 @@ declare module '@orpc/server' {
       TInitialContext,
       TInjectedContext,
       InitialInputSchema,
-      Schema<Exclude<TReturn, AnyORPCError>>,
-      TErrorMap,
-      Extract<TReturn | InferYieldError<TYield>, AnyORPCError>
+      Schema<TReturn>,
+      TErrorMap
     >
   }
 
@@ -79,9 +77,8 @@ declare module '@orpc/server' {
       TInitialContext,
       TInjectedContext,
       TInputSchema,
-      Schema<Exclude<TReturn, AnyORPCError>>,
-      TErrorMap,
-      Extract<TReturn | InferYieldError<TYield>, AnyORPCError>
+      Schema<TReturn>,
+      TErrorMap
     >
   }
 
@@ -93,7 +90,7 @@ declare module '@orpc/server' {
   > {
     effect<
       TYield extends Effect.Effect<any, any, InferEffectServices<MergedContext<TInitialContext, TInjectedContext>>>,
-      TReturn extends InferSchemaInput<TOutputSchema> | AnyORPCError,
+      TReturn extends InferSchemaInput<TOutputSchema>,
     >(
       handler: HandlerGen<
         MergedContext<TInitialContext, TInjectedContext>,
@@ -107,8 +104,7 @@ declare module '@orpc/server' {
       TInjectedContext,
       InitialInputSchema,
       TOutputSchema,
-      TErrorMap,
-      Extract<TReturn | InferYieldError<TYield>, AnyORPCError>
+      TErrorMap
     >
   }
 
@@ -121,7 +117,7 @@ declare module '@orpc/server' {
   > {
     effect<
       TYield extends Effect.Effect<any, any, InferEffectServices<MergedContext<TInitialContext, TInjectedContext>>>,
-      TReturn extends InferSchemaInput<TOutputSchema> | AnyORPCError,
+      TReturn extends InferSchemaInput<TOutputSchema>,
     >(
       handler: HandlerGen<
         MergedContext<TInitialContext, TInjectedContext>,
@@ -135,8 +131,7 @@ declare module '@orpc/server' {
       TInjectedContext,
       TInputSchema,
       TOutputSchema,
-      TErrorMap,
-      Extract<TReturn | InferYieldError<TYield>, AnyORPCError>
+      TErrorMap
     >
   }
 
@@ -152,7 +147,7 @@ declare module '@orpc/server' {
         MergedContext<TInitialContext, TInjectedContext>,
         InferSchemaOutput<TInputSchema>,
         Effect.Effect<any, any, InferEffectServices<MergedContext<TInitialContext, TInjectedContext>>>,
-        AnyORPCError | InferSchemaInput<TOutputSchema>,
+        InferSchemaInput<TOutputSchema>,
         ORPCErrorConstructorMap<TErrorMap>
       >,
     ): ImplementedProcedure<

@@ -1,4 +1,4 @@
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import useSWRMutation from 'swr/mutation'
@@ -51,7 +51,7 @@ it('useSWRSubscription with subscriber', () => {
 
   expectTypeOf(subscription.data).toEqualTypeOf<Array<{ output: string }> | undefined>()
 
-  if (subscription.error && isInferableError(subscription.error) && subscription.error.code === 'STREAM_ERROR') {
+  if (subscription.error && isDefinedError(subscription.error) && subscription.error.code === 'STREAM_ERROR') {
     expectTypeOf(subscription.error.data).toEqualTypeOf<{ stream: string }>()
   }
 
@@ -70,7 +70,7 @@ it('useSWRSubscription with liveSubscriber', () => {
 
   expectTypeOf(subscription.data).toEqualTypeOf<{ output: string } | undefined>()
 
-  if (subscription.error && isInferableError(subscription.error) && subscription.error.code === 'STREAM_ERROR') {
+  if (subscription.error && isDefinedError(subscription.error) && subscription.error.code === 'STREAM_ERROR') {
     expectTypeOf(subscription.error.data).toEqualTypeOf<{ stream: string }>()
   }
 

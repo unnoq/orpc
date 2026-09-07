@@ -25,8 +25,8 @@ describe('createServerFunctionable', () => {
         os.$context<{ auth: boolean }>().input(schema1).output(schema2).errors(errorMap).handler(() => ({ schema2: 123 })),
       ),
     ).toEqualTypeOf<
-      & ProcedureServerFunction<typeof schema1, typeof schema2, typeof errorMap, never>
-      & Procedure<{ auth: boolean }, object, typeof schema1, typeof schema2, typeof errorMap, never>
+      & ProcedureServerFunction<typeof schema1, typeof schema2, typeof errorMap>
+      & Procedure<{ auth: boolean }, object, typeof schema1, typeof schema2, typeof errorMap>
     >()
   })
 

@@ -49,7 +49,7 @@ The Hey API and Durable Iterator integrations no longer exist in v2. In place of
 Two formats changed on the wire:
 
 - The [RPC serializer](/docs/rpc/serializer) format, described in the [RPC Protocol](/docs/rpc/protocol).
-- The error response body, which adds an `inferable` field and no longer contains a `status` field, since [`status` was removed from errors](#status-removed-from-errors).
+- The error response body, which no longer contains a `status` field, since [`status` was removed from errors](#status-removed-from-errors).
 
 Because of these changes, a v1 [RPC Link](/docs/rpc/link) or [OpenAPI Link](/docs/openapi/link) cannot talk to a v2 server (and vice versa). Deploy the upgraded server and clients together.
 
@@ -443,19 +443,19 @@ const handler = new RPCHandler(router)
 
 </CodeGroup>
 
-### `isDefinedError` renamed to `isInferableError`
+### `safe` result changed
 
-`isDefinedError` still works as a deprecated alias. The `safe` result also changed: the third element is now the typed error itself (or `null`) instead of a boolean, and a fourth `isSuccess` element was added. See [Client Error Handling](/docs/client/error-handling).
+The third element of the `safe` result is now the typed error itself (or `null`) instead of a boolean, and a fourth `isSuccess` element was added. See [Client Error Handling](/docs/client/error-handling).
 
 <CodeGroup>
 
 ```ts v2
-import { isInferableError, safe } from '@orpc/client'
+import { isDefinedError, safe } from '@orpc/client'
 
-const [error, data, inferableError, isSuccess] = await safe(client.example({ id: 1 }))
+const [error, data, definedError, isSuccess] = await safe(client.example({ id: 1 }))
 
-if (inferableError) {
-  console.log(inferableError.data.retryAfter)
+if (definedError) {
+  console.log(definedError.data.retryAfter)
 }
 ```
 
@@ -1269,7 +1269,6 @@ These renames still compile through deprecated aliases, so you can migrate them 
 
 | v1 name                      | v2 name                       | Package                          |
 | ---------------------------- | ----------------------------- | -------------------------------- |
-| `isDefinedError`             | `isInferableError`            | `@orpc/client`                   |
 | `InferClientErrorUnion`      | `InferClientError`            | `@orpc/client`                   |
 | `ClientPromiseResult`        | `PromiseWithError`            | `@orpc/client`                   |
 | `eventIterator`              | `asyncIteratorObject`         | `@orpc/server`, `@orpc/contract` |

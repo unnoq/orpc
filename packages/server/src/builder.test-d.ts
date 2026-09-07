@@ -9,7 +9,6 @@ import type { DecoratedMiddleware } from './middleware-decorated'
 import type { Procedure } from './procedure'
 import type { DecoratedProcedure } from './procedure-decorated'
 import type { AugmentedRouter } from './router-utils'
-import { ORPCError } from '@orpc/client'
 import { onError, onFinish, onStart, onSuccess } from '@orpc/shared'
 import { expectTypeOf } from 'vitest'
 import { z } from 'zod'
@@ -219,27 +218,7 @@ describe('Builder', () => {
           object,
           Schema<void, unknown>,
           Schema<string>,
-          typeof errorMap,
-          never
-        >
-      >()
-    })
-
-    it('return ORPCError', () => {
-      expectTypeOf(builder.handler(async () => {
-        if (Math.random() > 0.5) {
-          return new ORPCError('BAD_REQUEST', { data: 'data' })
-        }
-
-        return 'out'
-      })).toEqualTypeOf<
-        DecoratedProcedure<
-          { auth: boolean },
-          object,
-          Schema<void, unknown>,
-          Schema<'out'>,
-          typeof errorMap,
-          ORPCError<'BAD_REQUEST', string>
+          typeof errorMap
         >
       >()
     })
@@ -247,10 +226,10 @@ describe('Builder', () => {
 
   it('.router', () => {
     const router = {
-      ping: {} as Procedure<object, object, typeof schema1, typeof schema2, typeof errorMap, never>,
+      ping: {} as Procedure<object, object, typeof schema1, typeof schema2, typeof errorMap>,
       // this builder has no middlewares, so it shouldn't restrict context
-      ping2: {} as Procedure<{ something1: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
-      ping3: {} as Procedure<{ something2: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
+      ping2: {} as Procedure<{ something1: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
+      ping3: {} as Procedure<{ something2: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
     }
 
     expectTypeOf(builder.router(router)).toEqualTypeOf<
@@ -263,10 +242,10 @@ describe('Builder', () => {
 
   it('.lazy', () => {
     const router = {
-      ping: {} as Procedure<object, object, typeof schema1, typeof schema2, typeof errorMap, never>,
+      ping: {} as Procedure<object, object, typeof schema1, typeof schema2, typeof errorMap>,
       // this builder has no middlewares, so it shouldn't restrict context
-      ping2: {} as Procedure<{ something1: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
-      ping3: {} as Procedure<{ something2: boolean }, object, Schema<void, unknown>, Schema<unknown>, object, never>,
+      ping2: {} as Procedure<{ something1: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
+      ping3: {} as Procedure<{ something2: boolean }, object, Schema<void, unknown>, Schema<unknown>, object>,
     }
 
     expectTypeOf(builder.lazy(async () => ({ default: router }))).toEqualTypeOf<

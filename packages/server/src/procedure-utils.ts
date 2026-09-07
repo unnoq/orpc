@@ -1,4 +1,4 @@
-import type { AnyORPCError, ClientOptions } from '@orpc/client'
+import type { ClientOptions } from '@orpc/client'
 import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, ORPCErrorFromErrorMap, ProcedureContract } from '@orpc/contract'
 import type { PromiseWithError, ThrowableError } from '@orpc/shared'
 import type { Context } from './context'
@@ -44,9 +44,9 @@ export function createContractProcedure<
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
 >(
-  procedure: Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, any, any>,
+  procedure: Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, any>,
   contract: ProcedureContract<any, any, TErrorMap>,
-): Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, never> {
+): Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap> {
   return new Procedure({
     ...procedure['~orpc'],
     errorMap: contract['~orpc'].errorMap,
@@ -59,9 +59,8 @@ export type CallOptions<
   TInitialContext extends Context,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
 >
-  = & ProcedureClientOptions<TInitialContext, TOutputSchema, TErrorMap, TReturnedError, object>
+  = & ProcedureClientOptions<TInitialContext, TOutputSchema, TErrorMap, object>
     & Omit<ClientOptions<object>, 'context'>
 
 export type CallRest<
@@ -69,12 +68,11 @@ export type CallRest<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
-> = object extends CallOptions<TInitialContext, TOutputSchema, TErrorMap, TReturnedError>
+> = object extends CallOptions<TInitialContext, TOutputSchema, TErrorMap>
   ? undefined extends InferSchemaInput<TInputSchema>
-    ? [input?: InferSchemaInput<TInputSchema>, options?: CallOptions<TInitialContext, TOutputSchema, TErrorMap, TReturnedError>]
-    : [input: InferSchemaInput<TInputSchema>, options?: CallOptions<TInitialContext, TOutputSchema, TErrorMap, TReturnedError>]
-  : [input: InferSchemaInput<TInputSchema>, options: CallOptions<TInitialContext, TOutputSchema, TErrorMap, TReturnedError>]
+    ? [input?: InferSchemaInput<TInputSchema>, options?: CallOptions<TInitialContext, TOutputSchema, TErrorMap>]
+    : [input: InferSchemaInput<TInputSchema>, options?: CallOptions<TInitialContext, TOutputSchema, TErrorMap>]
+  : [input: InferSchemaInput<TInputSchema>, options: CallOptions<TInitialContext, TOutputSchema, TErrorMap>]
 
 /**
  * Quickly call a procedure without creating a client.
@@ -92,13 +90,12 @@ export function call<
   TInputSchema extends AnySchema,
   TOutputSchema extends AnySchema,
   TErrorMap extends ErrorMap,
-  TReturnedError extends AnyORPCError,
 >(
-  lazyableProcedure: Lazyable<Procedure<TInitialContext, any, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>>,
+  lazyableProcedure: Lazyable<Procedure<TInitialContext, any, TInputSchema, TOutputSchema, TErrorMap>>,
   ...[
     input = undefined as InferSchemaInput<TInputSchema>,
-    options = {} as CallOptions<TInitialContext, TOutputSchema, TErrorMap, TReturnedError>,
-  ]: CallRest<TInitialContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
-): PromiseWithError<InferSchemaOutput<TOutputSchema>, ORPCErrorFromErrorMap<TErrorMap> | TReturnedError | ThrowableError> {
+    options = {} as CallOptions<TInitialContext, TOutputSchema, TErrorMap>,
+  ]: CallRest<TInitialContext, TInputSchema, TOutputSchema, TErrorMap>
+): PromiseWithError<InferSchemaOutput<TOutputSchema>, ORPCErrorFromErrorMap<TErrorMap> | ThrowableError> {
   return createProcedureClient(lazyableProcedure, options)(input, options)
 }

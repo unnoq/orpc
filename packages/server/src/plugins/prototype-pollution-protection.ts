@@ -19,7 +19,7 @@ export class PrototypePollutionProtectionHandlerPlugin<T extends Context> implem
   name = '~prototype-pollution-protection'
 
   init(options: StandardHandlerOptions<T>): StandardHandlerOptions<T> {
-    const interceptor: ProcedureClientInterceptor<T, Schema<unknown>, ErrorMap, any> = (interceptorOptions) => {
+    const interceptor: ProcedureClientInterceptor<T, Schema<unknown>, ErrorMap> = (interceptorOptions) => {
       const input = interceptorOptions.input
 
       if (isAsyncIteratorObject(input)) {

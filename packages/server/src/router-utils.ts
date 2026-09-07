@@ -19,16 +19,14 @@ export type AugmentedRouter<
   infer $CurrentContext,
   infer $InputSchema,
   infer $OutputSchema,
-  infer $ErrorMap,
-  infer $ReturnedORPCError
+  infer $ErrorMap
 >
   ? Procedure<
     $InitialContext,
     $CurrentContext,
     $InputSchema,
     $OutputSchema,
-    MergedErrorMap<TErrorMap, $ErrorMap>,
-    $ReturnedORPCError
+    MergedErrorMap<TErrorMap, $ErrorMap>
   >
   : {
       [K in keyof T]: T[K] extends Lazy<infer $ extends AnyRouter>
@@ -49,16 +47,14 @@ export type AugmentedRouterWithMiddlewares<
     infer $CurrentContext,
     infer $InputSchema,
     infer $OutputSchema,
-    infer $ErrorMap,
-    infer $ReturnedORPCError
+    infer $ErrorMap
   >
     ? Procedure<
       MergedInitialContext<TInitialContext, TInjectedContext, $InitialContext>,
       $CurrentContext,
       $InputSchema,
       $OutputSchema,
-      MergedErrorMap<TErrorMap, $ErrorMap>,
-      $ReturnedORPCError
+      MergedErrorMap<TErrorMap, $ErrorMap>
     >
     : {
         [K in keyof T]: T[K] extends Lazy<infer $ extends AnyRouter>

@@ -1,4 +1,4 @@
-import type { AnyORPCError, AnySchema, Context, ErrorMap, Procedure, ProcedureClientOptions } from '@orpc/server'
+import type { AnySchema, Context, ErrorMap, Procedure, ProcedureClientOptions } from '@orpc/server'
 import type { MaybeOptionalOptions } from '@orpc/shared'
 import type { ProcedureServerFunction } from '../server-function'
 import { DecoratedProcedure } from '@orpc/server'
@@ -11,7 +11,6 @@ declare module '@orpc/server' {
     TInputSchema extends AnySchema,
     TOutputSchema extends AnySchema,
     TErrorMap extends ErrorMap,
-    TReturnedError extends AnyORPCError,
   > {
     actionable(
       ...rest: MaybeOptionalOptions<
@@ -19,13 +18,12 @@ declare module '@orpc/server' {
           TInitialContext,
           TOutputSchema,
           TErrorMap,
-          TReturnedError,
           object
         >
       >
     ):
-      & ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
-      & Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
+      & ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap>
+      & Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
   }
 }
 

@@ -207,7 +207,6 @@ describe('createRouterImplementer', () => {
         expect(procedure['~orpc']).toEqual({
           ...config,
           ...contract.use['~orpc'],
-          opaqueReturnedErrors: true,
           orderedMiddlewares: [{ middleware: mid }],
           handler: expect.any(Function),
         })

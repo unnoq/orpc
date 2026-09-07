@@ -167,7 +167,6 @@ describe('createORPCErrorConstructorMap', () => {
     expect(e).toBeInstanceOf(ORPCError)
     expect(e.code).toEqual('BAD_GATEWAY')
     expect(e.defined).toBe(true)
-    expect(e.inferable).toBe(true)
     expect(e.message).toBe('default message')
     expect(e.data).toEqual({ output: 123 })
     expect(e.cause).toBe('cause')
@@ -180,7 +179,6 @@ describe('createORPCErrorConstructorMap', () => {
     expect(e).toBeInstanceOf(errorMap.WITH_ERROR_FACTORY)
     expect(e.code).toEqual('WITH_ERROR_FACTORY')
     expect(e.defined).toBe(true)
-    expect(e.inferable).toBe(true)
     expect(e.message).toBe('factory message')
     expect(e.data).toEqual({ output: 123 })
   })
@@ -198,7 +196,6 @@ describe('createORPCErrorConstructorMap', () => {
     expect(e).toBeInstanceOf(ORPCError)
     expect(e.code).toEqual('ANY_THING')
     expect(e.defined).toBe(false)
-    expect(e.inferable).toBe(false)
     expect(e.message).toBe('MESSAGE')
     expect(e.data).toEqual('DATA')
     expect(e.cause).toBe('cause')
@@ -213,7 +210,6 @@ describe('createORPCErrorConstructorMap', () => {
     expect(e.message).toBe('default message')
     expect(e.data).toBeUndefined()
     expect(e.defined).toBe(true)
-    expect(e.inferable).toBe(true)
   })
 
   it('not proxy when access with symbol', () => {
@@ -231,6 +227,5 @@ describe('createORPCErrorConstructorMap', () => {
 
     expect(e.code).toEqual('toString')
     expect(e.defined).toEqual(false)
-    expect(e.inferable).toEqual(false)
   })
 })

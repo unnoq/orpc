@@ -1,7 +1,7 @@
 import type { PromiseWithError, ThrowableError } from '@orpc/shared'
 import type { AnyORPCError } from './error'
 import type { ClientContext, ClientOptions, ClientRest, FriendlyClientOptions } from './types'
-import { isInferableError } from './error-utils'
+import { isDefinedError } from './error-utils'
 
 export function resolveFriendlyClientOptions<T extends ClientContext>(options: FriendlyClientOptions<T>): ClientOptions<T> {
   return {
@@ -18,49 +18,49 @@ export function resolveClientRest<TClientContext extends ClientContext, TInput>(
 }
 
 export type SafeResult<TOutput, TError>
-  = | [error: null, data: TOutput, inferableError: null, isSuccess: true]
-  & { error: null, data: TOutput, inferableError: null, isSuccess: true }
-  | [error: Exclude<TError, AnyORPCError>, data: undefined, inferableError: null, isSuccess: false]
-  & { error: Exclude<TError, AnyORPCError>, data: undefined, inferableError: null, isSuccess: false }
-  | [error: Extract<TError, AnyORPCError>, data: undefined, inferableError: Extract<TError, AnyORPCError>, isSuccess: false]
-  & { error: Extract<TError, AnyORPCError>, data: undefined, inferableError: Extract<TError, AnyORPCError>, isSuccess: false }
+  = | [error: null, data: TOutput, definedError: null, isSuccess: true]
+  & { error: null, data: TOutput, definedError: null, isSuccess: true }
+  | [error: Exclude<TError, AnyORPCError>, data: undefined, definedError: null, isSuccess: false]
+  & { error: Exclude<TError, AnyORPCError>, data: undefined, definedError: null, isSuccess: false }
+  | [error: Extract<TError, AnyORPCError>, data: undefined, definedError: Extract<TError, AnyORPCError>, isSuccess: false]
+  & { error: Extract<TError, AnyORPCError>, data: undefined, definedError: Extract<TError, AnyORPCError>, isSuccess: false }
 
 /**
- * Works like try/catch, but help you infer the error type if it is inferable ORPCError.
+ * Works like try/catch, but help you infer the error type if it is a defined ORPCError.
  *
  * @example
  * ```ts
- * const [error, data, inferableError, isSuccess] = await safe(client(...))
- * // or const { error, data, inferableError, isSuccess } = await safe(client(...))
+ * const [error, data, definedError, isSuccess] = await safe(client(...))
+ * // or const { error, data, definedError, isSuccess } = await safe(client(...))
  *
- * if (inferableError) {
- *  console.log(inferableError) // or error, both are well typed
+ * if (definedError) {
+ *  console.log(definedError) // or error, both are well typed
  * }
  * ```
  *
- * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isinferableerror | Client Error Handling - Using safe and isInferableError}
+ * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isdefinederror | Client Error Handling - Using safe and isDefinedError}
  */
 export async function safe<TOutput, TError = ThrowableError>(promise: PromiseWithError<TOutput, TError>): Promise<SafeResult<TOutput, TError>> {
   try {
     const output = await promise
     return Object.assign(
       [null, output, null, true] satisfies [null, TOutput, null, true],
-      { error: null, data: output, inferableError: null, isSuccess: true as const },
+      { error: null, data: output, definedError: null, isSuccess: true as const },
     )
   }
   catch (e) {
     const error = e as TError
 
-    if (isInferableError(error)) {
+    if (isDefinedError(error)) {
       return Object.assign(
         [error, undefined, error, false] satisfies [typeof error, undefined, typeof error, false],
-        { error, data: undefined, inferableError: error, isSuccess: false as const },
+        { error, data: undefined, definedError: error, isSuccess: false as const },
       )
     }
 
     return Object.assign(
       [error as Exclude<TError, AnyORPCError>, undefined, null, false] satisfies [Exclude<TError, AnyORPCError>, undefined, null, false],
-      { error: error as Exclude<TError, AnyORPCError>, data: undefined, inferableError: null, isSuccess: false as const },
+      { error: error as Exclude<TError, AnyORPCError>, data: undefined, definedError: null, isSuccess: false as const },
     )
   }
 }

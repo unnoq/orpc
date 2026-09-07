@@ -33,7 +33,7 @@ describe('reconcileORPCError', () => {
   describe('no map error matched', () => {
     const map: ErrorMap = { }
 
-    it('should return error itself if error is not defined & inferable', async () => {
+    it('should return error itself if error is not defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: 'd' })
       expect(await reconcileORPCError(map, error)).toBe(error)
       expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(0)
@@ -48,53 +48,27 @@ describe('reconcileORPCError', () => {
       expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(1)
       expect(validated).toBe(cloneORPCErrorSpy.mock.results[0]!.value)
       expect(validated.defined).toBe(false)
-      expect(validated.inferable).toBe(false)
-    })
-
-    it('should return error itself  if error is inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: 'd' })
-      ;(error.inferable as any) = true
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(0)
     })
   })
 
   describe('code in map but no data schema', () => {
     const map: ErrorMap = { CODE: { message: 'm' } }
 
-    it('return error itself if it is defined & inferable', async () => {
+    it('return error itself if it is defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: 'd' })
       ;(error.defined as any) = true
-      ;(error.inferable as any) = true
 
       const validated = await reconcileORPCError(map, error)
       expect(validated).toBe(error)
       expect(validated.code).toBe('CODE')
       expect(validated.data).toBe('d')
       expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
 
       expect(cloneORPCErrorSpy).not.toHaveBeenCalled()
     })
 
-    it('return modified error if it is not defined & inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: 'd' })
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).not.toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(1)
-      expect(validated).toBe(cloneORPCErrorSpy.mock.results[0]!.value)
-      expect(validated.code).toBe('CODE')
-      expect(validated.data).toBe('d')
-      expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
-    })
-
     it('return modified error if it is not defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: 'd' })
-      ;(error.inferable as any) = true
 
       const validated = await reconcileORPCError(map, error)
       expect(validated).not.toBe(error)
@@ -103,28 +77,13 @@ describe('reconcileORPCError', () => {
       expect(validated.code).toBe('CODE')
       expect(validated.data).toBe('d')
       expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
-    })
-
-    it('return modified error if it is not inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: 'd' })
-      ;(error.inferable as any) = false
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).not.toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(1)
-      expect(validated).toBe(cloneORPCErrorSpy.mock.results[0]!.value)
-      expect(validated.code).toBe('CODE')
-      expect(validated.data).toBe('d')
-      expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
     })
   })
 
   describe('code in map but validation failed', () => {
     const map: ErrorMap = { CODE: { data: z.boolean() } }
 
-    it('return error itself if it is not defined & inferable', async () => {
+    it('return error itself if it is not defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: 'invalid' })
 
       const validated = await reconcileORPCError(map, error)
@@ -132,7 +91,6 @@ describe('reconcileORPCError', () => {
       expect(validated.code).toBe('CODE')
       expect(validated.data).toBe('invalid')
       expect(validated.defined).toBe(false)
-      expect(validated.inferable).toBe(false)
 
       expect(cloneORPCErrorSpy).not.toHaveBeenCalled()
     })
@@ -148,40 +106,27 @@ describe('reconcileORPCError', () => {
       expect(validated.code).toBe('CODE')
       expect(validated.data).toBe('invalid')
       expect(validated.defined).toBe(false)
-      expect(validated.inferable).toBe(false)
-    })
-
-    it('return error itself if it is inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: 'invalid' })
-      ;(error.inferable as any) = true
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(0)
     })
   })
 
   describe('code in map and validation success (without transform data)', () => {
     const map: ErrorMap = { CODE: { message: 'm', data: z.number() } }
 
-    it('return error itself if it is defined & inferable', async () => {
+    it('return error itself if it is defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: 1 })
       ;(error.defined as any) = true
-      ;(error.inferable as any) = true
 
       const validated = await reconcileORPCError(map, error)
       expect(validated).toBe(error)
       expect(validated.code).toBe('CODE')
       expect(validated.data).toBe(1)
       expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
 
       expect(cloneORPCErrorSpy).not.toHaveBeenCalled()
     })
 
     it('return modified error if it is not defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: 1 })
-      ;(error.inferable as any) = true
 
       const validated = await reconcileORPCError(map, error)
       expect(validated).not.toBe(error)
@@ -190,44 +135,15 @@ describe('reconcileORPCError', () => {
       expect(validated.code).toBe('CODE')
       expect(validated.data).toBe(1)
       expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
-    })
-
-    it('return modified error if it is not inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: 1 })
-      ;(error.defined as any) = true
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).not.toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(1)
-      expect(validated).toBe(cloneORPCErrorSpy.mock.results[0]!.value)
-      expect(validated.code).toBe('CODE')
-      expect(validated.data).toBe(1)
-      expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
-    })
-
-    it('return modified error if it is not defined & inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: 1 })
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).not.toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(1)
-      expect(validated).toBe(cloneORPCErrorSpy.mock.results[0]!.value)
-      expect(validated.code).toBe('CODE')
-      expect(validated.data).toBe(1)
-      expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
     })
   })
 
   describe('code in map and validation success (with transform data)', () => {
     const map: ErrorMap = { CODE: { message: 'm', data: z.coerce.number() } }
 
-    it('return error cloned itself if it is defined & inferable', async () => {
+    it('return error cloned itself if it is defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: '123' })
       ;(error.defined as any) = true
-      ;(error.inferable as any) = true
 
       const validated = await reconcileORPCError(map, error)
       expect(validated).not.toBe(error)
@@ -236,12 +152,10 @@ describe('reconcileORPCError', () => {
       expect(validated.code).toBe('CODE')
       expect(validated.data).toEqual(123)
       expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
     })
 
     it('return modified error if it is not defined', async () => {
       const error = new ORPCError('CODE', { message: 'm', data: '123' })
-      ;(error.inferable as any) = true
 
       const validated = await reconcileORPCError(map, error)
       expect(validated).not.toBe(error)
@@ -250,34 +164,6 @@ describe('reconcileORPCError', () => {
       expect(validated.code).toBe('CODE')
       expect(validated.data).toEqual(123)
       expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
-    })
-
-    it('return modified error if it is not inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: '123' })
-      ;(error.defined as any) = true
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).not.toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(1)
-      expect(validated).toBe(cloneORPCErrorSpy.mock.results[0]!.value)
-      expect(validated.code).toBe('CODE')
-      expect(validated.data).toEqual(123)
-      expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
-    })
-
-    it('return modified error if it is not defined & inferable', async () => {
-      const error = new ORPCError('CODE', { message: 'm', data: '123' })
-
-      const validated = await reconcileORPCError(map, error)
-      expect(validated).not.toBe(error)
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(1)
-      expect(validated).toBe(cloneORPCErrorSpy.mock.results[0]!.value)
-      expect(validated.code).toBe('CODE')
-      expect(validated.data).toEqual(123)
-      expect(validated.defined).toBe(true)
-      expect(validated.inferable).toBe(true)
     })
   })
 

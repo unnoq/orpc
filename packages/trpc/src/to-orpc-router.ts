@@ -20,8 +20,7 @@ export type ToORPCRouterResult<TContext extends ORPC.Context, TRecord extends Re
           object,
           ORPC.Schema<TRecord[K]['_def']['$types']['input'], unknown>,
           ORPC.Schema<unknown, ToORPCOutput<TRecord[K]['_def']['$types']['output']>>,
-          object,
-          never
+          object
       >
       : TRecord[K] extends Record<string, any>
         ? ToORPCRouterResult<TContext, TRecord[K]>
@@ -89,7 +88,6 @@ function toORPCProcedure(procedure: AnyProcedure) {
     // tRPC procedure calling already validates the input/output
     disableInputValidation: true,
     disableOutputValidation: true,
-    opaqueReturnedErrors: true,
     handler: async ({ context, signal, path, input, lastEventId }) => {
       try {
         const trpcInput = lastEventId !== undefined && (input === undefined || isObject(input))

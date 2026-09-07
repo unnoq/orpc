@@ -1,4 +1,3 @@
-import type { AnyORPCError } from '@orpc/client'
 import type { AnySchema, ErrorMap, InferSchemaInput, InferSchemaOutput, InitialInputSchema, InitialOutputSchema, MergedErrorMap, MetaPlugin, ORPCErrorConstructorMap, ProcedureContractDefinition, Schema } from '@orpc/contract'
 import type { IntersectPick } from '@orpc/shared'
 import type { BuilderWithInput, BuilderWithMiddlewares, BuilderWithOutput } from './builder-variants'
@@ -266,9 +265,8 @@ export class Builder<
     TInitialContext,
     object,
     InitialInputSchema,
-    Schema<Exclude<T, AnyORPCError>>,
-    TErrorMap,
-    Extract<T, AnyORPCError>
+    Schema<T>,
+    TErrorMap
   > {
     let procedure = new DecoratedProcedure({
       ...this['~orpc'],

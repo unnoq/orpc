@@ -1,6 +1,5 @@
 import type { ErrorMap } from '@orpc/contract'
 import { ORPCError } from '@orpc/client'
-import * as ClientModule from '@orpc/client'
 import * as ContractModule from '@orpc/contract'
 import * as SharedV2Module from '@orpc/shared'
 import z from 'zod'
@@ -11,7 +10,6 @@ const isAsyncIteratorObject = SharedV2Module.isAsyncIteratorObject
 const ValidationError = ContractModule.ValidationError
 const createORPCErrorConstructorMapSpy = vi.spyOn(ContractModule, 'createORPCErrorConstructorMap')
 const reconcileErrorSpy = vi.spyOn(ContractModule, 'reconcileORPCError')
-const cloneORPCErrorSpy = vi.spyOn(ClientModule, 'cloneORPCError')
 const overrideSpy = vi.spyOn(SharedV2Module, 'override')
 
 beforeEach(() => {
@@ -929,104 +927,6 @@ describe('createProcedureClient', () => {
     }
     const procedure = os.use(mid1).errors(errorMap).use(mid2).handler(handler)
     const client = createProcedureClient(procedure, { interceptors: [interceptor] })
-
-    describe('marks returned errors as inferable', () => {
-      it('normal error', async () => {
-        const error = new ORPCError('ANY_CODE', { data: 'data' })
-        handler.mockResolvedValueOnce(error as any)
-
-        const expectError = new ORPCError('ANY_CODE', { data: 'data' })
-        ;(expectError as any).inferable = true
-
-        let expectedError
-        await expect(client()).rejects.toThrow(expectError)
-
-        expect(interceptor).toHaveBeenCalledTimes(1)
-        await expect(interceptor.mock.results[0]!.value).rejects.toThrow(expectedError)
-
-        expect(mid1).toHaveBeenCalledTimes(1)
-        await expect(mid1.mock.results[0]!.value).rejects.toThrow(expectedError)
-
-        expect(mid2).toHaveBeenCalledTimes(1)
-        await expect(mid2.mock.results[0]!.value).rejects.toThrow(expectedError)
-
-        expect(reconcileErrorSpy).toHaveBeenCalledTimes(1)
-        expect(reconcileErrorSpy).toHaveBeenCalledWith(errorMap, expectError)
-      })
-
-      it('inferable error', async () => {
-        const inferableError = new ORPCError('ANY_CODE', { data: 'data' })
-        ;(inferableError as any).inferable = true
-        handler.mockResolvedValueOnce(inferableError as any)
-
-        await expect(client()).rejects.toBe(inferableError)
-        // do not clone if error already inferable and not defined
-        expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(0)
-
-        expect(interceptor).toHaveBeenCalledTimes(1)
-        await expect(interceptor.mock.results[0]!.value).rejects.toThrow(inferableError)
-
-        expect(mid1).toHaveBeenCalledTimes(1)
-        await expect(mid1.mock.results[0]!.value).rejects.toThrow(inferableError)
-
-        expect(mid2).toHaveBeenCalledTimes(1)
-        await expect(mid2.mock.results[0]!.value).rejects.toThrow(inferableError)
-
-        expect(reconcileErrorSpy).toHaveBeenCalledTimes(1)
-        expect(reconcileErrorSpy).toHaveBeenCalledWith(errorMap, inferableError)
-      })
-
-      it('defined error but do not exists in error map', async () => {
-        const definedError = new ORPCError('ANY_CODE', { data: 'data' })
-        ;(definedError as any).defined = true
-        ;(definedError as any).inferable = true
-        handler.mockResolvedValueOnce(definedError as any)
-
-        const expectError = new ORPCError('ANY_CODE', { data: 'data' })
-        ;(expectError as any).inferable = true
-
-        let expectedError
-        await expect(client()).rejects.toThrow(expectError)
-
-        expect(interceptor).toHaveBeenCalledTimes(1)
-        await expect(interceptor.mock.results[0]!.value).rejects.toThrow(expectedError)
-
-        expect(mid1).toHaveBeenCalledTimes(1)
-        await expect(mid1.mock.results[0]!.value).rejects.toThrow(expectedError)
-
-        expect(mid2).toHaveBeenCalledTimes(1)
-        await expect(mid2.mock.results[0]!.value).rejects.toThrow(expectedError)
-
-        expect(reconcileErrorSpy).toHaveBeenCalledTimes(1)
-        expect(reconcileErrorSpy).toHaveBeenCalledWith(errorMap, expectError)
-      })
-    })
-
-    it('preserves returned errors when opaqueReturnedErrors is enabled', async () => {
-      const error = new ORPCError('ANY_CODE', { data: 'data' })
-      const opaqueProcedure = os.use(mid1).errors(errorMap).use(mid2).handler(handler)
-      opaqueProcedure['~orpc'].opaqueReturnedErrors = true
-      const opaqueClient = createProcedureClient(opaqueProcedure, { interceptors: [interceptor] })
-      handler.mockResolvedValueOnce(error as any)
-
-      await expect(opaqueClient()).rejects.toBe(error)
-
-      expect(cloneORPCErrorSpy).toHaveBeenCalledTimes(0)
-      expect(reconcileErrorSpy).toHaveBeenCalledTimes(1)
-      expect(reconcileErrorSpy).toHaveBeenCalledWith(errorMap, error)
-
-      expect(interceptor).toHaveBeenCalledTimes(1)
-      await expect(interceptor.mock.results[0]!.value).rejects.toThrow(error)
-
-      expect(mid1).toHaveBeenCalledTimes(1)
-      await expect(mid1.mock.results[0]!.value).rejects.toThrow(error)
-
-      expect(mid2).toHaveBeenCalledTimes(1)
-      await expect(mid2.mock.results[0]!.value).rejects.toThrow(error)
-
-      expect(reconcileErrorSpy).toHaveBeenCalledTimes(1)
-      expect(reconcileErrorSpy).toHaveBeenCalledWith(errorMap, error)
-    })
 
     it('reconcile error before throw', async () => {
       const error = new ORPCError('BAD_REQUEST', { data: 'data' })

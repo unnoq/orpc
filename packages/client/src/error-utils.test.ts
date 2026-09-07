@@ -4,25 +4,21 @@ import {
   cloneORPCError,
   createORPCErrorFromJson,
   createORPCErrorFromMalformedResponse,
-  isInferableError,
+  isDefinedError,
   isORPCErrorJson,
   toORPCError,
 } from './error-utils'
 
-it('isInferableError', () => {
-  const inferableError = new ORPCError('BAD_REQUEST')
-  ;(inferableError.inferable as Writable<typeof inferableError.inferable>) = true as any
-  expect(isInferableError(inferableError)).toBe(true)
+it('isDefinedError', () => {
   const definedError = new ORPCError('BAD_REQUEST')
   ;(definedError.defined as Writable<typeof definedError.defined>) = true as any
-  ;(definedError.inferable as Writable<typeof definedError.defined>) = true as any
-  expect(isInferableError(definedError)).toBe(true)
+  expect(isDefinedError(definedError)).toBe(true)
 
-  expect(isInferableError(new ORPCError('BAD_REQUEST'))).toBe(false)
-  expect(isInferableError(new Error('Regular error'))).toBe(false)
-  expect(isInferableError({ code: 'ERROR', inferable: true })).toBe(false)
-  expect(isInferableError(null)).toBe(false)
-  expect(isInferableError(undefined)).toBe(false)
+  expect(isDefinedError(new ORPCError('BAD_REQUEST'))).toBe(false)
+  expect(isDefinedError(new Error('Regular error'))).toBe(false)
+  expect(isDefinedError({ code: 'ERROR', defined: true })).toBe(false)
+  expect(isDefinedError(null)).toBe(false)
+  expect(isDefinedError(undefined)).toBe(false)
 })
 
 describe('toORPCError', () => {
@@ -55,7 +51,7 @@ describe('toORPCError', () => {
 
 describe('isORPCErrorJson', () => {
   const error = new ORPCError('BAD_REQUEST', { message: 'Bad request', cause: 'cause', data: 'data' })
-  ;(error as any).inferable = true as any
+  ;(error as any).defined = true as any
 
   it('returns true for valid ORPC error JSON', () => {
     expect(isORPCErrorJson(error.toJSON())).toBe(true)
@@ -74,14 +70,6 @@ describe('isORPCErrorJson', () => {
     const json = error.toJSON()
     // @ts-expect-error this is expected
     delete json.defined
-
-    expect(isORPCErrorJson(json)).toBe(false)
-  })
-
-  it('returns false for object missing inferable field', () => {
-    const json = error.toJSON()
-    // @ts-expect-error this is expected
-    delete json.inferable
 
     expect(isORPCErrorJson(json)).toBe(false)
   })
@@ -106,14 +94,6 @@ describe('isORPCErrorJson', () => {
     const json = error.toJSON()
     // @ts-expect-error this is expected
     json.defined = 'true'
-
-    expect(isORPCErrorJson(json)).toBe(false)
-  })
-
-  it('returns false for object with invalid inferable type', () => {
-    const json = error.toJSON()
-    // @ts-expect-error this is expected
-    json.inferable = 'true'
 
     expect(isORPCErrorJson(json)).toBe(false)
   })
@@ -158,7 +138,6 @@ describe('createORPCErrorFromJson', () => {
     expect(createdError.message).toBe(error.message)
     expect(createdError.data).toEqual(error.data)
     expect(createdError.defined).toBe(error.defined)
-    expect(createdError.inferable).toBe(error.inferable)
   })
 
   it('creates ORPCError from JSON without data', () => {
@@ -261,7 +240,6 @@ describe('cloneORPCError', () => {
     expect(cloned.message).toBe(original.message)
     expect(cloned.data).toEqual(original.data)
     expect(cloned.defined).toBe(false)
-    expect(cloned.inferable).toBe(false)
   })
 
   it('preserves cause and stack trace', () => {
@@ -275,16 +253,14 @@ describe('cloneORPCError', () => {
     expect(cloned.stack).toBe(original.stack)
   })
 
-  it('preserves defined and inferable flags', () => {
+  it('preserves defined flag', () => {
     const original = new ORPCError('CUSTOM_ERROR')
     ;(original.defined as any) = true
-    ;(original.inferable as any) = true
 
     const cloned = cloneORPCError(original)
 
     expect(cloned).toBeInstanceOf(ORPCError)
     expect(cloned.defined).toBe(true)
-    expect(cloned.inferable).toBe(true)
   })
 
   it('creates independent copy', () => {

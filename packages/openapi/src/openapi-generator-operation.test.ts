@@ -702,37 +702,34 @@ describe('openAPIGenerator operation builders', () => {
         type: 'object',
         properties: {
           defined: { const: true },
-          inferable: { type: 'boolean' },
           code: { const: 'BAD_REQUEST' },
           status: { const: 400 },
           message: { type: 'string', default: undefined },
           data: { type: 'object', properties: { field: { type: 'string' } }, required: ['field'] },
         },
-        required: ['defined', 'inferable', 'code', 'status', 'message', 'data'],
+        required: ['defined', 'code', 'status', 'message', 'data'],
       })
       expect(doc.components?.schemas?.BadRequest2).toEqual({
         type: 'object',
         properties: {
           defined: { const: true },
-          inferable: { type: 'boolean' },
           code: { const: 'BAD_REQUEST_2' },
           status: { const: 400 },
           message: { type: 'string', default: undefined },
           data: { },
         },
-        required: ['defined', 'inferable', 'code', 'status', 'message'],
+        required: ['defined', 'code', 'status', 'message'],
       })
       expect(doc.components?.schemas?.UndefinedError).toEqual({
         type: 'object',
         properties: {
           defined: { const: false },
-          inferable: { type: 'boolean' },
           code: { type: 'string' },
           status: { type: 'number' },
           message: { type: 'string' },
           data: {},
         },
-        required: ['defined', 'inferable', 'code', 'status', 'message'],
+        required: ['defined', 'code', 'status', 'message'],
       })
     })
 
@@ -818,13 +815,12 @@ describe('openAPIGenerator operation builders', () => {
         type: 'object',
         properties: {
           defined: { const: true },
-          inferable: { type: 'boolean' },
           code: { const: 'FORBIDDEN' },
           status: { const: 403 },
           message: { type: 'string', default: undefined },
           data: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] },
         },
-        required: ['defined', 'inferable', 'code', 'status', 'message', 'data'],
+        required: ['defined', 'code', 'status', 'message', 'data'],
       })
     })
 

@@ -88,15 +88,10 @@ export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
   override readonly name = 'ORPCError' as 'ORPCError' & { __branch: 'ORPCError' }
 
   /**
-   * Indicates whether the error matches a definition in the procedure's `.errors` map.
+   * Indicates whether the error matches a definition in the procedure's `.errors` map,
+   * which makes its type inferable on the client.
    */
   readonly defined: boolean = false
-
-  /**
-   * Indicates whether the error's type is inferable at the TypeScript level.
-   * This is typically true when the error is explicitly defined or returned within a handler.
-   */
-  readonly inferable: boolean = false
 
   code: TCode
   data: TData
@@ -114,7 +109,6 @@ export class ORPCError<TCode extends ORPCErrorCode, TData> extends Error {
   toJSON(): ORPCErrorJSON<TCode, TData> {
     return {
       defined: this.defined,
-      inferable: this.inferable,
       code: this.code,
       message: this.message,
       data: this.data,
@@ -154,10 +148,6 @@ export interface ORPCErrorJSON<TCode extends string, TData> extends Pick<ORPCErr
    * remove readonly
    */
   defined: boolean
-  /**
-   * remove readonly
-   */
-  inferable: boolean
 }
 
 export type AnyORPCError = ORPCError<any, any>

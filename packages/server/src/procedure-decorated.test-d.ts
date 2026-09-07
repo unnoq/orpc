@@ -1,4 +1,3 @@
-import type { ORPCError } from '@orpc/client'
 import type { MergedErrorMap, MetaPlugin, ORPCErrorConstructorMap, Schema } from '@orpc/contract'
 import type { MergedInitialContext } from './context'
 import type { Middleware, MiddlewareDone } from './middleware'
@@ -18,8 +17,7 @@ const procedure = {} as DecoratedProcedure<
   { user: string },
   Schema<number, string>,
   Schema<string, number>,
-  typeof errorMap,
-  ORPCError<'BASE', { id: string }>
+  typeof errorMap
 >
 
 describe('DecoratedProcedure', () => {
@@ -42,8 +40,7 @@ describe('DecoratedProcedure', () => {
         { user: string },
         Schema<number, string>,
         Schema<string, number>,
-        MergedErrorMap<typeof errorMap, typeof errors>,
-        ORPCError<'BASE', { id: string }>
+        MergedErrorMap<typeof errorMap, typeof errors>
       >
     >()
 
@@ -68,8 +65,7 @@ describe('DecoratedProcedure', () => {
           { user: string } & { extra: boolean },
           Schema<number, string>,
           Schema<string, number>,
-          MergedErrorMap<typeof errorMap, typeof errorMap>,
-          ORPCError<'BASE', { id: string }>
+          MergedErrorMap<typeof errorMap, typeof errorMap>
         >
       >()
 
@@ -109,8 +105,7 @@ describe('DecoratedProcedure', () => {
           { user: string } & { extra: boolean },
           Schema<number, string>,
           Schema<string, number>,
-          MergedErrorMap<{ SOME_ERROR: { message: string } }, typeof errorMap>,
-          ORPCError<'BASE', { id: string }>
+          MergedErrorMap<{ SOME_ERROR: { message: string } }, typeof errorMap>
         >
       >()
 
@@ -145,8 +140,7 @@ describe('DecoratedProcedure', () => {
           { user: string },
           Schema<number, string>,
           Schema<string, number>,
-          MergedErrorMap<{ EXTRA: { message: string } }, typeof errorMap>,
-          ORPCError<'BASE', { id: string }>
+          MergedErrorMap<{ EXTRA: { message: string } }, typeof errorMap>
         >
       >()
     })

@@ -1,7 +1,5 @@
 import type { Schema } from '@orpc/contract'
 import type { Builder, BuilderWithInput, BuilderWithInputOutput, BuilderWithMiddlewares, BuilderWithOutput, DecoratedProcedure, ORPCErrorConstructorMap } from '@orpc/server'
-import { ORPCError } from '@orpc/server'
-import { Effect } from 'effect'
 import { z } from 'zod'
 import './effect'
 import '@orpc/server/extensions/callable' // not sure why, but we need import this to make type work
@@ -32,31 +30,7 @@ describe('adds .effect into Builder', async () => {
         object,
         Schema<void, unknown>,
         Schema<string>,
-        typeof errorMap,
-        never
-      >
-    >()
-  })
-
-  it('return ORPCError', () => {
-    expectTypeOf(builder.effect(function* () {
-      // use error that has properties that ORPCError doesn't have.
-      yield* Effect.fail({ _tags: 'e', non_exists_in_ORPCError: 'abc' })
-      yield* Effect.fail(new ORPCError('CONFLICT', { data: 123 }))
-
-      if (Math.random() > 0.5) {
-        return new ORPCError('BAD_REQUEST', { data: 'data' })
-      }
-
-      return 'out'
-    })).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        object,
-        Schema<void, unknown>,
-        Schema<'out'>,
-        typeof errorMap,
-        ORPCError<'CONFLICT', number> | ORPCError<'BAD_REQUEST', string>
+        typeof errorMap
       >
     >()
   })
@@ -78,31 +52,7 @@ describe('adds .effect into BuilderWithMiddlewares', async () => {
         { extra: boolean },
         Schema<void, unknown>,
         Schema<string>,
-        typeof errorMap,
-        never
-      >
-    >()
-  })
-
-  it('return ORPCError', () => {
-    expectTypeOf(builder.effect(function* () {
-      // use error that has properties that ORPCError doesn't have.
-      yield* Effect.fail({ _tags: 'e', non_exists_in_ORPCError: 'abc' })
-      yield* Effect.fail(new ORPCError('CONFLICT', { data: 123 }))
-
-      if (Math.random() > 0.5) {
-        return new ORPCError('BAD_REQUEST', { data: 'data' })
-      }
-
-      return 'out'
-    })).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        { extra: boolean },
-        Schema<void, unknown>,
-        Schema<'out'>,
-        typeof errorMap,
-        ORPCError<'CONFLICT', number> | ORPCError<'BAD_REQUEST', string>
+        typeof errorMap
       >
     >()
   })
@@ -124,31 +74,7 @@ describe('adds .effect into BuilderWithInput', async () => {
         { extra: boolean },
         typeof schema1,
         Schema<string>,
-        typeof errorMap,
-        never
-      >
-    >()
-  })
-
-  it('return ORPCError', () => {
-    expectTypeOf(builder.effect(function* () {
-      // use error that has properties that ORPCError doesn't have.
-      yield* Effect.fail({ _tags: 'e', non_exists_in_ORPCError: 'abc' })
-      yield* Effect.fail(new ORPCError('CONFLICT', { data: 123 }))
-
-      if (Math.random() > 0.5) {
-        return new ORPCError('BAD_REQUEST', { data: 'data' })
-      }
-
-      return 'out'
-    })).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        { extra: boolean },
-        typeof schema1,
-        Schema<'out'>,
-        typeof errorMap,
-        ORPCError<'CONFLICT', number> | ORPCError<'BAD_REQUEST', string>
+        typeof errorMap
       >
     >()
   })
@@ -170,8 +96,7 @@ describe('adds .effect into BuilderWithOutput', async () => {
         { extra: boolean },
         Schema<void, unknown>,
         typeof schema2,
-        typeof errorMap,
-        never
+        typeof errorMap
       >
     >()
 
@@ -179,29 +104,6 @@ describe('adds .effect into BuilderWithOutput', async () => {
     void builder.effect(function* ({ errors, context }, input) {
       return 'invalid'
     })
-  })
-
-  it('return ORPCError', () => {
-    expectTypeOf(builder.effect(function* () {
-      // use error that has properties that ORPCError doesn't have.
-      yield* Effect.fail({ _tags: 'e', non_exists_in_ORPCError: 'abc' })
-      yield* Effect.fail(new ORPCError('CONFLICT', { data: 123 }))
-
-      if (Math.random() > 0.5) {
-        return new ORPCError('BAD_REQUEST', { data: 'data' })
-      }
-
-      return { schema2: 123 }
-    })).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        { extra: boolean },
-        Schema<void, unknown>,
-        typeof schema2,
-        typeof errorMap,
-        ORPCError<'CONFLICT', number> | ORPCError<'BAD_REQUEST', string>
-      >
-    >()
   })
 })
 
@@ -221,8 +123,7 @@ describe('adds .effect into BuilderWithInputOutput', async () => {
         { extra: boolean },
         typeof schema1,
         typeof schema2,
-        typeof errorMap,
-        never
+        typeof errorMap
       >
     >()
 
@@ -230,28 +131,5 @@ describe('adds .effect into BuilderWithInputOutput', async () => {
     void builder.effect(function* ({ errors, context }, input) {
       return 'invalid'
     })
-  })
-
-  it('return ORPCError', () => {
-    expectTypeOf(builder.effect(function* () {
-      // use error that has properties that ORPCError doesn't have.
-      yield* Effect.fail({ _tags: 'e', non_exists_in_ORPCError: 'abc' })
-      yield* Effect.fail(new ORPCError('CONFLICT', { data: 123 }))
-
-      if (Math.random() > 0.5) {
-        return new ORPCError('BAD_REQUEST', { data: 'data' })
-      }
-
-      return { schema2: 123 }
-    })).toEqualTypeOf<
-      DecoratedProcedure<
-        { auth: boolean },
-        { extra: boolean },
-        typeof schema1,
-        typeof schema2,
-        typeof errorMap,
-        ORPCError<'CONFLICT', number> | ORPCError<'BAD_REQUEST', string>
-      >
-    >()
   })
 })

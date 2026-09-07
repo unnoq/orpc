@@ -5,13 +5,13 @@ import { isPlainObject } from '@orpc/shared'
 import { COMMON_ERROR_STATUS_MAP, MalformedResponseError, ORPCError } from './error'
 
 /**
- * Checks if an error is an `ORPCError` whose type is inferable at the TypeScript level,
+ * Checks if an error is an `ORPCError` that matches a definition in the procedure's `.errors` map,
  * narrowing it so `code` and `data` are fully typed.
  *
- * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isinferableerror | Client Error Handling - Using safe and isInferableError}
+ * @see {@link https://orpc.dev/docs/client/error-handling#using-safe-and-isdefinederror | Client Error Handling - Using safe and isDefinedError}
  */
-export function isInferableError<T>(error: T): error is Extract<T, AnyORPCError> {
-  return error instanceof ORPCError && error.inferable
+export function isDefinedError<T>(error: T): error is Extract<T, AnyORPCError> {
+  return error instanceof ORPCError && error.defined
 }
 
 export function toORPCError<T>(error: T): Extract<T, AnyORPCError> | ORPCError<'INTERNAL_SERVER_ERROR', undefined> {
@@ -25,15 +25,13 @@ export function isORPCErrorJson(json: unknown): json is ORPCErrorJSON<ORPCErrorC
     return false
   }
 
-  const validKeys = ['defined', 'inferable', 'code', 'message', 'data']
+  const validKeys = ['defined', 'code', 'message', 'data']
   if (Object.keys(json).some(k => !validKeys.includes(k))) {
     return false
   }
 
   return 'defined' in json
     && typeof json.defined === 'boolean'
-    && 'inferable' in json
-    && typeof json.inferable === 'boolean'
     && 'code' in json
     && typeof json.code === 'string'
     && 'message' in json
@@ -50,7 +48,6 @@ export function createORPCErrorFromJson<TCode extends ORPCErrorCode, TData>(
   })
 
   ;(error.defined as Writable<typeof error.defined>) = json.defined
-  ;(error.inferable as Writable<typeof error.inferable>) = json.inferable
 
   return error
 }

@@ -20,8 +20,6 @@ export async function reconcileORPCError(
   const config = getOwn(map, error.code)
 
   if (!config) {
-    // Do not check `error.inferable` here, because even when config is undefined,
-    // the returned error can still be inferred on the client side.
     if (!error.defined) {
       return error
     }
@@ -29,20 +27,18 @@ export async function reconcileORPCError(
     const cloned = cloneORPCError(error)
 
     ;(cloned.defined as Writable<typeof cloned.defined>) = false
-    ;(cloned.inferable as Writable<typeof cloned.inferable>) = false
 
     return cloned
   }
 
   if (!config.data) {
-    if (error.defined && error.inferable) {
+    if (error.defined) {
       return error
     }
 
     const cloned = cloneORPCError(error)
 
     ;(cloned.defined as Writable<typeof cloned.defined>) = true
-    ;(cloned.inferable as Writable<typeof cloned.inferable>) = true
 
     return cloned
   }
@@ -50,8 +46,6 @@ export async function reconcileORPCError(
   const validated = await config.data['~standard'].validate(error.data)
 
   if (validated.issues) {
-    // Do not check `error.inferable` here, because even when validation failed,
-    // the returned error can still be inferred on the client side.
     if (!error.defined) {
       return error
     }
@@ -59,12 +53,11 @@ export async function reconcileORPCError(
     const cloned = cloneORPCError(error)
 
     ;(cloned.defined as Writable<typeof cloned.defined>) = false
-    ;(cloned.inferable as Writable<typeof cloned.inferable>) = false
 
     return cloned
   }
 
-  if (error.data === validated.value && error.defined && error.inferable) {
+  if (error.data === validated.value && error.defined) {
     return error
   }
 
@@ -72,7 +65,6 @@ export async function reconcileORPCError(
 
   cloned.data = validated.value
   ;(cloned.defined as Writable<typeof cloned.defined>) = true
-  ;(cloned.inferable as Writable<typeof cloned.inferable>) = true
 
   return cloned
 }

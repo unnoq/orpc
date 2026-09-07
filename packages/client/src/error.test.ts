@@ -9,7 +9,6 @@ describe('oRPCError', () => {
       cause: 'cause',
     })
     expect(error.defined).toBe(false)
-    expect(error.inferable).toBe(false)
     expect(error.code).toBe('BAD_GATEWAY')
     expect(error.message).toBe('message')
     expect(error.data).toBe('data')
@@ -22,24 +21,20 @@ describe('oRPCError', () => {
     expect(error.message).toBe('Bad Gateway')
   })
 
-  it('can force write .defined or .inferable', () => {
+  it('can force write .defined', () => {
     const error = new ORPCError('BAD_GATEWAY')
 
     expect(error.defined).toBe(false)
-    expect(error.inferable).toBe(false)
 
     ;(error.defined as any) = true
-    ;(error.inferable as any) = true
 
     expect(error.defined).toBe(true)
-    expect(error.inferable).toBe(true)
   })
 
   it('.toJSON', () => {
     const error = new ORPCError('BAD_GATEWAY', { message: 'message', data: 'data', cause: 'cause' })
     expect(error.toJSON()).toEqual({
       defined: false,
-      inferable: false,
       code: 'BAD_GATEWAY',
       message: 'message',
       data: 'data',

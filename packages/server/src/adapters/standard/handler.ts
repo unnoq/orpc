@@ -50,7 +50,7 @@ export interface StandardHandlerOptions<TContext extends Context> {
    * ClientInterceptor equivalent with createRouterClient.interceptors / createProcedure.interceptors
    * useful for error handling, logging, metrics, etc. (not counting encoding/decoding)
    */
-  clientInterceptors?: ProcedureClientInterceptor<TContext, Schema<unknown>, ErrorMap, any>[]
+  clientInterceptors?: ProcedureClientInterceptor<TContext, Schema<unknown>, ErrorMap>[]
 
   plugins?: StandardHandlerPlugin<TContext>[]
 }

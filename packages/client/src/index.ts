@@ -4,12 +4,6 @@ export * from './client-safe'
 export * from './consts'
 export * from './dynamic-link'
 export * from './error'
-export {
-  /**
-   * @deprecated Use `isInferableError` instead.
-   */
-  isInferableError as isDefinedError,
-} from './error-utils'
 export * from './error-utils'
 export * from './rpc-json-serializer'
 export * from './rpc-serializer'

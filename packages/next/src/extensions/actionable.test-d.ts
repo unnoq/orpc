@@ -1,4 +1,4 @@
-import type { DecoratedProcedure, ORPCError, Procedure } from '@orpc/server'
+import type { DecoratedProcedure, Procedure } from '@orpc/server'
 import type { ProcedureServerFunction } from '../server-function'
 import { z } from 'zod'
 import './actionable'
@@ -19,24 +19,21 @@ it('adds .actionable method to DecoratedProcedure', async () => {
     { extra: string },
     typeof schema1,
     typeof schema2,
-    typeof errorMap,
-    ORPCError<'CODE', string>
+    typeof errorMap
   >
 
   expectTypeOf(procedure.actionable({ context: { auth: true } })).toEqualTypeOf<
     & ProcedureServerFunction<
         typeof schema1,
         typeof schema2,
-        typeof errorMap,
-        ORPCError<'CODE', string>
+        typeof errorMap
     >
     & Procedure<
       { auth: boolean },
       { extra: string },
         typeof schema1,
         typeof schema2,
-        typeof errorMap,
-        ORPCError<'CODE', string>
+        typeof errorMap
     >
   >()
 

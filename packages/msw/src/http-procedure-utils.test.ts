@@ -3,7 +3,7 @@ import type { AnyRouter } from '@orpc/server'
 import type { ResponseHeadersHandlerPluginContext } from '@orpc/server/plugins'
 import type { AddressInfo } from 'node:net'
 import { createServer } from 'node:http'
-import { createORPCClient, isInferableError, ORPCError } from '@orpc/client'
+import { createORPCClient, isDefinedError, ORPCError } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { asyncIteratorObject, oc } from '@orpc/contract'
 import { RPCHandler } from '@orpc/server/fetch'
@@ -114,7 +114,7 @@ describe('handler', () => {
     }
     catch (error) {
       expect(error).toBeInstanceOf(ORPCError)
-      expect(isInferableError(error)).toBe(true)
+      expect(isDefinedError(error)).toBe(true)
       expect((error as any).code).toBe('NOT_FOUND')
       expect((error as any).message).toBe('Planet not found')
       expect((error as any).data).toEqual({ id: 7 })
@@ -266,7 +266,7 @@ describe('error', () => {
     }
     catch (error) {
       expect(error).toBeInstanceOf(ORPCError)
-      expect(isInferableError(error)).toBe(true)
+      expect(isDefinedError(error)).toBe(true)
       expect((error as any).code).toBe('NOT_FOUND')
       expect((error as any).message).toBe('Planet not found')
       expect((error as any).data).toEqual({ id: 42 })

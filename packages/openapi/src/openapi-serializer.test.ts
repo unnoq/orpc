@@ -150,7 +150,6 @@ describe('openAPISerializer', () => {
             data: {
               code: 'INTERNAL_SERVER_ERROR',
               defined: false,
-              inferable: false,
               message: 'Internal Server Error',
             },
           })

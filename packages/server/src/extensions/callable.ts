@@ -1,4 +1,4 @@
-import type { AnyORPCError, ClientContext } from '@orpc/client'
+import type { ClientContext } from '@orpc/client'
 import type { AnySchema, ErrorMap } from '@orpc/contract'
 import type { MaybeOptionalOptions } from '@orpc/shared'
 import type { Context } from '../context'
@@ -14,7 +14,6 @@ declare module '@orpc/server' {
     TInputSchema extends AnySchema,
     TOutputSchema extends AnySchema,
     TErrorMap extends ErrorMap,
-    TReturnedError extends AnyORPCError,
   > {
     callable<TClientContext extends ClientContext>(
       ...rest: MaybeOptionalOptions<
@@ -22,12 +21,11 @@ declare module '@orpc/server' {
           TInitialContext,
           TOutputSchema,
           TErrorMap,
-          TReturnedError,
           TClientContext
         >
       >
-    ): Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
-      & ProcedureClient<TClientContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
+    ): Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
+      & ProcedureClient<TClientContext, TInputSchema, TOutputSchema, TErrorMap>
   }
 }
 

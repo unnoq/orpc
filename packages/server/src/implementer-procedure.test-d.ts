@@ -2,7 +2,6 @@ import type { ORPCErrorConstructorMap, Schema } from '@orpc/contract'
 import type { MergedContext, MergedInitialContext } from './context'
 import type { ImplementedProcedure, ProcedureImplementer } from './implementer-procedure'
 import type { Middleware, MiddlewareDone } from './middleware'
-import { ORPCError } from '@orpc/client'
 import { expectTypeOf } from 'vitest'
 import { z } from 'zod'
 
@@ -120,24 +119,6 @@ describe('ProcedureImplementer', () => {
       void implementer.handler(async ({ errors, context }, input) => {
         return 1234
       })
-    })
-
-    it('allow return ORPCError', () => {
-      const procedure = implementer.handler(async ({ errors, context }, input) => {
-        if (Math.random() > 0.5) {
-          return new ORPCError('CODE')
-        }
-
-        return '123'
-      })
-
-      expectTypeOf(procedure).toEqualTypeOf<ImplementedProcedure<
-        { auth: boolean },
-        { user: string },
-        Schema<number, string>,
-        Schema<string, number>,
-        typeof errorMap
-      >>()
     })
   })
 })

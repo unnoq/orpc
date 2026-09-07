@@ -232,7 +232,7 @@ When you configure `queryKey`, it also affects `.queryOptions` because it is use
 Interceptors let you wrap `query` and `mutation` calls. Unlike [default options](#default-options), which can be overridden by per-call options, interceptors always run for every query and mutation.
 
 ```ts
-import { isInferableError, safe } from '@orpc/client'
+import { isDefinedError, safe } from '@orpc/client'
 
 const orpc = createPiniaColadaUtils(client, {
   queryInterceptors: [],
@@ -244,7 +244,7 @@ const orpc = createPiniaColadaUtils(client, {
       const [error, data] = await safe(next())
 
       if (error) {
-        if (isInferableError(error)) {
+        if (isDefinedError(error)) {
           // handle typesafe errors
         }
 
@@ -258,7 +258,7 @@ const orpc = createPiniaColadaUtils(client, {
 ```
 
 :::info
-You can use [`safe` and `isInferableError`](/docs/client/error-handling#using-safe-and-isinferableerror) together for typesafe error handling in interceptors.
+You can use [`safe` and `isDefinedError`](/docs/client/error-handling#using-safe-and-isdefinederror) together for typesafe error handling in interceptors.
 :::
 
 ## Plugins
@@ -401,14 +401,14 @@ const link = new RPCLink<ClientContext>({
 
 ## Typesafe Error Handling
 
-Use the built-in `isInferableError` helper to handle [typesafe errors](/docs/error-handling#typesafe-errors) in queries and mutations.
+Use the built-in `isDefinedError` helper to handle [typesafe errors](/docs/error-handling#typesafe-errors) in queries and mutations.
 
 ```ts
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 
 const mutation = useMutation(orpc.planet.create.mutationOptions({
   onError: (error) => {
-    if (isInferableError(error)) {
+    if (isDefinedError(error)) {
       // Handle typesafe errors here
     }
   }
@@ -416,7 +416,7 @@ const mutation = useMutation(orpc.planet.create.mutationOptions({
 
 mutation.mutate({ name: 'Earth' })
 
-if (mutation.error.value && isInferableError(mutation.error.value)) {
+if (mutation.error.value && isDefinedError(mutation.error.value)) {
   // Handle the typesafe errors here
 }
 ```

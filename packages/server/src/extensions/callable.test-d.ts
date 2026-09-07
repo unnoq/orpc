@@ -1,4 +1,4 @@
-import type { DecoratedProcedure, ORPCError, Procedure, ProcedureClient } from '@orpc/server'
+import type { DecoratedProcedure, Procedure, ProcedureClient } from '@orpc/server'
 import { z } from 'zod'
 import './callable'
 
@@ -18,8 +18,7 @@ it('adds .callable method to DecoratedProcedure', async () => {
     { extra: string },
     typeof schema1,
     typeof schema2,
-    typeof errorMap,
-    ORPCError<'CODE', string>
+    typeof errorMap
   >
 
   expectTypeOf(procedure.callable({ context: (cx: { cache?: boolean }) => ({ auth: true }) })).toEqualTypeOf<
@@ -27,16 +26,14 @@ it('adds .callable method to DecoratedProcedure', async () => {
       { cache?: boolean },
         typeof schema1,
         typeof schema2,
-        typeof errorMap,
-        ORPCError<'CODE', string>
+        typeof errorMap
     >
     & Procedure<
       { auth: boolean },
       { extra: string },
         typeof schema1,
         typeof schema2,
-        typeof errorMap,
-        ORPCError<'CODE', string>
+        typeof errorMap
     >
   >()
 

@@ -1,6 +1,5 @@
-import type { AnyORPCError, Context, ORPCErrorConstructorMap, ProcedureHandler, ProcedureHandlerOptions } from '@orpc/server'
+import type { Context, ORPCErrorConstructorMap, ProcedureHandler, ProcedureHandlerOptions } from '@orpc/server'
 import type { InferEffectServices, WithEffectContext } from './context'
-import { ORPCError } from '@orpc/server'
 import { Effect, Context as EffectContext } from 'effect'
 import { runPromise } from './runtime'
 
@@ -23,8 +22,6 @@ export interface HandlerGen<
   >
 }
 
-const succeedOnORPCError = Effect.catch(error => error instanceof ORPCError ? Effect.succeed(error) : Effect.fail(error))
-
 /**
  * Creates a procedure handler from an Effect generator function.
  * Inside the generator you can yield Effect operations, and `handlerGen`
@@ -40,18 +37,14 @@ export function handlerGen<
   TReturn,
 >(
   handler: HandlerGen<TCurrentContext, TInput, TYield, TReturn, TErrorConstructorMap>,
-): ProcedureHandler<TCurrentContext, TInput, TReturn | Extract<InferYieldError<TYield>, AnyORPCError>, TErrorConstructorMap> {
+): ProcedureHandler<TCurrentContext, TInput, TReturn, TErrorConstructorMap> {
   return (opts, input) => {
-    let ef = Effect
-      .gen(() => handler(opts, input))
-      .pipe(succeedOnORPCError) as Effect.Effect<TReturn | Extract<InferYieldError<TYield>, AnyORPCError>, Exclude<InferYieldError<TYield>, AnyORPCError>>
+    let ef = Effect.gen(() => handler(opts, input)) as Effect.Effect<TReturn, InferYieldError<TYield>>
 
     if (EffectContext.isContext(opts.context['effect/context'])) {
       ef = ef.pipe(Effect.provide(opts.context['effect/context']))
     }
 
-    // MUST wrap after `.pipe(succeedOnORPCError)`.
-    // Otherwise, an ORPCError thrown by intercept would be incorrectly marked as an inferable error.
     if (typeof opts.context['effect/wrap'] === 'function') {
       const intercept = opts.context['effect/wrap'] as Exclude<WithEffectContext<any>['effect/wrap'], undefined>
       ef = intercept(ef, opts)

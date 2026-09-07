@@ -172,7 +172,6 @@ export function createORPCErrorConstructorMap<T extends ErrorMap>(errorMap: T): 
 
         if (config) {
           ;(error.defined as Writable<typeof error.defined>) = true
-          ;(error.inferable as Writable<typeof error.inferable>) = true
         }
 
         return error

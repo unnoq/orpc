@@ -473,13 +473,12 @@ export function buildErrorResponse(
     type: 'object',
     properties: {
       defined: { const: false },
-      inferable: { type: 'boolean' },
       code: { type: 'string' },
       status: { type: 'number' },
       message: { type: 'string' },
       data: {},
     },
-    required: ['defined', 'inferable', 'code', 'status', 'message'],
+    required: ['defined', 'code', 'status', 'message'],
   })
 
   for (const [status, definitions] of definitionsByStatus.entries()) {
@@ -493,7 +492,6 @@ export function buildErrorResponse(
       ...definitions.map(({ code, dataJsonSchema, dataOptional }) => {
         return ctx.registry.register(toErrorComponentName(code), combineJsonObjectSchemaEntries([
           ['defined', { const: true }, false],
-          ['inferable', { type: 'boolean' }, false],
           ['code', { const: code }, false],
           ['status', { const: status }, false],
           // avoid using the defaultMessage here to improve component reusability

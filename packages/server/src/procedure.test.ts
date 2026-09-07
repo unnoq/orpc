@@ -44,7 +44,7 @@ describe('procedure', () => {
     })
 
     it('not support structural for extended class', () => {
-      class ExtendedProcedure extends Procedure<any, any, any, any, any, any> {
+      class ExtendedProcedure extends Procedure<any, any, any, any, any> {
         constructor() {
           super({
             ...procedure['~orpc'],

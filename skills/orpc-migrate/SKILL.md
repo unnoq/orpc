@@ -108,7 +108,7 @@ Most v1 names still compile through deprecated aliases (strike-through hints, no
    - **`RPCHandler` rejects GET by default** (`allowMethods` defaults to POST/PUT/PATCH/DELETE). Simplest fix: stop sending GET from the link; only allow GET deliberately, with CSRF protection.
    - **Handler `filter` takes positional arguments now;** the v1 destructured form still type-checks but reads wrong values.
    - **`.input`/`.output` now stack:** a repeated call adds a schema instead of replacing the previous one.
-4. **Sweep deprecated aliases** last: `isDefinedError` to `isInferableError`, `eventIterator` to `asyncIteratorObject`, handler plugins gained a `HandlerPlugin` suffix and link plugins a `LinkPlugin` suffix, `ContractRouter*` types became `RouterContract*`. The from-v1 guide ends with the full alias cheat sheet.
+4. **Sweep deprecated aliases** last: `eventIterator` to `asyncIteratorObject`, handler plugins gained a `HandlerPlugin` suffix and link plugins a `LinkPlugin` suffix, `ContractRouter*` types became `RouterContract*`. The from-v1 guide ends with the full alias cheat sheet.
 
 Verification: typecheck and unit tests after steps 1, 2, and 4; step 3 needs integration or e2e tests, since those changes never surface at compile time. Before finishing, grep for old package names and remaining deprecation strike-throughs.
 

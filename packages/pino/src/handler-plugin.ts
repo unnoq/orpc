@@ -176,7 +176,7 @@ export class PinoHandlerPlugin<T extends Context> implements StandardHandlerPlug
       }
     }
 
-    const clientInterceptor: ProcedureClientInterceptor<T, Schema<unknown>, ErrorMap, any> = async ({ next, context }) => {
+    const clientInterceptor: ProcedureClientInterceptor<T, Schema<unknown>, ErrorMap> = async ({ next, context }) => {
       const output = await next()
 
       if (isAsyncIteratorObject(output)) {

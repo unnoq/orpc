@@ -153,26 +153,26 @@ For app level error handling, we recommend [middleware](/docs/middleware) or int
 
 ### Typesafe Errors
 
-When you `yield* Effect.fail(new ORPCError(...))` or `return new ORPCError(...)`, oRPC treats it as a [returned ORPCError](/docs/error-handling#returning-an-orpcerror). On the client, you can handle these errors in a typesafe way:
+An `ORPCError` that fails the effect, such as `yield* Effect.fail(new ORPCError(...))`, is thrown from the handler exactly like a thrown `ORPCError` in a regular handler. Define your errors with `.errors` and fail with `errors.X(...)` to make them [typesafe](/docs/error-handling#typesafe-errors) on the client:
 
 ```ts
-const procedure = os.handler(handlerGen(function* ({ errors }) {
-  if (resourceNotFound) {
-    yield* Effect.fail(new ORPCError('NOT_FOUND', {
+const procedure = os
+  .errors({
+    NOT_FOUND: {
       message: 'The resource you are looking for does not exist',
-    }))
-    // -- or -
-    return new ORPCError('NOT_FOUND', {
-      message: 'The resource you are looking for does not exist',
-    })
-  }
+    },
+  })
+  .handler(handlerGen(function* ({ errors }) {
+    if (resourceNotFound) {
+      yield* Effect.fail(errors.NOT_FOUND())
+    }
 
-  return 'Success'
-}))
+    return 'Success'
+  }))
 
-const [error, result] = await call(procedure)
+const [error, result] = await safe(call(procedure))
 
-if (isInferableError(error)) {
+if (isDefinedError(error)) {
   // typesafe error handling
 }
 ```
@@ -244,14 +244,14 @@ const program = Effect.gen(function* () {
 )
 ```
 
-You can also combine `Effect.catchIf` with [isInferableError](/docs/client/error-handling#using-safe-and-isinferableerror) to recover from every inferable error in a typesafe way:
+You can also combine `Effect.catchIf` with [isDefinedError](/docs/client/error-handling#using-safe-and-isdefinederror) to recover from every defined error in a typesafe way:
 
 ```ts
-import { isInferableError } from '@orpc/client'
+import { isDefinedError } from '@orpc/client'
 import { Effect } from 'effect'
 
 const recovered = effectClient.planet.find({ id: 1 }).pipe(
-  Effect.catchIf(isInferableError, (error) => {
+  Effect.catchIf(isDefinedError, (error) => {
     // error is fully typed here
     return Effect.succeed(null)
   }),

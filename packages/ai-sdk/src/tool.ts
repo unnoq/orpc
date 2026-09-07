@@ -206,12 +206,12 @@ export function implementToolFactory(_options: ImplementToolFactoryOptions = {})
 
 export type CreateToolFactoryOptions<TInitialContext extends Context>
   = & ImplementToolFactoryOptions
-    & ProcedureClientOptions<TInitialContext, Schema<unknown>, object, never, object>
+    & ProcedureClientOptions<TInitialContext, Schema<unknown>, object, object>
     & Omit<ClientOptions<object>, 'context'>
 
 export interface ToolFactory<TInitialContext extends Context> {
   <TInputSchema extends AnySchema, TOutputSchema extends AnySchema>(
-    procedure: Procedure<TInitialContext, any, TInputSchema, TOutputSchema, any, any>,
+    procedure: Procedure<TInitialContext, any, TInputSchema, TOutputSchema, any>,
     ...rest: MaybeOptionalOptions<Omit<FunctionTool<InferSchemaOutput<TInputSchema>, ToolOutput<InferSchemaInput<TOutputSchema>>>, 'inputSchema' | 'outputSchema' | 'execute'>>
   ): Tool<InferSchemaOutput<TInputSchema>, ToolOutput<InferSchemaInput<TOutputSchema>>>
 }

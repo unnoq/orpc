@@ -1,5 +1,5 @@
 import type { ORPCErrorCode } from '@orpc/server'
-import { ORPCError, os } from '@orpc/server'
+import { os } from '@orpc/server'
 import { z } from 'zod'
 import { createServerFunction } from './server-function'
 
@@ -20,10 +20,6 @@ describe('createServerFunction', () => {
     .output(schema2)
     .errors(errorMap)
     .handler(() => {
-      if (Math.random() > 0.5) {
-        return new ORPCError('RETURNED', { data: 'string' })
-      }
-
       return { schema2: 123 }
     })
 
@@ -41,13 +37,9 @@ describe('createServerFunction', () => {
     const [error, data] = await fn({ schema1: 123 })
 
     if (error) {
-      if (error.inferable) {
+      if (error.defined) {
         if (error.code === 'BASE') {
           expectTypeOf(error.data).toEqualTypeOf<{ id: string }>()
-        }
-
-        if (error.code === 'RETURNED') {
-          expectTypeOf(error.data).toEqualTypeOf<string>()
         }
       }
       else {

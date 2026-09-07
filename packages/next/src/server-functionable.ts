@@ -1,4 +1,4 @@
-import type { AnyORPCError, AnySchema, Context, ErrorMap, Procedure, ProcedureClientOptions, Schema } from '@orpc/server'
+import type { AnySchema, Context, ErrorMap, Procedure, ProcedureClientOptions, Schema } from '@orpc/server'
 import type { MaybeOptionalOptions } from '@orpc/shared'
 import type { ProcedureServerFunction } from './server-function'
 import { resolveMaybeOptionalOptions } from '@orpc/shared'
@@ -10,12 +10,11 @@ export interface ServerFunctionable<TInitialContext extends Context> {
     TInputSchema extends AnySchema,
     TOutputSchema extends AnySchema,
     TErrorMap extends ErrorMap,
-    TReturnedError extends AnyORPCError,
   >(
-    procedure: Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
+    procedure: Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
   ):
-    & ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
-    & Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
+    & ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap>
+    & Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
 }
 
 /**
@@ -31,7 +30,6 @@ export function createServerFunctionable<TInitialContext extends Context = objec
       TInitialContext,
       Schema<unknown>,
       ErrorMap,
-      any,
       object
     >
   >
@@ -43,16 +41,15 @@ export function createServerFunctionable<TInitialContext extends Context = objec
     TInputSchema extends AnySchema,
     TOutputSchema extends AnySchema,
     TErrorMap extends ErrorMap,
-    TReturnedError extends AnyORPCError,
   >(
-    procedure: Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>,
+    procedure: Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>,
   ) => {
     const functionable = createServerFunction(
       procedure,
       options,
     ) as
-    & ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
-    & Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap, TReturnedError>
+    & ProcedureServerFunction<TInputSchema, TOutputSchema, TErrorMap>
+    & Procedure<TInitialContext, TInjectedContext, TInputSchema, TOutputSchema, TErrorMap>
 
     functionable['~orpc'] = procedure['~orpc']
 

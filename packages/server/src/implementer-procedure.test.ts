@@ -42,7 +42,7 @@ describe('procedureImplementer', () => {
   })
 
   describe('.handler', () => {
-    it('should return ImplementedProcedure with opaqueReturnedErrors enabled', () => {
+    it('should return ImplementedProcedure', () => {
       const handler = vi.fn()
       const applied = implementer.handler(handler)
 
@@ -50,7 +50,6 @@ describe('procedureImplementer', () => {
       expect(applied['~orpc']).toEqual({
         ...implementer['~orpc'],
         handler,
-        opaqueReturnedErrors: true,
       })
     })
   })
@@ -67,7 +66,6 @@ describe('implementedProcedure', () => {
     handler: vi.fn(),
     meta: { meta: true },
     metaPlugins: [{ name: 'plugin', init: vi.fn() }],
-    opaqueReturnedErrors: true,
   }
 
   const implemented = new ImplementedProcedure(definition)
