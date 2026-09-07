@@ -237,26 +237,6 @@ describe('set', () => {
     // eslint-disable-next-line no-proto, no-restricted-properties
     expect((root as any).__proto__).toBe('value')
   })
-
-  it('sets an own property instead of writing through an inherited setter', () => {
-    let setterCalls = 0
-    class Config {
-      get host(): string {
-        return 'from-getter'
-      }
-
-      set host(_: string) {
-        setterCalls++
-      }
-    }
-
-    const root = new Config()
-    set(root, ['host'], 'example.com')
-
-    expect(setterCalls).toBe(0)
-    expect(Object.hasOwn(root, 'host')).toBe(true)
-    expect(root.host).toBe('example.com')
-  })
 })
 
 describe('mergeTwoLevels', () => {

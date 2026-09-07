@@ -119,21 +119,20 @@ export function set(
 }
 
 /**
- * Sets `object[key]` as an own property without writing through an inherited one,
- * so a key like `__proto__` never re-parents the object.
+ * Sets `object[key]`, defining `__proto__` as an own property instead of re-parenting the object.
  */
 function setOwn(object: object, key: PropertyKey, value: unknown): void {
-  if (Object.hasOwn(object, key) || !(key in object)) {
-    (object as Record<PropertyKey, unknown>)[key] = value
-    return
+  if (key === '__proto__') {
+    Object.defineProperty(object, key, {
+      value,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    })
   }
-
-  Object.defineProperty(object, key, {
-    value,
-    writable: true,
-    enumerable: true,
-    configurable: true,
-  })
+  else {
+    (object as Record<PropertyKey, unknown>)[key] = value
+  }
 }
 
 /**
