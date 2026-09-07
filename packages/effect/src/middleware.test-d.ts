@@ -105,6 +105,75 @@ describe('middlewareGen', () => {
     void procedure
   })
 
+  it('infers everything without type arguments when created via os.middleware', () => {
+    interface ServerContext extends WithEffectContext<Service1> {
+      auth: boolean
+    }
+
+    const requireAuth = os
+      .$context<ServerContext>()
+      .middleware(middlewareGen(function* ({ context, next }) {
+        expectTypeOf(context.auth).toEqualTypeOf<boolean>()
+        yield* Service1
+
+        return yield* next({ context: { user: 'user' as const } })
+      }))
+
+    const procedure = os
+      .$context<ServerContext>()
+      .input(z.object({ id: z.string() }))
+      .output(z.string())
+      .use(requireAuth)
+      .handler(({ context }) => {
+        expectTypeOf(context.user).toEqualTypeOf<'user'>()
+
+        return 'output'
+      })
+
+    void procedure
+  })
+
+  it('supports standalone middleware on procedures with concrete input/output', () => {
+    interface ServerContext extends WithEffectContext<Service1> {
+      auth: boolean
+    }
+
+    const requireAuth = middlewareGen<ServerContext, { user: 'user' }>(
+      function* ({ context, next }) {
+        expectTypeOf(context.auth).toEqualTypeOf<boolean>()
+        yield* Service1
+
+        return yield* next({ context: { user: 'user' as const } })
+      },
+    )
+
+    const procedure = os
+      .$context<ServerContext>()
+      .input(z.object({ id: z.string() }))
+      .output(z.string())
+      .use(requireAuth)
+      .handler(({ context }) => {
+        expectTypeOf(context.user).toEqualTypeOf<'user'>()
+
+        return 'output'
+      })
+
+    void procedure
+
+    const decorated = os
+      .$context<ServerContext>()
+      .middleware(requireAuth)
+
+    const decoratedProcedure = os
+      .$context<ServerContext>()
+      .input(z.object({ id: z.string() }))
+      .output(z.string())
+      .use(decorated)
+      .handler(() => 'output')
+
+    void decoratedProcedure
+  })
+
   it('can infer typed errors through os.middleware', () => {
     // Unlike `.use`, `os.middleware` types `errors` from the builder's error map
     // because its middleware parameter references the error map non-generically.

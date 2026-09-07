@@ -50,11 +50,11 @@ export type AnyMiddlewareGen = MiddlewareGen<any, any, any, any, any, any>
  */
 export function middlewareGen<
   TInContext extends Context,
-  TInput,
-  TOutput,
-  TErrorMap extends ErrorMap,
-  TYield extends Effect.Effect<any, any, InferEffectServices<TInContext>>,
   TOutContext extends Context = object,
+  TInput = unknown,
+  TOutput = any, // TOutput = any by default is important to make middleware can be used in any output by default
+  TErrorMap extends ErrorMap = Record<never, never>,
+  TYield extends Effect.Effect<any, any, InferEffectServices<TInContext>> = Effect.Effect<any, any, InferEffectServices<TInContext>>,
 >(
   middleware: MiddlewareGen<TInContext, TOutContext, TInput, TOutput, TYield, ORPCErrorConstructorMap<TErrorMap>>,
 ): Middleware<TInContext, TOutContext, TInput, TOutput, TErrorMap> {
