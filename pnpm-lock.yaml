@@ -182,16 +182,16 @@ importers:
         specifier: workspace:*
         version: link:packages/zod
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/fetch':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/peer':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/shared':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@tanstack/ai':
         specifier: ^0.46.0
@@ -433,7 +433,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       '@types/bun':
@@ -449,13 +449,13 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/fetch':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/peer':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       zod:
@@ -477,7 +477,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       '@cloudflare/vitest-pool-workers':
@@ -549,7 +549,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       evlog:
@@ -568,10 +568,10 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/peer':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
 
   packages/json-schema:
@@ -642,10 +642,10 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/node':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       '@fastify/cookie':
@@ -710,13 +710,13 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/fetch':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/node':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       mime:
         specifier: ^4.1.0
@@ -750,10 +750,10 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/fetch':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       rou3:
         specifier: ^0.9.1
@@ -763,7 +763,7 @@ importers:
         specifier: ^1.65.1
         version: 1.66.1(axios@1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(change-case@5.4.4)(supports-color@10.2.2)(tailwindcss@4.3.3)(typescript@6.0.3)(zod@4.5.4)
       '@standard-server/aws-lambda':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@types/swagger-ui':
         specifier: ^5.32.0
@@ -834,7 +834,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       pino:
@@ -850,7 +850,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       '@upstash/redis':
@@ -869,7 +869,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
     devDependencies:
       '@upstash/ratelimit':
@@ -894,22 +894,22 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@standard-server/aws-lambda':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/core':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/fastify':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0(fastify@5.12.1)
       '@standard-server/fetch':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/node':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       '@standard-server/peer':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       cookie:
         specifier: ^2.0.1
@@ -931,7 +931,7 @@ importers:
   packages/shared:
     dependencies:
       '@standard-server/shared':
-        specifier: ^0.9.0
+        specifier: ~0.9.0
         version: 0.9.0
       radash:
         specifier: ^12.1.1

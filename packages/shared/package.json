@@ -48,7 +48,7 @@
     }
   },
   "dependencies": {
-    "@standard-server/shared": "^0.9.0",
+    "@standard-server/shared": "~0.9.0",
     "radash": "^12.1.1",
     "type-fest": "^5.3.1"
   },
