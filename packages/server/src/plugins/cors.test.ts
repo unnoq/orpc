@@ -92,7 +92,7 @@ describe('corsHandlerPlugin', () => {
   })
 
   it('sets allowed origin only when custom origin function approves', async () => {
-    const customOrigin = (origin: string | undefined) => origin === 'https://allowed.com' ? origin : null
+    const customOrigin = (origin: string) => origin === 'https://allowed.com' ? origin : null
     const customRouter = {
       custom: os.handler(() => 'ok'),
     }
@@ -126,7 +126,7 @@ describe('corsHandlerPlugin', () => {
   })
 
   it('handles timingOrigin option correctly', async () => {
-    const customTimingOrigin = (origin: string | undefined) => origin === 'https://timing.com' ? origin : null
+    const customTimingOrigin = (origin: string) => origin === 'https://timing.com' ? origin : null
     const customRouter = {
       timing: os.handler(() => 'ok'),
     }
@@ -146,8 +146,10 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
     expect(response!.headers.get('timing-allow-origin')).toBe('https://timing.com')
+    expect(response!.headers.get('vary')).toBe('Origin')
 
-    // Request with not allowed timing origin should not have the header
+    // Request with not allowed timing origin should not have the header,
+    // but a function may answer differently per origin so the response still varies
     const { response: response2 } = await handler.handle(new Request('https://example.com/timing', {
       method: 'POST',
       headers: {
@@ -157,6 +159,7 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
     expect(response2!.headers.get('timing-allow-origin')).toBeNull()
+    expect(response2!.headers.get('vary')).toBe('Origin')
   })
 
   it('sets credentials and exposeHeaders when specified in options', async () => {
@@ -196,7 +199,8 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
     expect(response!.headers.get('access-control-allow-origin')).toBe('*')
-    expect(response!.headers.get('vary')).toBeNull()
+    // a function may answer differently per origin, so the response is always marked as varying
+    expect(response!.headers.get('vary')).toBe('Origin')
   })
 
   it('returns "*" for timing-allow-origin when timingOrigin returns "*"', async () => {
@@ -214,6 +218,56 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
     expect(response!.headers.get('timing-allow-origin')).toBe('*')
+    expect(response!.headers.get('vary')).toBe('Origin')
+  })
+
+  it('adds Vary: Origin when timingOrigin is origin-specific even though origin is "*"', async () => {
+    const plugin = new CORSHandlerPlugin({ timingOrigin: ['https://timing.com'] })
+    const handler = new RPCHandler(router, {
+      plugins: [plugin],
+    })
+
+    const { response } = await handler.handle(new Request('https://example.com/ping', {
+      method: 'POST',
+      headers: {
+        'origin': 'https://timing.com',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ json: null }),
+    }))
+    expect(response!.headers.get('access-control-allow-origin')).toBe('*')
+    expect(response!.headers.get('timing-allow-origin')).toBe('https://timing.com')
+    expect(response!.headers.get('vary')).toBe('Origin')
+
+    // a request without an origin gets no timing header, but must still be marked as varying by origin
+    const { response: response2 } = await handler.handle(new Request('https://example.com/ping', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ json: null }),
+    }))
+    expect(response2!.headers.get('access-control-allow-origin')).toBe('*')
+    expect(response2!.headers.get('timing-allow-origin')).toBeNull()
+    expect(response2!.headers.get('vary')).toBe('Origin')
+  })
+
+  it('does not add Vary: Origin when timingOrigin is null', async () => {
+    const plugin = new CORSHandlerPlugin({ timingOrigin: null })
+    const handler = new RPCHandler(router, {
+      plugins: [plugin],
+    })
+
+    const { response } = await handler.handle(new Request('https://example.com/ping', {
+      method: 'POST',
+      headers: {
+        'origin': 'https://timing.com',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ json: null }),
+    }))
+    expect(response!.headers.get('timing-allow-origin')).toBeNull()
+    expect(response!.headers.get('vary')).toBeNull()
   })
 
   it('falls back to access-control-request-headers when allowHeaders is not set', async () => {
@@ -232,9 +286,11 @@ describe('corsHandlerPlugin', () => {
     expect(response!.headers.get('access-control-allow-headers')).toBe('X-Requested-With, Content-Type')
   })
 
-  it('does not set access-control-allow-origin when reflecting and request has no origin header', async () => {
+  it('only runs origin functions for requests that carry an Origin header', async () => {
+    const originFn = vi.fn((origin: string) => origin)
+    const timingOriginFn = vi.fn((origin: string) => origin)
     const handler = new RPCHandler(router, {
-      plugins: [new CORSHandlerPlugin({ origin: origin => origin })],
+      plugins: [new CORSHandlerPlugin({ origin: originFn, timingOrigin: timingOriginFn })],
     })
 
     const { response } = await handler.handle(new Request('https://example.com/ping', {
@@ -245,9 +301,45 @@ describe('corsHandlerPlugin', () => {
       body: JSON.stringify({ json: null }),
     }))
 
-    // the reflect origin function receives undefined, so there is no origin to reflect
+    // nothing to reflect, but the response still varies by origin so caches keep it apart from allowed origins
+    expect(originFn).not.toHaveBeenCalled()
+    expect(timingOriginFn).not.toHaveBeenCalled()
     expect(response!.headers.get('access-control-allow-origin')).toBeNull()
+    expect(response!.headers.get('timing-allow-origin')).toBeNull()
     expect(response!.headers.get('vary')).toBe('Origin')
+
+    const { response: response2 } = await handler.handle(new Request('https://example.com/ping', {
+      method: 'POST',
+      headers: {
+        'origin': 'https://app.com',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ json: null }),
+    }))
+
+    expect(originFn).toHaveBeenCalledExactlyOnceWith('https://app.com', expect.objectContaining({ request: expect.any(Object) }))
+    expect(timingOriginFn).toHaveBeenCalledExactlyOnceWith('https://app.com', expect.objectContaining({ request: expect.any(Object) }))
+    expect(response2!.headers.get('access-control-allow-origin')).toBe('https://app.com')
+    expect(response2!.headers.get('timing-allow-origin')).toBe('https://app.com')
+    expect(response2!.headers.get('vary')).toBe('Origin')
+  })
+
+  it('emits static wildcards even when the request has no Origin header', async () => {
+    const handler = new RPCHandler(router, {
+      plugins: [new CORSHandlerPlugin({ timingOrigin: '*' })],
+    })
+
+    const { response } = await handler.handle(new Request('https://example.com/ping', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ json: null }),
+    }))
+
+    expect(response!.headers.get('access-control-allow-origin')).toBe('*')
+    expect(response!.headers.get('timing-allow-origin')).toBe('*')
+    expect(response!.headers.get('vary')).toBeNull()
   })
 
   it('supports an async origin function resolved per request', async () => {
