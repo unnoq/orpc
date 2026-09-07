@@ -58,8 +58,8 @@ const contract = {
     .output(z.object({ value: z.number() })),
 }
 
-const spec: OpenAPIDocument = {
-  openapi: '3.1.1',
+const spec: OpenAPIDocument<'3.2.0'> = {
+  openapi: '3.2.0',
   info: { title: 'All Plugins', version: '1.0.0' },
 }
 

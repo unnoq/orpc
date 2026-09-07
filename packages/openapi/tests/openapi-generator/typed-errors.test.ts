@@ -59,7 +59,7 @@ describe('openAPIGenerator e2e: typed errors', () => {
       },
     })
 
-    expect(doc.paths?.['/planets/{id}']?.get?.responses?.[404]).toEqual(expect.objectContaining({
+    expect(doc.paths?.['/planets/{id}']?.get?.responses?.['404']).toEqual(expect.objectContaining({
       content: {
         'application/json': {
           schema: {
@@ -147,7 +147,7 @@ describe('openAPIGenerator e2e: typed errors', () => {
       },
     })
 
-    expect(doc.paths?.['/planets/{id}']?.get?.responses?.[410]).toEqual({
+    expect(doc.paths?.['/planets/{id}']?.get?.responses?.['410']).toEqual({
       description: 'Planet is gone',
       content: {
         'application/json': {

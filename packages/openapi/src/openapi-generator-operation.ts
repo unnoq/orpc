@@ -1,11 +1,9 @@
-// eslint-disable-next-line no-restricted-imports
-import type { OpenAPIV3_1 } from '@hey-api/spec-types'
 import type { AnyProcedureContract, AnySchema } from '@orpc/contract'
 import type { JsonObjectSchemaEntry, JsonSchema, JsonSchemaConverterDirection } from '@orpc/json-schema'
 import type { Value } from '@orpc/shared'
 import type { OpenAPIMeta } from './meta'
 import type { OpenAPIComponentRegistry } from './openapi-generator-components'
-import type { OpenAPIOperationObject } from './types'
+import type { OpenAPIV3_2 } from './types'
 import type { getDynamicPathParams } from './utils'
 import { getAsyncIteratorObjectSchemaDetails } from '@orpc/contract'
 import {
@@ -84,7 +82,7 @@ interface RequestParts {
 
 export function buildRequest(
   ctx: OpenAPIOperationContext,
-  operation: OpenAPIOperationObject,
+  operation: OpenAPIV3_2.OperationObject,
   def: AnyProcedureContract['~orpc'],
   meta: OpenAPIMeta | undefined,
   dynamicPathParams: DynamicPathParam[] | undefined,
@@ -193,7 +191,7 @@ function extractDetailedRequestParts(schema: JsonSchema): RequestParts {
 
 function renderPathParameters(
   ctx: OpenAPIOperationContext,
-  operation: OpenAPIOperationObject,
+  operation: OpenAPIV3_2.OperationObject,
   dynamicParams: string[] | undefined,
   paramsEntries: JsonObjectSchemaEntry[] | undefined,
   paramsStyles: OpenAPIMeta['paramsStyles'],
@@ -229,7 +227,7 @@ function renderPathParameters(
     }
 
     const style = paramsStyles?.[name]
-    const parameter: Exclude<OpenAPIOperationObject['parameters'], undefined>[number] = {
+    const parameter: OpenAPIV3_2.ParameterObject = {
       in: 'path',
       required: true,
       name,
@@ -251,13 +249,13 @@ function renderPathParameters(
 
 function renderQueryParameters(
   ctx: OpenAPIOperationContext,
-  operation: OpenAPIOperationObject,
+  operation: OpenAPIV3_2.OperationObject,
   queryEntries: JsonObjectSchemaEntry[] | undefined,
   queryStyles: OpenAPIMeta['queryStyles'],
 ): void {
   for (const [name, schema, optional] of queryEntries ?? []) {
     const style = queryStyles?.[name]
-    const parameter: Exclude<OpenAPIOperationObject['parameters'], undefined>[number] = {
+    const parameter: OpenAPIV3_2.ParameterObject = {
       in: 'query',
       name,
       schema: ctx.registry.toOpenAPISchema(schema, 'input'),
@@ -305,7 +303,7 @@ function renderQueryParameters(
 
 function renderHeaderParameters(
   ctx: OpenAPIOperationContext,
-  operation: OpenAPIOperationObject,
+  operation: OpenAPIV3_2.OperationObject,
   headersEntries: JsonObjectSchemaEntry[] | undefined,
 ): void {
   for (const [name, schema, optional] of headersEntries ?? []) {
@@ -321,7 +319,7 @@ function renderHeaderParameters(
 
 export function buildSuccessResponse(
   ctx: OpenAPIOperationContext,
-  operation: OpenAPIOperationObject,
+  operation: OpenAPIV3_2.OperationObject,
   def: AnyProcedureContract['~orpc'],
   meta: OpenAPIMeta | undefined,
 ): void {
@@ -334,7 +332,7 @@ export function buildSuccessResponse(
 
     if (iteratorDetails) {
       operation.responses ??= {}
-      operation.responses[status] = {
+      operation.responses[toResponseStatusKey(status)] = {
         description,
         content: toAsyncIteratorObjectContent(
           ctx,
@@ -352,7 +350,7 @@ export function buildSuccessResponse(
 
   if (isUnconstrainedSchema(schema) || outputStructure === 'compact') {
     operation.responses ??= {}
-    operation.responses[status] = {
+    operation.responses[toResponseStatusKey(status)] = {
       description,
       content: toBodyContent(ctx, 'output', schema),
     }
@@ -360,7 +358,7 @@ export function buildSuccessResponse(
   }
 
   for (const [responseStatus, parts] of extractDetailedResponseParts(schema, status)) {
-    const responseObject: OpenAPIV3_1.ResponseObject = {
+    const responseObject: OpenAPIV3_2.ResponseObject = {
       description: parts.descriptions.length ? parts.descriptions.join(', ') : description,
     }
 
@@ -380,8 +378,15 @@ export function buildSuccessResponse(
     }
 
     operation.responses ??= {}
-    operation.responses[responseStatus] = responseObject
+    operation.responses[toResponseStatusKey(responseStatus)] = responseObject
   }
+}
+
+/**
+ * Formats a numeric HTTP status as a Responses Object key.
+ */
+function toResponseStatusKey(status: number): `${1 | 2 | 3 | 4 | 5}${string}` {
+  return String(status) as `${1 | 2 | 3 | 4 | 5}${string}`
 }
 
 /**
@@ -442,7 +447,7 @@ function extractDetailedResponseParts(
 
 export function buildErrorResponse(
   ctx: OpenAPIOperationContext,
-  operation: OpenAPIOperationObject,
+  operation: OpenAPIV3_2.OperationObject,
   def: AnyProcedureContract['~orpc'],
 ): void {
   const definitionsByStatus = new Map<number, OpenAPIErrorBodyDefinition[]>()
@@ -503,14 +508,14 @@ export function buildErrorResponse(
     ])
 
     operation.responses ??= {}
-    operation.responses[status] = {
+    operation.responses[toResponseStatusKey(status)] = {
       description: descriptions.length ? descriptions.join(', ') : status.toString(),
       content: {
         'application/json': {
           schema: ctx.registry.toOpenAPISchema(responseSchema, 'output'),
         },
       },
-    } satisfies OpenAPIV3_1.ResponseObject
+    } satisfies OpenAPIV3_2.ResponseObject
   }
 }
 
@@ -591,7 +596,7 @@ function toAsyncIteratorObjectContent(
   }
 }
 
-function toBodyContent(ctx: OpenAPIOperationContext, direction: JsonSchemaConverterDirection, schema: JsonSchema): Record<string, OpenAPIV3_1.MediaTypeObject> {
+function toBodyContent(ctx: OpenAPIOperationContext, direction: JsonSchemaConverterDirection, schema: JsonSchema): Record<string, OpenAPIV3_2.MediaTypeObject> {
   const fileSchemasByMediaType = new Map<string, JsonSchema[]>()
 
   const rest = flattenJsonUnionSchema(schema).filter((s) => {
@@ -611,7 +616,7 @@ function toBodyContent(ctx: OpenAPIOperationContext, direction: JsonSchemaConver
     return false
   })
 
-  const content: Record<string, OpenAPIV3_1.MediaTypeObject> = {}
+  const content: Record<string, OpenAPIV3_2.MediaTypeObject> = {}
 
   if (rest.length > 0) {
     const restSchema = fileSchemasByMediaType.size ? combineJsonSchemasWithComposition('anyOf', rest) : schema

@@ -1,5 +1,5 @@
 import type { JsonSchema } from '@orpc/json-schema'
-import type { OpenAPIDocument } from './types'
+import type { OpenAPIV3_2 } from './types'
 import { OpenAPIComponentRegistry } from './openapi-generator-components'
 
 describe('openAPIComponentRegistry', () => {
@@ -7,8 +7,8 @@ describe('openAPIComponentRegistry', () => {
     schemas?: Record<string, any>
     customComponentName?: (defName: string, defSchema: JsonSchema) => string | undefined
   } = {}) {
-    const doc: OpenAPIDocument = {
-      openapi: '3.1.2',
+    const doc: OpenAPIV3_2.OpenAPIObject = {
+      openapi: '3.2.0',
       info: { title: 'API Reference', version: '0.0.0' },
       ...(options.schemas ? { components: { schemas: options.schemas } } : {}),
     }

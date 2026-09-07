@@ -1,22 +1,27 @@
 // eslint-disable-next-line no-restricted-imports
-import type { OpenAPIV3_1 } from '@hey-api/spec-types'
+import type { OpenAPIV3_0, OpenAPIV3_1, OpenAPIV3_2 } from '@openapi-spec/types'
 import type { AnyNestedClient, Client, ORPCError } from '@orpc/client'
 import type { AsyncIteratorClass } from '@orpc/shared'
 
-export type OpenAPIOperationObject = OpenAPIV3_1.OperationObject
+// eslint-disable-next-line no-restricted-imports
+export type { OpenAPIV3_0, OpenAPIV3_1, OpenAPIV3_2 } from '@openapi-spec/types'
 
 /**
- * An OpenAPI 3.1 document with the OpenAPI 3.2 QUERY additions used by oRPC.
- * This type does not claim support for the complete OpenAPI 3.2 specification.
+ * An OpenAPI version `OpenAPIGenerator` can target: any `3.0.x`, `3.1.x`, or `3.2.x` value.
+ *
+ * @see {@link https://orpc.dev/docs/openapi/specification#openapi-version | OpenAPI Specification - OpenAPI Version}
  */
-export type OpenAPIDocument = Omit<OpenAPIV3_1.Document, 'openapi' | 'paths'> & {
-  openapi: OpenAPIV3_1.Document['openapi'] | '3.2.0'
-  paths?: undefined | OpenAPIV3_1.PathsObject & {
-    [path: `/${string}`]: OpenAPIV3_1.PathItemObject & {
-      query?: OpenAPIOperationObject | undefined
-    }
-  }
-}
+export type OpenAPIVersion = `3.0.${number}` | `3.1.${number}` | `3.2.${number}`
+
+/**
+ * The OpenAPI document of the given version.
+ *
+ * @see {@link https://orpc.dev/docs/openapi/specification#openapi-version | OpenAPI Specification - OpenAPI Version}
+ */
+export type OpenAPIDocument<TVersion extends OpenAPIVersion>
+  = TVersion extends `3.0.${string}` ? OpenAPIV3_0.OpenAPIObject
+    : TVersion extends `3.1.${string}` ? OpenAPIV3_1.OpenAPIObject
+      : OpenAPIV3_2.OpenAPIObject
 
 export type JsonifiedValue<T>
   = T extends string ? T

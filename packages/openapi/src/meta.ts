@@ -2,7 +2,7 @@ import type { AnyProcedureContract, AnySchema, ErrorMap, MetaPlugin } from '@orp
 import type { Lazy } from '@orpc/server'
 import type { Value } from '@orpc/shared'
 import type { StandardBodyHint } from '@standard-server/core'
-import type { OpenAPIOperationObject } from './types'
+import type { OpenAPIV3_2 } from './types'
 import { mergeHttpPath } from '@orpc/shared'
 
 export interface OpenAPIMeta {
@@ -289,6 +289,9 @@ export interface OpenAPIMeta {
    * Pass a plain object to replace entire operation object, or a function that receives the current
    * operation object and returns the modified version.
    *
+   * The operation object always follows OpenAPI 3.2, `OpenAPIGenerator` downgrades it with the
+   * rest of the document when an older version is requested.
+   *
    * **Merging**: When defined multiple times:
    *
    * - Two functions are chained: the most recent function receives the result of the previous one.
@@ -297,7 +300,7 @@ export interface OpenAPIMeta {
    *
    * Explicitly setting `undefined` resets the spec instead of merging.
    */
-  spec?: Value<OpenAPIOperationObject, [current: OpenAPIOperationObject]>
+  spec?: Value<OpenAPIV3_2.OperationObject, [current: OpenAPIV3_2.OperationObject]>
 
   /**
    * Prefix for the path. Useful when you want to apply a common path prefix across multiple procedures.

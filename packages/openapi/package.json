@@ -115,7 +115,8 @@
     }
   },
   "dependencies": {
-    "@hey-api/spec-types": "0.0.0-next-20260408030107",
+    "@openapi-spec/downgrader": "~0.1.0",
+    "@openapi-spec/types": "~0.1.0",
     "@orpc/client": "workspace:*",
     "@orpc/contract": "workspace:*",
     "@orpc/json-schema": "workspace:*",

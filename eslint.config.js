@@ -39,10 +39,8 @@ export default antfu({
     'no-restricted-imports': ['error', {
       patterns: [{
         group: [
-          '/json-schema-typed',
-          '/openapi-types',
+          '/@openapi-spec/types',
           '/@standard-schema/spec',
-          '/@hey-api/spec-types',
           '/compression',
         ],
         message: 'Please import from @orpc/* instead',

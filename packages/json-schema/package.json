@@ -45,12 +45,12 @@
     "type:check": "tsc -b"
   },
   "dependencies": {
+    "@openapi-spec/types": "~0.1.0",
     "@orpc/client": "workspace:*",
     "@orpc/contract": "workspace:*",
     "@orpc/server": "workspace:*",
     "@orpc/shared": "workspace:*",
-    "@standard-schema/spec": "^1.1.0",
-    "json-schema-typed": "^8.0.2"
+    "@standard-schema/spec": "^1.1.0"
   },
   "devDependencies": {
     "zod": "^4.5.4"

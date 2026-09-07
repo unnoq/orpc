@@ -10,7 +10,7 @@ describe('openAPIGenerator basic & options', () => {
 
   it('starts from the default base document', async () => {
     await expect(generator.generate({})).resolves.toEqual({
-      openapi: '3.1.2',
+      openapi: '3.2.0',
       info: {
         title: 'API Reference',
         version: '0.0.0',
@@ -18,14 +18,12 @@ describe('openAPIGenerator basic & options', () => {
     })
   })
 
-  it('generates QUERY operations in an explicit OpenAPI 3.2 document', async () => {
+  it('generates QUERY operations in the default OpenAPI 3.2 document', async () => {
     const doc = await generator.generate({
       search: oc
         .meta(openapi({ method: 'QUERY', path: '/search' }))
         .input(z.object({ term: z.string() }))
         .output(z.object({ result: z.string() })),
-    }, {
-      base: { openapi: '3.2.0' },
     })
 
     expect(doc.openapi).toBe('3.2.0')
@@ -56,11 +54,11 @@ describe('openAPIGenerator basic & options', () => {
     }))
   })
 
-  it('rejects QUERY operations unless the base document uses OpenAPI 3.2', async () => {
+  it('rejects QUERY operations when an older OpenAPI version is requested', async () => {
     await expect(generator.generate({
       search: oc.meta(openapi({ method: 'QUERY', path: '/search' })),
-    })).rejects.toThrow(
-      'QUERY operations require OpenAPI 3.2. Set base.openapi to \'3.2.0\'.',
+    }, { version: '3.1.2' })).rejects.toThrow(
+      'QUERY operations require OpenAPI 3.2, but version "3.1.2" was requested.',
     )
   })
 
@@ -83,7 +81,7 @@ describe('openAPIGenerator basic & options', () => {
     })
 
     expect(serializer.serialize).toHaveBeenCalledWith({
-      openapi: '3.1.2',
+      openapi: '3.2.0',
       info: {
         title: 'Planet API',
         version: '1.2.3',
@@ -95,7 +93,7 @@ describe('openAPIGenerator basic & options', () => {
     })
 
     expect(doc).toEqual({
-      openapi: '3.1.2',
+      openapi: '3.2.0',
       info: {
         title: 'Planet API',
         version: '1.2.3',
@@ -488,5 +486,84 @@ describe('openAPIGenerator basic & options', () => {
 
     expect(error).not.toBeInstanceOf(OpenAPIGeneratorError)
     expect(error.message).toBe('converter exploded')
+  })
+})
+
+describe('openAPIGenerator version', () => {
+  const generator = new OpenAPIGenerator({ converters: [testSchemaConverter] })
+
+  const router = {
+    planet: oc
+      .meta(openapi({ method: 'GET', path: '/planets/{id}' }))
+      .input(testSchema({ type: 'object', properties: { id: { type: 'string' } }, required: ['id'] }))
+      .output(testSchema({ type: 'object', properties: { name: { type: ['string', 'null'] } } })),
+  }
+
+  const planetPath = {
+    get: {
+      operationId: 'planet',
+      parameters: [
+        { in: 'path', name: 'id', required: true, schema: { type: 'string' } },
+      ],
+      responses: {
+        200: {
+          description: 'OK',
+          content: {
+            'application/json': {
+              schema: { type: 'object', properties: { name: { type: ['string', 'null'] } } },
+            },
+          },
+        },
+      },
+    },
+  }
+
+  it.each(['3.2.0', '3.2.7'] as const)('generates OpenAPI %s', async (version) => {
+    await expect(generator.generate(router, { version })).resolves.toEqual({
+      openapi: version,
+      info: { title: 'API Reference', version: '0.0.0' },
+      paths: { '/planets/{id}': planetPath },
+    })
+  })
+
+  it.each(['3.1.2', '3.1.0'] as const)('downgrades to OpenAPI %s', async (version) => {
+    await expect(generator.generate(router, { version })).resolves.toEqual({
+      openapi: version,
+      info: { title: 'API Reference', version: '0.0.0' },
+      paths: { '/planets/{id}': planetPath },
+    })
+  })
+
+  it.each(['3.0.4', '3.0.0'] as const)('downgrades to OpenAPI %s', async (version) => {
+    await expect(generator.generate(router, { version })).resolves.toEqual({
+      openapi: version,
+      info: { title: 'API Reference', version: '0.0.0' },
+      paths: {
+        '/planets/{id}': {
+          get: {
+            ...planetPath.get,
+            responses: {
+              200: {
+                description: 'OK',
+                content: {
+                  'application/json': {
+                    schema: { type: 'object', properties: { name: { type: 'string', nullable: true } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+  })
+
+  it('serializes non-JSON values after downgrading', async () => {
+    const doc = await generator.generate({}, {
+      version: '3.0.4',
+      base: { info: { 'title': 'Planet API', 'version': '1.0.0', 'x-generated-at': new Date('2020-01-01T00:00:00.000Z') } },
+    })
+
+    expect(doc.info['x-generated-at']).toBe('2020-01-01T00:00:00.000Z')
   })
 })

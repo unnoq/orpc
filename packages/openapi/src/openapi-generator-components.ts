@@ -1,7 +1,5 @@
-// eslint-disable-next-line no-restricted-imports
-import type { OpenAPIV3_1 } from '@hey-api/spec-types'
 import type { JsonSchema, JsonSchemaConverterDirection } from '@orpc/json-schema'
-import type { OpenAPIDocument } from './types'
+import type { OpenAPIV3_2 } from './types'
 import {
   decodeJsonPointerSegment,
   encodeJsonPointerSegment,
@@ -18,7 +16,7 @@ import { isDeepEqual } from '@orpc/shared'
  */
 export class OpenAPIComponentRegistry {
   constructor(
-    private readonly doc: OpenAPIDocument,
+    private readonly doc: OpenAPIV3_2.OpenAPIObject,
     private readonly customComponentName: ((defName: string, defSchema: JsonSchema) => string | undefined) | undefined,
   ) {}
 
@@ -119,14 +117,14 @@ export class OpenAPIComponentRegistry {
       componentsSchemas[componentName] = rewriteComponentSchemaRefs(
         cleanSchema,
         renameMap,
-      ) as OpenAPIV3_1.SchemaObject
+      )
     }
 
     return rewriteComponentSchemaRefs(rest, renameMap)
   }
 
-  toOpenAPISchema(schema: JsonSchema, direction?: JsonSchemaConverterDirection): OpenAPIV3_1.SchemaObject {
-    return ensureJsonSchemaObject(this.hoistDefs(schema, direction)) as OpenAPIV3_1.SchemaObject
+  toOpenAPISchema(schema: JsonSchema, direction?: JsonSchemaConverterDirection): OpenAPIV3_2.SchemaObject {
+    return ensureJsonSchemaObject(this.hoistDefs(schema, direction))
   }
 }
 

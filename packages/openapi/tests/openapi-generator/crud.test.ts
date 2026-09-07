@@ -172,7 +172,7 @@ describe('openAPIGenerator e2e: crud api', () => {
     }))
 
     // the list response references the same hoisted Planet component
-    expect((doc.paths?.['/api/v1/planets']?.get?.responses?.[200] as any).content['application/json'].schema).toEqual({
+    expect((doc.paths?.['/api/v1/planets']?.get?.responses?.['200'] as any).content['application/json'].schema).toEqual({
       type: 'array',
       items: { $ref: '#/components/schemas/Planet' },
     })
