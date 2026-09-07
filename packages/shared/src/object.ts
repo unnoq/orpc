@@ -177,27 +177,48 @@ export function omit<T extends object, K extends keyof T>(
   return result
 }
 
+/**
+ * Deep clones arrays and plain objects, leaving every other value as is.
+ * Circular and shared references are preserved in the copy.
+ */
 export function clone<T>(value: T): T {
+  return cloneWithVisited(value, new WeakMap()) as T
+}
+
+function cloneWithVisited(value: unknown, visited: WeakMap<object, unknown>): unknown {
+  if (!Array.isArray(value) && !isPlainObject(value)) {
+    return value
+  }
+
+  const existing = visited.get(value)
+  if (existing) {
+    return existing
+  }
+
   if (Array.isArray(value)) {
-    return value.map(clone) as any
-  }
+    const result: unknown[] = []
+    visited.set(value, result)
 
-  if (isPlainObject(value)) {
-    const result: Record<PropertyKey, unknown> = {}
-
-    // Use setOwn so special keys like __proto__ don't re-parent the result.
-    for (const key in value) {
-      setOwn(result, key, clone(value[key]))
+    for (const item of value) {
+      result.push(cloneWithVisited(item, visited))
     }
 
-    for (const sym of Object.getOwnPropertySymbols(value)) {
-      setOwn(result, sym, clone(value[sym]))
-    }
-
-    return result as any
+    return result
   }
 
-  return value
+  const result: Record<PropertyKey, unknown> = {}
+  visited.set(value, result)
+
+  // Use setOwn so special keys like __proto__ don't re-parent the result.
+  for (const key in value) {
+    setOwn(result, key, cloneWithVisited(value[key], visited))
+  }
+
+  for (const sym of Object.getOwnPropertySymbols(value)) {
+    setOwn(result, sym, cloneWithVisited(value[sym], visited))
+  }
+
+  return result
 }
 
 export function isPropertyKey(value: unknown): value is PropertyKey {
