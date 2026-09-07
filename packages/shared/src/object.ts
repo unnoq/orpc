@@ -107,7 +107,7 @@ export function set(
 
     if (!isTypescriptObject(next)) {
       const child = {}
-      defineOwnProperty(current, key, child)
+      setOwn(current, key, child)
       current = child
     }
     else {
@@ -115,10 +115,19 @@ export function set(
     }
   }
 
-  defineOwnProperty(current, path.at(-1)!, value)
+  setOwn(current, path.at(-1)!, value)
 }
 
-function defineOwnProperty(object: object, key: PropertyKey, value: unknown): void {
+/**
+ * Sets `object[key]` as an own property without writing through an inherited one,
+ * so a key like `__proto__` never re-parents the object.
+ */
+function setOwn(object: object, key: PropertyKey, value: unknown): void {
+  if (Object.hasOwn(object, key) || !(key in object)) {
+    (object as Record<PropertyKey, unknown>)[key] = value
+    return
+  }
+
   Object.defineProperty(object, key, {
     value,
     writable: true,
@@ -148,7 +157,7 @@ export function mergeTwoLevels(first: unknown, second: unknown): unknown {
     const secondValue = second[key]
 
     if (isPlainObject(firstValue) && isPlainObject(secondValue)) {
-      defineOwnProperty(result, key, { ...firstValue, ...secondValue })
+      setOwn(result, key, { ...firstValue, ...secondValue })
     }
   }
 
@@ -176,13 +185,13 @@ export function clone<T>(value: T): T {
   if (isPlainObject(value)) {
     const result: Record<PropertyKey, unknown> = {}
 
-    // Use defineOwnProperty so special keys like __proto__ don't re-parent the result.
+    // Use setOwn so special keys like __proto__ don't re-parent the result.
     for (const key in value) {
-      defineOwnProperty(result, key, clone(value[key]))
+      setOwn(result, key, clone(value[key]))
     }
 
     for (const sym of Object.getOwnPropertySymbols(value)) {
-      defineOwnProperty(result, sym, clone(value[sym]))
+      setOwn(result, sym, clone(value[sym]))
     }
 
     return result as any
