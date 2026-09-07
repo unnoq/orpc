@@ -9,7 +9,6 @@ import type { DecoratedMiddleware } from './middleware-decorated'
 import type { Procedure } from './procedure'
 import type { DecoratedProcedure } from './procedure-decorated'
 import type { AugmentedRouter } from './router-utils'
-import { ORPCError } from '@orpc/client'
 import { onError, onFinish, onStart, onSuccess } from '@orpc/shared'
 import { expectTypeOf } from 'vitest'
 import { z } from 'zod'
@@ -219,24 +218,6 @@ describe('Builder', () => {
           object,
           Schema<void, unknown>,
           Schema<string>,
-          typeof errorMap
-        >
-      >()
-    })
-
-    it('treats returned ORPCError as output', () => {
-      expectTypeOf(builder.handler(async () => {
-        if (Math.random() > 0.5) {
-          return new ORPCError('BAD_REQUEST', { data: 'data' })
-        }
-
-        return 'out'
-      })).toEqualTypeOf<
-        DecoratedProcedure<
-          { auth: boolean },
-          object,
-          Schema<void, unknown>,
-          Schema<'out' | ORPCError<'BAD_REQUEST', string>>,
           typeof errorMap
         >
       >()

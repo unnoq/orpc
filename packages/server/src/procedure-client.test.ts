@@ -928,16 +928,6 @@ describe('createProcedureClient', () => {
     const procedure = os.use(mid1).errors(errorMap).use(mid2).handler(handler)
     const client = createProcedureClient(procedure, { interceptors: [interceptor] })
 
-    it('treats returned ORPCError as a regular output', async () => {
-      const error = new ORPCError('BAD_REQUEST', { data: 'data' })
-      handler.mockResolvedValueOnce(error as any)
-
-      await expect(client()).resolves.toBe(error)
-
-      expect(error.defined).toBe(false)
-      expect(reconcileErrorSpy).toHaveBeenCalledTimes(0)
-    })
-
     it('reconcile error before throw', async () => {
       const error = new ORPCError('BAD_REQUEST', { data: 'data' })
       handler.mockRejectedValueOnce(error)

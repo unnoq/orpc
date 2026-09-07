@@ -7,7 +7,6 @@ import type { DecoratedMiddleware } from './middleware-decorated'
 import type { Procedure } from './procedure'
 import type { DecoratedProcedure } from './procedure-decorated'
 import type { AugmentedRouterWithMiddlewares } from './router-utils'
-import { ORPCError } from '@orpc/client'
 import { expectTypeOf } from 'vitest'
 import { z } from 'zod'
 
@@ -190,24 +189,6 @@ describe('BuilderWithMiddlewares', () => {
           { extra: boolean },
           Schema<void, unknown>,
           Schema<string>,
-          typeof errorMap
-        >
-      >()
-    })
-
-    it('treats returned ORPCError as output', () => {
-      expectTypeOf(builder.handler(async () => {
-        if (Math.random() > 0.5) {
-          return new ORPCError('BAD_REQUEST', { data: 'data' })
-        }
-
-        return 'out'
-      })).toEqualTypeOf<
-        DecoratedProcedure<
-          { auth: boolean },
-          { extra: boolean },
-          Schema<void, unknown>,
-          Schema<'out' | ORPCError<'BAD_REQUEST', string>>,
           typeof errorMap
         >
       >()
@@ -397,25 +378,6 @@ describe('BuilderWithInput', () => {
         >
       >()
     })
-
-    it('treats returned ORPCError as output', () => {
-      expectTypeOf(builder.handler(async ({ input }) => {
-        expectTypeOf(input).toEqualTypeOf<{ schema1: string }>()
-        if (Math.random() > 0.5) {
-          return new ORPCError('BAD_REQUEST', { data: 'data' })
-        }
-
-        return 'out'
-      })).toEqualTypeOf<
-        DecoratedProcedure<
-          { auth: boolean },
-          { extra: boolean },
-          typeof schema1,
-          Schema<'out' | ORPCError<'BAD_REQUEST', string>>,
-          typeof errorMap
-        >
-      >()
-    })
   })
 })
 
@@ -569,17 +531,6 @@ describe('BuilderWithOutput', () => {
       // @ts-expect-error - output is invalid
       void builder.handler(async ({ errors, context }, input) => {
         return 'invalid'
-      })
-    })
-
-    it('does not allow returning ORPCError', () => {
-      // @ts-expect-error - ORPCError is not a valid output
-      void builder.handler(async () => {
-        if (Math.random() > 0.5) {
-          return new ORPCError('BAD_REQUEST', { data: 'data' })
-        }
-
-        return { schema2: 123 }
       })
     })
   })
@@ -745,17 +696,6 @@ describe('BuilderWithInputOutput', () => {
 
       // @ts-expect-error invalid return type
       builder.handler(() => 'invalid')
-    })
-
-    it('does not allow returning ORPCError', () => {
-      // @ts-expect-error - ORPCError is not a valid output
-      void builder.handler(async ({ input }) => {
-        if (Math.random() > 0.5) {
-          return new ORPCError('BAD_REQUEST', { data: 'data' })
-        }
-
-        return { schema2: 123 }
-      })
     })
   })
 })

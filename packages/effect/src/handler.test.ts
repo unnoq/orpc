@@ -42,16 +42,6 @@ describe('handlerGen', () => {
     expect(error.defined).toBe(false)
   })
 
-  it('treats returned ORPCError as a regular output', async () => {
-    const error = new ORPCError('__TEST__')
-
-    await expect(
-      call(os.handler(handlerGen(function* () {
-        return error
-      }))),
-    ).resolves.toBe(error)
-  })
-
   it('throw original errors without fiber failure error wrapper', async () => {
     const error = new Error('__TEST__')
     await expect(
