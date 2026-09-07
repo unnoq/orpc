@@ -185,13 +185,12 @@ export function clone<T>(value: T): T {
 }
 
 function cloneWithVisited(value: unknown, visited: WeakMap<object, unknown>): unknown {
-  // WeakMap.get returns undefined for primitives, so no type check is needed before the lookup.
-  const existing = visited.get(value as object)
-  if (existing) {
-    return existing
-  }
-
   if (Array.isArray(value)) {
+    const existing = visited.get(value)
+    if (existing) {
+      return existing
+    }
+
     const result: unknown[] = []
     visited.set(value, result)
 
@@ -203,6 +202,11 @@ function cloneWithVisited(value: unknown, visited: WeakMap<object, unknown>): un
   }
 
   if (isPlainObject(value)) {
+    const existing = visited.get(value)
+    if (existing) {
+      return existing
+    }
+
     const result: Record<PropertyKey, unknown> = {}
     visited.set(value, result)
 
