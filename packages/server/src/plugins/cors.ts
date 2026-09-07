@@ -2,7 +2,7 @@ import type { Promisable, Value } from '@orpc/shared'
 import type { StandardHeaders } from '@standard-server/core'
 import type { StandardHandlerOptions, StandardHandlerPlugin, StandardHandlerRoutingInterceptor, StandardHandlerRoutingInterceptorOptions } from '../adapters/standard'
 import type { Context } from '../context'
-import { toArray, value } from '@orpc/shared'
+import { toArray } from '@orpc/shared'
 import { flattenStandardHeader } from '@standard-server/core'
 
 export interface CORSHandlerPluginOptions<T extends Context> {
@@ -12,13 +12,13 @@ export interface CORSHandlerPluginOptions<T extends Context> {
    *
    * @default '*'
    */
-  origin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string | undefined, options: StandardHandlerRoutingInterceptorOptions<T>]>
+  origin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
   /**
    * Configures the `Timing-Allow-Origin` header.
    * Can be a string, an array of allowed origins, or a function (optionally async) that returns the allowed origin(s).
    */
-  timingOrigin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string | undefined, options: StandardHandlerRoutingInterceptorOptions<T>]>
+  timingOrigin?: Value<Promisable<string | readonly string[] | null | undefined>, [origin: string, options: StandardHandlerRoutingInterceptorOptions<T>]>
 
   /**
    * Configures the `Access-Control-Allow-Methods` header for preflight requests.
@@ -91,29 +91,22 @@ export class CORSHandlerPlugin<T extends Context> implements StandardHandlerPlug
 
       const origin = flattenStandardHeader(interceptorOptions.request.headers.origin)
 
-      const allowedOrigins = toArray(await value(this.options.origin, origin, interceptorOptions))
+      const allowOrigin = await this.resolveOrigin(this.options.origin, origin, interceptorOptions)
+      const timingAllowOrigin = await this.resolveOrigin(this.options.timingOrigin, origin, interceptorOptions)
 
-      if (allowedOrigins.includes('*')) {
-        resHeaders['access-control-allow-origin'] = '*'
+      if (allowOrigin.value !== undefined) {
+        resHeaders['access-control-allow-origin'] = allowOrigin.value
       }
-      else {
-        if (origin !== undefined && allowedOrigins.includes(origin)) {
-          resHeaders['access-control-allow-origin'] = origin
-        }
 
+      if (timingAllowOrigin.value !== undefined) {
+        resHeaders['timing-allow-origin'] = timingAllowOrigin.value
+      }
+
+      if (allowOrigin.varies || timingAllowOrigin.varies) {
         const existingVary = flattenStandardHeader(resHeaders.vary)
         if (!existingVary?.split(',').some(v => v.trim().toLowerCase() === 'origin')) {
           resHeaders.vary = existingVary ? `${existingVary}, Origin` : 'Origin'
         }
-      }
-
-      const allowedTimingOrigins = toArray(await value(this.options.timingOrigin, origin, interceptorOptions))
-
-      if (allowedTimingOrigins.includes('*')) {
-        resHeaders['timing-allow-origin'] = '*'
-      }
-      else if (origin !== undefined && allowedTimingOrigins.includes(origin)) {
-        resHeaders['timing-allow-origin'] = origin
       }
 
       if (this.options.credentials) {
@@ -166,5 +159,37 @@ export class CORSHandlerPlugin<T extends Context> implements StandardHandlerPlug
         ...toArray(options.routingInterceptors),
       ],
     }
+  }
+
+  private async resolveOrigin(
+    option: CORSHandlerPluginOptions<T>['origin'],
+    origin: string | undefined,
+    interceptorOptions: StandardHandlerRoutingInterceptorOptions<T>,
+  ): Promise<{ value: string | undefined, varies: boolean }> {
+    if (typeof option === 'function') {
+      if (origin === undefined) {
+        return { value: undefined, varies: true }
+      }
+
+      const allowed = toArray(await option(origin, interceptorOptions))
+
+      if (allowed.includes('*')) {
+        return { value: '*', varies: true }
+      }
+
+      return { value: allowed.includes(origin) ? origin : undefined, varies: true }
+    }
+
+    const allowed = toArray(await option)
+
+    if (allowed.includes('*')) {
+      return { value: '*', varies: false }
+    }
+
+    if (origin !== undefined && allowed.includes(origin)) {
+      return { value: origin, varies: true }
+    }
+
+    return { value: undefined, varies: allowed.length > 0 }
   }
 }
