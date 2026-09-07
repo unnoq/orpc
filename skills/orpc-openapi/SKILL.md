@@ -1,6 +1,6 @@
 ---
 name: orpc-openapi
-description: "Expose an oRPC router as a spec-compliant OpenAPI HTTP API. Use when a project depends on @orpc/openapi, or for defining REST-style routes on oRPC procedures (openapi() metadata or .route with method, path, successStatus), serving them with OpenAPIHandler alongside RPCHandler, coercing query and path strings with Smart Coercion, calling an OpenAPI-shaped API with OpenAPILink, generating an OpenAPI 3.1 document with OpenAPIGenerator, or serving Scalar or Swagger docs with the OpenAPI Reference plugin. Biases toward retrieval from the oRPC docs over pre-trained knowledge. For contract-first work (defining contracts with oc, implementing them with implement, or generating a contract from an existing OpenAPI spec), use the orpc-contract skill; for plain RPC serving, core builder, middleware, or client work with no REST exposure, use the orpc skill instead."
+description: "Expose an oRPC router as a spec-compliant OpenAPI HTTP API. Use when a project depends on @orpc/openapi, or for defining REST-style routes on oRPC procedures (openapi() metadata or .route with method, path, successStatus), serving them with OpenAPIHandler alongside RPCHandler, coercing query and path strings with Smart Coercion, calling an OpenAPI-shaped API with OpenAPILink, generating an OpenAPI 3.2 (or 3.1, 3.0) document with OpenAPIGenerator, or serving Scalar or Swagger docs with the OpenAPI Reference plugin. Biases toward retrieval from the oRPC docs over pre-trained knowledge. For contract-first work (defining contracts with oc, implementing them with implement, or generating a contract from an existing OpenAPI spec), use the orpc-contract skill; for plain RPC serving, core builder, middleware, or client work with no REST exposure, use the orpc skill instead."
 license: MIT
 ---
 
@@ -106,7 +106,7 @@ To ship a contract to clients without bundling server code, minify it to JSON an
 
 ## Spec document and interactive docs
 
-`OpenAPIGenerator` turns a router or contract into an OpenAPI 3.1 document. `OpenAPIReferenceHandlerPlugin` serves the spec at `/spec.json` and a Scalar UI at `/` under the handler prefix (change with `specPath`/`docsPath`, or set `provider: 'swagger'` for Swagger UI):
+`OpenAPIGenerator` turns a router or contract into an OpenAPI 3.2 document (pass any `3.1.x` or `3.0.x` `version` for tools that stop at an older version; `QUERY` procedures need 3.2). `OpenAPIReferenceHandlerPlugin` serves the spec at `/spec.json` and a Scalar UI at `/` under the handler prefix (change with `specPath`/`docsPath`, or set `provider: 'swagger'` for Swagger UI):
 
 ```ts
 import { OpenAPIGenerator } from '@orpc/openapi'
@@ -129,7 +129,7 @@ const handler = new OpenAPIHandler(router, {
 })
 ```
 
-Enrich the document through `openapi` metadata: `operationId`, `summary`, `description`, `tags`, `successDescription`, and a `spec` callback that receives the generated operation object and returns an extended one (security requirements, extra responses). Converters also exist for Valibot (`@orpc/valibot`) and ArkType (`@orpc/arktype`); schemas without a matching converter fall back to Standard JSON Schema conversion.
+Enrich the document through `openapi` metadata: `operationId`, `summary`, `description`, `tags`, `successDescription`, and a `spec` callback that receives the generated operation object and returns an extended one (security requirements, extra responses). Write `spec` and `base` as OpenAPI 3.2 objects even when generating 3.1 or 3.0; the generator downgrades the whole document. Converters also exist for Valibot (`@orpc/valibot`) and ArkType (`@orpc/arktype`); schemas without a matching converter fall back to Standard JSON Schema conversion.
 
 Verify the wiring before declaring success: request `/spec.json` under the handler prefix and one routed endpoint, and confirm the method, path, and status you configured.
 

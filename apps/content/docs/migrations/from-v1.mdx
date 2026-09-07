@@ -1020,10 +1020,11 @@ const spec = await generator.generate(router, {
 
 </CodeGroup>
 
-Two smaller changes in the same area:
+Three smaller changes in the same area:
 
 - The `oo` helper (`oo.spec`) was removed. To customize the operation object, attach [`openapi({ spec })` metadata](/docs/openapi/specification#customizing-the-operation-object) directly on the procedure or router.
 - The `shouldHoistDef` option was replaced by [`customComponentName`](/docs/openapi/specification#hoisting-defs). Root `$defs` are now always hoisted into `components.schemas`; this option only renames them.
+- Documents are generated as OpenAPI 3.2.0 by default. Pass [`version: '3.1.1'`](/docs/openapi/specification#openapi-version) to keep old behavior.
 
 ### `OpenAPIReferencePlugin` renamed and reshaped
 

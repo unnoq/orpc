@@ -4,7 +4,8 @@ import type { AnyProcedure, AnyRouter } from '@orpc/server'
 import type { Value } from '@orpc/shared'
 import type { OpenAPIMeta } from './meta'
 import type { OpenAPIErrorBodyDefinition, OpenAPIOperationContext } from './openapi-generator-operation'
-import type { OpenAPIDocument, OpenAPIOperationObject } from './types'
+import type { OpenAPIDocument, OpenAPIV3_2, OpenAPIVersion } from './types'
+import { downgradeSpecV31ToV30, downgradeSpecV32ToV31 } from '@openapi-spec/downgrader'
 import { COMMON_ERROR_STATUS_MAP } from '@orpc/client'
 import { combineJsonSchemasWithComposition, DelegatingJsonSchemaConverter, StandardJsonSchemaConverter } from '@orpc/json-schema'
 import { walkProcedureContractsAsync } from '@orpc/server'
@@ -34,8 +35,22 @@ export interface OpenAPIGeneratorOptions {
   serializer?: Pick<OpenAPISerializer, keyof OpenAPISerializer> | undefined
 }
 
-export interface OpenAPIGeneratorGenerateOptions {
-  base?: Partial<OpenAPIDocument> | undefined
+export interface OpenAPIGeneratorGenerateOptions<TVersion extends OpenAPIVersion> {
+  /**
+   * The OpenAPI version of the generated document.
+   * The document is generated as OpenAPI 3.2 and downgraded when an older version is requested.
+   * The minor version selects the conversion, the document carries the exact value, such as `3.1.0`.
+   *
+   * @default '3.2.0'
+   */
+  version?: TVersion | undefined
+
+  /**
+   * OpenAPI 3.2 document fields to start from, such as `info`, `servers`, or `components`.
+   * They are downgraded with the rest of the document when an older `version` is requested.
+   * The `openapi` field is derived from `version`.
+   */
+  base?: Partial<Omit<OpenAPIV3_2.OpenAPIObject, 'openapi'>> | undefined
 
   /**
    * Root-level `$defs` are always moved into `components.schemas`.
@@ -63,6 +78,7 @@ export interface OpenAPIGeneratorGenerateOptions {
    *
    * @remarks
    * - Return `null | undefined` to use the default error response body shaper.
+   * - The schema is an OpenAPI 3.2 Schema Object, it is downgraded with the rest of the document when an older `version` is requested.
    */
   customErrorResponseBodySchema?: Value<
     JsonSchema | undefined | null,
@@ -95,10 +111,15 @@ export class OpenAPIGenerator {
     ])
   }
 
-  async generate(router: RouterContract | AnyRouter, options: OpenAPIGeneratorGenerateOptions = {}): Promise<OpenAPIDocument> {
-    const doc: OpenAPIDocument = {
+  async generate<TVersion extends OpenAPIVersion = '3.2.0'>(
+    router: RouterContract | AnyRouter,
+    options: OpenAPIGeneratorGenerateOptions<TVersion> = {},
+  ): Promise<OpenAPIDocument<TVersion>> {
+    const version: OpenAPIVersion = options.version ?? '3.2.0'
+
+    const doc: OpenAPIV3_2.OpenAPIObject = {
       ...clone(options.base),
-      openapi: options.base?.openapi ?? '3.1.2',
+      openapi: '3.2.0',
       info: options.base?.info ?? { title: 'API Reference', version: '0.0.0' },
     }
 
@@ -122,9 +143,9 @@ export class OpenAPIGenerator {
 
         const method = (meta?.method ?? DEFAULT_OPENAPI_METHOD).toLowerCase() as Lowercase<NonNullable<OpenAPIMeta['method']>>
 
-        if (method === 'query' && doc.openapi !== '3.2.0') {
+        if (method === 'query' && !version.startsWith('3.2.')) {
           throw new OpenAPIGeneratorError(
-            `QUERY operations require OpenAPI 3.2. Set base.openapi to '3.2.0'.`,
+            `QUERY operations require OpenAPI 3.2, but version "${version}" was requested.`,
           )
         }
 
@@ -133,7 +154,7 @@ export class OpenAPIGenerator {
         const dynamicPathParams = getDynamicPathParams(httpPath)
         const openApiPath = toOpenAPIPath(httpPath, dynamicPathParams)
 
-        let operation: OpenAPIOperationObject
+        let operation: OpenAPIV3_2.OperationObject
 
         if (meta?.spec !== undefined && typeof meta.spec !== 'function') {
           operation = meta.spec
@@ -174,7 +195,8 @@ export class OpenAPIGenerator {
       )
     }
 
-    return this.serializer.serialize(doc, { asFormData: false, useFormDataForBlobFields: false }) as OpenAPIDocument
+    const versioned = toVersionedOpenAPIDocument(doc, version)
+    return this.serializer.serialize(versioned, { asFormData: false, useFormDataForBlobFields: false }) as OpenAPIDocument<TVersion>
   }
 
   private convertSchema(schema: AnySchema | undefined, direction: JsonSchemaConverterDirection): [JsonSchema, boolean] {
@@ -194,6 +216,16 @@ export class OpenAPIGenerator {
       results.every(([, optional]) => optional),
     ]
   }
+}
+
+function toVersionedOpenAPIDocument(doc: OpenAPIV3_2.OpenAPIObject, version: OpenAPIVersion): OpenAPIDocument<OpenAPIVersion> {
+  const downgraded = version.startsWith('3.2.')
+    ? doc
+    : version.startsWith('3.1.')
+      ? downgradeSpecV32ToV31(doc)
+      : downgradeSpecV31ToV30(downgradeSpecV32ToV31(doc))
+
+  return { ...downgraded, openapi: version } as OpenAPIDocument<OpenAPIVersion>
 }
 
 function strip$schemaField(schema: JsonSchema): JsonSchema {

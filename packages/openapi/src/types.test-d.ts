@@ -1,16 +1,18 @@
 import type { Client, ORPCError } from '@orpc/client'
 import type { RouterContractClient } from '@orpc/contract'
 import type { AsyncIteratorClass } from '@orpc/shared'
-import type { JsonifiedClient, JsonifiedValue, OpenAPIDocument } from './types'
+import type { JsonifiedClient, JsonifiedValue, OpenAPIDocument, OpenAPIV3_0, OpenAPIV3_1, OpenAPIV3_2 } from './types'
 import { asyncIteratorObject, oc } from '@orpc/contract'
 import z from 'zod'
 
 describe('OpenAPIDocument', () => {
-  it('narrowly supports OpenAPI 3.2 QUERY path items', () => {
-    expectTypeOf<OpenAPIDocument['openapi']>().toEqualTypeOf<'3.1.0' | '3.1.1' | '3.1.2' | '3.2.0'>()
-
-    expectTypeOf<NonNullable<OpenAPIDocument['paths']>['/search']['query']>()
-      .toEqualTypeOf<NonNullable<OpenAPIDocument['paths']>['/search']['post']>()
+  it('resolves the document type of a version, patch segment ignored', () => {
+    expectTypeOf<OpenAPIDocument<'3.0.0'>>().toEqualTypeOf<OpenAPIV3_0.OpenAPIObject>()
+    expectTypeOf<OpenAPIDocument<'3.0.4'>>().toEqualTypeOf<OpenAPIV3_0.OpenAPIObject>()
+    expectTypeOf<OpenAPIDocument<'3.1.0'>>().toEqualTypeOf<OpenAPIV3_1.OpenAPIObject>()
+    expectTypeOf<OpenAPIDocument<'3.1.2'>>().toEqualTypeOf<OpenAPIV3_1.OpenAPIObject>()
+    expectTypeOf<OpenAPIDocument<'3.2.0'>>().toEqualTypeOf<OpenAPIV3_2.OpenAPIObject>()
+    expectTypeOf<OpenAPIDocument<'3.2.7'>>().toEqualTypeOf<OpenAPIV3_2.OpenAPIObject>()
   })
 })
 

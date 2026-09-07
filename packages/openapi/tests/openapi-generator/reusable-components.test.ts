@@ -23,7 +23,7 @@ describe('openAPIGenerator e2e: reusable component schemas', () => {
         .output(z.object({ category: Category })),
     })
 
-    expect((doc.paths?.['/categories/{name}']?.get?.responses?.[200] as any).content['application/json'].schema).toEqual(
+    expect((doc.paths?.['/categories/{name}']?.get?.responses?.['200'] as any).content['application/json'].schema).toEqual(
       expect.objectContaining({
         properties: {
           category: { $ref: '#/components/schemas/Category' },
@@ -103,7 +103,7 @@ describe('openAPIGenerator e2e: reusable component schemas', () => {
       expect((doc.paths?.[path]?.post?.requestBody as any).content['application/json'].schema.properties).toEqual({
         planet: { $ref: '#/components/schemas/Planet' },
       })
-      expect((doc.paths?.[path]?.post?.responses?.[200] as any).content['application/json'].schema.properties).toEqual({
+      expect((doc.paths?.[path]?.post?.responses?.['200'] as any).content['application/json'].schema.properties).toEqual({
         planet: { $ref: '#/components/schemas/PlanetOutput' },
       })
     }

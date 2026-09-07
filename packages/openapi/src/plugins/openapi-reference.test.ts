@@ -1,4 +1,4 @@
-import type { OpenAPIDocument } from '../types'
+import type { OpenAPIDocument, OpenAPIVersion } from '../types'
 import { OpenAPIReferenceHandlerPlugin } from './openapi-reference'
 
 describe('openAPIReferenceHandlerPlugin', () => {
@@ -6,7 +6,7 @@ describe('openAPIReferenceHandlerPlugin', () => {
     vi.clearAllMocks()
   })
 
-  function createSpec(title = 'Example API'): OpenAPIDocument {
+  function createSpec(title = 'Example API'): OpenAPIDocument<OpenAPIVersion> {
     return {
       openapi: '3.1.0',
       info: {
@@ -14,7 +14,7 @@ describe('openAPIReferenceHandlerPlugin', () => {
         version: '1.0.0',
       },
       paths: {},
-    } as OpenAPIDocument
+    } as OpenAPIDocument<OpenAPIVersion>
   }
 
   function getInterceptor(

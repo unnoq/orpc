@@ -1548,15 +1548,16 @@ describe('combineJsonSchemasWithComposition', () => {
       {
         allOf: [{ $ref: '#/$defs/toString' }, { $ref: '#/$defs/valueOf' }],
         $defs: {
-          toString: { type: 'string' },
-          constructor: { type: 'boolean' },
+          // Object.prototype member names get a method contextual type, `satisfies` keeps `type` literal
+          toString: { type: 'string' } satisfies JsonSchema,
+          constructor: { type: 'boolean' } satisfies JsonSchema,
         },
       },
       {
         $ref: '#/$defs/toString',
         $defs: {
-          toString: { type: 'number' },
-          constructor: { type: 'boolean' },
+          toString: { type: 'number' } satisfies JsonSchema,
+          constructor: { type: 'boolean' } satisfies JsonSchema,
         },
       },
     ])).toEqual({
@@ -1581,7 +1582,7 @@ describe('combineJsonSchemasWithComposition', () => {
   it('never lets two renames in the same branch land on the same target', () => {
     // A skips the taken A2..A11 and lands on A12, which A1 would otherwise take as its own first choice
     const taken = Object.fromEntries(
-      ['A', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10', 'A11'].map(name => [name, { type: 'string' }]),
+      ['A', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10', 'A11'].map((name): [string, JsonSchema] => [name, { type: 'string' }]),
     )
 
     expect(combineJsonSchemasWithComposition('anyOf', [

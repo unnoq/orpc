@@ -17,7 +17,7 @@ Package map:
 - `@orpc/server`: the `os` builder, routers, middleware, `RPCHandler`, server-side clients (`call`, `createRouterClient`), `implement` for mocks
 - `@orpc/client`: `createORPCClient`, `RPCLink`, `safe`, `createSafeClient`, `isDefinedError`
 - `@orpc/contract`: contract-first API definitions implemented separately from their logic (see the `orpc-contract` skill)
-- `@orpc/openapi`: `OpenAPIHandler`, `OpenAPILink`, OpenAPI 3.1 spec generation
+- `@orpc/openapi`: `OpenAPIHandler`, `OpenAPILink`, OpenAPI 3.2 spec generation
 - Integration packages such as `@orpc/tanstack-query` and `@orpc/nest`
 
 ## Define procedures

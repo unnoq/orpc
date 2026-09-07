@@ -50,7 +50,7 @@ describe('openAPIGenerator e2e: server-sent event streaming', () => {
       },
     })
 
-    expect(doc.paths?.['/chat']?.post?.responses?.[200]).toEqual({
+    expect(doc.paths?.['/chat']?.post?.responses?.['200']).toEqual({
       description: 'OK',
       content: {
         'text/event-stream': {
@@ -91,7 +91,7 @@ describe('openAPIGenerator e2e: server-sent event streaming', () => {
         .output(asyncIteratorObject(z.object({ title: z.string() }))),
     })
 
-    const schema = (doc.paths?.['/notifications']?.get?.responses?.[200] as any).content['text/event-stream'].schema
+    const schema = (doc.paths?.['/notifications']?.get?.responses?.['200'] as any).content['text/event-stream'].schema
 
     expect(schema.oneOf[1]).toEqual({
       type: 'object',

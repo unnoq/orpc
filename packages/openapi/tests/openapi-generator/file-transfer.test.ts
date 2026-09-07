@@ -57,7 +57,7 @@ describe('openAPIGenerator e2e: file upload and download', () => {
         .output(z.file()),
     })
 
-    expect(doc.paths?.['/documents/{id}']?.get?.responses?.[200]).toEqual({
+    expect(doc.paths?.['/documents/{id}']?.get?.responses?.['200']).toEqual({
       description: 'OK',
       content: {
         '*/*': {
@@ -78,7 +78,7 @@ describe('openAPIGenerator e2e: file upload and download', () => {
         ])),
     })
 
-    expect(doc.paths?.['/planets/export']?.get?.responses?.[200]).toEqual({
+    expect(doc.paths?.['/planets/export']?.get?.responses?.['200']).toEqual({
       description: 'OK',
       content: {
         'application/json': {

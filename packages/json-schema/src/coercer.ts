@@ -161,7 +161,7 @@ export class JsonSchemaCoercer {
                 : []
 
             const itemSchema: JsonSchema | undefined = Array.isArray(schema.items)
-              ? schema.additionalItems
+              ? schema.additionalItems as JsonSchema | undefined
               : schema.items as JsonSchema | undefined
 
             let shouldUseCoercedItems = false

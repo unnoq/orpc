@@ -1,6 +1,6 @@
 import type { AnyProcedureContract, AnySchema, ErrorMap } from '@orpc/contract'
 import type { OpenAPIOperationContext } from './openapi-generator-operation'
-import type { OpenAPIDocument, OpenAPIOperationObject } from './types'
+import type { OpenAPIV3_2 } from './types'
 import { COMMON_ERROR_STATUS_MAP } from '@orpc/client'
 import { asyncIteratorObject, error } from '@orpc/contract'
 import { combineJsonSchemasWithComposition, DelegatingJsonSchemaConverter } from '@orpc/json-schema'
@@ -21,8 +21,8 @@ describe('openAPIGenerator operation builders', () => {
     errorStatusMap?: Record<string, number>
     customErrorResponseBodySchema?: OpenAPIOperationContext['customErrorResponseBodySchema']
   } = {}) {
-    const doc: OpenAPIDocument = {
-      openapi: '3.1.2',
+    const doc: OpenAPIV3_2.OpenAPIObject = {
+      openapi: '3.2.0',
       info: { title: 'API Reference', version: '0.0.0' },
       ...(options.schemas ? { components: { schemas: options.schemas } } : {}),
     }
@@ -47,7 +47,7 @@ describe('openAPIGenerator operation builders', () => {
       customErrorResponseBodySchema: options.customErrorResponseBodySchema,
     }
 
-    const operation: OpenAPIOperationObject = {}
+    const operation: OpenAPIV3_2.OperationObject = {}
 
     return { doc, ctx, operation }
   }
@@ -486,7 +486,7 @@ describe('openAPIGenerator operation builders', () => {
         })],
       }), undefined)
 
-      expect(operation.responses?.[200]).toEqual({
+      expect(operation.responses?.['200']).toEqual({
         description: 'OK',
         content: {
           'application/json': { schema: { type: 'object' } },
@@ -513,7 +513,7 @@ describe('openAPIGenerator operation builders', () => {
         })],
       }), undefined)
 
-      expect(operation.responses?.[200]).toEqual({
+      expect(operation.responses?.['200']).toEqual({
         description: 'OK',
         content: {
           'multipart/form-data': {
@@ -533,7 +533,7 @@ describe('openAPIGenerator operation builders', () => {
         outputs: [asyncIteratorObject(testSchema({ type: 'string' }))],
       }), undefined)
 
-      expect(operation.responses?.[200]).toEqual({
+      expect(operation.responses?.['200']).toEqual({
         description: 'OK',
         content: {
           'text/event-stream': {
@@ -670,7 +670,7 @@ describe('openAPIGenerator operation builders', () => {
         },
       }))
 
-      expect(operation.responses?.[400]).toEqual({
+      expect(operation.responses?.['400']).toEqual({
         description: 'Second bad request',
         content: {
           'application/json': {
@@ -684,7 +684,7 @@ describe('openAPIGenerator operation builders', () => {
           },
         },
       })
-      expect(operation.responses?.[408]).toEqual({
+      expect(operation.responses?.['408']).toEqual({
         description: '408',
         content: {
           'application/json': {
@@ -751,7 +751,7 @@ describe('openAPIGenerator operation builders', () => {
 
       buildErrorResponse(ctx, operation, testDef({ errors: { '---': {} } }))
 
-      expect((operation.responses?.[500] as any).content['application/json'].schema.oneOf[0]).toEqual({
+      expect((operation.responses?.['500'] as any).content['application/json'].schema.oneOf[0]).toEqual({
         $ref: '#/components/schemas/Error',
       })
     })
@@ -772,7 +772,7 @@ describe('openAPIGenerator operation builders', () => {
         },
       }))
 
-      expect((operation.responses?.[409] as any).content['application/json'].schema.oneOf[0]).toEqual({
+      expect((operation.responses?.['409'] as any).content['application/json'].schema.oneOf[0]).toEqual({
         $ref: '#/components/schemas/Conflict2',
       })
       expect(doc.components?.schemas?.Conflict).toEqual({ type: 'string' })
@@ -797,7 +797,7 @@ describe('openAPIGenerator operation builders', () => {
         },
       }))
 
-      expect(operation.responses?.[403]).toEqual({
+      expect(operation.responses?.['403']).toEqual({
         description: 'Access denied',
         content: {
           'application/json': {
@@ -852,11 +852,11 @@ describe('openAPIGenerator operation builders', () => {
         },
       ], 400)
 
-      expect((operation.responses?.[400] as any).content['application/json'].schema).toEqual({
+      expect((operation.responses?.['400'] as any).content['application/json'].schema).toEqual({
         type: 'object',
         description: 'custom-400',
       })
-      expect((operation.responses?.[404] as any).content['application/json'].schema).toEqual(
+      expect((operation.responses?.['404'] as any).content['application/json'].schema).toEqual(
         expect.objectContaining({ oneOf: expect.any(Array) }),
       )
     })
