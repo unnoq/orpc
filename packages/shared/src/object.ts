@@ -186,11 +186,8 @@ export function clone<T>(value: T): T {
 }
 
 function cloneWithVisited(value: unknown, visited: WeakMap<object, unknown>): unknown {
-  if (!Array.isArray(value) && !isPlainObject(value)) {
-    return value
-  }
-
-  const existing = visited.get(value)
+  // WeakMap.get returns undefined for primitives, so no type check is needed before the lookup.
+  const existing = visited.get(value as object)
   if (existing) {
     return existing
   }
@@ -206,19 +203,23 @@ function cloneWithVisited(value: unknown, visited: WeakMap<object, unknown>): un
     return result
   }
 
-  const result: Record<PropertyKey, unknown> = {}
-  visited.set(value, result)
+  if (isPlainObject(value)) {
+    const result: Record<PropertyKey, unknown> = {}
+    visited.set(value, result)
 
-  // Use setOwn so special keys like __proto__ don't re-parent the result.
-  for (const key in value) {
-    setOwn(result, key, cloneWithVisited(value[key], visited))
+    // Use setOwn so special keys like __proto__ don't re-parent the result.
+    for (const key in value) {
+      setOwn(result, key, cloneWithVisited(value[key], visited))
+    }
+
+    for (const sym of Object.getOwnPropertySymbols(value)) {
+      setOwn(result, sym, cloneWithVisited(value[sym], visited))
+    }
+
+    return result
   }
 
-  for (const sym of Object.getOwnPropertySymbols(value)) {
-    setOwn(result, sym, cloneWithVisited(value[sym], visited))
-  }
-
-  return result
+  return value
 }
 
 export function isPropertyKey(value: unknown): value is PropertyKey {
