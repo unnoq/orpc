@@ -107,7 +107,7 @@ export function set(
 
     if (!isTypescriptObject(next)) {
       const child = {}
-      defineOwnProperty(current, key, child)
+      setOwn(current, key, child)
       current = child
     }
     else {
@@ -115,16 +115,24 @@ export function set(
     }
   }
 
-  defineOwnProperty(current, path.at(-1)!, value)
+  setOwn(current, path.at(-1)!, value)
 }
 
-function defineOwnProperty(object: object, key: PropertyKey, value: unknown): void {
-  Object.defineProperty(object, key, {
-    value,
-    writable: true,
-    enumerable: true,
-    configurable: true,
-  })
+/**
+ * Sets `object[key]`, defining `__proto__` as an own property instead of re-parenting the object.
+ */
+function setOwn(object: object, key: PropertyKey, value: unknown): void {
+  if (key === '__proto__') {
+    Object.defineProperty(object, key, {
+      value,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    })
+  }
+  else {
+    (object as Record<PropertyKey, unknown>)[key] = value
+  }
 }
 
 /**
@@ -148,7 +156,7 @@ export function mergeTwoLevels(first: unknown, second: unknown): unknown {
     const secondValue = second[key]
 
     if (isPlainObject(firstValue) && isPlainObject(secondValue)) {
-      defineOwnProperty(result, key, { ...firstValue, ...secondValue })
+      setOwn(result, key, { ...firstValue, ...secondValue })
     }
   }
 
@@ -168,24 +176,50 @@ export function omit<T extends object, K extends keyof T>(
   return result
 }
 
+/**
+ * Deep clones arrays and plain objects, leaving every other value as is.
+ * Circular and shared references are preserved in the copy.
+ */
 export function clone<T>(value: T): T {
+  return cloneWithVisited(value, new WeakMap()) as T
+}
+
+function cloneWithVisited(value: unknown, visited: WeakMap<object, unknown>): unknown {
   if (Array.isArray(value)) {
-    return value.map(clone) as any
+    const existing = visited.get(value)
+    if (existing) {
+      return existing
+    }
+
+    const result: unknown[] = []
+    visited.set(value, result)
+
+    for (const item of value) {
+      result.push(cloneWithVisited(item, visited))
+    }
+
+    return result
   }
 
   if (isPlainObject(value)) {
-    const result: Record<PropertyKey, unknown> = {}
+    const existing = visited.get(value)
+    if (existing) {
+      return existing
+    }
 
-    // Use defineOwnProperty so special keys like __proto__ don't re-parent the result.
+    const result: Record<PropertyKey, unknown> = {}
+    visited.set(value, result)
+
+    // Use setOwn so special keys like __proto__ don't re-parent the result.
     for (const key in value) {
-      defineOwnProperty(result, key, clone(value[key]))
+      setOwn(result, key, cloneWithVisited(value[key], visited))
     }
 
     for (const sym of Object.getOwnPropertySymbols(value)) {
-      defineOwnProperty(result, sym, clone(value[sym]))
+      setOwn(result, sym, cloneWithVisited(value[sym], visited))
     }
 
-    return result as any
+    return result
   }
 
   return value

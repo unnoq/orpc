@@ -412,6 +412,41 @@ describe('clone', () => {
     // eslint-disable-next-line no-restricted-properties, no-proto
     expect(clonedNullProto.__proto__).toBe(2)
   })
+
+  it('clone with circular references', () => {
+    const obj: Record<string, unknown> = { a: 1 }
+    obj.self = obj
+    obj.list = [obj]
+
+    const cloned = clone(obj)
+
+    expect(cloned).not.toBe(obj)
+    expect(cloned.a).toBe(1)
+    expect(cloned.self).toBe(cloned)
+    expect((cloned.list as unknown[])[0]).toBe(cloned)
+    expect(cloned.list).not.toBe(obj.list)
+
+    const arr: unknown[] = [1]
+    arr.push(arr)
+
+    const clonedArr = clone(arr)
+
+    expect(clonedArr).not.toBe(arr)
+    expect(clonedArr[0]).toBe(1)
+    expect(clonedArr[1]).toBe(clonedArr)
+  })
+
+  it('clone keeps shared references shared', () => {
+    const shared = { x: 1 }
+    const obj = { a: shared, b: shared, c: [shared] }
+
+    const cloned = clone(obj)
+
+    expect(cloned.a).toEqual(shared)
+    expect(cloned.a).not.toBe(shared)
+    expect(cloned.b).toBe(cloned.a)
+    expect(cloned.c[0]).toBe(cloned.a)
+  })
 })
 
 describe('bindMethods', () => {
